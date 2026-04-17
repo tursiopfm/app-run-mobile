@@ -1,44 +1,66 @@
 package com.franck.trailcockpit.data
 
-data class WeekDay(
+data class DaySession(
     val day: String,
-    val session: String,
-    val volume: String,
-    val dPlus: String
+    val label: String,
+    val volumeKm: Double,
+    val denivelePos: Int
+)
+
+data class WeekOverview(
+    val runKm: Double,
+    val runTargetKm: Int,
+    val runSessions: Int,
+    val runDPlus: Int,
+    val runDPlusTarget: Int,
+    val runSuffer: Int,
+    val bikeKm: Double,
+    val bikeSessions: Int,
+    val bikeDPlus: Int
+)
+
+data class YtdData(
+    val runKm: Double,
+    val runDPlus: Int,
+    val bikeKm: Double,
+    val bikeDPlus: Int,
+    val atl: Int,
+    val ctl: Int,
+    val tsb: Int,
+    val yearTarget: Int
 )
 
 data class WeeklyPoint(
-    val week: String,
-    val value: Float
+    val weekLabel: String,
+    val km: Double,
+    val dPlus: Int,
+    val suffer: Int,
+    val atl: Int,
+    val ctl: Int,
+    val tsb: Int
 )
 
-data class MonthlyAccum(
-    val month: Int,
-    val km: Float,
-    val year: String
-)
-
-data class YearlyAccum(
-    val year: String,
-    val totalKm: Float
-)
-
-data class IntensityZone(
+data class IntensityShare(
     val label: String,
-    val percent: Float,
-    val colorIndex: Int
+    val km: Double
 )
 
-data class FitnessPoint(
-    val week: String,
-    val atl: Float,
-    val ctl: Float,
-    val tsb: Float
+data class YearCumulativePoint(
+    val dayOfYear: Int,
+    val km: Double
 )
 
-data class ObjectiveProgress(
+data class YearSeries(
+    val year: Int,
+    val points: List<YearCumulativePoint>
+)
+
+data class MonthCumulativePoint(
+    val dayOfMonth: Int,
+    val km: Double
+)
+
+data class MonthSeries(
     val label: String,
-    val current: Float,
-    val target: Float,
-    val unit: String
+    val points: List<MonthCumulativePoint>
 )

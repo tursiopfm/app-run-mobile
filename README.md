@@ -1,50 +1,57 @@
-# Welcome to your Expo app 👋
+# Trail Cockpit — Android
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Application Android (Jetpack Compose) reproduisant le tableau de bord de suivi de course à pied / trail « TRAIL COCKPIT — FRANCK 2026 ».
 
-## Get started
+## Ce que l'app affiche
 
-1. Install dependencies
+- **En-tête** : titre et statut de charge (« Zone OK — TSB 7 »).
+- **Tuiles KPI semaine** : RUN km, RUN D+, VÉLO km.
+- **Tableau hebdo** : 7 jours × (séance / volume km / D+ m) + total.
+- **Tuiles YTD** : RUN cumul, CHARGE (ATL / CTL / TSB), VÉLO.
+- **Barres d'objectifs** : km année, volume semaine, D+ semaine.
+- **Graphiques** (dessinés en Jetpack Compose `Canvas`, aucune dépendance de chart externe) :
+  - RUN km — 16 semaines (line)
+  - RUN D+ (m) — 16 semaines (bar)
+  - ATL / CTL / TSB — 16 semaines (multi-line)
+  - Répartition des intensités — 30 j glissants (donut)
+  - RUN Suffer — 16 semaines (bar)
+  - Ratio D+/km — tendance (line)
+  - Cumul km par année (13 saisons + 2026)
+  - Cumul km par mois (4 derniers mois)
 
-   ```bash
-   npm install
-   ```
+Les valeurs sont un jeu de données d'exemple (`data/SampleData.kt`) calqué sur la capture d'écran fournie.
 
-2. Start the app
+## Stack
 
-   ```bash
-   npx expo start
-   ```
+- Kotlin 2.0 + Android Gradle Plugin 8.5
+- Jetpack Compose BOM 2024.09, Material 3
+- minSdk 26, targetSdk/compileSdk 34
 
-In the output, you'll find options to open the app in a
+## Lancer le projet
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+1. Ouvrir le dossier dans Android Studio (Koala+).
+2. Laisser Gradle se synchroniser (le wrapper sera généré au premier build).
+3. `Run` sur un émulateur ou un appareil Android ≥ 8.0.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Architecture
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+app/src/main/java/com/franck/trailcockpit/
+├── MainActivity.kt
+├── data/
+│   ├── Models.kt           # data classes (WeekOverview, YtdData, WeeklyPoint…)
+│   └── SampleData.kt       # données d'exemple
+└── ui/
+    ├── theme/              # palette + thème Material3
+    ├── components/         # ChartCard, LineChart, BarChart, PieChart,
+    │                       # KpiTile, ProgressRow, WeekTable, SmallBarStrip
+    └── screens/
+        └── DashboardScreen.kt
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Étapes suivantes possibles
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Brancher une source de données réelle (export Strava / CSV / Google Sheets).
+- Ajouter la persistance locale (Room).
+- Ajouter un écran de saisie rapide d'une séance.
+- Notifications hebdomadaires de bilan.
