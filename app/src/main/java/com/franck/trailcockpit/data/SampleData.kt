@@ -2,128 +2,135 @@ package com.franck.trailcockpit.data
 
 object SampleData {
 
-    // Week table (lundi → dimanche)
-    val weekDays = listOf(
-        WeekDay("Lun", "Footing récup", "8.2 km", "95 m"),
-        WeekDay("Mar", "Fractionné", "10.5 km", "180 m"),
-        WeekDay("Mer", "Repos", "—", "—"),
-        WeekDay("Jeu", "Côtes", "9.8 km", "320 m"),
-        WeekDay("Ven", "Vélo", "25.5 km", "210 m"),
-        WeekDay("Sam", "Sortie longue", "22.0 km", "688 m"),
-        WeekDay("Dim", "Repos", "—", "—"),
+    val week: List<DaySession> = listOf(
+        DaySession("lundi", "footing", 10.01, 137),
+        DaySession("mardi", "2X3000 @5/10 /200", 11.68, 23),
+        DaySession("mercredi", "A/R c\u00f4tes", 9.37, 1009),
+        DaySession("jeudi", "Runtaf", 9.42, 114),
+        DaySession("vendredi", "Trail vallon\u00e9e", 10.0, 0),
+        DaySession("samedi", "", 0.0, 0),
+        DaySession("dimanche", "SL trail", 20.0, 0)
     )
 
-    val weekTotal = WeekDay("Total", "4 séances", "40.5 km", "1283 m")
-
-    // KPIs semaine
-    val weekRunKm = 40.5f
-    val weekRunDPlus = 1283
-    val weekSuffer = 119
-    val weekBikeKm = 25.5f
-
-    // KPIs YTD
-    val ytdRunKm = 982.5f
-    val chargeAtl = 26f
-    val chargeCtl = 33f
-    val chargeTsb = 7f
-    val ytdBikeKm = 403.4f
-
-    // Objectives
-    val objectives = listOf(
-        ObjectiveProgress("Objectif annuel", 982.5f, 2800f, "km"),
-        ObjectiveProgress("Volume semaine", 40.5f, 55f, "km"),
-        ObjectiveProgress("D+ semaine", 1283f, 1800f, "m"),
+    val overview = WeekOverview(
+        runKm = 40.5,
+        runTargetKm = 80,
+        runSessions = 4,
+        runDPlus = 1283,
+        runDPlusTarget = 2000,
+        runSuffer = 119,
+        bikeKm = 25.5,
+        bikeSessions = 3,
+        bikeDPlus = 176
     )
 
-    // Km 16 semaines
-    val weeklyKm = listOf(
-        WeeklyPoint("S1", 32f), WeeklyPoint("S2", 45f), WeeklyPoint("S3", 28f),
-        WeeklyPoint("S4", 52f), WeeklyPoint("S5", 38f), WeeklyPoint("S6", 61f),
-        WeeklyPoint("S7", 44f), WeeklyPoint("S8", 35f), WeeklyPoint("S9", 55f),
-        WeeklyPoint("S10", 48f), WeeklyPoint("S11", 62f), WeeklyPoint("S12", 41f),
-        WeeklyPoint("S13", 50f), WeeklyPoint("S14", 36f), WeeklyPoint("S15", 58f),
-        WeeklyPoint("S16", 40.5f),
+    val ytd = YtdData(
+        runKm = 982.5,
+        runDPlus = 12073,
+        bikeKm = 403.4,
+        bikeDPlus = 2673,
+        atl = 26,
+        ctl = 33,
+        tsb = 7,
+        yearTarget = 3000
     )
 
-    // D+ 16 semaines
-    val weeklyDPlus = listOf(
-        WeeklyPoint("S1", 820f), WeeklyPoint("S2", 1150f), WeeklyPoint("S3", 680f),
-        WeeklyPoint("S4", 1320f), WeeklyPoint("S5", 950f), WeeklyPoint("S6", 1580f),
-        WeeklyPoint("S7", 1100f), WeeklyPoint("S8", 870f), WeeklyPoint("S9", 1400f),
-        WeeklyPoint("S10", 1200f), WeeklyPoint("S11", 1620f), WeeklyPoint("S12", 1050f),
-        WeeklyPoint("S13", 1280f), WeeklyPoint("S14", 900f), WeeklyPoint("S15", 1480f),
-        WeeklyPoint("S16", 1283f),
+    val weekly: List<WeeklyPoint> = listOf(
+        WeeklyPoint("2025-12-29", 52.7, 483, 261, 24, 28, 4),
+        WeeklyPoint("2026-01-05", 53.1, 555, 281, 25, 29, 4),
+        WeeklyPoint("2026-01-12", 51.7, 268, 285, 27, 30, 3),
+        WeeklyPoint("2026-01-19", 41.6, 357, 210, 23, 30, 7),
+        WeeklyPoint("2026-01-26", 43.8, 337, 215, 24, 30, 6),
+        WeeklyPoint("2026-02-02", 56.2, 429, 349, 28, 31, 3),
+        WeeklyPoint("2026-02-09", 76.2, 1033, 348, 32, 32, 0),
+        WeeklyPoint("2026-02-16", 85.3, 772, 424, 35, 33, -2),
+        WeeklyPoint("2026-02-23", 93.3, 1570, 435, 38, 34, -4),
+        WeeklyPoint("2026-03-02", 87.4, 840, 412, 40, 35, -5),
+        WeeklyPoint("2026-03-09", 87.4, 632, 319, 37, 35, -2),
+        WeeklyPoint("2026-03-16", 89.1, 1598, 185, 36, 36, 0),
+        WeeklyPoint("2026-03-23", 71.4, 1037, 182, 32, 35, 3),
+        WeeklyPoint("2026-03-30", 57.5, 503, 187, 28, 34, 6),
+        WeeklyPoint("2026-04-06", 80.5, 1293, 342, 29, 34, 5),
+        WeeklyPoint("2026-04-13", 40.5, 1283, 119, 26, 33, 7)
     )
 
-    // ATL / CTL / TSB
-    val fitnessData = listOf(
-        FitnessPoint("S1", 20f, 28f, 8f),
-        FitnessPoint("S2", 28f, 29f, 1f),
-        FitnessPoint("S3", 18f, 28f, 10f),
-        FitnessPoint("S4", 32f, 30f, -2f),
-        FitnessPoint("S5", 24f, 29f, 5f),
-        FitnessPoint("S6", 36f, 31f, -5f),
-        FitnessPoint("S7", 28f, 31f, 3f),
-        FitnessPoint("S8", 22f, 30f, 8f),
-        FitnessPoint("S9", 34f, 31f, -3f),
-        FitnessPoint("S10", 30f, 31f, 1f),
-        FitnessPoint("S11", 38f, 32f, -6f),
-        FitnessPoint("S12", 26f, 32f, 6f),
-        FitnessPoint("S13", 32f, 32f, 0f),
-        FitnessPoint("S14", 22f, 31f, 9f),
-        FitnessPoint("S15", 35f, 32f, -3f),
-        FitnessPoint("S16", 26f, 33f, 7f),
+    val intensities: List<IntensityShare> = listOf(
+        IntensityShare("Runtaf", 52.2),
+        IntensityShare("VMA", 17.4),
+        IntensityShare("Seuil", 20.8),
+        IntensityShare("C\u00f4tes", 21.3),
+        IntensityShare("Sortie longue", 38.5),
+        IntensityShare("Footing / EF", 119.4),
+        IntensityShare("Autre", 0.0)
     )
 
-    // Répartition intensités (donut)
-    val intensityZones = listOf(
-        IntensityZone("Z1 Récup", 25f, 0),
-        IntensityZone("Z2 Endurance", 42f, 1),
-        IntensityZone("Z3 Tempo", 18f, 2),
-        IntensityZone("Z4 Seuil", 10f, 3),
-        IntensityZone("Z5 VMA", 5f, 4),
+    val ratio16: List<Double> = listOf(
+        9.27, 10.44, 5.19, 10.29, 7.76, 7.62, 13.56, 9.05,
+        14.23, 9.63, 6.67, 17.93, 14.46, 9.16, 17.98, 31.69
     )
 
-    // Suffer score 16 sem
-    val weeklySuffer = listOf(
-        WeeklyPoint("S1", 85f), WeeklyPoint("S2", 120f), WeeklyPoint("S3", 72f),
-        WeeklyPoint("S4", 135f), WeeklyPoint("S5", 98f), WeeklyPoint("S6", 155f),
-        WeeklyPoint("S7", 110f), WeeklyPoint("S8", 88f), WeeklyPoint("S9", 140f),
-        WeeklyPoint("S10", 125f), WeeklyPoint("S11", 160f), WeeklyPoint("S12", 105f),
-        WeeklyPoint("S13", 130f), WeeklyPoint("S14", 90f), WeeklyPoint("S15", 148f),
-        WeeklyPoint("S16", 119f),
-    )
+    val yearSeries: List<YearSeries> = run {
+        val yearTotals = mapOf(
+            2013 to 1400, 2014 to 1650, 2015 to 1950, 2016 to 2100,
+            2017 to 2250, 2018 to 2600, 2019 to 2400, 2020 to 2300,
+            2021 to 2550, 2022 to 2700, 2023 to 2850, 2024 to 2900,
+            2025 to 3350
+        )
+        val list = mutableListOf<YearSeries>()
+        yearTotals.toSortedMap().forEach { (year, total) ->
+            val pts = mutableListOf<YearCumulativePoint>()
+            var cumulative = 0.0
+            for (d in 1..365) {
+                val daily = total.toDouble() / 365.0 +
+                    (((d * (year % 7 + 1)) % 5) - 2).toDouble()
+                cumulative += daily.coerceAtLeast(0.0)
+                if (d % 3 == 0 || d == 365) {
+                    pts.add(YearCumulativePoint(d, cumulative))
+                }
+            }
+            list.add(YearSeries(year, pts))
+        }
+        val pts2026 = mutableListOf<YearCumulativePoint>()
+        var c = 0.0
+        val target = 982.5
+        for (d in 1..106) {
+            val daily = target / 106.0 + (((d * 3) % 7) - 3).toDouble() * 0.4
+            c += daily.coerceAtLeast(0.0)
+            if (d % 2 == 0 || d == 106) {
+                pts2026.add(YearCumulativePoint(d, c))
+            }
+        }
+        list.add(YearSeries(2026, pts2026))
+        list
+    }
 
-    // Ratio D+/km
-    val weeklyRatio = listOf(
-        WeeklyPoint("S1", 25.6f), WeeklyPoint("S2", 25.5f), WeeklyPoint("S3", 24.3f),
-        WeeklyPoint("S4", 25.4f), WeeklyPoint("S5", 25.0f), WeeklyPoint("S6", 25.9f),
-        WeeklyPoint("S7", 25.0f), WeeklyPoint("S8", 24.9f), WeeklyPoint("S9", 25.5f),
-        WeeklyPoint("S10", 25.0f), WeeklyPoint("S11", 26.1f), WeeklyPoint("S12", 25.6f),
-        WeeklyPoint("S13", 25.6f), WeeklyPoint("S14", 25.0f), WeeklyPoint("S15", 25.5f),
-        WeeklyPoint("S16", 31.7f),
-    )
-
-    // Cumul km par année (14 saisons)
-    val yearlyAccum = listOf(
-        YearlyAccum("2013", 420f), YearlyAccum("2014", 680f),
-        YearlyAccum("2015", 910f), YearlyAccum("2016", 1150f),
-        YearlyAccum("2017", 1380f), YearlyAccum("2018", 1620f),
-        YearlyAccum("2019", 1850f), YearlyAccum("2020", 1540f),
-        YearlyAccum("2021", 2010f), YearlyAccum("2022", 2280f),
-        YearlyAccum("2023", 2450f), YearlyAccum("2024", 2650f),
-        YearlyAccum("2025", 2520f), YearlyAccum("2026", 982.5f),
-    )
-
-    // Cumul km par mois (4 derniers mois de l'année en cours)
-    val monthlyAccum = listOf(
-        MonthlyAccum(1, 180f, "2026"), MonthlyAccum(2, 420f, "2026"),
-        MonthlyAccum(3, 710f, "2026"), MonthlyAccum(4, 982.5f, "2026"),
-        MonthlyAccum(1, 165f, "2025"), MonthlyAccum(2, 385f, "2025"),
-        MonthlyAccum(3, 640f, "2025"), MonthlyAccum(4, 880f, "2025"),
-        MonthlyAccum(1, 190f, "2024"), MonthlyAccum(2, 440f, "2024"),
-        MonthlyAccum(3, 730f, "2024"), MonthlyAccum(4, 1010f, "2024"),
-        MonthlyAccum(1, 155f, "2023"), MonthlyAccum(2, 360f, "2023"),
-        MonthlyAccum(3, 600f, "2023"), MonthlyAccum(4, 840f, "2023"),
+    val monthSeries: List<MonthSeries> = listOf(
+        MonthSeries(
+            "janv. 2026",
+            listOf(
+                1 to 3.0, 4 to 19.0, 7 to 35.0, 10 to 50.0, 14 to 72.0,
+                18 to 95.0, 22 to 120.0, 25 to 150.0, 28 to 180.0, 31 to 210.0
+            ).map { (d, km) -> MonthCumulativePoint(d, km) }
+        ),
+        MonthSeries(
+            "f\u00e9vr. 2026",
+            listOf(
+                1 to 5.0, 4 to 25.0, 7 to 50.0, 10 to 85.0, 14 to 115.0,
+                18 to 140.0, 22 to 175.0, 25 to 205.0, 28 to 230.3
+            ).map { (d, km) -> MonthCumulativePoint(d, km) }
+        ),
+        MonthSeries(
+            "mars 2026",
+            listOf(
+                1 to 6.0, 4 to 30.0, 7 to 56.8, 10 to 95.0, 14 to 145.0,
+                18 to 190.0, 22 to 240.0, 25 to 270.0, 28 to 295.0, 31 to 326.8
+            ).map { (d, km) -> MonthCumulativePoint(d, km) }
+        ),
+        MonthSeries(
+            "avr. 2026",
+            listOf(
+                1 to 4.0, 3 to 14.0, 6 to 32.0, 9 to 60.0, 12 to 92.0, 15 to 130.0
+            ).map { (d, km) -> MonthCumulativePoint(d, km) }
+        )
     )
 }
