@@ -2,43 +2,38 @@ package com.franck.trailcockpit.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Dark background palette
-val DarkBg = Color(0xFF0B0F1A)
-val CardBg = Color(0xFF141929)
-val CardBorder = Color(0xFF1E2540)
-val SurfaceDark = Color(0xFF1A1F35)
+object TrailColors {
+    val Background = Color(0xFFF6F6F6)
+    val CardBg = Color(0xFFFFFFFF)
+    val Border = Color(0xFFD0D0D0)
+    val HeaderBg = Color(0xFFEDEDED)
+    val SubtleText = Color(0xFF5F6368)
+    val Text = Color(0xFF1F1F1F)
+    val GreenOk = Color(0xFF2E8B57)
+    val PaleGreen = Color(0xFFC7E2BE)
 
-// Text
-val TextPrimary = Color(0xFFE8ECF4)
-val TextSecondary = Color(0xFF8B95B0)
-val TextMuted = Color(0xFF5A6480)
+    val RunRed = Color(0xFFE45757)
+    val BikeBlack = Color(0xFF2B2B2B)
+    val ChargeOrange = Color(0xFFF0A020)
 
-// Accent colors
-val AccentGreen = Color(0xFF2DD4A0)
-val AccentBlue = Color(0xFF3B82F6)
-val AccentOrange = Color(0xFFFF9F43)
-val AccentRed = Color(0xFFEF4444)
-val AccentPurple = Color(0xFF8B5CF6)
-val AccentCyan = Color(0xFF06B6D4)
-val AccentYellow = Color(0xFFFBBF24)
-val AccentPink = Color(0xFFEC4899)
+    val SeriesBlue = Color(0xFF2A7FC7)
+    val SeriesRed = Color(0xFFE45757)
+    val SeriesOrange = Color(0xFFF0A020)
+    val SeriesYellow = Color(0xFFF4C430)
+    val SeriesGreen = Color(0xFF4CAF50)
 
-// Zone colors for intensity donut
-val ZoneColors = listOf(
-    Color(0xFF2DD4A0), // Z1 Récup - green
-    Color(0xFF3B82F6), // Z2 Endurance - blue
-    Color(0xFFFF9F43), // Z3 Tempo - orange
-    Color(0xFFEF4444), // Z4 Seuil - red
-    Color(0xFF8B5CF6), // Z5 VMA - purple
-)
+    val PieRuntaf = Color(0xFFE45757)
+    val PieVma = Color(0xFF2A7FC7)
+    val PieSeuil = Color(0xFFF0A020)
+    val PieCotes = Color(0xFF8E63C7)
+    val PieSortieLongue = Color(0xFF4CAF50)
+    val PieFooting = Color(0xFFF4C430)
+    val PieAutre = Color(0xFF9AA0A6)
 
-// Chart line colors
-val ChartLine1 = Color(0xFF3B82F6)
-val ChartLine2 = Color(0xFF2DD4A0)
-val ChartLine3 = Color(0xFFFF9F43)
-val ChartLine4 = Color(0xFFEF4444)
-
-// Status badge
-val StatusOk = Color(0xFF2DD4A0)
-val StatusWarning = Color(0xFFFF9F43)
-val StatusAlert = Color(0xFFEF4444)
+    val ProgressRunBg = Color(0xFFE8F5E9)
+    val ProgressRunFg = Color(0xFF7CB342)
+    val ProgressVolumeBg = Color(0xFFFFEBEE)
+    val ProgressVolumeFg = Color(0xFFE57373)
+    val ProgressDPlusBg = Color(0xFFE3F2FD)
+    val ProgressDPlusFg = Color(0xFF64B5F6)
+}

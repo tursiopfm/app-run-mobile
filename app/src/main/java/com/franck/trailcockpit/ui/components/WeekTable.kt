@@ -2,131 +2,109 @@ package com.franck.trailcockpit.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.franck.trailcockpit.data.WeekDay
-import com.franck.trailcockpit.ui.theme.*
+import com.franck.trailcockpit.data.DaySession
+import com.franck.trailcockpit.ui.theme.TrailColors
 
 @Composable
-fun WeekTable(
-    days: List<WeekDay>,
-    total: WeekDay,
-    modifier: Modifier = Modifier
-) {
+fun WeekTable(sessions: List<DaySession>, modifier: Modifier = Modifier) {
+    val totalKm = sessions.sumOf { it.volumeKm }
+    val totalDPlus = sessions.sumOf { it.denivelePos.toLong() }.toInt()
+
     Column(
         modifier = modifier
-            .fillMaxWidth()
-            .background(CardBg, RoundedCornerShape(12.dp))
-            .border(1.dp, CardBorder, RoundedCornerShape(12.dp))
-            .padding(12.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .border(1.dp, TrailColors.Border, RoundedCornerShape(4.dp))
+            .horizontalScroll(rememberScrollState())
+    ) {
+        Row {
+            HeaderCell("S\u00e9ance", width = 90.dp, bg = TrailColors.HeaderBg)
+            for (s in sessions) {
+                HeaderCell(s.day, width = 92.dp, bg = TrailColors.HeaderBg, bold = true)
+            }
+            HeaderCell("Total", width = 70.dp, bg = TrailColors.HeaderBg, bold = true)
+        }
+        Row {
+            HeaderCell("Label", width = 90.dp, bg = Color.White)
+            for (s in sessions) {
+                BodyCell(s.label.ifEmpty { "\u2014" }, width = 92.dp)
+            }
+            BodyCell("", width = 70.dp)
+        }
+        Row {
+            HeaderCell("Volume (km)", width = 90.dp, bg = Color.White)
+            for (s in sessions) {
+                BodyCell(format1(s.volumeKm), width = 92.dp)
+            }
+            BodyCell(format1(totalKm), width = 70.dp, bold = true)
+        }
+        Row {
+            HeaderCell("D\u00e9nivel\u00e9 (m)", width = 90.dp, bg = Color.White)
+            for (s in sessions) {
+                BodyCell(s.denivelePos.toString(), width = 92.dp)
+            }
+            BodyCell(totalDPlus.toString(), width = 70.dp, bold = true)
+        }
+    }
+}
+
+@Composable
+private fun HeaderCell(text: String, width: Dp, bg: Color, bold: Boolean = false) {
+    Box(
+        Modifier
+            .width(width)
+            .height(28.dp)
+            .background(bg)
+            .border(0.5.dp, TrailColors.Border)
+            .padding(horizontal = 6.dp),
+        contentAlignment = Alignment.CenterStart
     ) {
         Text(
-            text = "SEMAINE EN COURS",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        // Header row
-        TableRow(
-            day = "Jour",
-            session = "Séance",
-            volume = "Volume",
-            dPlus = "D+",
-            isHeader = true
-        )
-
-        HorizontalDivider(color = CardBorder, thickness = 1.dp)
-
-        // Data rows
-        days.forEach { weekDay ->
-            TableRow(
-                day = weekDay.day,
-                session = weekDay.session,
-                volume = weekDay.volume,
-                dPlus = weekDay.dPlus,
-                isRest = weekDay.session == "Repos"
-            )
-        }
-
-        HorizontalDivider(color = AccentBlue.copy(alpha = 0.3f), thickness = 1.dp)
-
-        // Total row
-        TableRow(
-            day = total.day,
-            session = total.session,
-            volume = total.volume,
-            dPlus = total.dPlus,
-            isTotal = true
+            text = text,
+            fontSize = 11.sp,
+            fontWeight = if (bold) FontWeight.SemiBold else FontWeight.Normal,
+            color = TrailColors.Text
         )
     }
 }
 
 @Composable
-private fun TableRow(
-    day: String,
-    session: String,
-    volume: String,
-    dPlus: String,
-    isHeader: Boolean = false,
-    isTotal: Boolean = false,
-    isRest: Boolean = false
-) {
-    val textColor = when {
-        isHeader -> TextMuted
-        isTotal -> AccentGreen
-        isRest -> TextMuted
-        else -> TextPrimary
-    }
-    val weight = if (isHeader || isTotal) FontWeight.Bold else FontWeight.Normal
-    val fontSize = if (isHeader) 11.sp else 12.sp
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(
-                if (isTotal) Modifier.background(AccentGreen.copy(alpha = 0.05f))
-                else Modifier
-            )
-            .padding(vertical = 6.dp, horizontal = 4.dp)
+private fun BodyCell(text: String, width: Dp, bold: Boolean = false) {
+    Box(
+        Modifier
+            .width(width)
+            .height(26.dp)
+            .background(Color.White)
+            .border(0.5.dp, TrailColors.Border)
+            .padding(horizontal = 6.dp),
+        contentAlignment = Alignment.CenterStart
     ) {
         Text(
-            text = day,
-            modifier = Modifier.weight(0.8f),
-            color = textColor,
-            fontWeight = weight,
-            fontSize = fontSize
-        )
-        Text(
-            text = session,
-            modifier = Modifier.weight(1.5f),
-            color = textColor,
-            fontWeight = weight,
-            fontSize = fontSize
-        )
-        Text(
-            text = volume,
-            modifier = Modifier.weight(1f),
-            color = textColor,
-            fontWeight = weight,
-            fontSize = fontSize,
-            textAlign = TextAlign.End
-        )
-        Text(
-            text = dPlus,
-            modifier = Modifier.weight(0.8f),
-            color = textColor,
-            fontWeight = weight,
-            fontSize = fontSize,
-            textAlign = TextAlign.End
+            text = text,
+            fontSize = 11.sp,
+            fontWeight = if (bold) FontWeight.SemiBold else FontWeight.Normal,
+            color = TrailColors.Text
         )
     }
 }
+
+private fun format1(v: Double): String =
+    if (v % 1.0 == 0.0) "%.0f".format(v) else "%.2f".format(v)
