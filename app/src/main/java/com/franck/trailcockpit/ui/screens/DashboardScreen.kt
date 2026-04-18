@@ -407,7 +407,7 @@ private fun intensitiesSlices(): List<PieSlice> {
         TrailColors.PieCotes, TrailColors.PieSortieLongue, TrailColors.PieFooting,
         TrailColors.PieAutre
     )
-    return data.mapIndexed { idx, it -> PieSlice(it.label, it.value, palette[idx % palette.size]) }
+    return data.mapIndexed { idx, share -> PieSlice(share.label, share.value, palette[idx % palette.size]) }
 }
 
 private fun resampleTo(points: List<Pair<Int, Double>>, n: Int): List<Double> {
