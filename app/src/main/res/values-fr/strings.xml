@@ -114,4 +114,31 @@
     <string name="week_table_header_volume">Volume (km)</string>
     <string name="week_table_header_elevation">Dénivelé (m)</string>
     <string name="week_table_header_total">Total</string>
+
+    <!-- draft cards -->
+    <string name="draft_data_sources_title">Sources de données</string>
+    <string name="draft_data_sources_subtitle">Le draft s\'appuie sur le classeur Excel existant et conserve temporairement l\'API push.</string>
+    <string name="draft_api_push_active">API push active</string>
+    <string name="draft_api_push_inactive">API push inactive</string>
+    <string name="draft_mode_push">Mode push</string>
+    <string name="draft_mode_strava">Mode Strava OAuth</string>
+    <string name="draft_workbook_mapping_title">Mapping du fichier Excel</string>
+    <string name="draft_workbook_mapping_subtitle">Les onglets les plus utiles ont été traduits en blocs d\'application mobile.</string>
+    <string name="draft_prep_cycles_title">Cycles de préparation</string>
+    <string name="draft_prep_cycles_subtitle">Le classeur contient déjà le découpage de saison. On peut donc le reprendre tel quel dans l\'app.</string>
+    <string name="draft_delivery_title">Plan de livraison</string>
+    <string name="draft_delivery_subtitle">Le draft pose l\'UX mobile et le mapping métier. L\'étape suivante est l\'auth Strava réelle.</string>
+    <string name="draft_recent_activities_title">Dernières activités détectées</string>
+    <string name="draft_recent_activities_subtitle">Aperçu aligné sur l\'onglet Activities du fichier source.</string>
+    <string name="draft_strava_title">Connexion Strava</string>
+    <string name="draft_strava_athlete">Athlète</string>
+    <string name="draft_strava_auth">Auth</string>
+    <string name="draft_strava_status">Statut</string>
+    <string name="draft_strava_connected">Connecté</string>
+    <string name="draft_strava_pending">À connecter</string>
+    <string name="draft_strava_button_connect">Connecter Strava</string>
+    <string name="draft_strava_button_reconnect">Reconnecter Strava</string>
+    <string name="draft_suffer_score">Suffer %d</string>
+    <string name="draft_file_ref">Fichier de référence : %s</string>
+    <string name="draft_transition_mode">Mode de transition : %s</string>
 </resources>

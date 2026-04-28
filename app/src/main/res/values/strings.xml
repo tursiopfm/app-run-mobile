@@ -114,4 +114,31 @@
     <string name="week_table_header_volume">Volume (km)</string>
     <string name="week_table_header_elevation">Elevation (m)</string>
     <string name="week_table_header_total">Total</string>
+
+    <!-- draft cards -->
+    <string name="draft_data_sources_title">Data sources</string>
+    <string name="draft_data_sources_subtitle">The draft relies on the existing Excel workbook and temporarily keeps the push API.</string>
+    <string name="draft_api_push_active">API push active</string>
+    <string name="draft_api_push_inactive">API push inactive</string>
+    <string name="draft_mode_push">Push mode</string>
+    <string name="draft_mode_strava">Strava OAuth mode</string>
+    <string name="draft_workbook_mapping_title">Excel file mapping</string>
+    <string name="draft_workbook_mapping_subtitle">The most useful tabs have been translated into mobile app blocks.</string>
+    <string name="draft_prep_cycles_title">Preparation cycles</string>
+    <string name="draft_prep_cycles_subtitle">The workbook already contains the season breakdown. We can reuse it as-is in the app.</string>
+    <string name="draft_delivery_title">Delivery plan</string>
+    <string name="draft_delivery_subtitle">The draft sets up mobile UX and business mapping. Next step is real Strava auth.</string>
+    <string name="draft_recent_activities_title">Last detected activities</string>
+    <string name="draft_recent_activities_subtitle">Preview aligned with the Activities tab of the source file.</string>
+    <string name="draft_strava_title">Strava connection</string>
+    <string name="draft_strava_athlete">Athlete</string>
+    <string name="draft_strava_auth">Auth</string>
+    <string name="draft_strava_status">Status</string>
+    <string name="draft_strava_connected">Connected</string>
+    <string name="draft_strava_pending">To connect</string>
+    <string name="draft_strava_button_connect">Connect Strava</string>
+    <string name="draft_strava_button_reconnect">Reconnect Strava</string>
+    <string name="draft_suffer_score">Suffer %d</string>
+    <string name="draft_file_ref">Reference file: %s</string>
+    <string name="draft_transition_mode">Transition mode: %s</string>
 </resources>
