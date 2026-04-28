@@ -170,4 +170,55 @@
     <!-- stats metric -->
     <string name="stats_metric_km">Km</string>
     <string name="stats_metric_dplus">D+</string>
+
+    <!-- cockpit tab -->
+    <string name="cockpit_all_activities_title">Km &amp; Elevation — All activities</string>
+    <string name="cockpit_strava_connected">Account connected</string>
+    <string name="cockpit_strava_pending">Connection pending</string>
+    <string name="cockpit_sync_ready">User sync ready for next step.</string>
+    <string name="cockpit_strava_connect">Connect Strava</string>
+    <string name="cockpit_strava_reconnect">Reconnect Strava</string>
+    <string name="cockpit_strava_connected_label">Connected</string>
+    <string name="cockpit_strava_not_connected">Not connected</string>
+    <string name="cockpit_strava_oauth_status">OAuth status</string>
+    <string name="cockpit_strava_athlete">Athlete</string>
+    <string name="cockpit_goals_title">Goals</string>
+    <string name="cockpit_goals_bike_title">Cycling goals</string>
+    <string name="cockpit_goals_swim_title">Swimming goals</string>
+    <string name="cockpit_goals_set">Set goals</string>
+    <string name="cockpit_goals_annual_km">Annual cumulative target — km</string>
+    <string name="cockpit_goals_all_km">Total km all activities (year)</string>
+    <string name="cockpit_add_block">Add a block</string>
+    <string name="cockpit_configure_block">Configure block</string>
+    <string name="cockpit_block_hidden">Block will be hidden in Cockpit.</string>
+    <string name="cockpit_fav_metrics">Favorite metrics</string>
+    <string name="cockpit_shown_first">Shown first in Cockpit</string>
+    <string name="cockpit_uncheck_hides_block">Uncheck all to hide this block in Cockpit</string>
+    <string name="cockpit_period_label">History period</string>
+    <string name="cockpit_period_10w">10 weeks</string>
+    <string name="cockpit_period_12m">12 months</string>
+    <string name="cockpit_period_16w">16-week summary</string>
+    <string name="cockpit_chart_period">Chart period</string>
+    <string name="cockpit_default_activity">Default activity</string>
+    <string name="cockpit_choose_type">Choose type</string>
+    <string name="cockpit_choose_pace">Choose pace</string>
+    <string name="cockpit_choose_duration">Choose duration</string>
+    <string name="cockpit_choose_sport">Choose a sport.</string>
+    <string name="cockpit_kpis_volume">KPIs &amp; Volume</string>
+    <string name="cockpit_historique">History</string>
+    <string name="cockpit_activites_label">Activities —</string>
+    <string name="cockpit_toutes_activites_title">Km &amp; Elevation — All activities</string>
+    <string name="cockpit_cumul_months_title">Monthly km total</string>
+
+    <!-- stats tab -->
+    <string name="stats_km_dplus_title">Cumulative Km &amp; Elevation</string>
+    <string name="stats_km_monthly_title">Monthly cumulative km</string>
+    <string name="stats_weekly_label">Weekly</string>
+    <string name="stats_history_label">History</string>
+    <string name="stats_period_label">Period</string>
+    <string name="stats_current_week">Current week</string>
+    <string name="stats_n1">N-1</string>
+    <string name="stats_n2">N-2</string>
+    <string name="stats_n3">N-3</string>
+    <string name="stats_n4">N-4</string>
 </resources>

@@ -1380,13 +1380,13 @@ private fun CockpitTab(
                 onDismiss = { showGoalDialogSport = null }
             )
             SportMode.Bike -> SimpleGoalDialog(
-                title = "Objectifs Vélo", sport = SportMode.Bike,
+                title = stringResource(R.string.cockpit_goals_bike_title), sport = SportMode.Bike,
                 weekTarget = bikeWeekTarget, yearTarget = bikeYearTarget,
                 onConfirm = { w, y -> bikeWeekTarget = w; bikeYearTarget = y; showGoalDialogSport = null },
                 onDismiss = { showGoalDialogSport = null }
             )
             SportMode.Swim -> SimpleGoalDialog(
-                title = "Objectifs Natation", sport = SportMode.Swim,
+                title = stringResource(R.string.cockpit_goals_swim_title), sport = SportMode.Swim,
                 weekTarget = swimWeekTarget, yearTarget = swimYearTarget,
                 onConfirm = { w, y -> swimWeekTarget = w; swimYearTarget = y; showGoalDialogSport = null },
                 onDismiss = { showGoalDialogSport = null }
@@ -1401,8 +1401,8 @@ private fun CockpitTab(
             containerColor = TrailColors.CardBg,
             titleContentColor = TrailColors.Text,
             textContentColor = TrailColors.Text,
-            title = { Text("Objectif cumulé (année) — km", fontWeight = FontWeight.Bold, fontSize = 16.sp) },
-            text = { GoalField("Total km toutes activités (année)", yearStr) { yearStr = it } },
+            title = { Text(stringResource(R.string.cockpit_goals_annual_km), fontWeight = FontWeight.Bold, fontSize = 16.sp) },
+            text = { GoalField(stringResource(R.string.cockpit_goals_all_km), yearStr) { yearStr = it } },
             confirmButton = {
                 TextButton(onClick = { allYearTarget = yearStr.toIntOrNull() ?: allYearTarget; showGoalDialogAll = false }) {
                     Text("Valider", color = TrailColors.ChargeOrange, fontWeight = FontWeight.SemiBold)
@@ -1556,7 +1556,7 @@ private fun CockpitTab(
                             SectionCard {
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        Text("Activités —", color = TrailColors.SubtleText, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                                        Text(stringResource(R.string.cockpit_activites_label), color = TrailColors.SubtleText, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                                         Text(sport?.let { stringResource(it.labelRes) } ?: stringResource(R.string.common_label_all), color = sportColor, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                                         Text(sport?.icon ?: "⚡", fontSize = 16.sp)
                                     }
@@ -1677,9 +1677,11 @@ private fun CockpitTab(
                                     Triple(monthNames.getOrElse(i) { "${i+1}" }, runKm + bikeMonthlyKm.getOrElse(i) { 0.0 } + swimMonthlyKm.getOrElse(i) { 0.0 }, 0.0)
                                 }
                             }
+                            val period10w = stringResource(R.string.cockpit_period_10w)
+                            val period12m = stringResource(R.string.cockpit_period_12m)
                             val periodLabel = if (sport == SportMode.Run) when (chartPeriod) {
-                                ChartPeriod.Week -> "10 semaines"; ChartPeriod.Month -> "12 mois"; ChartPeriod.MonthYear -> "mois $currentYear"
-                            } else "12 mois"
+                                ChartPeriod.Week -> period10w; ChartPeriod.Month -> period12m; ChartPeriod.MonthYear -> "mois $currentYear"
+                            } else period12m
 
                             ChartCard(title = "", minHeight = 220.dp, titleSlot = {
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -1693,7 +1695,7 @@ private fun CockpitTab(
                                     }
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                         if (sport == SportMode.Run) {
-                                            Icon(Icons.Default.Settings, "Période", tint = TrailColors.SubtleText,
+                                            Icon(Icons.Default.Settings, stringResource(R.string.cockpit_chart_period), tint = TrailColors.SubtleText,
                                                 modifier = Modifier.size(16.dp).clickable { showChartPeriodPicker = true })
                                         }
                                         BlockMoreIcon(onClick = { onConfigureBlockType(groupType) })
@@ -1717,7 +1719,7 @@ private fun CockpitTab(
                             val totalKmYtd = ytd.runKm + ytd.bikeKm + ytd.swimKm
                             val totalDPlusYtd = ytd.runDPlus + ytd.bikeDPlus
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text("Km & D+ cumulés — Toutes activités", color = TrailColors.SubtleText, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                                Text(stringResource(R.string.cockpit_toutes_activites_title), color = TrailColors.SubtleText, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                                 BlockMoreIcon(onClick = { onConfigureBlockType(groupType) })
                             }
                             Spacer(Modifier.height(10.dp))
@@ -1738,7 +1740,7 @@ private fun CockpitTab(
                             val monthColors = listOf(TrailColors.SeriesGreen, TrailColors.SeriesOrange, TrailColors.SeriesRed, TrailColors.SeriesBlue)
                             ChartCard(title = "", minHeight = 280.dp, titleSlot = {
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                    Text("Cumul km par mois — ${sport?.let { stringResource(it.labelRes) } ?: stringResource(R.string.block_all_activities)}", color = TrailColors.ChargeOrange, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                    Text("${stringResource(R.string.cockpit_cumul_months_title)} — ${sport?.let { stringResource(it.labelRes) } ?: stringResource(R.string.block_all_activities)}", color = TrailColors.ChargeOrange, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                                     BlockMoreIcon(onClick = { onConfigureBlockType(groupType) })
                                 }
                             }) {
@@ -1845,7 +1847,7 @@ private fun CockpitTab(
                             if (showHistoryPeriodDialog) {
                                 AlertDialog(
                                     onDismissRequest = { showHistoryPeriodDialog = false },
-                                    title = { Text("Période de l'historique", color = TrailColors.Text) },
+                                    title = { Text(stringResource(R.string.cockpit_period_label), color = TrailColors.Text) },
                                     text = {
                                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                             listOf("Semaine", "Mois", "Année").forEach { period ->
@@ -1873,12 +1875,12 @@ private fun CockpitTab(
                             SectionCard {
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                        Text("Historique", color = TrailColors.SubtleText, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                                        Text(stringResource(R.string.cockpit_historique), color = TrailColors.SubtleText, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                                         Text(sport?.let { stringResource(it.labelRes) } ?: stringResource(R.string.block_all_activities), color = TrailColors.ChargeOrange, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                                         if (sport != null) Text(sport.icon, fontSize = 15.sp)
                                     }
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        Icon(Icons.Filled.Settings, "Période", tint = TrailColors.SubtleText,
+                                        Icon(Icons.Filled.Settings, stringResource(R.string.cockpit_period_label), tint = TrailColors.SubtleText,
                                             modifier = Modifier.size(18.dp).clickable { showHistoryPeriodDialog = true })
                                         BlockMoreIcon(onClick = { onConfigureBlockType(groupType) })
                                     }
@@ -1933,9 +1935,9 @@ private fun CockpitTab(
                             Spacer(Modifier.height(8.dp))
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(if (connected) "Compte connecté" else "Connexion en attente", color = TrailColors.Text, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                    Text(if (connected) stringResource(R.string.cockpit_strava_connected) else stringResource(R.string.cockpit_strava_pending), color = TrailColors.Text, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                     Spacer(Modifier.height(3.dp))
-                                    Text(authEvent ?: if (connected) "La sync utilisateur est prête pour la suite." else "On garde ce draft, puis on branche l'OAuth Strava réel.",
+                                    Text(authEvent ?: if (connected) stringResource(R.string.cockpit_sync_ready) else "On garde ce draft, puis on branche l'OAuth Strava réel.",
                                         color = TrailColors.SubtleText, fontSize = 11.sp)
                                 }
                                 Spacer(Modifier.width(8.dp))
@@ -1978,7 +1980,7 @@ private fun CockpitTab(
                         modifier = Modifier.size(18.dp)
                     )
                     Text(
-                        "Ajouter un bloc",
+                        stringResource(R.string.cockpit_add_block),
                         color = TrailColors.SubtleText,
                         fontSize = 14.sp
                     )
@@ -2047,7 +2049,7 @@ private fun StatsTab(
         }
         item {
             SectionCard {
-                SectionTitle("Récap 16 semaines")
+                SectionTitle(stringResource(R.string.cockpit_period_16w))
                 Spacer(Modifier.height(8.dp))
                 weekly.asReversed().forEach { point ->
                     WeekRecapRow(point)
@@ -3842,7 +3844,7 @@ private fun ActivityTypeDropdown(
             Spacer(Modifier.width(4.dp))
             Icon(
                 imageVector = Icons.Default.ArrowDropDown,
-                contentDescription = "Choisir le type",
+                contentDescription = stringResource(R.string.cockpit_choose_type),
                 tint = TrailColors.SubtleText,
                 modifier = Modifier.size(18.dp)
             )
@@ -3992,7 +3994,7 @@ private fun HmsWheelDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (withHours) "Choisir la durée" else "Choisir l'allure") },
+        title = { Text(if (withHours) stringResource(R.string.cockpit_choose_duration) else stringResource(R.string.cockpit_choose_pace)) },
         text = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -4273,6 +4275,7 @@ private fun ActivityEditScreen(
     var errorMessage by remember(activity.id) { mutableStateOf<String?>(null) }
     var isSaving by remember(activity.id) { mutableStateOf(false) }
     val supportsIntensity = typeSupportsIntensity(type)
+    val chooseSportMsg = stringResource(R.string.cockpit_choose_sport)
 
     Column(
         modifier = Modifier
@@ -4426,7 +4429,7 @@ private fun ActivityEditScreen(
                                 parsedDistance == null || parsedDistance < 0 -> errorMessage = "Distance invalide."
                                 parsedDuration == null || parsedDuration < 0 -> errorMessage = "Dur\u00E9e invalide. Utilise le format min:sec."
                                 parsedDPlus == null || parsedDPlus < 0 -> errorMessage = "D\u00E9nivel\u00E9 invalide."
-                                type.isBlank() -> errorMessage = "Choisis un sport."
+                                type.isBlank() -> errorMessage = chooseSportMsg
                                 else -> {
                                     errorMessage = null
                                     isSaving = true
@@ -4476,25 +4479,25 @@ private fun SettingsTab(
                 Spacer(Modifier.height(10.dp))
                 SettingsRow(
                     title = "Connexion Strava",
-                    value = if (connected) "Connecté" else "Non connecté",
+                    value = if (connected) stringResource(R.string.cockpit_strava_connected_label) else stringResource(R.string.cockpit_strava_not_connected),
                     accent = if (connected) TrailColors.GreenOk else TrailColors.ChargeOrange
                 )
                 Spacer(Modifier.height(8.dp))
                 SettingsRow(
-                    title = "Athlète",
+                    title = stringResource(R.string.cockpit_strava_athlete),
                     value = athleteName,
                     accent = TrailColors.SeriesBlue
                 )
                 Spacer(Modifier.height(8.dp))
                 SettingsRow(
-                    title = "Statut OAuth",
+                    title = stringResource(R.string.cockpit_strava_oauth_status),
                     value = authEvent ?: "Prêt pour le branchement final",
                     accent = TrailColors.SeriesYellow
                 )
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ActionChip(
-                        label = if (connected) "Reconnecter Strava" else "Connecter Strava",
+                        label = if (connected) stringResource(R.string.cockpit_strava_reconnect) else stringResource(R.string.cockpit_strava_connect),
                         active = true,
                         onClick = onConnectStrava
                     )
@@ -4558,7 +4561,7 @@ private fun SettingsTab(
                 Spacer(Modifier.height(8.dp))
                 SettingsRow(
                     title = "Granularité stats",
-                    value = "Hebdomadaire",
+                    value = stringResource(R.string.stats_weekly_label),
                     accent = TrailColors.GreenOk
                 )
             }
@@ -4568,7 +4571,7 @@ private fun SettingsTab(
                 SectionTitle("À venir")
                 Spacer(Modifier.height(10.dp))
                 BulletLine("Notifications de synchro Strava")
-                BulletLine("Choix des métriques favorites")
+                BulletLine(stringResource(R.string.cockpit_fav_metrics))
                 BulletLine("Unités, zones, fréquence cardiaque et seuils")
                 BulletLine("Gestion du compte et export de données")
             }
@@ -5144,7 +5147,7 @@ private fun GoalSettingsDialog(
         containerColor = TrailColors.CardBg,
         titleContentColor = TrailColors.Text,
         textContentColor = TrailColors.Text,
-        title = { Text("Régler les objectifs", fontWeight = FontWeight.Bold, fontSize = 16.sp) },
+        title = { Text(stringResource(R.string.cockpit_goals_set), fontWeight = FontWeight.Bold, fontSize = 16.sp) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 GoalField("Distance run (semaine) — km", runWeekStr) { runWeekStr = it }
@@ -5248,7 +5251,7 @@ private fun ChartPeriodDialog(
         containerColor = TrailColors.CardBg,
         titleContentColor = TrailColors.Text,
         textContentColor = TrailColors.Text,
-        title = { Text("Période du graphique", fontWeight = FontWeight.Bold, fontSize = 16.sp) },
+        title = { Text(stringResource(R.string.cockpit_chart_period), fontWeight = FontWeight.Bold, fontSize = 16.sp) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 ChartPeriod.entries.forEach { period ->
@@ -5286,7 +5289,7 @@ private fun ChartPeriodDialog(
 private fun BlockMoreIcon(onClick: () -> Unit) {
     Icon(
         imageVector = Icons.Default.MoreVert,
-        contentDescription = "Configurer le bloc",
+        contentDescription = stringResource(R.string.cockpit_configure_block),
         tint = TrailColors.SubtleText,
         modifier = Modifier.size(20.dp).clickable { onClick() }
     )
@@ -5322,7 +5325,7 @@ private fun AddBlockDialog(
         onDismissRequest = onDismiss,
         containerColor = TrailColors.CardBg,
         titleContentColor = TrailColors.Text,
-        title = { Text("Ajouter un bloc", fontWeight = FontWeight.Bold, fontSize = 16.sp) },
+        title = { Text(stringResource(R.string.cockpit_add_block), fontWeight = FontWeight.Bold, fontSize = 16.sp) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 hiddenBlockTypes.forEach { blockType ->
@@ -5450,7 +5453,7 @@ private fun BlockConfigScreen(
 
             item("hint_hide_block") {
                 Text(
-                    text = "Tout décocher masque ce bloc dans le Cockpit",
+                    text = stringResource(R.string.cockpit_uncheck_hides_block),
                     color = TrailColors.SubtleText,
                     fontSize = 11.sp,
                     modifier = Modifier.padding(top = 6.dp, start = 4.dp)
@@ -5460,14 +5463,14 @@ private fun BlockConfigScreen(
             item("hdr_default") {
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    "Activité par défaut",
+                    stringResource(R.string.cockpit_default_activity),
                     color = TrailColors.SubtleText,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 Text(
-                    "Affichée en premier dans le Cockpit",
+                    stringResource(R.string.cockpit_shown_first),
                     color = TrailColors.SubtleText,
                     fontSize = 11.sp,
                     modifier = Modifier.padding(bottom = 6.dp)
@@ -5476,7 +5479,7 @@ private fun BlockConfigScreen(
             if (visibleForType.isEmpty()) {
                 item("def_empty") {
                     Text(
-                        "Le bloc sera masqué dans le Cockpit.",
+                        stringResource(R.string.cockpit_block_hidden),
                         color = TrailColors.SubtleText,
                         fontSize = 13.sp
                     )

@@ -170,4 +170,55 @@
     <!-- stats metric -->
     <string name="stats_metric_km">Km</string>
     <string name="stats_metric_dplus">D+</string>
+
+    <!-- cockpit tab -->
+    <string name="cockpit_all_activities_title">Km &amp; D+ cumulés — Toutes activités</string>
+    <string name="cockpit_strava_connected">Compte connecté</string>
+    <string name="cockpit_strava_pending">Connexion en attente</string>
+    <string name="cockpit_sync_ready">La sync utilisateur est prête pour la suite.</string>
+    <string name="cockpit_strava_connect">Connecter Strava</string>
+    <string name="cockpit_strava_reconnect">Reconnecter Strava</string>
+    <string name="cockpit_strava_connected_label">Connecté</string>
+    <string name="cockpit_strava_not_connected">Non connecté</string>
+    <string name="cockpit_strava_oauth_status">Statut OAuth</string>
+    <string name="cockpit_strava_athlete">Athlète</string>
+    <string name="cockpit_goals_title">Objectifs</string>
+    <string name="cockpit_goals_bike_title">Objectifs Vélo</string>
+    <string name="cockpit_goals_swim_title">Objectifs Natation</string>
+    <string name="cockpit_goals_set">Régler les objectifs</string>
+    <string name="cockpit_goals_annual_km">Objectif cumulé (année) — km</string>
+    <string name="cockpit_goals_all_km">Total km toutes activités (année)</string>
+    <string name="cockpit_add_block">Ajouter un bloc</string>
+    <string name="cockpit_configure_block">Configurer le bloc</string>
+    <string name="cockpit_block_hidden">Le bloc sera masqué dans le Cockpit.</string>
+    <string name="cockpit_fav_metrics">Choix des métriques favorites</string>
+    <string name="cockpit_shown_first">Affichée en premier dans le Cockpit</string>
+    <string name="cockpit_uncheck_hides_block">Tout décocher masque ce bloc dans le Cockpit</string>
+    <string name="cockpit_period_label">Période de l\'historique</string>
+    <string name="cockpit_period_10w">10 semaines</string>
+    <string name="cockpit_period_12m">12 mois</string>
+    <string name="cockpit_period_16w">Récap 16 semaines</string>
+    <string name="cockpit_chart_period">Période du graphique</string>
+    <string name="cockpit_default_activity">Activité par défaut</string>
+    <string name="cockpit_choose_type">Choisir le type</string>
+    <string name="cockpit_choose_pace">Choisir l\'allure</string>
+    <string name="cockpit_choose_duration">Choisir la durée</string>
+    <string name="cockpit_choose_sport">Choisis un sport.</string>
+    <string name="cockpit_kpis_volume">KPIs &amp; Volume</string>
+    <string name="cockpit_historique">Historique</string>
+    <string name="cockpit_activites_label">Activités —</string>
+    <string name="cockpit_toutes_activites_title">Km &amp; D+ cumulés — Toutes activités</string>
+    <string name="cockpit_cumul_months_title">Cumul km par mois</string>
+
+    <!-- stats tab -->
+    <string name="stats_km_dplus_title">Km &amp; D+ cumulés</string>
+    <string name="stats_km_monthly_title">Cumul km par mois</string>
+    <string name="stats_weekly_label">Hebdomadaire</string>
+    <string name="stats_history_label">Historique</string>
+    <string name="stats_period_label">Période</string>
+    <string name="stats_current_week">S en cours</string>
+    <string name="stats_n1">N-1</string>
+    <string name="stats_n2">N-2</string>
+    <string name="stats_n3">N-3</string>
+    <string name="stats_n4">N-4</string>
 </resources>
