@@ -21,6 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.franck.trailcockpit.R
 import com.franck.trailcockpit.data.DaySession
 import com.franck.trailcockpit.ui.theme.TrailColors
 
@@ -36,28 +38,28 @@ fun WeekTable(sessions: List<DaySession>, modifier: Modifier = Modifier) {
             .horizontalScroll(rememberScrollState())
     ) {
         Row {
-            HeaderCell("S\u00e9ance", width = 90.dp, bg = TrailColors.HeaderBg)
+            HeaderCell(stringResource(R.string.week_table_header_session), width = 90.dp, bg = TrailColors.HeaderBg)
             for (s in sessions) {
                 HeaderCell(s.day, width = 92.dp, bg = TrailColors.HeaderBg, bold = true)
             }
-            HeaderCell("Total", width = 70.dp, bg = TrailColors.HeaderBg, bold = true)
+            HeaderCell(stringResource(R.string.week_table_header_total), width = 70.dp, bg = TrailColors.HeaderBg, bold = true)
         }
         Row {
-            HeaderCell("Label", width = 90.dp, bg = Color.White)
+            HeaderCell(stringResource(R.string.week_table_header_label), width = 90.dp, bg = TrailColors.CardBg)
             for (s in sessions) {
                 BodyCell(s.label.ifEmpty { "\u2014" }, width = 92.dp)
             }
             BodyCell("", width = 70.dp)
         }
         Row {
-            HeaderCell("Volume (km)", width = 90.dp, bg = Color.White)
+            HeaderCell(stringResource(R.string.week_table_header_volume), width = 90.dp, bg = TrailColors.CardBg)
             for (s in sessions) {
                 BodyCell(format1(s.volumeKm), width = 92.dp)
             }
             BodyCell(format1(totalKm), width = 70.dp, bold = true)
         }
         Row {
-            HeaderCell("D\u00e9nivel\u00e9 (m)", width = 90.dp, bg = Color.White)
+            HeaderCell(stringResource(R.string.week_table_header_elevation), width = 90.dp, bg = TrailColors.CardBg)
             for (s in sessions) {
                 BodyCell(s.denivelePos.toString(), width = 92.dp)
             }
@@ -92,7 +94,7 @@ private fun BodyCell(text: String, width: Dp, bold: Boolean = false) {
         Modifier
             .width(width)
             .height(26.dp)
-            .background(Color.White)
+            .background(TrailColors.Surface)
             .border(0.5.dp, TrailColors.Border)
             .padding(horizontal = 6.dp),
         contentAlignment = Alignment.CenterStart

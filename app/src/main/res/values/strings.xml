@@ -107,4 +107,11 @@
         <item>Female</item>
         <item>Other</item>
     </string-array>
+
+    <!-- week table -->
+    <string name="week_table_header_session">Session</string>
+    <string name="week_table_header_label">Label</string>
+    <string name="week_table_header_volume">Volume (km)</string>
+    <string name="week_table_header_elevation">Elevation (m)</string>
+    <string name="week_table_header_total">Total</string>
 </resources>
