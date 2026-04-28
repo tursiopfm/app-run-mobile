@@ -141,4 +141,33 @@
     <string name="draft_suffer_score">Suffer %d</string>
     <string name="draft_file_ref">Reference file: %s</string>
     <string name="draft_transition_mode">Transition mode: %s</string>
+
+    <!-- dashboard tabs -->
+    <string name="dashboard_tab_cockpit">Cockpit</string>
+    <string name="dashboard_tab_stats">Stats</string>
+    <string name="dashboard_tab_charge">Charge</string>
+    <string name="dashboard_tab_plan">Plan</string>
+    <string name="dashboard_tab_activities">Activities</string>
+    <string name="dashboard_tab_settings">Settings</string>
+
+    <!-- cockpit block display names -->
+    <string name="block_kpis">KPIs &amp; Volume</string>
+    <string name="block_goals">Goals</string>
+    <string name="block_chart">Chart</string>
+    <string name="block_history">History</string>
+    <string name="block_km_dplus">Cumulative Km &amp; Elevation</string>
+    <string name="block_cumul_months">Monthly km total</string>
+    <string name="block_load">Load</string>
+    <string name="block_intensities">Intensities</string>
+    <string name="block_strava">Strava Sync</string>
+    <string name="block_all_activities">All activities</string>
+
+    <!-- chart period -->
+    <string name="chart_period_week">Week</string>
+    <string name="chart_period_month">Month</string>
+    <string name="chart_period_month_year">Month (year)</string>
+
+    <!-- stats metric -->
+    <string name="stats_metric_km">Km</string>
+    <string name="stats_metric_dplus">D+</string>
 </resources>
