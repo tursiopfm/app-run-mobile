@@ -1452,7 +1452,7 @@ private fun CockpitTab(
     }
 
     val currentYear = LocalDate.now().year.toString()
-    val monthNames = listOf("jan","fév","mar","avr","mai","jun","jul","aoû","sep","oct","nov","déc")
+    val monthNames = (1..12).map { i -> java.time.Month.of(i).getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault()) }
     val dayLabels = listOf("L", "M", "M", "J", "V", "S", "D")
     val monthLetters = listOf("J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D")
 
@@ -1736,7 +1736,7 @@ private fun CockpitTab(
 
                         BlockType.CumulMonths -> {
                             val cumulData = getCumulativeMonthsData(sport, activities, bikeMonthlyKm, swimMonthlyKm)
-                            val monthLabels = listOf("janv 2025", "fév 2025", "mars 2025", "avr 2025")
+                            val monthLabels = (1..4).map { i -> "${java.time.Month.of(i).getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault())} 2025" }
                             val monthColors = listOf(TrailColors.SeriesGreen, TrailColors.SeriesOrange, TrailColors.SeriesRed, TrailColors.SeriesBlue)
                             ChartCard(title = "", minHeight = 280.dp, titleSlot = {
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -1817,8 +1817,8 @@ private fun CockpitTab(
                                         val short = if (wp.weekLabel.length >= 10) "${wp.weekLabel.substring(8, 10)}/${wp.weekLabel.substring(5, 7)}" else wp.weekLabel
                                         PillData(short, wp.km, wp.dPlus, wp.suffer)
                                     }
-                                    SportMode.Bike -> { val labels = listOf("N-4","N-3","N-2","N-1","S en cours"); bikeMonthlyKm.takeLast(5).mapIndexed { i, km -> PillData(labels.getOrElse(i) { "?" }, km, 0, 0) } }
-                                    SportMode.Swim -> { val labels = listOf("N-4","N-3","N-2","N-1","S en cours"); swimMonthlyKm.takeLast(5).mapIndexed { i, km -> PillData(labels.getOrElse(i) { "?" }, km, 0, 0) } }
+                                    SportMode.Bike -> { val labels = listOf(stringResource(R.string.stats_n4),stringResource(R.string.stats_n3),stringResource(R.string.stats_n2),stringResource(R.string.stats_n1),stringResource(R.string.stats_current_week)); bikeMonthlyKm.takeLast(5).mapIndexed { i, km -> PillData(labels.getOrElse(i) { "?" }, km, 0, 0) } }
+                                    SportMode.Swim -> { val labels = listOf(stringResource(R.string.stats_n4),stringResource(R.string.stats_n3),stringResource(R.string.stats_n2),stringResource(R.string.stats_n1),stringResource(R.string.stats_current_week)); swimMonthlyKm.takeLast(5).mapIndexed { i, km -> PillData(labels.getOrElse(i) { "?" }, km, 0, 0) } }
                                     null -> weekly.takeLast(5).map { wp ->
                                         val short = if (wp.weekLabel.length >= 10) "${wp.weekLabel.substring(8, 10)}/${wp.weekLabel.substring(5, 7)}" else wp.weekLabel
                                         PillData(short, wp.km, wp.dPlus, wp.suffer)
@@ -5533,13 +5533,14 @@ private fun BlockConfigScreen(
     }
 }
 
+@Composable
 private fun BlockType.typeName(): String = when (this) {
     BlockType.Kpis -> "Volume d'activités"
-    BlockType.Goals -> "Objectifs"
+    BlockType.Goals -> stringResource(R.string.cockpit_goals_title)
     BlockType.Chart -> "km/D+"
-    BlockType.Days -> "Historique"
-    BlockType.KmDPlus -> "Km & D+ cumulés"
-    BlockType.CumulMonths -> "Cumul km par mois"
+    BlockType.Days -> stringResource(R.string.cockpit_historique)
+    BlockType.KmDPlus -> stringResource(R.string.stats_km_dplus_title)
+    BlockType.CumulMonths -> stringResource(R.string.stats_km_monthly_title)
     BlockType.Load -> "Charge"
     BlockType.Intensity -> "Intensités"
     BlockType.Strava -> "Sync Strava"
@@ -5557,7 +5558,7 @@ private fun getCumulativeMonthsData(
 ): CumulativeMonthsChartData {
     val monthColors = listOf(TrailColors.SeriesGreen, TrailColors.SeriesOrange, TrailColors.SeriesRed, TrailColors.SeriesBlue)
     val currentYear = LocalDate.now().year
-    val monthLabels = listOf("janv $currentYear", "fév $currentYear", "mars $currentYear", "avr $currentYear")
+    val monthLabels = (1..4).map { i -> "${java.time.Month.of(i).getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault())} $currentYear" }
     val daysPerMonth = listOf(31, 28, 31, 26) // Last 4 months (Jan, Feb, Mar, Apr)
 
     val lastDayIndices = daysPerMonth.map { it - 1 }
@@ -5653,8 +5654,9 @@ private fun calculateRunCumulativeData(activities: List<ActivityDraft>, daysPerM
 
 private fun monthShortLabel(yyyyMm: String): String {
     val month = yyyyMm.split("-").getOrNull(1)?.toIntOrNull() ?: return yyyyMm
-    val names = listOf("jan", "fév", "mar", "avr", "mai", "jun", "jul", "aoû", "sep", "oct", "nov", "déc")
-    return names.getOrNull(month - 1) ?: yyyyMm
+    return try {
+        java.time.Month.of(month).getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault())
+    } catch (_: Exception) { yyyyMm }
 }
 
 private fun shortWeekLabel(isoDate: String): String {
