@@ -1,0 +1,92 @@
+<resources>
+    <string name="app_name">Trail Cockpit</string>
+
+    <!-- common -->
+    <string name="common_button_save">Enregistrer</string>
+    <string name="common_button_cancel">Annuler</string>
+    <string name="common_button_apply">Appliquer</string>
+    <string name="common_button_reset">Réinitialiser</string>
+    <string name="common_button_validate">Valider</string>
+    <string name="common_button_reconnect">Reconnecter</string>
+    <string name="common_button_connect">Connecter</string>
+    <string name="common_button_sync">Sync</string>
+    <string name="common_button_search">Rechercher</string>
+    <string name="common_button_add_block">Ajouter un bloc</string>
+    <string name="common_button_back">Retour</string>
+    <string name="common_label_loading">Chargement</string>
+    <string name="common_label_loading_dots">Chargement…</string>
+    <string name="common_label_saving">Enregistrement…</string>
+    <string name="common_label_all">Toutes</string>
+    <string name="common_label_all_activities">Toutes activités</string>
+    <string name="common_label_week">Semaine</string>
+    <string name="common_label_month">Mois</string>
+    <string name="common_label_year">Année</string>
+    <string name="common_label_total">Total</string>
+    <string name="common_label_week_caps">SEMAINE</string>
+    <string name="common_label_year_caps">ANNÉE</string>
+    <string name="common_label_label">Label</string>
+
+    <!-- units -->
+    <string name="unit_km">km</string>
+    <string name="unit_m">m</string>
+    <string name="unit_km_h">km/h</string>
+    <string name="unit_per_km">/km</string>
+    <string name="unit_swim_pace">m:s/100m</string>
+    <string name="unit_duration_ms">mm:ss</string>
+    <string name="unit_duration_hms">h:mm:ss</string>
+    <string name="unit_kg">kg</string>
+    <string name="unit_pct_fcmax">% FC max</string>
+
+    <!-- errors -->
+    <string name="error_email_password_required">Email et mot de passe requis.</string>
+    <string name="error_first_last_name_required">Prénom et nom requis.</string>
+    <string name="error_gender_required">Veuillez sélectionner un genre.</string>
+    <string name="error_password_too_short">Le mot de passe doit faire au moins 6 caractères.</string>
+    <string name="error_unknown">Erreur inconnue</string>
+    <string name="error_invalid_title">Titre invalide.</string>
+    <string name="error_invalid_distance">Distance invalide.</string>
+    <string name="error_invalid_duration">Durée invalide. Utilise le format min:sec.</string>
+    <string name="error_no_activity_match">Aucune activité ne correspond.</string>
+    <string name="error_activity_load_failed">Impossible de charger l\'activité.</string>
+    <string name="error_map_unavailable">Tracé indisponible</string>
+    <string name="error_detail_unavailable">Détail indisponible</string>
+
+    <!-- formats -->
+    <string name="format_date_placeholder">JJ/MM/AAAA</string>
+    <string name="format_duration_hint">min ou min:sec</string>
+
+    <!-- sports -->
+    <string name="sport_run">Running</string>
+    <string name="sport_bike">Vélo</string>
+    <string name="sport_swim">Natation</string>
+    <string name="sport_run_abbr">RUN</string>
+    <string name="sport_bike_abbr">VÉLO</string>
+    <string name="sport_swim_abbr">NATATION</string>
+    <string name="sport_run_type_run">Course</string>
+    <string name="sport_run_type_trail">Trail</string>
+    <string name="sport_run_type_walk">Marche</string>
+    <string name="sport_run_type_hike">Randonnée</string>
+    <string name="sport_bike_type_ride">Vélo</string>
+    <string name="sport_bike_type_virtual">Vélo virtuel</string>
+    <string name="sport_bike_type_ebike">Vélo électrique</string>
+    <string name="sport_swim_type">Natation</string>
+
+    <!-- heart rate zones -->
+    <string name="hr_zone_z1_name">Endurance fondamentale</string>
+    <string name="hr_zone_z1_description">Footing très facile, récupération, échauffement.</string>
+    <string name="hr_zone_z2_name">Endurance active</string>
+    <string name="hr_zone_z2_description">Endurance active, effort soutenu mais contrôlé.</string>
+    <string name="hr_zone_z3_name">Travail au seuil</string>
+    <string name="hr_zone_z3_description">Travail au seuil, effort difficile mais tenable.</string>
+    <string name="hr_zone_z4_name">VO₂max / VMA</string>
+    <string name="hr_zone_z4_description">VO₂max, côtes, intervalles courts, effort très intense.</string>
+    <string name="hr_zone_z5_name">VMA / très intense</string>
+    <string name="hr_zone_z5_description">Effort très intense, sprint.</string>
+    <string name="hr_zone_custom_zones">Zones personnalisées</string>
+    <string name="hr_zone_lt_hr">Seuil anaérobie / LTHR</string>
+    <string name="hr_zone_aet">Seuil aérobie / AeT</string>
+    <string name="hr_zone_zones_used">Zones FC utilisées</string>
+    <string name="hr_zone_min">Min</string>
+    <string name="hr_zone_max">Max</string>
+    <string name="hr_zone_optimal_range">Plage optimale</string>
+</resources>
