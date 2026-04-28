@@ -1,5 +1,6 @@
 package com.franck.trailcockpit.ui.components
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -18,23 +19,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.franck.trailcockpit.ui.theme.TrailColors
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun KpiTile(
     title: String,
     titleColor: Color,
     mainValue: String,
-    mainValueColor: Color = TrailColors.Text,
+    mainValueColor: Color? = null,
     subline1: String? = null,
     subline2: String? = null,
     trailing: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val resolvedMainValueColor = mainValueColor ?: TrailColors.Text
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
@@ -65,7 +75,7 @@ fun KpiTile(
                 text = mainValue,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
-                color = mainValueColor
+                color = resolvedMainValueColor
             )
             if (subline1 != null) {
                 Spacer(Modifier.height(2.dp))
@@ -85,20 +95,55 @@ fun KpiTile(
 }
 
 @Composable
-fun SmallBarStrip(values: List<Float>, color: Color) {
-    Row(
-        verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.spacedBy(2.dp)
+fun FullWidthBarStrip(
+    values: List<Float>,
+    labels: List<String>,
+    color: Color
+) {
+    val textMeasurer = rememberTextMeasurer()
+    val insideStyle = TextStyle(fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.SemiBold)
+    val aboveStyle = TextStyle(fontSize = 10.sp, color = color, fontWeight = FontWeight.SemiBold)
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(26.dp)
     ) {
-        values.forEach { v ->
-            val h = (14f * v.coerceIn(0f, 1f)).dp
-            Box(
-                Modifier
-                    .width(6.dp)
-                    .height(if (h.value < 2f) 2.dp else h)
-                    .clip(RoundedCornerShape(1.dp))
-                    .background(color)
+        val n = values.size
+        if (n == 0) return@Canvas
+        val gapPx = 2f
+        val labelAreaH = 9.dp.toPx()
+        val barAreaH = size.height - labelAreaH
+        val barW = (size.width - gapPx * (n - 1)) / n
+        val minInsideH = 13.dp.toPx()
+        val cornerR = 2.dp.toPx()
+
+        values.forEachIndexed { i, v ->
+            val barH = (barAreaH * v.coerceIn(0f, 1f)).coerceAtLeast(2.dp.toPx())
+            val x = i * (barW + gapPx)
+            val barTop = size.height - barH
+
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(x, barTop),
+                size = Size(barW, barH),
+                cornerRadius = CornerRadius(cornerR)
             )
+
+            val label = labels.getOrNull(i) ?: ""
+            if (label.isNotEmpty()) {
+                if (barH >= minInsideH) {
+                    val m = textMeasurer.measure(label, insideStyle)
+                    val lx = (x + (barW - m.size.width) / 2).coerceAtLeast(0f)
+                    val ly = barTop + (barH - m.size.height) / 2
+                    drawText(m, topLeft = Offset(lx, ly))
+                } else {
+                    val m = textMeasurer.measure(label, aboveStyle)
+                    val lx = (x + (barW - m.size.width) / 2).coerceAtLeast(0f)
+                    val ly = (barTop - m.size.height - 1.dp.toPx()).coerceAtLeast(0f)
+                    drawText(m, topLeft = Offset(lx, ly))
+                }
+            }
         }
     }
 }
@@ -133,7 +178,7 @@ fun ProgressRow(
         ) {
             Box(
                 Modifier
-                    .fillMaxWidth(ratio)
+                .fillMaxWidth(ratio)
                     .height(16.dp)
                     .background(fgColor)
             )
@@ -142,7 +187,18 @@ fun ProgressRow(
 }
 
 private fun formatDouble(v: Double): String {
-    return if (v >= 100) "%,.0f".format(v).replace(",", " ")
-    else if (v % 1.0 == 0.0) "%.0f".format(v)
-    else "%.1f".format(v)
+    val nf = NumberFormat.getInstance(Locale.getDefault())
+    return if (v >= 100) {
+        nf.maximumFractionDigits = 0
+        nf.minimumFractionDigits = 0
+        nf.format(v)
+    } else if (v % 1.0 == 0.0) {
+        nf.maximumFractionDigits = 0
+        nf.minimumFractionDigits = 0
+        nf.format(v)
+    } else {
+        nf.maximumFractionDigits = 1
+        nf.minimumFractionDigits = 1
+        nf.format(v)
+    }
 }
