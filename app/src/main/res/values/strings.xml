@@ -89,4 +89,22 @@
     <string name="hr_zone_min">Min</string>
     <string name="hr_zone_max">Max</string>
     <string name="hr_zone_optimal_range">Optimal range</string>
+
+    <!-- auth -->
+    <string name="auth_subtitle">AI Sport Coach</string>
+    <string name="auth_tab_login">Login</string>
+    <string name="auth_tab_create_account">Create account</string>
+    <string name="auth_field_first_name">First name</string>
+    <string name="auth_field_last_name">Last name</string>
+    <string name="auth_field_gender">Gender</string>
+    <string name="auth_field_birth_date">Date of birth</string>
+    <string name="auth_field_email">Email</string>
+    <string name="auth_field_password">Password</string>
+    <string name="auth_button_login">Log in</string>
+    <string name="auth_button_create">Create my account</string>
+    <string-array name="auth_genders">
+        <item>Male</item>
+        <item>Female</item>
+        <item>Other</item>
+    </string-array>
 </resources>

@@ -89,4 +89,22 @@
     <string name="hr_zone_min">Min</string>
     <string name="hr_zone_max">Max</string>
     <string name="hr_zone_optimal_range">Plage optimale</string>
+
+    <!-- auth -->
+    <string name="auth_subtitle">AI Coach Sport</string>
+    <string name="auth_tab_login">Connexion</string>
+    <string name="auth_tab_create_account">Créer un compte</string>
+    <string name="auth_field_first_name">Prénom</string>
+    <string name="auth_field_last_name">Nom</string>
+    <string name="auth_field_gender">Genre</string>
+    <string name="auth_field_birth_date">Date de naissance</string>
+    <string name="auth_field_email">Email</string>
+    <string name="auth_field_password">Mot de passe</string>
+    <string name="auth_button_login">Se connecter</string>
+    <string name="auth_button_create">Créer mon compte</string>
+    <string-array name="auth_genders">
+        <item>Homme</item>
+        <item>Femme</item>
+        <item>Autre</item>
+    </string-array>
 </resources>
