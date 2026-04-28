@@ -1557,7 +1557,7 @@ private fun CockpitTab(
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                         Text("Activités —", color = TrailColors.SubtleText, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-                                        Text(sport?.label ?: "Toutes", color = sportColor, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                                        Text(sport?.let { stringResource(it.labelRes) } ?: stringResource(R.string.common_label_all), color = sportColor, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                                         Text(sport?.icon ?: "⚡", fontSize = 16.sp)
                                     }
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1738,7 +1738,7 @@ private fun CockpitTab(
                             val monthColors = listOf(TrailColors.SeriesGreen, TrailColors.SeriesOrange, TrailColors.SeriesRed, TrailColors.SeriesBlue)
                             ChartCard(title = "", minHeight = 280.dp, titleSlot = {
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                    Text("Cumul km par mois — ${sport?.label ?: "Toutes activités"}", color = TrailColors.ChargeOrange, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                    Text("Cumul km par mois — ${sport?.let { stringResource(it.labelRes) } ?: stringResource(R.string.block_all_activities)}", color = TrailColors.ChargeOrange, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                                     BlockMoreIcon(onClick = { onConfigureBlockType(groupType) })
                                 }
                             }) {
@@ -1874,7 +1874,7 @@ private fun CockpitTab(
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                         Text("Historique", color = TrailColors.SubtleText, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                                        Text(sport?.label ?: "Toutes activités", color = TrailColors.ChargeOrange, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                                        Text(sport?.let { stringResource(it.labelRes) } ?: stringResource(R.string.block_all_activities), color = TrailColors.ChargeOrange, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                                         if (sport != null) Text(sport.icon, fontSize = 15.sp)
                                     }
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -5439,7 +5439,7 @@ private fun BlockConfigScreen(
                         fontSize = 18.sp
                     )
                     Text(
-                        text = block.sport?.label ?: "Toutes activités",
+                        text = block.sport?.let { stringResource(it.labelRes) } ?: stringResource(R.string.block_all_activities),
                         color = TrailColors.Text,
                         fontWeight = if (isEnabled) FontWeight.SemiBold else FontWeight.Normal,
                         fontSize = 15.sp,
@@ -5517,7 +5517,7 @@ private fun BlockConfigScreen(
                             fontSize = 18.sp
                         )
                         Text(
-                            text = block.sport?.label ?: "Toutes activités",
+                            text = block.sport?.let { stringResource(it.labelRes) } ?: stringResource(R.string.block_all_activities),
                             color = if (isDefault) TrailColors.ChargeOrange else TrailColors.Text,
                             fontWeight = if (isDefault) FontWeight.SemiBold else FontWeight.Normal,
                             fontSize = 15.sp,
