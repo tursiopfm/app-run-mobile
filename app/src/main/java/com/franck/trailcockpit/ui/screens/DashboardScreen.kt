@@ -3376,7 +3376,7 @@ private fun ActiveFiltersRow(
     ) {
         if (search.query.isNotBlank()) {
             DismissChip(
-                label = "${search.field.label}: ${search.query}",
+                label = "${stringResource(search.field.labelRes)}: ${search.query}",
                 onDismiss = onClearSearch
             )
         }
