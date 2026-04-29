@@ -3024,20 +3024,20 @@ private fun SplitRow(split: ActivitySplitDraft, slowestPace: Double) {
 
 private enum class ActivitiesScreenMode { LIST, SEARCH, FILTER }
 
-private enum class ActivitySearchField(val label: String) {
-    Title("Titre"),
-    Distance("Distance"),
-    Duration("Durée"),
-    DPlus("D+")
+private enum class ActivitySearchField(@StringRes val labelRes: Int) {
+    Title(R.string.activities_field_title),
+    Distance(R.string.activities_label_distance),
+    Duration(R.string.activities_label_duration),
+    DPlus(R.string.activities_label_dplus)
 }
 
-private enum class ActivitySortCriterion(val label: String) {
-    Type("Activité"),
-    Date("Date"),
-    Distance("Distance"),
-    Pace("Allure"),
-    Duration("Durée"),
-    DPlus("D+")
+private enum class ActivitySortCriterion(@StringRes val labelRes: Int) {
+    Type(R.string.activities_single),
+    Date(R.string.activities_label_date),
+    Distance(R.string.activities_label_distance),
+    Pace(R.string.activities_field_pace),
+    Duration(R.string.activities_label_duration),
+    DPlus(R.string.activities_label_dplus)
 }
 
 private enum class SortDirection { Asc, Desc }
@@ -3380,7 +3380,7 @@ private fun ActiveFiltersRow(
             filter.direction != ActivityFilterState().direction
         if (sortChanged || filter.hasValueFilters()) {
             val arrow = if (filter.direction == SortDirection.Asc) "↑" else "↓"
-            val parts = mutableListOf(stringResource(R.string.activities_sort_label, filter.criterion.label, arrow))
+            val parts = mutableListOf(stringResource(R.string.activities_sort_label, stringResource(filter.criterion.labelRes), arrow))
             if (filter.typeFilter.isNotBlank()) {
                 parts += "${stringResource(R.string.activities_single)}=${displayActivityType(filter.typeFilter, context)}"
             }
@@ -3494,7 +3494,7 @@ private fun ActivitiesSearchScreen(
                     ) {
                         ActivitySearchField.values().forEach { option ->
                             ActionChip(
-                                label = option.label,
+                                label = stringResource(option.labelRes),
                                 active = field == option,
                                 onClick = {
                                     field = option
@@ -3542,11 +3542,12 @@ private fun ActivitiesSearchScreen(
     }
 }
 
+@Composable
 private fun searchFieldHint(field: ActivitySearchField): String = when (field) {
-    ActivitySearchField.Title -> "Titre de l'activité"
-    ActivitySearchField.Distance -> "Distance (km)"
-    ActivitySearchField.Duration -> "Durée (min ou min:sec)"
-    ActivitySearchField.DPlus -> "D+ (m)"
+    ActivitySearchField.Title -> stringResource(R.string.activities_search_hint_title)
+    ActivitySearchField.Distance -> stringResource(R.string.activities_field_distance)
+    ActivitySearchField.Duration -> stringResource(R.string.activities_search_hint_duration)
+    ActivitySearchField.DPlus -> stringResource(R.string.activities_search_hint_dplus)
 }
 
 private fun searchKeyboardType(field: ActivitySearchField): KeyboardType = when (field) {
@@ -3652,7 +3653,7 @@ private fun ActivitiesFilterScreen(
                             dPlusMax = dPlusMax, onDPlusMax = { dPlusMax = it }
                         )
                         FilterCriterionRow(
-                            label = option.label,
+                            label = stringResource(option.labelRes),
                             selected = criterion == option,
                             direction = direction,
                             range = binding,

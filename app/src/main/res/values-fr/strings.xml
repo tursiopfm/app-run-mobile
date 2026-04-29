@@ -276,4 +276,11 @@
     <string name="activities_drag_map">Déplace et zoome la carte</string>
     <string name="activities_zoom_in">Zoomer</string>
     <string name="activities_zoom_out">Dézoomer</string>
+    <string name="activities_label_distance">Distance</string>
+    <string name="activities_label_duration">Durée</string>
+    <string name="activities_label_dplus">D+</string>
+    <string name="activities_label_date">Date</string>
+    <string name="activities_search_hint_title">Titre de l\'activité</string>
+    <string name="activities_search_hint_duration">Durée (min ou min:sec)</string>
+    <string name="activities_search_hint_dplus">D+ (m)</string>
 </resources>
