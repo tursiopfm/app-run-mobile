@@ -221,4 +221,36 @@
     <string name="stats_n2">N-2</string>
     <string name="stats_n3">N-3</string>
     <string name="stats_n4">N-4</string>
+
+    <!-- charge tab -->
+    <string name="charge_weekly_title">Weekly training load</string>
+    <string name="charge_fatigue_fitness_title">Fatigue vs Fitness — 16 weeks</string>
+    <string name="charge_freshness_title">Freshness</string>
+    <string name="charge_intensity_title">Intensity distribution — 30-day rolling</string>
+    <string name="charge_intensity_run_title">Intensity distribution — 30-day rolling (RUN)</string>
+    <string name="charge_fatigue_7d">7d fatigue</string>
+    <string name="charge_fitness_28d">28d fitness</string>
+    <string name="charge_tsb_label">TSB Form / Fatigue</string>
+    <string name="charge_training_capacity">Training capacity</string>
+    <string name="charge_training_load">Training load</string>
+    <string name="charge_recovery">Recovery</string>
+    <string name="charge_form_state">Fitness state</string>
+    <string name="charge_very_fresh">Very fresh</string>
+    <string name="charge_fresh">Fresh</string>
+    <string name="charge_balanced">Balanced</string>
+    <string name="charge_recent_fatigue">Recent fatigue</string>
+    <string name="charge_very_low">Very low</string>
+    <string name="charge_fit">Fit</string>
+    <string name="charge_excellent">Excellent</string>
+    <string name="charge_good">Good</string>
+    <string name="charge_low">Low</string>
+    <string name="charge_loaded">Loaded</string>
+    <string name="charge_overloaded">Overloaded</string>
+    <string name="charge_insufficient_data">Insufficient data. Follow the plan carefully.</string>
+    <string name="charge_moderate">Moderate load</string>
+    <string name="charge_balanced_msg">Balanced load. Follow the plan normally.</string>
+    <string name="charge_rising_fatigue">Rising fatigue. Reduce volume or do easy endurance.</string>
+    <string name="charge_well_rested">Well rested. Ideal for an intense session.</string>
+    <string name="charge_good_balance">Good balance. The 30-min field test can further improve accuracy.</string>
+    <string name="charge_interpretation_tips">Interpretation tips</string>
 </resources>

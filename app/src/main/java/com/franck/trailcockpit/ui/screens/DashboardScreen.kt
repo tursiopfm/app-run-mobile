@@ -2083,7 +2083,7 @@ private fun LoadTab(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            ChartCard(title = "Charge hebdomadaire", minHeight = 200.dp) {
+            ChartCard(title = stringResource(R.string.charge_weekly_title), minHeight = 200.dp) {
                 AreaChart(
                     xLabels = xLabels,
                     values = fatigueByDay,
@@ -2093,19 +2093,19 @@ private fun LoadTab(
         }
         item { StatusCard(status) }
         item {
-            ChartCard(title = "Fatigue vs Capacité — 16 sem", minHeight = 220.dp) {
+            ChartCard(title = stringResource(R.string.charge_fatigue_fitness_title), minHeight = 220.dp) {
                 LineChart(
                     xLabels = xLabels,
                     series = listOf(
-                        LineSeries("Fatigue récente", TrailColors.ChargeOrange, status.fatigueSeries, drawPoints = false, valueLabels = false),
-                        LineSeries("Capacité d'entraînement", TrailColors.SeriesBlue, status.fitnessSeries, drawPoints = false, valueLabels = false)
+                        LineSeries(stringResource(R.string.charge_recent_fatigue), TrailColors.ChargeOrange, status.fatigueSeries, drawPoints = false, valueLabels = false),
+                        LineSeries(stringResource(R.string.charge_training_capacity), TrailColors.SeriesBlue, status.fitnessSeries, drawPoints = false, valueLabels = false)
                     ),
                     xLabelEveryN = 2
                 )
             }
         }
         item {
-            ChartCard(title = "Fraîcheur", minHeight = 200.dp) {
+            ChartCard(title = stringResource(R.string.charge_freshness_title), minHeight = 200.dp) {
                 BarChart(
                     xLabels = xLabels,
                     values = status.freshnessSeries,
@@ -2117,7 +2117,7 @@ private fun LoadTab(
             }
         }
         item {
-            ChartCard(title = "Répartition intensité — 30j glissants", minHeight = 220.dp) {
+            ChartCard(title = stringResource(R.string.charge_intensity_title), minHeight = 220.dp) {
                 val colorMap = mapOf(
                     "Runtaf" to TrailColors.PieRuntaf,
                     "VMA" to TrailColors.PieVma,
@@ -2146,7 +2146,7 @@ private fun StatusCard(status: TrainingStatus) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                SectionTitle("État de forme")
+                SectionTitle(stringResource(R.string.charge_form_state))
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = statusRecommendation(status.status),
@@ -2190,13 +2190,14 @@ private fun StatusPill(status: String, freshness: Double) {
     }
 }
 
+@Composable
 private fun statusRecommendation(status: String): String {
     return when (status) {
-        "Frais" -> "Tu es bien reposé. Idéal pour une séance intense."
-        "Équilibré" -> "Charge équilibrée. Suis le plan normalement."
-        "Chargé" -> "Fatigue en hausse. Réduis le volume ou fais de l'endurance."
+        "Frais" -> stringResource(R.string.charge_well_rested)
+        "Équilibré" -> stringResource(R.string.charge_balanced_msg)
+        "Chargé" -> stringResource(R.string.charge_rising_fatigue)
         "Surchargé" -> "Repos conseillé ou séance très facile."
-        else -> "Données insuffisantes. Suis le plan avec prudence."
+        else -> stringResource(R.string.charge_insufficient_data)
     }
 }
 
@@ -4729,9 +4730,9 @@ private fun TsbBadge(tsb: Int) {
         else -> TrailColors.RunRed
     }
     val label = when {
-        tsb >= 10 -> "Très frais"
-        tsb >= 0 -> "En forme"
-        tsb >= -10 -> "Charge modérée"
+        tsb >= 10 -> stringResource(R.string.charge_very_fresh)
+        tsb >= 0 -> stringResource(R.string.charge_fit)
+        tsb >= -10 -> stringResource(R.string.charge_moderate)
         else -> "Fatigué"
     }
     Box(

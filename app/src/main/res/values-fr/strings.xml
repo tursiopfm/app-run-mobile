@@ -221,4 +221,36 @@
     <string name="stats_n2">N-2</string>
     <string name="stats_n3">N-3</string>
     <string name="stats_n4">N-4</string>
+
+    <!-- charge tab -->
+    <string name="charge_weekly_title">Charge hebdomadaire</string>
+    <string name="charge_fatigue_fitness_title">Fatigue vs Capacité — 16 sem</string>
+    <string name="charge_freshness_title">Fraîcheur</string>
+    <string name="charge_intensity_title">Répartition intensité — 30j glissants</string>
+    <string name="charge_intensity_run_title">Répartition intensités — 30j glissants (RUN)</string>
+    <string name="charge_fatigue_7d">Fatigue 7j</string>
+    <string name="charge_fitness_28d">Fitness 28j</string>
+    <string name="charge_tsb_label">TSB Forme / Fatigue</string>
+    <string name="charge_training_capacity">Capacité d\'entraînement</string>
+    <string name="charge_training_load">Charge d\'entraînement</string>
+    <string name="charge_recovery">Récupération</string>
+    <string name="charge_form_state">État de forme</string>
+    <string name="charge_very_fresh">Très frais</string>
+    <string name="charge_fresh">Frais</string>
+    <string name="charge_balanced">Équilibré</string>
+    <string name="charge_recent_fatigue">Fatigue récente</string>
+    <string name="charge_very_low">Très faible</string>
+    <string name="charge_fit">En forme</string>
+    <string name="charge_excellent">Excellente</string>
+    <string name="charge_good">Bonne</string>
+    <string name="charge_low">Faible</string>
+    <string name="charge_loaded">Chargé</string>
+    <string name="charge_overloaded">Surchargé</string>
+    <string name="charge_insufficient_data">Données insuffisantes. Suis le plan avec prudence.</string>
+    <string name="charge_moderate">Charge modérée</string>
+    <string name="charge_balanced_msg">Charge équilibrée. Suis le plan normalement.</string>
+    <string name="charge_rising_fatigue">Fatigue en hausse. Réduis le volume ou fais de l\'endurance.</string>
+    <string name="charge_well_rested">Tu es bien reposé. Idéal pour une séance intense.</string>
+    <string name="charge_good_balance">Bon compromis. Le test terrain de 30 minutes peut encore améliorer la précision.</string>
+    <string name="charge_interpretation_tips">Conseils d\'interprétation</string>
 </resources>
