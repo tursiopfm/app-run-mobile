@@ -1409,10 +1409,10 @@ private fun CockpitTab(
             text = { GoalField(stringResource(R.string.cockpit_goals_all_km), yearStr) { yearStr = it } },
             confirmButton = {
                 TextButton(onClick = { allYearTarget = yearStr.toIntOrNull() ?: allYearTarget; showGoalDialogAll = false }) {
-                    Text("Valider", color = TrailColors.ChargeOrange, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.common_button_validate), color = TrailColors.ChargeOrange, fontWeight = FontWeight.SemiBold)
                 }
             },
-            dismissButton = { TextButton(onClick = { showGoalDialogAll = false }) { Text("Annuler", color = TrailColors.SubtleText) } }
+            dismissButton = { TextButton(onClick = { showGoalDialogAll = false }) { Text(stringResource(R.string.common_button_cancel), color = TrailColors.SubtleText) } }
         )
     }
 
@@ -2326,7 +2326,7 @@ private fun ActivityDetailStatusScreen(
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             SectionCard {
                 Text(
-                    text = if (isLoading) "Chargement..." else error.orEmpty(),
+                    text = if (isLoading) stringResource(R.string.common_label_loading_dots) else error.orEmpty(),
                     color = if (isLoading) TrailColors.SubtleText else TrailColors.RunRed,
                     fontSize = 14.sp
                 )
@@ -2399,7 +2399,7 @@ private fun DetailHeader(title: String, onBack: () -> Unit) {
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = "Retour",
+            contentDescription = stringResource(R.string.common_button_back),
             tint = TrailColors.Text,
             modifier = Modifier.size(24.dp).clickable { onBack() }
         )
@@ -3463,7 +3463,7 @@ private fun ActivitiesSearchScreen(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Retour",
+                contentDescription = stringResource(R.string.common_button_back),
                 tint = TrailColors.Text,
                 modifier = Modifier.size(22.dp).clickable { onBack() }
             )
@@ -3613,7 +3613,7 @@ private fun ActivitiesFilterScreen(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Retour",
+                contentDescription = stringResource(R.string.common_button_back),
                 tint = TrailColors.Text,
                 modifier = Modifier.size(22.dp).clickable { onBack() }
             )
@@ -4040,7 +4040,7 @@ private fun HmsWheelDialog(
             }) { Text("OK") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Annuler") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_button_cancel)) }
         }
     )
 }
@@ -4182,7 +4182,7 @@ private fun InlineDateCell(
                 }) { Text("OK") }
             },
             dismissButton = {
-                TextButton(onClick = { showPicker = false }) { Text("Annuler") }
+                TextButton(onClick = { showPicker = false }) { Text(stringResource(R.string.common_button_cancel)) }
             }
         ) {
             DatePicker(state = pickerState)
@@ -4304,7 +4304,7 @@ private fun ActivityEditScreen(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Retour",
+                contentDescription = stringResource(R.string.common_button_back),
                 tint = TrailColors.Text,
                 modifier = Modifier.size(22.dp).clickable(enabled = !isSaving) { onBack() }
             )
@@ -4426,9 +4426,9 @@ private fun ActivityEditScreen(
 
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ActionChip(label = "Annuler", active = false, onClick = onBack)
+                    ActionChip(label = stringResource(R.string.common_button_cancel), active = false, onClick = onBack)
                     ActionChip(
-                        label = if (isSaving) "Enregistrement..." else "Enregistrer",
+                        label = if (isSaving) stringResource(R.string.common_label_saving) else stringResource(R.string.common_button_save),
                         active = true,
                         onClick = {
                             val parsedDistance = distanceKm.replace(',', '.').toDoubleOrNull()
@@ -4489,7 +4489,7 @@ private fun SettingsTab(
                 SectionTitle(stringResource(R.string.settings_account_section))
                 Spacer(Modifier.height(10.dp))
                 SettingsRow(
-                    title = "Connexion Strava",
+                    title = stringResource(R.string.draft_strava_title),
                     value = if (connected) stringResource(R.string.cockpit_strava_connected_label) else stringResource(R.string.cockpit_strava_not_connected),
                     accent = if (connected) TrailColors.GreenOk else TrailColors.ChargeOrange
                 )
@@ -5174,12 +5174,12 @@ private fun GoalSettingsDialog(
                     yearStr.toIntOrNull() ?: runYearTarget
                 )
             }) {
-                Text("Valider", color = TrailColors.ChargeOrange, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.common_button_validate), color = TrailColors.ChargeOrange, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Annuler", color = TrailColors.SubtleText)
+                Text(stringResource(R.string.common_button_cancel), color = TrailColors.SubtleText)
             }
         }
     )
@@ -5240,12 +5240,12 @@ private fun SimpleGoalDialog(
             TextButton(onClick = {
                 onConfirm(weekStr.toIntOrNull() ?: weekTarget, yearStr.toIntOrNull() ?: yearTarget)
             }) {
-                Text("Valider", color = TrailColors.ChargeOrange, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.common_button_validate), color = TrailColors.ChargeOrange, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Annuler", color = TrailColors.SubtleText)
+                Text(stringResource(R.string.common_button_cancel), color = TrailColors.SubtleText)
             }
         }
     )
@@ -5290,7 +5290,7 @@ private fun ChartPeriodDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Annuler", color = TrailColors.SubtleText)
+                Text(stringResource(R.string.common_button_cancel), color = TrailColors.SubtleText)
             }
         }
     )
@@ -5362,7 +5362,7 @@ private fun AddBlockDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Annuler", color = TrailColors.SubtleText)
+                Text(stringResource(R.string.common_button_cancel), color = TrailColors.SubtleText)
             }
         }
     )
@@ -5391,7 +5391,7 @@ private fun BlockConfigScreen(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Retour",
+                contentDescription = stringResource(R.string.common_button_back),
                 tint = TrailColors.Text,
                 modifier = Modifier.size(22.dp).clickable { onBack() }
             )
