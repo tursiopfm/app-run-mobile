@@ -253,4 +253,7 @@
     <string name="charge_well_rested">Well rested. Ideal for an intense session.</string>
     <string name="charge_good_balance">Good balance. The 30-min field test can further improve accuracy.</string>
     <string name="charge_interpretation_tips">Interpretation tips</string>
+    <string name="charge_form_label">Form</string>
+    <string name="charge_weekly_short">Weekly load</string>
+    <string name="charge_overloaded_msg">Rest recommended or very easy session.</string>
 </resources>

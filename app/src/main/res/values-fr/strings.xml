@@ -253,4 +253,7 @@
     <string name="charge_well_rested">Tu es bien reposé. Idéal pour une séance intense.</string>
     <string name="charge_good_balance">Bon compromis. Le test terrain de 30 minutes peut encore améliorer la précision.</string>
     <string name="charge_interpretation_tips">Conseils d\'interprétation</string>
+    <string name="charge_form_label">Forme</string>
+    <string name="charge_weekly_short">Charge hebdo</string>
+    <string name="charge_overloaded_msg">Repos conseillé ou séance très facile.</string>
 </resources>

@@ -1780,18 +1780,18 @@ private fun CockpitTab(
 
                         BlockType.Load -> SectionCard {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                SectionTitle("Charge d'entraînement")
+                                SectionTitle(stringResource(R.string.charge_training_load))
                                 BlockMoreIcon(onClick = { onConfigureBlockType(groupType) })
                             }
                             Spacer(Modifier.height(10.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                CompactMetricCard("ATL", overview.runSuffer / 5, "Fatigue 7j", TrailColors.ChargeOrange, Modifier.weight(1f))
-                                CompactMetricCard("CTL", ytd.ctl, "Fitness 28j", TrailColors.SeriesBlue, Modifier.weight(1f))
+                                CompactMetricCard("ATL", overview.runSuffer / 5, stringResource(R.string.charge_fatigue_7d), TrailColors.ChargeOrange, Modifier.weight(1f))
+                                CompactMetricCard("CTL", ytd.ctl, stringResource(R.string.charge_fitness_28d), TrailColors.SeriesBlue, Modifier.weight(1f))
                             }
                             Spacer(Modifier.height(8.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                CompactMetricCard("TSB", ytd.tsb, "Forme", if (ytd.tsb >= 0) TrailColors.GreenOk else TrailColors.RunRed, Modifier.weight(1f))
-                                CompactMetricCard("Suffer", overview.runSuffer, "Charge hebdo", TrailColors.SeriesYellow, Modifier.weight(1f))
+                                CompactMetricCard("TSB", ytd.tsb, stringResource(R.string.charge_form_label), if (ytd.tsb >= 0) TrailColors.GreenOk else TrailColors.RunRed, Modifier.weight(1f))
+                                CompactMetricCard("Suffer", overview.runSuffer, stringResource(R.string.charge_weekly_short), TrailColors.SeriesYellow, Modifier.weight(1f))
                             }
                         }
 
@@ -1908,7 +1908,7 @@ private fun CockpitTab(
                             val slices = intensityBreakdown.filter { it.km > 0 }.map { PieSlice(it.label, it.km, colorMap[it.label] ?: TrailColors.PieAutre) }
                             SectionCard {
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                    Text("Répartition intensités — 30j glissants (RUN)", color = TrailColors.SubtleText, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                                    Text(stringResource(R.string.charge_intensity_run_title), color = TrailColors.SubtleText, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                                     BlockMoreIcon(onClick = { onConfigureBlockType(groupType) })
                                 }
                                 Spacer(Modifier.height(10.dp))
@@ -2196,7 +2196,7 @@ private fun statusRecommendation(status: String): String {
         "Frais" -> stringResource(R.string.charge_well_rested)
         "Équilibré" -> stringResource(R.string.charge_balanced_msg)
         "Chargé" -> stringResource(R.string.charge_rising_fatigue)
-        "Surchargé" -> "Repos conseillé ou séance très facile."
+        "Surchargé" -> stringResource(R.string.charge_overloaded_msg)
         else -> stringResource(R.string.charge_insufficient_data)
     }
 }
