@@ -519,7 +519,7 @@ private fun AthleteProfileScreen(
     }
 
     Column(Modifier.fillMaxSize().background(TrailColors.Background)) {
-        DetailHeader(title = "Profil sportif", onBack = onBack)
+        DetailHeader(title = stringResource(R.string.profile_title), onBack = onBack)
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(12.dp),
@@ -535,7 +535,7 @@ private fun AthleteProfileScreen(
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        text = "Ce profil sert à calibrer les zones de fréquence cardiaque et à mieux interpréter le niveau d'effort.",
+                        text = stringResource(R.string.profile_description),
                         color = TrailColors.SubtleText,
                         fontSize = 13.sp,
                         lineHeight = 18.sp
@@ -545,7 +545,7 @@ private fun AthleteProfileScreen(
 
             item {
                 SectionCard {
-                    SectionTitle("Méthode de calcul des zones")
+                    SectionTitle(stringResource(R.string.profile_zone_method))
                     Spacer(Modifier.height(10.dp))
                     HeartRateZoneMode.entries.forEach { mode ->
                         ProfileModeRow(
@@ -573,19 +573,19 @@ private fun AthleteProfileScreen(
 
             item {
                 SectionCard {
-                    SectionTitle("Source des valeurs")
+                    SectionTitle(stringResource(R.string.profile_values_source))
                     Spacer(Modifier.height(10.dp))
                     ProfileModeRow(
-                        title = "Je renseigne mes valeurs",
-                        subtitle = "Les champs du profil sont utilisés directement pour calculer tes zones.",
+                        title = stringResource(R.string.profile_manual_mode),
+                        subtitle = stringResource(R.string.profile_manual_mode_desc),
                         selected = profile.calibrationMode == ProfileCalibrationMode.Manual,
                         accent = TrailColors.GreenOk,
                         onClick = { updateProfile(profile.copy(calibrationMode = ProfileCalibrationMode.Manual)) }
                     )
                     Spacer(Modifier.height(8.dp))
                     ProfileModeRow(
-                        title = "Déduire automatiquement",
-                        subtitle = "L'app peut compléter les valeurs manquantes avec l'âge ou l'historique disponible.",
+                        title = stringResource(R.string.profile_auto_mode),
+                        subtitle = stringResource(R.string.profile_auto_mode_desc),
                         selected = profile.calibrationMode == ProfileCalibrationMode.Inferred,
                         accent = TrailColors.ChargeOrange,
                         onClick = { updateProfile(profile.copy(calibrationMode = ProfileCalibrationMode.Inferred)) }
@@ -595,7 +595,7 @@ private fun AthleteProfileScreen(
 
             item {
                 SectionCard {
-                    SectionTitle("Données cardio")
+                    SectionTitle(stringResource(R.string.profile_cardio_data))
                     Spacer(Modifier.height(10.dp))
                     HeartRateModeFields(
                         profile = profile,
@@ -620,18 +620,18 @@ private fun AthleteProfileScreen(
                     Spacer(Modifier.height(10.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         ProfileNumberField(
-                            label = "Poids (kg)",
+                            label = stringResource(R.string.profile_weight),
                             value = profile.weightKg,
-                            placeholder = "ex. 72",
+                            placeholder = stringResource(R.string.profile_weight_placeholder),
                             enabled = true,
                             keyboardType = KeyboardType.Decimal,
                             modifier = Modifier.weight(1f),
                             onValueChange = { updateProfile(profile.copy(weightKg = it.filterDecimal(5))) }
                         )
                         ProfileNumberField(
-                            label = "Année naissance",
+                            label = stringResource(R.string.profile_birth_year),
                             value = profile.birthYear,
-                            placeholder = "ex. 1985",
+                            placeholder = stringResource(R.string.profile_birth_year_placeholder),
                             enabled = true,
                             modifier = Modifier.weight(1f),
                             onValueChange = { updateProfile(profile.copy(birthYear = it.filterDigits(4))) }
@@ -639,7 +639,7 @@ private fun AthleteProfileScreen(
                     }
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "Ces infos améliorent les estimations si tu ne renseignes pas directement tes zones.",
+                        text = stringResource(R.string.profile_help_text),
                         color = TrailColors.SubtleText,
                         fontSize = 12.sp,
                         lineHeight = 16.sp
@@ -649,12 +649,12 @@ private fun AthleteProfileScreen(
 
             item {
                 SectionCard {
-                    SectionTitle("Zones FC utilisées")
+                    SectionTitle(stringResource(R.string.hr_zone_zones_used))
                     Spacer(Modifier.height(10.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         ProfileMetricCard("Méthode", compactModeLabel(profile.heartRateZoneMode), confidenceColor(calculation.confidence), Modifier.weight(1f))
                         ProfileMetricCard("Fiabilité", compactConfidenceLabel(calculation.confidence), confidenceColor(calculation.confidence), Modifier.weight(1f))
-                        ProfileMetricCard("FC max", "${calculation.maxHrUsed ?: profileModel.maxHeartRate}", TrailColors.RunRed, Modifier.weight(1f))
+                        ProfileMetricCard(stringResource(R.string.profile_hr_max), "${calculation.maxHrUsed ?: profileModel.maxHeartRate}", TrailColors.RunRed, Modifier.weight(1f))
                     }
                     Spacer(Modifier.height(10.dp))
                     val zonesToShow = calculation.zones.map { it.toUi() }.ifEmpty { profileModel.zones }
@@ -689,7 +689,7 @@ private fun HeartRateTestProtocolScreen(
     onUseLthrMode: () -> Unit
 ) {
     Column(Modifier.fillMaxSize().background(TrailColors.Background)) {
-        DetailHeader(title = "Protocole du test terrain 30 minutes", onBack = onBack)
+        DetailHeader(title = stringResource(R.string.hr_test_title), onBack = onBack)
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(12.dp),
@@ -700,7 +700,7 @@ private fun HeartRateTestProtocolScreen(
                     SectionTitle("Introduction")
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Le test terrain de 30 minutes permet d'estimer ta fréquence cardiaque au seuil. Cette valeur est appelée LTHR, pour Lactate Threshold Heart Rate. Elle sert à créer des zones cardio plus fiables qu'un simple calcul basé sur l'âge ou la FC max.",
+                        stringResource(R.string.hr_test_description),
                         color = TrailColors.SubtleText,
                         fontSize = 13.sp,
                         lineHeight = 18.sp
@@ -709,20 +709,20 @@ private fun HeartRateTestProtocolScreen(
             }
             item {
                 SectionCard {
-                    SectionTitle("Avant de commencer")
+                    SectionTitle(stringResource(R.string.hr_test_before_title))
                     Spacer(Modifier.height(8.dp))
                     listOf(
-                        "Réalise ce test uniquement si tu es en bonne santé.",
-                        "Ne fais pas ce test en cas de fatigue importante, douleur, fièvre ou reprise après blessure.",
-                        "Choisis un parcours plat, régulier et sans interruption.",
-                        "Utilise idéalement une ceinture cardio plutôt qu'un capteur optique au poignet.",
-                        "Évite les fortes chaleurs, le vent fort ou les parcours vallonnés.",
-                        "Ne fais pas ce test après une grosse séance ou une compétition récente.",
-                        "Prévois au moins 48 h sans entraînement intense avant le test."
+                        stringResource(R.string.hr_tip_health_only),
+                        stringResource(R.string.hr_test_before_2),
+                        stringResource(R.string.hr_test_before_4),
+                        stringResource(R.string.hr_test_before_5),
+                        stringResource(R.string.hr_tip_avoid_conditions),
+                        stringResource(R.string.hr_tip_no_heavy_session),
+                        stringResource(R.string.hr_test_before_3)
                     ).forEach { BulletLine(it) }
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Ce test ne remplace pas un avis médical. En cas de doute, demande l'avis d'un professionnel de santé.",
+                        stringResource(R.string.hr_tip_not_medical),
                         color = TrailColors.ChargeOrange,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -732,11 +732,11 @@ private fun HeartRateTestProtocolScreen(
             }
             item {
                 SectionCard {
-                    SectionTitle("Échauffement")
+                    SectionTitle(stringResource(R.string.hr_test_warmup_title))
                     Spacer(Modifier.height(8.dp))
-                    NumberedStep("1", "Échauffe-toi 15 à 20 minutes en endurance facile.")
-                    NumberedStep("2", "Ajoute 3 à 4 accélérations progressives de 15 à 20 secondes pour préparer l'effort.")
-                    NumberedStep("3", "Récupère 2 à 3 minutes en footing facile avant de commencer le test.")
+                    NumberedStep("1", stringResource(R.string.hr_test_warmup_1))
+                    NumberedStep("2", stringResource(R.string.hr_test_add_accelerations))
+                    NumberedStep("3", stringResource(R.string.hr_test_warmup_2))
                 }
             }
             item {
@@ -744,34 +744,34 @@ private fun HeartRateTestProtocolScreen(
                     SectionTitle("Le test")
                     Spacer(Modifier.height(8.dp))
                     NumberedStep("1", "Lance une activité course à pied sur ta montre.")
-                    NumberedStep("2", "Cours 30 minutes au meilleur effort régulier possible.")
-                    NumberedStep("3", "Ne pars pas trop vite. L'objectif est de tenir une intensité forte mais stable pendant toute la durée du test.")
-                    NumberedStep("4", "Si ta montre le permet, appuie sur le bouton LAP après les 10 premières minutes.")
-                    NumberedStep("5", "La fréquence cardiaque moyenne des 20 dernières minutes correspond à ton estimation de LTHR.")
+                    NumberedStep("2", stringResource(R.string.hr_test_run_1))
+                    NumberedStep("3", stringResource(R.string.hr_test_run_2))
+                    NumberedStep("4", stringResource(R.string.hr_test_run_3))
+                    NumberedStep("5", stringResource(R.string.hr_test_after_1))
                     Spacer(Modifier.height(8.dp))
-                    Text("Exemple : si ta FC moyenne sur les 20 dernières minutes est de 174 bpm, alors ton LTHR estimé est 174.", color = TrailColors.Text, fontSize = 12.sp, lineHeight = 16.sp)
+                    Text(stringResource(R.string.hr_test_after_2), color = TrailColors.Text, fontSize = 12.sp, lineHeight = 16.sp)
                 }
             }
             item {
                 SectionCard {
-                    SectionTitle("Après le test")
+                    SectionTitle(stringResource(R.string.hr_test_after_title))
                     Spacer(Modifier.height(8.dp))
-                    Text("Entre ta valeur LTHR dans ton profil, dans le mode 'Test terrain 30 minutes'. L'app calculera automatiquement tes zones cardio.", color = TrailColors.SubtleText, fontSize = 13.sp, lineHeight = 18.sp)
+                    Text(stringResource(R.string.hr_test_after_3), color = TrailColors.SubtleText, fontSize = 13.sp, lineHeight = 18.sp)
                     Spacer(Modifier.height(8.dp))
                     TextButton(onClick = onUseLthrMode) {
-                        Text("Renseigner ma FC seuil", color = TrailColors.ChargeOrange, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.profile_enter_lthr), color = TrailColors.ChargeOrange, fontWeight = FontWeight.Bold)
                     }
                 }
             }
             item {
                 SectionCard {
-                    SectionTitle("Conseils d'interprétation")
+                    SectionTitle(stringResource(R.string.charge_interpretation_tips))
                     Spacer(Modifier.height(8.dp))
                     listOf(
                         "Si tu as explosé dans les 10 dernières minutes, le test est probablement parti trop vite.",
                         "Si tu as fini avec beaucoup de marge, tu étais probablement trop prudent.",
-                        "Répète le test toutes les 8 à 12 semaines si ton entraînement évolue.",
-                        "Garde des conditions similaires pour comparer les résultats."
+                        stringResource(R.string.hr_test_repeat_tip),
+                        stringResource(R.string.hr_tip_conditions)
                     ).forEach { BulletLine(it) }
                 }
             }
@@ -813,38 +813,38 @@ private fun HeartRateModeFields(
     when (profile.heartRateZoneMode) {
         HeartRateZoneMode.PhysiologicalThresholds -> {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ProfileNumberField("FC max", profile.maxHr, profileModel.inferredMaxHeartRate.toString(), true, Modifier.weight(1f), onValueChange = ::updateMax)
-                ProfileNumberField("Seuil aérobie / AeT", profile.aerobicThresholdHr, "ex. 150", true, Modifier.weight(1f)) {
+                ProfileNumberField(stringResource(R.string.profile_hr_max), profile.maxHr, profileModel.inferredMaxHeartRate.toString(), true, Modifier.weight(1f), onValueChange = ::updateMax)
+                ProfileNumberField(stringResource(R.string.hr_zone_aet), profile.aerobicThresholdHr, "ex. 150", true, Modifier.weight(1f)) {
                     onProfileChange(profile.copy(aerobicThresholdHr = it.filterDigits(3)))
                 }
             }
             Spacer(Modifier.height(8.dp))
-            ProfileNumberField("Seuil anaérobie / LTHR", profile.lactateThresholdHr, "ex. 174", true, onValueChange = ::updateLthr)
+            ProfileNumberField(stringResource(R.string.hr_zone_lt_hr), profile.lactateThresholdHr, "ex. 174", true, onValueChange = ::updateLthr)
         }
         HeartRateZoneMode.LthrFieldTest -> {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ProfileNumberField("FC max", profile.maxHr, profileModel.inferredMaxHeartRate.toString(), true, Modifier.weight(1f), onValueChange = ::updateMax)
-                ProfileNumberField("FC seuil test 30 min", profile.lactateThresholdHr, "ex. 174", true, Modifier.weight(1f), onValueChange = ::updateLthr)
+                ProfileNumberField(stringResource(R.string.profile_hr_max), profile.maxHr, profileModel.inferredMaxHeartRate.toString(), true, Modifier.weight(1f), onValueChange = ::updateMax)
+                ProfileNumberField(stringResource(R.string.profile_hr_lthr_test), profile.lactateThresholdHr, "ex. 174", true, Modifier.weight(1f), onValueChange = ::updateLthr)
             }
             TextButton(onClick = onOpenHrTestProtocol) {
-                Text("Voir le protocole du test 30 min", color = TrailColors.ChargeOrange, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.profile_view_test_protocol), color = TrailColors.ChargeOrange, fontWeight = FontWeight.Bold)
             }
         }
         HeartRateZoneMode.HeartRateReserve -> {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ProfileNumberField("FC max", profile.maxHr, profileModel.inferredMaxHeartRate.toString(), true, Modifier.weight(1f), onValueChange = ::updateMax)
-                ProfileNumberField("FC repos", profile.restingHr, profileModel.inferredRestingHeartRate.toString(), true, Modifier.weight(1f), onValueChange = ::updateResting)
+                ProfileNumberField(stringResource(R.string.profile_hr_max), profile.maxHr, profileModel.inferredMaxHeartRate.toString(), true, Modifier.weight(1f), onValueChange = ::updateMax)
+                ProfileNumberField(stringResource(R.string.profile_hr_rest), profile.restingHr, profileModel.inferredRestingHeartRate.toString(), true, Modifier.weight(1f), onValueChange = ::updateResting)
             }
         }
         HeartRateZoneMode.PercentMaxHr -> {
-            ProfileNumberField("FC max", profile.maxHr, profileModel.inferredMaxHeartRate.toString(), true, onValueChange = ::updateMax)
+            ProfileNumberField(stringResource(R.string.profile_hr_max), profile.maxHr, profileModel.inferredMaxHeartRate.toString(), true, onValueChange = ::updateMax)
         }
         HeartRateZoneMode.EstimatedMaxHr -> {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ProfileNumberField("Année naissance", profile.birthYear, "ex. 1985", true, Modifier.weight(1f)) {
+                ProfileNumberField(stringResource(R.string.profile_birth_year), profile.birthYear, stringResource(R.string.profile_birth_year_placeholder), true, Modifier.weight(1f)) {
                     onProfileChange(profile.copy(birthYear = it.filterDigits(4)))
                 }
-                ProfileNumberField("FCmax estimée", calculation.maxHrUsed?.toString().orEmpty(), "auto", false, Modifier.weight(1f)) {}
+                ProfileNumberField(stringResource(R.string.profile_hr_max_estimated), calculation.maxHrUsed?.toString().orEmpty(), "auto", false, Modifier.weight(1f)) {}
             }
         }
         HeartRateZoneMode.Manual -> {
@@ -866,7 +866,7 @@ private fun ManualZoneEditRow(zone: HeartRateZone, onChange: (String, String) ->
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         Text("Z${zone.zone}", color = TrailColors.Text, fontWeight = FontWeight.Bold, modifier = Modifier.width(32.dp))
         ProfileNumberField(
-            label = "Min",
+            label = stringResource(R.string.hr_zone_min),
             value = zone.min?.toString().orEmpty(),
             placeholder = if (zone.zone == 1) "vide" else "min",
             enabled = true,
@@ -874,7 +874,7 @@ private fun ManualZoneEditRow(zone: HeartRateZone, onChange: (String, String) ->
             onValueChange = { onChange(it.filterDigits(3), zone.max.toString()) }
         )
         ProfileNumberField(
-            label = "Max",
+            label = stringResource(R.string.hr_zone_max),
             value = zone.max.toString(),
             placeholder = "max",
             enabled = true,
@@ -1006,39 +1006,43 @@ private fun confidenceLabel(confidence: HeartRateZoneConfidence): String = when 
     HeartRateZoneConfidence.Custom -> "Zones personnalisées"
 }
 
+@Composable
 private fun compactConfidenceLabel(confidence: HeartRateZoneConfidence): String = when (confidence) {
-    HeartRateZoneConfidence.High -> "Excellente"
-    HeartRateZoneConfidence.Good -> "Bonne"
+    HeartRateZoneConfidence.High -> stringResource(R.string.charge_excellent)
+    HeartRateZoneConfidence.Good -> stringResource(R.string.charge_good)
     HeartRateZoneConfidence.Medium -> "Moyenne"
-    HeartRateZoneConfidence.Low -> "Faible"
-    HeartRateZoneConfidence.VeryLow -> "Très faible"
-    HeartRateZoneConfidence.Custom -> "Personnalisée"
+    HeartRateZoneConfidence.Low -> stringResource(R.string.charge_low)
+    HeartRateZoneConfidence.VeryLow -> stringResource(R.string.charge_very_low)
+    HeartRateZoneConfidence.Custom -> stringResource(R.string.hr_zone_custom_zones)
 }
 
+@Composable
 private fun compactModeLabel(mode: HeartRateZoneMode): String = when (mode) {
     HeartRateZoneMode.PhysiologicalThresholds -> "Seuils physio"
     HeartRateZoneMode.LthrFieldTest -> "Test terrain"
-    HeartRateZoneMode.HeartRateReserve -> "FC réserve"
-    HeartRateZoneMode.PercentMaxHr -> "% FC max"
+    HeartRateZoneMode.HeartRateReserve -> stringResource(R.string.profile_hr_reserve)
+    HeartRateZoneMode.PercentMaxHr -> stringResource(R.string.unit_pct_fcmax)
     HeartRateZoneMode.EstimatedMaxHr -> "Estimation"
     HeartRateZoneMode.Manual -> "Personnalisé"
 }
 
+@Composable
 private fun helpTextForMode(mode: HeartRateZoneMode): String = when (mode) {
     HeartRateZoneMode.PhysiologicalThresholds -> "Cette méthode est la plus précise si tes seuils ont été mesurés en test labo ou test terrain fiable."
     HeartRateZoneMode.LthrFieldTest -> "Cette méthode est recommandée si tu peux réaliser un test terrain régulier de 30 minutes."
     HeartRateZoneMode.HeartRateReserve -> "Cette méthode tient compte de ta FC repos et personnalise mieux les zones."
     HeartRateZoneMode.PercentMaxHr -> "Cette méthode est simple mais moins personnalisée que la méthode FC réserve ou le test terrain."
     HeartRateZoneMode.EstimatedMaxHr -> "Cette méthode est une estimation. Elle peut être imprécise selon ton profil."
-    HeartRateZoneMode.Manual -> "Vérifie que les zones personnalisées sont continues, croissantes et sans chevauchement."
+    HeartRateZoneMode.Manual -> stringResource(R.string.hr_tip_custom_zones_check)
 }
 
+@Composable
 private fun improvementHint(profile: AthleteProfileSettings, calculation: com.franck.trailcockpit.data.HeartRateZoneCalculationResult): String {
     return when {
-        calculation.zones.isEmpty() -> "Renseigne au minimum ta FC max ou ta date de naissance pour calculer tes zones."
-        profile.heartRateZoneMode == HeartRateZoneMode.PercentMaxHr -> "Tes zones sont actuellement calculées avec la méthode % FC max. Pour une meilleure précision, ajoute ta FC repos ou réalise le test terrain de 30 minutes."
-        profile.heartRateZoneMode == HeartRateZoneMode.EstimatedMaxHr -> "Pour un coaching plus fiable, renseigne ta FC repos, ta FC max réelle ou réalise un test terrain."
-        profile.heartRateZoneMode == HeartRateZoneMode.HeartRateReserve -> "Bon compromis. Le test terrain de 30 minutes peut encore améliorer la précision."
+        calculation.zones.isEmpty() -> stringResource(R.string.hr_tip_enter_fcmax)
+        profile.heartRateZoneMode == HeartRateZoneMode.PercentMaxHr -> stringResource(R.string.hr_tip_pct_fcmax)
+        profile.heartRateZoneMode == HeartRateZoneMode.EstimatedMaxHr -> stringResource(R.string.hr_tip_calibrate)
+        profile.heartRateZoneMode == HeartRateZoneMode.HeartRateReserve -> stringResource(R.string.charge_good_balance)
         else -> "Méthode utilisée : ${profile.heartRateZoneMode.displayName}."
     }
 }
@@ -1250,10 +1254,10 @@ private fun heartRateZones(maxHeartRate: Int): List<HeartRateZoneUi> {
 
     return listOf(
         HeartRateZoneUi("Z1", "Récupération", "≤$z1Max", TrailColors.GreenOk),
-        HeartRateZoneUi("Z2", "Endurance fondamentale", "$z2Min-$z2Max", TrailColors.SeriesBlue),
+        HeartRateZoneUi("Z2", stringResource(R.string.hr_zone_z2_name), "$z2Min-$z2Max", TrailColors.SeriesBlue),
         HeartRateZoneUi("Z3", "Tempo / vallonné actif", "$z3Min-$z3Max", TrailColors.SeriesYellow),
-        HeartRateZoneUi("Z4", "Seuil", "$z4Min-$z4Max", TrailColors.ChargeOrange),
-        HeartRateZoneUi("Z5", "VMA / très intense", "$z5Min-$maxHeartRate", TrailColors.RunRed)
+        HeartRateZoneUi("Z4", stringResource(R.string.hr_zone_z3_name), "$z4Min-$z4Max", TrailColors.ChargeOrange),
+        HeartRateZoneUi("Z5", stringResource(R.string.hr_zone_z5_name), "$z5Min-$maxHeartRate", TrailColors.RunRed)
     )
 }
 
@@ -1319,7 +1323,7 @@ private fun TopHeader(
             )
             Icon(
                 imageVector = Icons.Default.MoreVert,
-                contentDescription = "Profil sportif",
+                contentDescription = stringResource(R.string.profile_title),
                 tint = TrailColors.SubtleText,
                 modifier = Modifier
                     .size(22.dp)
@@ -1627,14 +1631,14 @@ private fun CockpitTab(
                                 SportMode.Run -> {
                                     GoalProgressRow("Distance (semaine)", overview.runKm, runWeekTarget.toDouble(), "km", TrailColors.ChargeOrange)
                                     Spacer(Modifier.height(6.dp))
-                                    GoalProgressRow("Dénivelé + (semaine)", overview.runDPlus.toDouble(), dplusWeekTarget.toDouble(), "m", TrailColors.SeriesBlue)
+                                    GoalProgressRow(stringResource(R.string.cockpit_goal_elevation_week), overview.runDPlus.toDouble(), dplusWeekTarget.toDouble(), "m", TrailColors.SeriesBlue)
                                     Spacer(Modifier.height(6.dp))
                                     GoalProgressRow("Distance (année)", ytd.runKm, runYearTarget.toDouble(), "km", TrailColors.GreenOk)
                                 }
                                 SportMode.Bike -> {
                                     GoalProgressRow("Distance (semaine)", overview.bikeKm, bikeWeekTarget.toDouble(), "km", TrailColors.ChargeOrange)
                                     Spacer(Modifier.height(6.dp))
-                                    GoalProgressRow("Dénivelé + (semaine)", overview.bikeDPlus.toDouble(), 0.0, "m", TrailColors.SeriesBlue)
+                                    GoalProgressRow(stringResource(R.string.cockpit_goal_elevation_week), overview.bikeDPlus.toDouble(), 0.0, "m", TrailColors.SeriesBlue)
                                     Spacer(Modifier.height(6.dp))
                                     GoalProgressRow("Distance (année)", ytd.bikeKm, bikeYearTarget.toDouble(), "km", TrailColors.GreenOk)
                                 }
@@ -2795,7 +2799,7 @@ private fun SplitSegmentCard(
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             SplitMetaPill("D±", formatSignedMeters(split.elevationDeltaM), TrailColors.SeriesBlue)
-            SplitMetaPill("FC", split.averageHeartRate?.toString() ?: "--", TrailColors.ChargeOrange)
+            SplitMetaPill(stringResource(R.string.profile_hr_abbr), split.averageHeartRate?.toString() ?: "--", TrailColors.ChargeOrange)
         }
     }
 }
@@ -2995,7 +2999,7 @@ private fun SplitHeaderRow() {
         Text(stringResource(R.string.activities_field_pace), color = TrailColors.SubtleText, fontSize = 12.sp, modifier = Modifier.width(64.dp))
         Text("", color = TrailColors.SubtleText, fontSize = 12.sp, modifier = Modifier.weight(1f))
         Text("Élev.", color = TrailColors.SubtleText, fontSize = 12.sp, modifier = Modifier.width(52.dp))
-        Text("FC", color = TrailColors.SubtleText, fontSize = 12.sp, modifier = Modifier.width(38.dp))
+        Text(stringResource(R.string.profile_hr_abbr), color = TrailColors.SubtleText, fontSize = 12.sp, modifier = Modifier.width(38.dp))
     }
 }
 
@@ -4482,7 +4486,7 @@ private fun SettingsTab(
     ) {
         item {
             SectionCard {
-                SectionTitle("Compte et synchronisation")
+                SectionTitle(stringResource(R.string.settings_account_section))
                 Spacer(Modifier.height(10.dp))
                 SettingsRow(
                     title = "Connexion Strava",
@@ -4512,7 +4516,7 @@ private fun SettingsTab(
                         ActionChip(label = "Sync", active = true, onClick = onSyncStrava)
                     }
                     ActionChip(
-                        label = "Se déconnecter",
+                        label = stringResource(R.string.settings_logout),
                         active = false,
                         onClick = onLogout
                     )
@@ -4521,7 +4525,7 @@ private fun SettingsTab(
         }
         item {
             SectionCard {
-                SectionTitle("Apparence")
+                SectionTitle(stringResource(R.string.settings_appearance_section))
                 Spacer(Modifier.height(10.dp))
                 Row(
                     modifier = Modifier
@@ -4552,22 +4556,22 @@ private fun SettingsTab(
         }
         item {
             SectionCard {
-                SectionTitle("Préférences cockpit")
+                SectionTitle(stringResource(R.string.settings_cockpit_prefs))
                 Spacer(Modifier.height(10.dp))
                 SettingsRow(
-                    title = "Écran d'ouverture",
+                    title = stringResource(R.string.settings_startup_screen),
                     value = "Cockpit",
                     accent = TrailColors.ChargeOrange
                 )
                 Spacer(Modifier.height(8.dp))
                 SettingsRow(
-                    title = "Source de données active",
+                    title = stringResource(R.string.settings_data_source),
                     value = if (connected) "Strava + données cockpit" else "Draft local + backend",
                     accent = TrailColors.SeriesBlue
                 )
                 Spacer(Modifier.height(8.dp))
                 SettingsRow(
-                    title = "Granularité stats",
+                    title = stringResource(R.string.settings_stats_granularity),
                     value = stringResource(R.string.stats_weekly_label),
                     accent = TrailColors.GreenOk
                 )
@@ -4577,10 +4581,10 @@ private fun SettingsTab(
             SectionCard {
                 SectionTitle("À venir")
                 Spacer(Modifier.height(10.dp))
-                BulletLine("Notifications de synchro Strava")
+                BulletLine(stringResource(R.string.settings_strava_notifications))
                 BulletLine(stringResource(R.string.cockpit_fav_metrics))
-                BulletLine("Unités, zones, fréquence cardiaque et seuils")
-                BulletLine("Gestion du compte et export de données")
+                BulletLine(stringResource(R.string.settings_appearance_subtitle))
+                BulletLine(stringResource(R.string.settings_account_subtitle))
             }
         }
     }
@@ -5158,7 +5162,7 @@ private fun GoalSettingsDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 GoalField("Distance run (semaine) — km", runWeekStr) { runWeekStr = it }
-                GoalField("Dénivelé + (semaine) — m", dplusStr) { dplusStr = it }
+                GoalField("${stringResource(R.string.cockpit_goal_elevation_week)} — m", dplusStr) { dplusStr = it }
                 GoalField("Distance run (année) — km", yearStr) { yearStr = it }
             }
         },

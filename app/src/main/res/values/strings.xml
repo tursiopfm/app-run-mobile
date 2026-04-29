@@ -283,4 +283,77 @@
     <string name="activities_search_hint_title">Activity title</string>
     <string name="activities_search_hint_duration">Duration (min or min:sec)</string>
     <string name="activities_search_hint_dplus">D+ (m)</string>
+
+    <!-- settings tab -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_account_section">Account &amp; sync</string>
+    <string name="settings_account_subtitle">Account management and data export</string>
+    <string name="settings_appearance_section">Appearance</string>
+    <string name="settings_appearance_subtitle">Units, zones, heart rate and thresholds</string>
+    <string name="settings_startup_screen">Startup screen</string>
+    <string name="settings_data_source">Active data source</string>
+    <string name="settings_stats_granularity">Stats granularity</string>
+    <string name="settings_logout">Sign out</string>
+    <string name="settings_strava_notifications">Strava sync notifications</string>
+    <string name="settings_cockpit_prefs">Cockpit preferences</string>
+
+    <!-- athlete profile -->
+    <string name="profile_title">Athletic profile</string>
+    <string name="profile_description">This profile calibrates heart rate zones and helps interpret effort level.</string>
+    <string name="profile_help_text">This info improves estimates if you don\'t enter your zones directly.</string>
+    <string name="profile_zone_method">Zone calculation method</string>
+    <string name="profile_manual_mode">I enter my values</string>
+    <string name="profile_manual_mode_desc">Profile fields are used directly to calculate your zones.</string>
+    <string name="profile_auto_mode">Infer automatically</string>
+    <string name="profile_auto_mode_desc">The app can fill missing values using age or available history.</string>
+    <string name="profile_values_source">Values source</string>
+    <string name="profile_cardio_data">Heart rate data</string>
+    <string name="profile_weight">Weight (kg)</string>
+    <string name="profile_birth_year">Birth year</string>
+    <string name="profile_weight_placeholder">e.g. 72</string>
+    <string name="profile_birth_year_placeholder">e.g. 1985</string>
+    <string name="profile_hr_rest">Resting HR</string>
+    <string name="profile_hr_max">Max HR</string>
+    <string name="profile_hr_reserve">HR reserve</string>
+    <string name="profile_hr_lthr_test">Threshold HR — 30-min test</string>
+    <string name="profile_hr_abbr">HR</string>
+    <string name="profile_hr_max_estimated">Estimated max HR</string>
+    <string name="profile_enter_lthr">Enter my threshold HR</string>
+    <string name="profile_view_test_protocol">View 30-min test protocol</string>
+
+    <!-- HR test protocol -->
+    <string name="hr_test_title">30-minute field test protocol</string>
+    <string name="hr_test_description">The 30-minute field test estimates your heart rate at threshold (LTHR). This is the most reliable value for calculating your training zones accurately.</string>
+    <string name="hr_test_before_title">Before you start</string>
+    <string name="hr_test_before_1">Do not do this test after a heavy session or recent competition.</string>
+    <string name="hr_test_before_2">Do not do this test if you are very tired, in pain, feverish, or returning from injury.</string>
+    <string name="hr_test_before_3">Allow at least 48 hours without intense training before the test.</string>
+    <string name="hr_test_before_4">Choose a flat, consistent course without interruptions.</string>
+    <string name="hr_test_before_5">Ideally use a chest HR strap rather than a wrist optical sensor.</string>
+    <string name="hr_test_warmup_title">Warm-up</string>
+    <string name="hr_test_warmup_1">Warm up for 15–20 minutes at easy endurance pace.</string>
+    <string name="hr_test_warmup_2">Recover 2–3 minutes of easy jogging before starting the test.</string>
+    <string name="hr_test_run_1">Run 30 minutes at the best steady effort you can sustain.</string>
+    <string name="hr_test_run_2">Don\'t go too fast at the start. The goal is to maintain a high but stable intensity for the full duration.</string>
+    <string name="hr_test_run_3">If your watch allows, press LAP after the first 10 minutes.</string>
+    <string name="hr_test_after_title">After the test</string>
+    <string name="hr_test_after_1">The average heart rate over the last 20 minutes is your estimated LTHR.</string>
+    <string name="hr_test_after_2">Example: if your average HR over the last 20 minutes is 174 bpm, your estimated LTHR is 174.</string>
+    <string name="hr_test_after_3">Enter your LTHR value in your profile under \'30-minute field test\' mode. The app will automatically calculate your HR zones.</string>
+    <string name="hr_test_add_accelerations">Add 3–4 progressive accelerations of 15–20 seconds to prepare for the effort.</string>
+    <string name="hr_test_repeat_tip">Repeat the test every 8–12 weeks if your training changes significantly.</string>
+
+    <!-- HR zone interpretation tips -->
+    <string name="hr_tip_calibrate">For more reliable coaching, enter your resting HR, actual max HR, or do a field test.</string>
+    <string name="hr_tip_enter_fcmax">Enter at least your max HR or birth date to calculate your zones.</string>
+    <string name="hr_tip_pct_fcmax">Your zones are currently calculated using % Max HR. For better accuracy, add your resting HR or do the 30-min field test.</string>
+    <string name="hr_tip_custom_zones_check">Verify that custom zones are continuous, increasing, and non-overlapping.</string>
+    <string name="hr_tip_conditions">Keep similar conditions to compare results.</string>
+    <string name="hr_tip_avoid_conditions">Avoid extreme heat, strong wind, or hilly courses.</string>
+    <string name="hr_tip_no_heavy_session">Do not do this test after a heavy session or recent competition.</string>
+    <string name="hr_tip_health_only">Only do this test if you are in good health.</string>
+    <string name="hr_tip_not_medical">This test does not replace medical advice. If in doubt, consult a health professional.</string>
+
+    <!-- cockpit goals elevation -->
+    <string name="cockpit_goal_elevation_week">Weekly elevation gain</string>
 </resources>

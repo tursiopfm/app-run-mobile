@@ -283,4 +283,77 @@
     <string name="activities_search_hint_title">Titre de l\'activité</string>
     <string name="activities_search_hint_duration">Durée (min ou min:sec)</string>
     <string name="activities_search_hint_dplus">D+ (m)</string>
+
+    <!-- settings tab -->
+    <string name="settings_title">Réglages</string>
+    <string name="settings_account_section">Compte et synchronisation</string>
+    <string name="settings_account_subtitle">Gestion du compte et export de données</string>
+    <string name="settings_appearance_section">Apparence</string>
+    <string name="settings_appearance_subtitle">Unités, zones, fréquence cardiaque et seuils</string>
+    <string name="settings_startup_screen">Écran d\'ouverture</string>
+    <string name="settings_data_source">Source de données active</string>
+    <string name="settings_stats_granularity">Granularité stats</string>
+    <string name="settings_logout">Se déconnecter</string>
+    <string name="settings_strava_notifications">Notifications de synchro Strava</string>
+    <string name="settings_cockpit_prefs">Préférences cockpit</string>
+
+    <!-- athlete profile -->
+    <string name="profile_title">Profil sportif</string>
+    <string name="profile_description">Ce profil sert à calibrer les zones de fréquence cardiaque et à mieux interpréter le niveau d\'effort.</string>
+    <string name="profile_help_text">Ces infos améliorent les estimations si tu ne renseignes pas directement tes zones.</string>
+    <string name="profile_zone_method">Méthode de calcul des zones</string>
+    <string name="profile_manual_mode">Je renseigne mes valeurs</string>
+    <string name="profile_manual_mode_desc">Les champs du profil sont utilisés directement pour calculer tes zones.</string>
+    <string name="profile_auto_mode">Déduire automatiquement</string>
+    <string name="profile_auto_mode_desc">L\'app peut compléter les valeurs manquantes avec l\'âge ou l\'historique disponible.</string>
+    <string name="profile_values_source">Source des valeurs</string>
+    <string name="profile_cardio_data">Données cardio</string>
+    <string name="profile_weight">Poids (kg)</string>
+    <string name="profile_birth_year">Année naissance</string>
+    <string name="profile_weight_placeholder">ex. 72</string>
+    <string name="profile_birth_year_placeholder">ex. 1985</string>
+    <string name="profile_hr_rest">FC repos</string>
+    <string name="profile_hr_max">FC max</string>
+    <string name="profile_hr_reserve">FC réserve</string>
+    <string name="profile_hr_lthr_test">FC seuil test 30 min</string>
+    <string name="profile_hr_abbr">FC</string>
+    <string name="profile_hr_max_estimated">FCmax estimée</string>
+    <string name="profile_enter_lthr">Renseigner ma FC seuil</string>
+    <string name="profile_view_test_protocol">Voir le protocole du test 30 min</string>
+
+    <!-- HR test protocol -->
+    <string name="hr_test_title">Protocole du test terrain 30 minutes</string>
+    <string name="hr_test_description">Le test terrain de 30 minutes permet d\'estimer ta fréquence cardiaque au seuil (LTHR). C\'est la valeur la plus fiable pour calculer tes zones d\'entraînement avec précision.</string>
+    <string name="hr_test_before_title">Avant de commencer</string>
+    <string name="hr_test_before_1">Ne fais pas ce test après une grosse séance ou une compétition récente.</string>
+    <string name="hr_test_before_2">Ne fais pas ce test en cas de fatigue importante, douleur, fièvre ou reprise après blessure.</string>
+    <string name="hr_test_before_3">Prévois au moins 48 h sans entraînement intense avant le test.</string>
+    <string name="hr_test_before_4">Choisis un parcours plat, régulier et sans interruption.</string>
+    <string name="hr_test_before_5">Utilise idéalement une ceinture cardio plutôt qu\'un capteur optique au poignet.</string>
+    <string name="hr_test_warmup_title">Échauffement</string>
+    <string name="hr_test_warmup_1">Échauffe-toi 15 à 20 minutes en endurance facile.</string>
+    <string name="hr_test_warmup_2">Récupère 2 à 3 minutes en footing facile avant de commencer le test.</string>
+    <string name="hr_test_run_1">Cours 30 minutes au meilleur effort régulier possible.</string>
+    <string name="hr_test_run_2">Ne pars pas trop vite. L\'objectif est de tenir une intensité forte mais stable pendant toute la durée du test.</string>
+    <string name="hr_test_run_3">Si ta montre le permet, appuie sur le bouton LAP après les 10 premières minutes.</string>
+    <string name="hr_test_after_title">Après le test</string>
+    <string name="hr_test_after_1">La fréquence cardiaque moyenne des 20 dernières minutes correspond à ton estimation de LTHR.</string>
+    <string name="hr_test_after_2">Exemple : si ta FC moyenne sur les 20 dernières minutes est de 174 bpm, alors ton LTHR estimé est 174.</string>
+    <string name="hr_test_after_3">Entre ta valeur LTHR dans ton profil, dans le mode \'Test terrain 30 minutes\'. L\'app calculera automatiquement tes zones cardio.</string>
+    <string name="hr_test_add_accelerations">Ajoute 3 à 4 accélérations progressives de 15 à 20 secondes pour préparer l\'effort.</string>
+    <string name="hr_test_repeat_tip">Répète le test toutes les 8 à 12 semaines si ton entraînement évolue.</string>
+
+    <!-- HR zone interpretation tips -->
+    <string name="hr_tip_calibrate">Pour un coaching plus fiable, renseigne ta FC repos, ta FC max réelle ou réalise un test terrain.</string>
+    <string name="hr_tip_enter_fcmax">Renseigne au minimum ta FC max ou ta date de naissance pour calculer tes zones.</string>
+    <string name="hr_tip_pct_fcmax">Tes zones sont actuellement calculées avec la méthode % FC max. Pour une meilleure précision, ajoute ta FC repos ou réalise le test terrain de 30 minutes.</string>
+    <string name="hr_tip_custom_zones_check">Vérifie que les zones personnalisées sont continues, croissantes et sans chevauchement.</string>
+    <string name="hr_tip_conditions">Garde des conditions similaires pour comparer les résultats.</string>
+    <string name="hr_tip_avoid_conditions">Évite les fortes chaleurs, le vent fort ou les parcours vallonnés.</string>
+    <string name="hr_tip_no_heavy_session">Ne fais pas ce test après une grosse séance ou une compétition récente.</string>
+    <string name="hr_tip_health_only">Réalise ce test uniquement si tu es en bonne santé.</string>
+    <string name="hr_tip_not_medical">Ce test ne remplace pas un avis médical. En cas de doute, demande l\'avis d\'un professionnel de santé.</string>
+
+    <!-- cockpit goals elevation -->
+    <string name="cockpit_goal_elevation_week">Dénivelé + (semaine)</string>
 </resources>
