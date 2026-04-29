@@ -2283,7 +2283,7 @@ private fun ActivityCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
-                                contentDescription = "Modifier l'activit\u00E9",
+                                contentDescription = stringResource(R.string.activities_edit_title),
                                 tint = TrailColors.ChargeOrange,
                                 modifier = Modifier.size(16.dp)
                             )
@@ -2318,7 +2318,7 @@ private fun ActivityDetailStatusScreen(
     onBack: () -> Unit
 ) {
     Column(Modifier.fillMaxSize().background(TrailColors.Background)) {
-        DetailHeader(title = if (isLoading) "Chargement" else "Détail activité", onBack = onBack)
+        DetailHeader(title = if (isLoading) stringResource(R.string.common_label_loading) else stringResource(R.string.activities_detail_title), onBack = onBack)
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             SectionCard {
                 Text(
@@ -2505,7 +2505,7 @@ private fun NativeActivityMapView(
             MapZoomButton("-") { zoom = (zoom - 1).coerceAtLeast(MinMapZoom) }
         }
         Text(
-            text = "Déplace et zoome la carte",
+            text = stringResource(R.string.activities_drag_map),
             color = Color.White.copy(alpha = 0.9f),
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
@@ -2599,7 +2599,7 @@ private fun ActivityDetailStats(detail: ActivityDetailDraft) {
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             DetailMetricTile("Temps", formatDurationMinutes(detail.movingTimeMin), "", Modifier.weight(1f))
-            DetailMetricTile("Allure", formatPace(detail.paceMinPerKm), "/km", Modifier.weight(1f))
+            DetailMetricTile(stringResource(R.string.activities_field_pace), formatPace(detail.paceMinPerKm), stringResource(R.string.unit_per_km), Modifier.weight(1f))
         }
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -2992,7 +2992,7 @@ private fun ActivitySplitsCard(splits: List<ActivitySplitDraft>) {
 private fun SplitHeaderRow() {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text("Km", color = TrailColors.SubtleText, fontSize = 12.sp, modifier = Modifier.width(38.dp))
-        Text("Allure", color = TrailColors.SubtleText, fontSize = 12.sp, modifier = Modifier.width(64.dp))
+        Text(stringResource(R.string.activities_field_pace), color = TrailColors.SubtleText, fontSize = 12.sp, modifier = Modifier.width(64.dp))
         Text("", color = TrailColors.SubtleText, fontSize = 12.sp, modifier = Modifier.weight(1f))
         Text("Élev.", color = TrailColors.SubtleText, fontSize = 12.sp, modifier = Modifier.width(52.dp))
         Text("FC", color = TrailColors.SubtleText, fontSize = 12.sp, modifier = Modifier.width(38.dp))
@@ -3347,7 +3347,7 @@ private fun SearchFilterBar(
         ) {
             Icon(
                 imageVector = Icons.Default.FilterList,
-                contentDescription = "Filtre",
+                contentDescription = stringResource(R.string.activities_filter_label),
                 tint = TrailColors.ChargeOrange,
                 modifier = Modifier.size(20.dp)
             )
@@ -3380,9 +3380,9 @@ private fun ActiveFiltersRow(
             filter.direction != ActivityFilterState().direction
         if (sortChanged || filter.hasValueFilters()) {
             val arrow = if (filter.direction == SortDirection.Asc) "↑" else "↓"
-            val parts = mutableListOf("Tri: ${filter.criterion.label} $arrow")
+            val parts = mutableListOf(stringResource(R.string.activities_sort_label, filter.criterion.label, arrow))
             if (filter.typeFilter.isNotBlank()) {
-                parts += "Activité=${displayActivityType(filter.typeFilter, context)}"
+                parts += "${stringResource(R.string.activities_single)}=${displayActivityType(filter.typeFilter, context)}"
             }
             rangeChipText(
                 "Date",
@@ -3390,7 +3390,7 @@ private fun ActiveFiltersRow(
                 formatIsoDateForDisplay(filter.dateTo)
             )?.let { parts += it }
             rangeChipText("Dist", filter.distanceMin, filter.distanceMax)?.let { parts += it }
-            rangeChipText("Allure", filter.paceMin, filter.paceMax)?.let { parts += it }
+            rangeChipText(stringResource(R.string.activities_field_pace), filter.paceMin, filter.paceMax)?.let { parts += it }
             rangeChipText("Durée", filter.durationMin, filter.durationMax)?.let { parts += it }
             rangeChipText("D+", filter.dPlusMin, filter.dPlusMax)?.let { parts += it }
             DismissChip(
@@ -3486,7 +3486,7 @@ private fun ActivitiesSearchScreen(
         ) {
             item {
                 SectionCard {
-                    SectionTitle("Rechercher par")
+                    SectionTitle(stringResource(R.string.activities_search_by))
                     Spacer(Modifier.height(10.dp))
                     Row(
                         modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -3613,7 +3613,7 @@ private fun ActivitiesFilterScreen(
                 modifier = Modifier.size(22.dp).clickable { onBack() }
             )
             Text(
-                text = "Filtre",
+                text = stringResource(R.string.activities_filter_label),
                 color = TrailColors.Text,
                 fontWeight = FontWeight.Bold,
                 fontSize = 17.sp,
@@ -3635,7 +3635,7 @@ private fun ActivitiesFilterScreen(
         ) {
             item {
                 SectionCard {
-                    SectionTitle("Trier et filtrer")
+                    SectionTitle(stringResource(R.string.activities_sort_filter))
                     Spacer(Modifier.height(10.dp))
                     ActivitySortCriterion.values().forEach { option ->
                         val binding = rangeBindingFor(
@@ -4277,6 +4277,11 @@ private fun ActivityEditScreen(
     var isSaving by remember(activity.id) { mutableStateOf(false) }
     val supportsIntensity = typeSupportsIntensity(type)
     val chooseSportMsg = stringResource(R.string.cockpit_choose_sport)
+    val errInvalidTitle = stringResource(R.string.error_invalid_title)
+    val errInvalidDistance = stringResource(R.string.error_invalid_distance)
+    val errInvalidDuration = stringResource(R.string.error_invalid_duration)
+    val errActivityLoad = stringResource(R.string.error_activity_load_failed)
+    val errInvalidElevation = stringResource(R.string.activities_field_elevation) + " invalide."
 
     Column(
         modifier = Modifier
@@ -4300,7 +4305,7 @@ private fun ActivityEditScreen(
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Modifier l'activit\u00E9",
+                    text = stringResource(R.string.activities_edit_title),
                     color = TrailColors.Text,
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp
@@ -4321,10 +4326,10 @@ private fun ActivityEditScreen(
         ) {
             item {
                 SectionCard {
-                    SectionTitle("Activit\u00E9")
+                    SectionTitle(stringResource(R.string.activities_single))
                     Spacer(Modifier.height(8.dp))
                     ActivityEditNumberField(
-                        label = "Titre",
+                        label = stringResource(R.string.activities_field_title),
                         value = activityName,
                         keyboardType = KeyboardType.Text
                     ) { activityName = it }
@@ -4336,19 +4341,19 @@ private fun ActivityEditScreen(
                     SectionTitle("M\u00E9triques")
                     Spacer(Modifier.height(12.dp))
                     ActivityEditNumberField(
-                        label = "Distance (km)",
+                        label = stringResource(R.string.activities_field_distance),
                         value = distanceKm,
                         keyboardType = KeyboardType.Decimal
                     ) { distanceKm = sanitizeDecimalInput(it) }
                     Spacer(Modifier.height(12.dp))
                     ActivityEditNumberField(
-                        label = "Dur\u00E9e (min:sec)",
+                        label = stringResource(R.string.activities_field_duration),
                         value = movingTimeMin,
                         keyboardType = KeyboardType.Text
                     ) { movingTimeMin = sanitizeDurationInput(it) }
                     Spacer(Modifier.height(12.dp))
                     ActivityEditNumberField(
-                        label = "D\u00E9nivel\u00E9 positif (m)",
+                        label = stringResource(R.string.activities_field_elevation),
                         value = dPlus,
                         keyboardType = KeyboardType.Number
                     ) { dPlus = it.filter(Char::isDigit) }
@@ -4426,10 +4431,10 @@ private fun ActivityEditScreen(
                             val parsedDPlus = dPlus.toIntOrNull()
 
                             when {
-                                activityName.isBlank() -> errorMessage = "Titre invalide."
-                                parsedDistance == null || parsedDistance < 0 -> errorMessage = "Distance invalide."
-                                parsedDuration == null || parsedDuration < 0 -> errorMessage = "Dur\u00E9e invalide. Utilise le format min:sec."
-                                parsedDPlus == null || parsedDPlus < 0 -> errorMessage = "D\u00E9nivel\u00E9 invalide."
+                                activityName.isBlank() -> errorMessage = errInvalidTitle
+                                parsedDistance == null || parsedDistance < 0 -> errorMessage = errInvalidDistance
+                                parsedDuration == null || parsedDuration < 0 -> errorMessage = errInvalidDuration
+                                parsedDPlus == null || parsedDPlus < 0 -> errorMessage = errInvalidElevation
                                 type.isBlank() -> errorMessage = chooseSportMsg
                                 else -> {
                                     errorMessage = null
@@ -5400,7 +5405,7 @@ private fun BlockConfigScreen(
         ) {
             item("hdr_visible") {
                 Text(
-                    "Activités à afficher",
+                    stringResource(R.string.activities_to_display),
                     color = TrailColors.SubtleText,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
@@ -6433,22 +6438,23 @@ private fun isSwimActivityType(type: String): Boolean {
     return type == "Swim"
 }
 
+@Composable
 private fun fourthMetricForActivity(activity: ActivityDraft): ActivityMetricSpec {
     return when {
         isBikeActivityType(activity.type) -> ActivityMetricSpec(
-            label = "Vitesse moy.",
+            label = stringResource(R.string.activities_field_speed),
             value = formatSpeed(activity.distanceKm, activity.movingTimeMin),
-            unit = "km/h"
+            unit = stringResource(R.string.unit_km_h)
         )
         isSwimActivityType(activity.type) -> ActivityMetricSpec(
-            label = "Allure",
+            label = stringResource(R.string.activities_field_pace),
             value = formatSwimPace(activity.distanceKm, activity.movingTimeMin),
-            unit = "m:s/100m"
+            unit = stringResource(R.string.unit_swim_pace)
         )
         else -> ActivityMetricSpec(
-            label = "Allure",
+            label = stringResource(R.string.activities_field_pace),
             value = formatPace(activity.paceMinPerKm),
-            unit = "/km"
+            unit = stringResource(R.string.unit_per_km)
         )
     }
 }

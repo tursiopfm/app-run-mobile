@@ -256,4 +256,24 @@
     <string name="charge_form_label">Forme</string>
     <string name="charge_weekly_short">Charge hebdo</string>
     <string name="charge_overloaded_msg">Repos conseillé ou séance très facile.</string>
+
+    <!-- activities tab -->
+    <string name="activities_title">Activités</string>
+    <string name="activities_single">Activité</string>
+    <string name="activities_detail_title">Détail activité</string>
+    <string name="activities_edit_title">Modifier l\'activité</string>
+    <string name="activities_field_title">Titre</string>
+    <string name="activities_field_distance">Distance (km)</string>
+    <string name="activities_field_duration">Durée (min:sec)</string>
+    <string name="activities_field_elevation">Dénivelé positif (m)</string>
+    <string name="activities_field_pace">Allure</string>
+    <string name="activities_field_speed">Vitesse moy.</string>
+    <string name="activities_search_by">Rechercher par</string>
+    <string name="activities_sort_filter">Trier et filtrer</string>
+    <string name="activities_filter_label">Filtre</string>
+    <string name="activities_sort_label">Tri: %1$s %2$s</string>
+    <string name="activities_to_display">Activités à afficher</string>
+    <string name="activities_drag_map">Déplace et zoome la carte</string>
+    <string name="activities_zoom_in">Zoomer</string>
+    <string name="activities_zoom_out">Dézoomer</string>
 </resources>

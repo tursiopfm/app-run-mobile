@@ -256,4 +256,24 @@
     <string name="charge_form_label">Form</string>
     <string name="charge_weekly_short">Weekly load</string>
     <string name="charge_overloaded_msg">Rest recommended or very easy session.</string>
+
+    <!-- activities tab -->
+    <string name="activities_title">Activities</string>
+    <string name="activities_single">Activity</string>
+    <string name="activities_detail_title">Activity detail</string>
+    <string name="activities_edit_title">Edit activity</string>
+    <string name="activities_field_title">Title</string>
+    <string name="activities_field_distance">Distance (km)</string>
+    <string name="activities_field_duration">Duration (min:sec)</string>
+    <string name="activities_field_elevation">Elevation gain (m)</string>
+    <string name="activities_field_pace">Pace</string>
+    <string name="activities_field_speed">Avg speed</string>
+    <string name="activities_search_by">Search by</string>
+    <string name="activities_sort_filter">Sort and filter</string>
+    <string name="activities_filter_label">Filter</string>
+    <string name="activities_sort_label">Sort: %1$s %2$s</string>
+    <string name="activities_to_display">Activities to display</string>
+    <string name="activities_drag_map">Drag and zoom the map</string>
+    <string name="activities_zoom_in">Zoom in</string>
+    <string name="activities_zoom_out">Zoom out</string>
 </resources>
