@@ -46,6 +46,18 @@ export async function POST(request: NextRequest) {
         .select('id')
         .single()
 
+      const { data: connection } = await supabase
+        .from('provider_connections')
+        .select('user_id')
+        .eq('provider', 'strava')
+        .eq('provider_user_id', String(event.owner_id))
+        .single()
+
+      if (!connection) {
+        console.warn('Webhook: unknown owner_id', event.owner_id)
+        return
+      }
+
       if (event.object_type === 'activity') {
         await supabase.from('sync_jobs').insert({
           provider:  'strava',

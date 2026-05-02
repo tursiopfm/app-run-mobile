@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/database/supabase-server'
 import { AppShell } from '@/components/navigation/AppShell'
 import { Users, Plug, Activity, Webhook, RefreshCw, AlertTriangle, Brain } from 'lucide-react'
 
@@ -17,7 +19,11 @@ const RECENT_WEBHOOKS = [
   { provider: 'strava', event: 'activity.create', at: '2026-05-01 07:55' },
 ]
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/settings')
+
   return (
     <AppShell title="Admin">
       <div className="px-4 py-4 space-y-4">
