@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  background-color: #0f1117;
+  color: #e8eaf0;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #1a1d2e; }
+::-webkit-scrollbar-thumb { background: #2a2f45; border-radius: 2px; }
