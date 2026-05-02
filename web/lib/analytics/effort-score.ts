@@ -1,6 +1,9 @@
 import type { ActivityInput, CesResult, EffortLabel, SportCategory, SportConfig } from './types'
 
-const SPORT_CONFIGS: Record<SportCategory, SportConfig> = {
+// Simplified muscular load ratio: approximates Blueprint K_muscular without per-sport muscularSensitivity
+const MUSCLE_LOAD_RATIO = 0.6
+
+const SPORT_CONFIGS = {
   run:          { sportBase: 100, sportFactor: 1.00, defaultIF: 0.75, minIF: 0.4, maxIF: 1.3, elevationSensitivity: 8,  thresholdPaceSecPerKm: 300, thresholdPower: null },
   trail_run:    { sportBase: 100, sportFactor: 1.15, defaultIF: 0.75, minIF: 0.4, maxIF: 1.3, elevationSensitivity: 12, thresholdPaceSecPerKm: 330, thresholdPower: null },
   walk:         { sportBase:  60, sportFactor: 0.50, defaultIF: 0.50, minIF: 0.3, maxIF: 0.8, elevationSensitivity: 10, thresholdPaceSecPerKm: null, thresholdPower: null },
@@ -14,7 +17,7 @@ const SPORT_CONFIGS: Record<SportCategory, SportConfig> = {
   mobility:     { sportBase:  40, sportFactor: 0.40, defaultIF: 0.50, minIF: 0.2, maxIF: 0.7, elevationSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: null },
   cardio_other: { sportBase:  80, sportFactor: 0.80, defaultIF: 0.65, minIF: 0.3, maxIF: 1.1, elevationSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: null },
   other:        { sportBase:  70, sportFactor: 0.70, defaultIF: 0.60, minIF: 0.3, maxIF: 1.0, elevationSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: null },
-}
+} as const satisfies Record<SportCategory, SportConfig>
 
 export function normalizeSportType(rawSportType: string, name?: string): SportCategory {
   const raw   = rawSportType.toLowerCase()
@@ -30,6 +33,7 @@ export function normalizeSportType(rawSportType: string, name?: string): SportCa
   if (raw.includes('swim'))                                                     return 'swim'
   if (raw.includes('strength') || raw.includes('weight') || raw.includes('muscu')) return 'strength'
   if (raw.includes('yoga') || raw.includes('mobility') || raw.includes('stretch')) return 'mobility'
+  if (raw.includes('cardio'))                                                    return 'cardio_other'
   return 'other'
 }
 
@@ -47,14 +51,14 @@ function effortLabel(ces: number): EffortLabel {
 }
 
 function calcIF(a: ActivityInput, cfg: SportConfig): number {
-  if (cfg.thresholdPaceSecPerKm && a.distanceMeters && a.distanceMeters > 200 && a.movingTimeSeconds > 0) {
+  if (cfg.thresholdPaceSecPerKm !== null && a.distanceMeters != null && a.distanceMeters > 200 && a.movingTimeSeconds > 0) {
     const paceSecPerKm = a.movingTimeSeconds / (a.distanceMeters / 1000)
     return clamp(cfg.thresholdPaceSecPerKm / paceSecPerKm, cfg.minIF, cfg.maxIF)
   }
-  if (cfg.thresholdPower && a.normalizedPowerWatts) {
+  if (cfg.thresholdPower !== null && a.normalizedPowerWatts != null) {
     return clamp(a.normalizedPowerWatts / cfg.thresholdPower, cfg.minIF, cfg.maxIF)
   }
-  if (cfg.thresholdPower && a.averageWatts) {
+  if (cfg.thresholdPower !== null && a.averageWatts != null) {
     return clamp(a.averageWatts / cfg.thresholdPower, cfg.minIF, cfg.maxIF)
   }
   return cfg.defaultIF
@@ -75,11 +79,12 @@ export function computeCesResult(a: ActivityInput): CesResult {
   const elevFactor    = calcElevationFactor(a, cfg)
   const baseScore     = durationHours * cfg.sportBase * (IF * IF)
   const finalScore    = baseScore * cfg.sportFactor * elevFactor
+  const ces = Math.round(finalScore)
   return {
-    ces:             Math.round(finalScore),
+    ces,
     cardioLoad:      Math.round(baseScore * cfg.sportFactor),
-    muscleLoad:      Math.round(finalScore * 0.6),
-    label:           effortLabel(finalScore),
+    muscleLoad:      Math.round(finalScore * MUSCLE_LOAD_RATIO),
+    label:           effortLabel(ces),
     intensityFactor: Math.round(IF * 100) / 100,
   }
 }
