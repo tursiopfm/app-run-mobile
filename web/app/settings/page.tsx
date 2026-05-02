@@ -1,5 +1,6 @@
 import { AppShell } from '@/components/navigation/AppShell'
 import { ExternalLink, ChevronRight, Circle } from 'lucide-react'
+import { AccountSection } from '@/components/settings/AccountSection'
 
 export default function SettingsPage() {
   return (
@@ -55,6 +56,9 @@ export default function SettingsPage() {
             ))}
           </div>
         </section>
+
+        {/* Compte (affiché uniquement si connecté) */}
+        <AccountSection />
       </div>
     </AppShell>
   )
