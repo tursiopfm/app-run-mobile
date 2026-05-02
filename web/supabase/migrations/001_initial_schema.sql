@@ -152,3 +152,18 @@ create table if not exists admin_logs (
   detail      jsonb,
   created_at  timestamptz default now()
 );
+
+-- Auto-update updated_at on row modification
+create extension if not exists moddatetime schema extensions;
+
+create trigger profiles_updated_at
+  before update on profiles
+  for each row execute procedure moddatetime(updated_at);
+
+create trigger provider_connections_updated_at
+  before update on provider_connections
+  for each row execute procedure moddatetime(updated_at);
+
+create trigger activities_updated_at
+  before update on activities
+  for each row execute procedure moddatetime(updated_at);
