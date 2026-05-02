@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/database/supabase-server'
 import type { StravaWebhookEvent } from '@/lib/providers/strava/webhook'
 
-const VERIFY_TOKEN = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN ?? 'trail_cockpit_webhook_secret'
+const VERIFY_TOKEN = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
+if (!VERIFY_TOKEN) throw new Error('Missing required environment variable: STRAVA_WEBHOOK_VERIFY_TOKEN')
 
 // GET: Strava hub challenge validation
 export async function GET(request: NextRequest) {

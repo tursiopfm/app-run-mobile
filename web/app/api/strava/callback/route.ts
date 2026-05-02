@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { exchangeStravaCode } from '@/lib/providers/strava/auth'
 import { createClient } from '@/lib/database/supabase-server'
 
@@ -8,6 +9,16 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
   const code  = searchParams.get('code')
   const error = searchParams.get('error')
+  const state = searchParams.get('state')
+
+  const cookieStore = await cookies()
+  const savedState  = cookieStore.get('strava_oauth_state')?.value
+
+  if (!state || !savedState || state !== savedState) {
+    cookieStore.delete('strava_oauth_state')
+    return NextResponse.redirect(`${APP_URL}/settings?strava=error`)
+  }
+  cookieStore.delete('strava_oauth_state')
 
   if (error || !code) {
     return NextResponse.redirect(`${APP_URL}/settings?strava=error`)
