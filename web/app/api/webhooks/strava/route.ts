@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/database/supabase-server'
 import type { StravaWebhookEvent } from '@/lib/providers/strava/webhook'
 
-const VERIFY_TOKEN = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
-if (!VERIFY_TOKEN) throw new Error('Missing required environment variable: STRAVA_WEBHOOK_VERIFY_TOKEN')
-
 // GET: Strava hub challenge validation
 export async function GET(request: NextRequest) {
-  const { searchParams } = request.nextUrl
-  const mode        = searchParams.get('hub.mode')
-  const challenge   = searchParams.get('hub.challenge')
-  const verifyToken = searchParams.get('hub.verify_token')
+  const verifyToken = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
+  if (!verifyToken) return NextResponse.json({ error: 'webhook not configured' }, { status: 500 })
 
-  if (mode === 'subscribe' && verifyToken === VERIFY_TOKEN && challenge) {
+  const { searchParams } = request.nextUrl
+  const mode      = searchParams.get('hub.mode')
+  const challenge = searchParams.get('hub.challenge')
+  const token     = searchParams.get('hub.verify_token')
+
+  if (mode === 'subscribe' && token === verifyToken && challenge) {
     return NextResponse.json({ 'hub.challenge': challenge })
   }
   return NextResponse.json({ error: 'forbidden' }, { status: 403 })
