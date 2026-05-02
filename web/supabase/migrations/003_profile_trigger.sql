@@ -12,6 +12,10 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
+  if new.email is null then
+    return new;
+  end if;
+
   insert into public.profiles (id, email, role, subscription_status)
   values (
     new.id,
