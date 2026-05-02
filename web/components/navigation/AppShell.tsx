@@ -1,7 +1,8 @@
+import type { ReactNode } from 'react'
 import { BottomNav } from './BottomNav'
 
 type AppShellProps = {
-  children: React.ReactNode
+  children: ReactNode
   title?: string
 }
 
