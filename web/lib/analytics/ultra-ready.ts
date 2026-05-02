@@ -23,7 +23,7 @@ export function computeUltraReady(metrics: DailyMetrics[], targetDate?: string):
   // Score 0–100: freshness weight 40%, fitness 40%, load balance 20%
   const freshnessScore = Math.min(Math.max(freshness / 20, 0), 1) * 40
   const fitnessScore   = Math.min(fitnessLevel / 150, 1) * 40
-  const loadScore      = Math.max(0, (1.2 - loadRatio) / 0.7) * 20
+  const loadScore      = Math.min(Math.max(0, (1.2 - loadRatio) / 0.7), 1) * 20
   const score          = Math.round(freshnessScore + fitnessScore + loadScore)
 
   const label: UltraReadyScore['label'] =

@@ -17,9 +17,9 @@ export type EwmaPoint = {
 }
 
 function nextDay(dateStr: string): string {
-  const d = new Date(dateStr)
-  d.setDate(d.getDate() + 1)
-  return d.toISOString().split('T')[0]
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const date = new Date(Date.UTC(y, m - 1, d + 1))
+  return date.toISOString().split('T')[0]
 }
 
 function fillConsecutiveDays(loads: DailyLoad[]): DailyLoad[] {

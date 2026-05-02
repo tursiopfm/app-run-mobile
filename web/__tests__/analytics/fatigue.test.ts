@@ -2,9 +2,8 @@ import { computeEwma, buildDailyMetrics, type DailyLoad } from '@/lib/analytics/
 
 function makeLoads(days: number, cesPerDay: number): DailyLoad[] {
   return Array.from({ length: days }, (_, i) => {
-    const d = new Date('2026-01-01')
-    d.setDate(d.getDate() + i)
-    return { date: d.toISOString().split('T')[0], ces: cesPerDay }
+    const date = new Date(Date.UTC(2026, 0, 1 + i))
+    return { date: date.toISOString().split('T')[0], ces: cesPerDay }
   })
 }
 
