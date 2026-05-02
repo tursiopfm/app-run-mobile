@@ -32,7 +32,11 @@ export async function middleware(request: NextRequest) {
     process.env.NODE_ENV === 'production' &&
     !user
   ) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    const redirectResponse = NextResponse.redirect(new URL('/login', request.url))
+    supabaseResponse.cookies.getAll().forEach(c =>
+      redirectResponse.cookies.set(c.name, c.value)
+    )
+    return redirectResponse
   }
 
   return supabaseResponse
