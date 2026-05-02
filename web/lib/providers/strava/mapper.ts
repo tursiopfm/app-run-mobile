@@ -1,6 +1,8 @@
+export type Provider = 'strava' | 'garmin' | 'polar' | 'suunto' | 'coros' | 'fit_file'
+
 export type NormalizedActivity = {
   userId: string
-  provider: string
+  provider: Provider
   providerActivityId: string
   sportType: string
   name: string
@@ -42,7 +44,7 @@ export function stravaToNormalized(userId: string, a: StravaActivity): Normalize
     userId,
     provider: 'strava',
     providerActivityId: String(a.id),
-    sportType: a.sport_type || a.type,
+    sportType: a.sport_type ?? a.type,
     name: a.name,
     startTime: a.start_date_local ?? a.start_date,
     durationSec: a.elapsed_time,
