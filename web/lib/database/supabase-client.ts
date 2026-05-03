@@ -1,14 +1,8 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-function requireEnv(name: string): string {
-  const val = process.env[name]
-  if (!val) throw new Error(`Missing required environment variable: ${name}`)
-  return val
-}
-
 export function createClient() {
-  return createBrowserClient(
-    requireEnv('NEXT_PUBLIC_SUPABASE_URL'),
-    requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY')
-  )
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !key) throw new Error('Missing Supabase env vars — check .env.local')
+  return createBrowserClient(url, key)
 }
