@@ -1,34 +1,24 @@
+import { redirect } from 'next/navigation'
 import { AppShell } from '@/components/navigation/AppShell'
-import { KpiCard }  from '@/components/ui/KpiCard'
+import { KpiCard } from '@/components/ui/KpiCard'
 import { LoadChart } from '@/components/ui/LoadChart'
-import { buildDailyMetrics } from '@/lib/analytics/fatigue'
+import { createClient } from '@/lib/database/supabase-server'
+import { getDashboardData } from '@/lib/data/dashboard'
 
-// Deterministic mock data (server component — no Math.random)
-const MOCK_LOADS = [
-  { date: '2026-04-03', ces: 45 }, { date: '2026-04-04', ces: 0  },
-  { date: '2026-04-05', ces: 72 }, { date: '2026-04-06', ces: 55 },
-  { date: '2026-04-07', ces: 88 }, { date: '2026-04-08', ces: 0  },
-  { date: '2026-04-09', ces: 30 }, { date: '2026-04-10', ces: 60 },
-  { date: '2026-04-11', ces: 48 }, { date: '2026-04-12', ces: 95 },
-  { date: '2026-04-13', ces: 0  }, { date: '2026-04-14', ces: 40 },
-  { date: '2026-04-15', ces: 78 }, { date: '2026-04-16', ces: 62 },
-  { date: '2026-04-17', ces: 0  }, { date: '2026-04-18', ces: 85 },
-  { date: '2026-04-19', ces: 50 }, { date: '2026-04-20', ces: 110},
-  { date: '2026-04-21', ces: 0  }, { date: '2026-04-22', ces: 35 },
-  { date: '2026-04-23', ces: 68 }, { date: '2026-04-24', ces: 55 },
-  { date: '2026-04-25', ces: 92 }, { date: '2026-04-26', ces: 0  },
-  { date: '2026-04-27', ces: 45 }, { date: '2026-04-28', ces: 70 },
-  { date: '2026-04-29', ces: 58 }, { date: '2026-04-30', ces: 80 },
-  { date: '2026-05-01', ces: 0  }, { date: '2026-05-02', ces: 65 },
-]
+export default async function DashboardPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
-export default function DashboardPage() {
-  const metrics = buildDailyMetrics(MOCK_LOADS)
-  const latest  = metrics[metrics.length - 1] ?? { atl: 0, ctl: 0, tsb: 0, dailyLoad: 0 }
-  const chartData = metrics.slice(-14).map((m) => ({
+  const { dailyMetrics, recentActivities, hasActivities } = await getDashboardData(user.id)
+
+  const latest = dailyMetrics[dailyMetrics.length - 1] ?? {
+    atl: 0, ctl: 0, tsb: 0, dailyLoad: 0,
+  }
+  const chartData = dailyMetrics.slice(-14).map((m) => ({
     date: m.date.slice(5),
-    atl:  m.atl,
-    ctl:  m.ctl,
+    atl: m.atl,
+    ctl: m.ctl,
   }))
 
   return (
@@ -37,14 +27,20 @@ export default function DashboardPage() {
         {/* KPIs */}
         <div className="grid grid-cols-2 gap-3">
           <KpiCard label="Fatigue (ATL)" value={Math.round(latest.atl)} sub="7j EWMA" />
-          <KpiCard label="Fitness (CTL)"  value={Math.round(latest.ctl)} sub="42j EWMA" accent />
-          <KpiCard label="Fraîcheur (TSB)" value={Math.round(latest.tsb)} sub={latest.tsb >= 0 ? 'Reposé ✓' : 'Fatigué'} />
-          <KpiCard label="Charge du jour"  value={Math.round(latest.dailyLoad)} unit="CES" />
+          <KpiCard label="Fitness (CTL)" value={Math.round(latest.ctl)} sub="42j EWMA" accent />
+          <KpiCard
+            label="Fraîcheur (TSB)"
+            value={Math.round(latest.tsb)}
+            sub={latest.tsb >= 0 ? 'Reposé ✓' : 'Fatigué'}
+          />
+          <KpiCard label="Charge du jour" value={Math.round(latest.dailyLoad)} unit="CES" />
         </div>
 
         {/* Load chart */}
         <div className="bg-trail-card border border-trail-border rounded-2xl p-4">
-          <h2 className="text-sm font-semibold text-trail-text mb-3">Fatigue vs Fitness — 14 jours</h2>
+          <h2 className="text-sm font-semibold text-trail-text mb-3">
+            Fatigue vs Fitness — 14 jours
+          </h2>
           <LoadChart data={chartData} />
           <div className="flex gap-4 mt-3">
             <span className="flex items-center gap-1.5 text-xs text-trail-muted">
@@ -56,18 +52,40 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Week placeholder */}
+        {/* Cette semaine */}
         <div className="bg-trail-card border border-trail-border rounded-2xl p-4">
           <h2 className="text-sm font-semibold text-trail-text mb-2">Cette semaine</h2>
-          <p className="text-trail-muted text-xs mb-3">Connecte Strava pour voir tes activités</p>
-          <div className="grid grid-cols-7 gap-1">
-            {['L','M','M','J','V','S','D'].map((d, i) => (
-              <div key={i} className="flex flex-col items-center gap-1">
-                <div className="w-full h-10 rounded-lg bg-trail-border/40" />
-                <span className="text-xs text-trail-muted">{d}</span>
-              </div>
-            ))}
-          </div>
+          {!hasActivities ? (
+            <div className="py-4 text-center space-y-2">
+              <p className="text-xs text-trail-muted">Aucune activité importée</p>
+              <a href="/settings" className="inline-block text-xs text-trail-accent underline">
+                Connecter Strava dans les réglages →
+              </a>
+            </div>
+          ) : recentActivities.length === 0 ? (
+            <p className="text-xs text-trail-muted py-2">Aucune activité cette semaine</p>
+          ) : (
+            <ul className="space-y-2">
+              {recentActivities.map((a) => (
+                <li
+                  key={a.id}
+                  className="flex items-center justify-between py-1.5 border-b border-trail-border last:border-0"
+                >
+                  <div>
+                    <p className="text-sm text-trail-text">{a.name}</p>
+                    <p className="text-xs text-trail-muted">
+                      {a.sport_type}
+                      {a.distance_m ? ` · ${(a.distance_m / 1000).toFixed(1)} km` : ''}
+                      {a.elevation_gain_m ? ` · +${Math.round(a.elevation_gain_m)}m` : ''}
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-trail-accent">
+                    {a.ces != null ? `${Math.round(a.ces)} CES` : '—'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </AppShell>
