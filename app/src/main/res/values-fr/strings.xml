@@ -1,0 +1,359 @@
+<resources>
+    <string name="app_name">Trail Cockpit</string>
+
+    <!-- common -->
+    <string name="common_button_save">Enregistrer</string>
+    <string name="common_button_cancel">Annuler</string>
+    <string name="common_button_apply">Appliquer</string>
+    <string name="common_button_reset">Réinitialiser</string>
+    <string name="common_button_validate">Valider</string>
+    <string name="common_button_reconnect">Reconnecter</string>
+    <string name="common_button_connect">Connecter</string>
+    <string name="common_button_sync">Sync</string>
+    <string name="common_button_search">Rechercher</string>
+    <string name="common_button_add_block">Ajouter un bloc</string>
+    <string name="common_button_back">Retour</string>
+    <string name="common_label_loading">Chargement</string>
+    <string name="common_label_loading_dots">Chargement…</string>
+    <string name="common_label_saving">Enregistrement…</string>
+    <string name="common_label_all">Toutes</string>
+    <string name="common_label_all_activities">Toutes activités</string>
+    <string name="common_label_week">Semaine</string>
+    <string name="common_label_month">Mois</string>
+    <string name="common_label_year">Année</string>
+    <string name="common_label_total">Total</string>
+    <string name="common_label_week_caps">SEMAINE</string>
+    <string name="common_label_year_caps">ANNÉE</string>
+    <string name="common_label_label">Label</string>
+
+    <!-- units -->
+    <string name="unit_km">km</string>
+    <string name="unit_m">m</string>
+    <string name="unit_km_h">km/h</string>
+    <string name="unit_per_km">/km</string>
+    <string name="unit_swim_pace">m:s/100m</string>
+    <string name="unit_duration_ms">mm:ss</string>
+    <string name="unit_duration_hms">h:mm:ss</string>
+    <string name="unit_kg">kg</string>
+    <string name="unit_pct_fcmax">% FC max</string>
+
+    <!-- errors -->
+    <string name="error_email_password_required">Email et mot de passe requis.</string>
+    <string name="error_first_last_name_required">Prénom et nom requis.</string>
+    <string name="error_gender_required">Veuillez sélectionner un genre.</string>
+    <string name="error_password_too_short">Le mot de passe doit faire au moins 6 caractères.</string>
+    <string name="error_unknown">Erreur inconnue</string>
+    <string name="error_invalid_title">Titre invalide.</string>
+    <string name="error_invalid_distance">Distance invalide.</string>
+    <string name="error_invalid_duration">Durée invalide. Utilise le format min:sec.</string>
+    <string name="error_no_activity_match">Aucune activité ne correspond.</string>
+    <string name="error_activity_load_failed">Impossible de charger l\'activité.</string>
+    <string name="error_map_unavailable">Tracé indisponible</string>
+    <string name="error_detail_unavailable">Détail indisponible</string>
+
+    <!-- formats -->
+    <string name="format_date_placeholder">JJ/MM/AAAA</string>
+    <string name="format_duration_hint">min ou min:sec</string>
+
+    <!-- sports -->
+    <string name="sport_run">Running</string>
+    <string name="sport_bike">Vélo</string>
+    <string name="sport_swim">Natation</string>
+    <string name="sport_run_abbr">RUN</string>
+    <string name="sport_bike_abbr">VÉLO</string>
+    <string name="sport_swim_abbr">NATATION</string>
+    <string name="sport_run_type_run">Course</string>
+    <string name="sport_run_type_trail">Trail</string>
+    <string name="sport_run_type_walk">Marche</string>
+    <string name="sport_run_type_hike">Randonnée</string>
+    <string name="sport_bike_type_ride">Vélo</string>
+    <string name="sport_bike_type_virtual">Vélo virtuel</string>
+    <string name="sport_bike_type_ebike">Vélo électrique</string>
+    <string name="sport_swim_type">Natation</string>
+
+    <!-- heart rate zones -->
+    <string name="hr_zone_z1_name">Endurance fondamentale</string>
+    <string name="hr_zone_z1_description">Footing très facile, récupération, échauffement.</string>
+    <string name="hr_zone_z2_name">Endurance active</string>
+    <string name="hr_zone_z2_description">Endurance active, effort soutenu mais contrôlé.</string>
+    <string name="hr_zone_z3_name">Travail au seuil</string>
+    <string name="hr_zone_z3_description">Travail au seuil, effort difficile mais tenable.</string>
+    <string name="hr_zone_z4_name">VO₂max / VMA</string>
+    <string name="hr_zone_z4_description">VO₂max, côtes, intervalles courts, effort très intense.</string>
+    <string name="hr_zone_z5_name">VMA / très intense</string>
+    <string name="hr_zone_z5_description">Effort très intense, sprint.</string>
+    <string name="hr_zone_custom_zones">Zones personnalisées</string>
+    <string name="hr_zone_lt_hr">Seuil anaérobie / LTHR</string>
+    <string name="hr_zone_aet">Seuil aérobie / AeT</string>
+    <string name="hr_zone_zones_used">Zones FC utilisées</string>
+    <string name="hr_zone_min">Min</string>
+    <string name="hr_zone_max">Max</string>
+    <string name="hr_zone_optimal_range">Plage optimale</string>
+
+    <!-- auth -->
+    <string name="auth_subtitle">AI Coach Sport</string>
+    <string name="auth_tab_login">Connexion</string>
+    <string name="auth_tab_create_account">Créer un compte</string>
+    <string name="auth_field_first_name">Prénom</string>
+    <string name="auth_field_last_name">Nom</string>
+    <string name="auth_field_gender">Genre</string>
+    <string name="auth_field_birth_date">Date de naissance</string>
+    <string name="auth_field_email">Email</string>
+    <string name="auth_field_password">Mot de passe</string>
+    <string name="auth_button_login">Se connecter</string>
+    <string name="auth_button_create">Créer mon compte</string>
+    <string-array name="auth_genders">
+        <item>Homme</item>
+        <item>Femme</item>
+        <item>Autre</item>
+    </string-array>
+
+    <!-- week table -->
+    <string name="week_table_header_session">Séance</string>
+    <string name="week_table_header_label">Label</string>
+    <string name="week_table_header_volume">Volume (km)</string>
+    <string name="week_table_header_elevation">Dénivelé (m)</string>
+    <string name="week_table_header_total">Total</string>
+
+    <!-- draft cards -->
+    <string name="draft_data_sources_title">Sources de données</string>
+    <string name="draft_data_sources_subtitle">Le draft s\'appuie sur le classeur Excel existant et conserve temporairement l\'API push.</string>
+    <string name="draft_api_push_active">API push active</string>
+    <string name="draft_api_push_inactive">API push inactive</string>
+    <string name="draft_mode_push">Mode push</string>
+    <string name="draft_mode_strava">Mode Strava OAuth</string>
+    <string name="draft_workbook_mapping_title">Mapping du fichier Excel</string>
+    <string name="draft_workbook_mapping_subtitle">Les onglets les plus utiles ont été traduits en blocs d\'application mobile.</string>
+    <string name="draft_prep_cycles_title">Cycles de préparation</string>
+    <string name="draft_prep_cycles_subtitle">Le classeur contient déjà le découpage de saison. On peut donc le reprendre tel quel dans l\'app.</string>
+    <string name="draft_delivery_title">Plan de livraison</string>
+    <string name="draft_delivery_subtitle">Le draft pose l\'UX mobile et le mapping métier. L\'étape suivante est l\'auth Strava réelle.</string>
+    <string name="draft_recent_activities_title">Dernières activités détectées</string>
+    <string name="draft_recent_activities_subtitle">Aperçu aligné sur l\'onglet Activities du fichier source.</string>
+    <string name="draft_strava_title">Connexion Strava</string>
+    <string name="draft_strava_athlete">Athlète</string>
+    <string name="draft_strava_auth">Auth</string>
+    <string name="draft_strava_status">Statut</string>
+    <string name="draft_strava_connected">Connecté</string>
+    <string name="draft_strava_pending">À connecter</string>
+    <string name="draft_strava_button_connect">Connecter Strava</string>
+    <string name="draft_strava_button_reconnect">Reconnecter Strava</string>
+    <string name="draft_suffer_score">Suffer %d</string>
+    <string name="draft_file_ref">Fichier de référence : %s</string>
+    <string name="draft_transition_mode">Mode de transition : %s</string>
+
+    <!-- dashboard tabs -->
+    <string name="dashboard_tab_cockpit">Cockpit</string>
+    <string name="dashboard_tab_stats">Stats</string>
+    <string name="dashboard_tab_charge">Charge</string>
+    <string name="dashboard_tab_plan">Plan</string>
+    <string name="dashboard_tab_activities">Activités</string>
+    <string name="dashboard_tab_settings">Réglages</string>
+
+    <!-- cockpit block display names -->
+    <string name="block_kpis">KPIs &amp; Volume</string>
+    <string name="block_goals">Objectifs</string>
+    <string name="block_chart">Graphique</string>
+    <string name="block_history">Historique</string>
+    <string name="block_km_dplus">Km &amp; D+ cumulés</string>
+    <string name="block_cumul_months">Cumul km par mois</string>
+    <string name="block_load">Charge</string>
+    <string name="block_intensities">Intensités</string>
+    <string name="block_strava">Sync Strava</string>
+    <string name="block_all_activities">Toutes activités</string>
+
+    <!-- chart period -->
+    <string name="chart_period_week">Semaine</string>
+    <string name="chart_period_month">Mois</string>
+    <string name="chart_period_month_year">Mois (année)</string>
+
+    <!-- stats metric -->
+    <string name="stats_metric_km">Km</string>
+    <string name="stats_metric_dplus">D+</string>
+
+    <!-- cockpit tab -->
+    <string name="cockpit_all_activities_title">Km &amp; D+ cumulés — Toutes activités</string>
+    <string name="cockpit_strava_connected">Compte connecté</string>
+    <string name="cockpit_strava_pending">Connexion en attente</string>
+    <string name="cockpit_sync_ready">La sync utilisateur est prête pour la suite.</string>
+    <string name="cockpit_strava_connect">Connecter Strava</string>
+    <string name="cockpit_strava_reconnect">Reconnecter Strava</string>
+    <string name="cockpit_strava_connected_label">Connecté</string>
+    <string name="cockpit_strava_not_connected">Non connecté</string>
+    <string name="cockpit_strava_oauth_status">Statut OAuth</string>
+    <string name="cockpit_strava_athlete">Athlète</string>
+    <string name="cockpit_goals_title">Objectifs</string>
+    <string name="cockpit_goals_bike_title">Objectifs Vélo</string>
+    <string name="cockpit_goals_swim_title">Objectifs Natation</string>
+    <string name="cockpit_goals_set">Régler les objectifs</string>
+    <string name="cockpit_goals_annual_km">Objectif cumulé (année) — km</string>
+    <string name="cockpit_goals_all_km">Total km toutes activités (année)</string>
+    <string name="cockpit_add_block">Ajouter un bloc</string>
+    <string name="cockpit_configure_block">Configurer le bloc</string>
+    <string name="cockpit_block_hidden">Le bloc sera masqué dans le Cockpit.</string>
+    <string name="cockpit_fav_metrics">Choix des métriques favorites</string>
+    <string name="cockpit_shown_first">Affichée en premier dans le Cockpit</string>
+    <string name="cockpit_uncheck_hides_block">Tout décocher masque ce bloc dans le Cockpit</string>
+    <string name="cockpit_period_label">Période de l\'historique</string>
+    <string name="cockpit_period_10w">10 semaines</string>
+    <string name="cockpit_period_12m">12 mois</string>
+    <string name="cockpit_period_16w">Récap 16 semaines</string>
+    <string name="cockpit_chart_period">Période du graphique</string>
+    <string name="cockpit_default_activity">Activité par défaut</string>
+    <string name="cockpit_choose_type">Choisir le type</string>
+    <string name="cockpit_choose_pace">Choisir l\'allure</string>
+    <string name="cockpit_choose_duration">Choisir la durée</string>
+    <string name="cockpit_choose_sport">Choisis un sport.</string>
+    <string name="cockpit_kpis_volume">KPIs &amp; Volume</string>
+    <string name="cockpit_historique">Historique</string>
+    <string name="cockpit_activites_label">Activités —</string>
+    <string name="cockpit_toutes_activites_title">Km &amp; D+ cumulés — Toutes activités</string>
+    <string name="cockpit_cumul_months_title">Cumul km par mois</string>
+
+    <!-- stats tab -->
+    <string name="stats_km_dplus_title">Km &amp; D+ cumulés</string>
+    <string name="stats_km_monthly_title">Cumul km par mois</string>
+    <string name="stats_weekly_label">Hebdomadaire</string>
+    <string name="stats_history_label">Historique</string>
+    <string name="stats_period_label">Période</string>
+    <string name="stats_current_week">S en cours</string>
+    <string name="stats_n1">N-1</string>
+    <string name="stats_n2">N-2</string>
+    <string name="stats_n3">N-3</string>
+    <string name="stats_n4">N-4</string>
+
+    <!-- charge tab -->
+    <string name="charge_weekly_title">Charge hebdomadaire</string>
+    <string name="charge_fatigue_fitness_title">Fatigue vs Capacité — 16 sem</string>
+    <string name="charge_freshness_title">Fraîcheur</string>
+    <string name="charge_intensity_title">Répartition intensité — 30j glissants</string>
+    <string name="charge_intensity_run_title">Répartition intensités — 30j glissants (RUN)</string>
+    <string name="charge_fatigue_7d">Fatigue 7j</string>
+    <string name="charge_fitness_28d">Fitness 28j</string>
+    <string name="charge_tsb_label">TSB Forme / Fatigue</string>
+    <string name="charge_training_capacity">Capacité d\'entraînement</string>
+    <string name="charge_training_load">Charge d\'entraînement</string>
+    <string name="charge_recovery">Récupération</string>
+    <string name="charge_form_state">État de forme</string>
+    <string name="charge_very_fresh">Très frais</string>
+    <string name="charge_fresh">Frais</string>
+    <string name="charge_balanced">Équilibré</string>
+    <string name="charge_recent_fatigue">Fatigue récente</string>
+    <string name="charge_very_low">Très faible</string>
+    <string name="charge_fit">En forme</string>
+    <string name="charge_excellent">Excellente</string>
+    <string name="charge_good">Bonne</string>
+    <string name="charge_low">Faible</string>
+    <string name="charge_loaded">Chargé</string>
+    <string name="charge_overloaded">Surchargé</string>
+    <string name="charge_insufficient_data">Données insuffisantes. Suis le plan avec prudence.</string>
+    <string name="charge_moderate">Charge modérée</string>
+    <string name="charge_balanced_msg">Charge équilibrée. Suis le plan normalement.</string>
+    <string name="charge_rising_fatigue">Fatigue en hausse. Réduis le volume ou fais de l\'endurance.</string>
+    <string name="charge_well_rested">Tu es bien reposé. Idéal pour une séance intense.</string>
+    <string name="charge_good_balance">Bon compromis. Le test terrain de 30 minutes peut encore améliorer la précision.</string>
+    <string name="charge_interpretation_tips">Conseils d\'interprétation</string>
+    <string name="charge_form_label">Forme</string>
+    <string name="charge_weekly_short">Charge hebdo</string>
+    <string name="charge_overloaded_msg">Repos conseillé ou séance très facile.</string>
+
+    <!-- activities tab -->
+    <string name="activities_title">Activités</string>
+    <string name="activities_single">Activité</string>
+    <string name="activities_detail_title">Détail activité</string>
+    <string name="activities_edit_title">Modifier l\'activité</string>
+    <string name="activities_field_title">Titre</string>
+    <string name="activities_field_distance">Distance (km)</string>
+    <string name="activities_field_duration">Durée (min:sec)</string>
+    <string name="activities_field_elevation">Dénivelé positif (m)</string>
+    <string name="activities_field_pace">Allure</string>
+    <string name="activities_field_speed">Vitesse moy.</string>
+    <string name="activities_search_by">Rechercher par</string>
+    <string name="activities_sort_filter">Trier et filtrer</string>
+    <string name="activities_filter_label">Filtre</string>
+    <string name="activities_sort_label">Tri: %1$s %2$s</string>
+    <string name="activities_to_display">Activités à afficher</string>
+    <string name="activities_drag_map">Déplace et zoome la carte</string>
+    <string name="activities_zoom_in">Zoomer</string>
+    <string name="activities_zoom_out">Dézoomer</string>
+    <string name="activities_label_distance">Distance</string>
+    <string name="activities_label_duration">Durée</string>
+    <string name="activities_label_dplus">D+</string>
+    <string name="activities_label_date">Date</string>
+    <string name="activities_search_hint_title">Titre de l\'activité</string>
+    <string name="activities_search_hint_duration">Durée (min ou min:sec)</string>
+    <string name="activities_search_hint_dplus">D+ (m)</string>
+
+    <!-- settings tab -->
+    <string name="settings_title">Réglages</string>
+    <string name="settings_account_section">Compte et synchronisation</string>
+    <string name="settings_account_subtitle">Gestion du compte et export de données</string>
+    <string name="settings_appearance_section">Apparence</string>
+    <string name="settings_appearance_subtitle">Unités, zones, fréquence cardiaque et seuils</string>
+    <string name="settings_startup_screen">Écran d\'ouverture</string>
+    <string name="settings_data_source">Source de données active</string>
+    <string name="settings_stats_granularity">Granularité stats</string>
+    <string name="settings_logout">Se déconnecter</string>
+    <string name="settings_strava_notifications">Notifications de synchro Strava</string>
+    <string name="settings_cockpit_prefs">Préférences cockpit</string>
+
+    <!-- athlete profile -->
+    <string name="profile_title">Profil sportif</string>
+    <string name="profile_description">Ce profil sert à calibrer les zones de fréquence cardiaque et à mieux interpréter le niveau d\'effort.</string>
+    <string name="profile_help_text">Ces infos améliorent les estimations si tu ne renseignes pas directement tes zones.</string>
+    <string name="profile_zone_method">Méthode de calcul des zones</string>
+    <string name="profile_manual_mode">Je renseigne mes valeurs</string>
+    <string name="profile_manual_mode_desc">Les champs du profil sont utilisés directement pour calculer tes zones.</string>
+    <string name="profile_auto_mode">Déduire automatiquement</string>
+    <string name="profile_auto_mode_desc">L\'app peut compléter les valeurs manquantes avec l\'âge ou l\'historique disponible.</string>
+    <string name="profile_values_source">Source des valeurs</string>
+    <string name="profile_cardio_data">Données cardio</string>
+    <string name="profile_weight">Poids (kg)</string>
+    <string name="profile_birth_year">Année naissance</string>
+    <string name="profile_weight_placeholder">ex. 72</string>
+    <string name="profile_birth_year_placeholder">ex. 1985</string>
+    <string name="profile_hr_rest">FC repos</string>
+    <string name="profile_hr_max">FC max</string>
+    <string name="profile_hr_reserve">FC réserve</string>
+    <string name="profile_hr_lthr_test">FC seuil test 30 min</string>
+    <string name="profile_hr_abbr">FC</string>
+    <string name="profile_hr_max_estimated">FCmax estimée</string>
+    <string name="profile_enter_lthr">Renseigner ma FC seuil</string>
+    <string name="profile_view_test_protocol">Voir le protocole du test 30 min</string>
+
+    <!-- HR test protocol -->
+    <string name="hr_test_title">Protocole du test terrain 30 minutes</string>
+    <string name="hr_test_description">Le test terrain de 30 minutes permet d\'estimer ta fréquence cardiaque au seuil (LTHR). C\'est la valeur la plus fiable pour calculer tes zones d\'entraînement avec précision.</string>
+    <string name="hr_test_before_title">Avant de commencer</string>
+    <string name="hr_test_before_1">Ne fais pas ce test après une grosse séance ou une compétition récente.</string>
+    <string name="hr_test_before_2">Ne fais pas ce test en cas de fatigue importante, douleur, fièvre ou reprise après blessure.</string>
+    <string name="hr_test_before_3">Prévois au moins 48 h sans entraînement intense avant le test.</string>
+    <string name="hr_test_before_4">Choisis un parcours plat, régulier et sans interruption.</string>
+    <string name="hr_test_before_5">Utilise idéalement une ceinture cardio plutôt qu\'un capteur optique au poignet.</string>
+    <string name="hr_test_warmup_title">Échauffement</string>
+    <string name="hr_test_warmup_1">Échauffe-toi 15 à 20 minutes en endurance facile.</string>
+    <string name="hr_test_warmup_2">Récupère 2 à 3 minutes en footing facile avant de commencer le test.</string>
+    <string name="hr_test_run_1">Cours 30 minutes au meilleur effort régulier possible.</string>
+    <string name="hr_test_run_2">Ne pars pas trop vite. L\'objectif est de tenir une intensité forte mais stable pendant toute la durée du test.</string>
+    <string name="hr_test_run_3">Si ta montre le permet, appuie sur le bouton LAP après les 10 premières minutes.</string>
+    <string name="hr_test_after_title">Après le test</string>
+    <string name="hr_test_after_1">La fréquence cardiaque moyenne des 20 dernières minutes correspond à ton estimation de LTHR.</string>
+    <string name="hr_test_after_2">Exemple : si ta FC moyenne sur les 20 dernières minutes est de 174 bpm, alors ton LTHR estimé est 174.</string>
+    <string name="hr_test_after_3">Entre ta valeur LTHR dans ton profil, dans le mode \'Test terrain 30 minutes\'. L\'app calculera automatiquement tes zones cardio.</string>
+    <string name="hr_test_add_accelerations">Ajoute 3 à 4 accélérations progressives de 15 à 20 secondes pour préparer l\'effort.</string>
+    <string name="hr_test_repeat_tip">Répète le test toutes les 8 à 12 semaines si ton entraînement évolue.</string>
+
+    <!-- HR zone interpretation tips -->
+    <string name="hr_tip_calibrate">Pour un coaching plus fiable, renseigne ta FC repos, ta FC max réelle ou réalise un test terrain.</string>
+    <string name="hr_tip_enter_fcmax">Renseigne au minimum ta FC max ou ta date de naissance pour calculer tes zones.</string>
+    <string name="hr_tip_pct_fcmax">Tes zones sont actuellement calculées avec la méthode % FC max. Pour une meilleure précision, ajoute ta FC repos ou réalise le test terrain de 30 minutes.</string>
+    <string name="hr_tip_custom_zones_check">Vérifie que les zones personnalisées sont continues, croissantes et sans chevauchement.</string>
+    <string name="hr_tip_conditions">Garde des conditions similaires pour comparer les résultats.</string>
+    <string name="hr_tip_avoid_conditions">Évite les fortes chaleurs, le vent fort ou les parcours vallonnés.</string>
+    <string name="hr_tip_no_heavy_session">Ne fais pas ce test après une grosse séance ou une compétition récente.</string>
+    <string name="hr_tip_health_only">Réalise ce test uniquement si tu es en bonne santé.</string>
+    <string name="hr_tip_not_medical">Ce test ne remplace pas un avis médical. En cas de doute, demande l\'avis d\'un professionnel de santé.</string>
+
+    <!-- cockpit goals elevation -->
+    <string name="cockpit_goal_elevation_week">Dénivelé + (semaine)</string>
+</resources>
