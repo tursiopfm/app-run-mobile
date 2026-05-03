@@ -16,18 +16,22 @@ export default function SignupPage() {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    const supabase = createClient()
-    const { data, error } = await supabase.auth.signUp({ email, password })
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return
-    }
-    if (data.session) {
-      router.push('/dashboard')
-      router.refresh()
-    } else {
-      setCheckEmail(true)
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.signUp({ email, password })
+      if (error) {
+        setError(error.message)
+        return
+      }
+      if (data.session) {
+        router.push('/dashboard')
+        router.refresh()
+      } else {
+        setCheckEmail(true)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur de connexion. Vérifiez votre .env.local.')
+    } finally {
       setLoading(false)
     }
   }
