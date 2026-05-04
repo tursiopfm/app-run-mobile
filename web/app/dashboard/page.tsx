@@ -25,12 +25,8 @@ export default async function DashboardPage() {
         {/* ── 1. Activités (swipeable multi-sport) ── */}
         <ActivitiesBlock sportOverviews={sportOverviews} />
 
-        {/* ── 2. Objectifs (configurable) ── */}
-        <GoalsBlock
-          weekKm={sportOverviews.run.weekKm}
-          weekDPlus={sportOverviews.run.weekDPlus}
-          yearKm={sportOverviews.run.ytdKm}
-        />
+        {/* ── 2. Objectifs (swipeable multi-sport) ── */}
+        <GoalsBlock sportOverviews={sportOverviews} />
 
         {/* ── 3+4. Volume & Ratio — 10 semaines (swipeable multi-sport) ── */}
         <WeeklyStatsBlock sportOverviews={sportOverviews} />
