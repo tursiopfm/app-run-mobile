@@ -1,9 +1,9 @@
 import { importActivities } from '@/lib/sync/import-activities'
 import type { NormalizedActivity } from '@/lib/providers/strava/mapper'
-import { createClient } from '@/lib/database/supabase-server'
+import { createServiceClient } from '@/lib/database/supabase-server'
 
-jest.mock('@/lib/database/supabase-server', () => ({ createClient: jest.fn() }))
-const mockCreateClient = createClient as jest.Mock
+jest.mock('@/lib/database/supabase-server', () => ({ createServiceClient: jest.fn() }))
+const mockCreateServiceClient = createServiceClient as jest.Mock
 
 const sampleActivity: NormalizedActivity = {
   userId: 'u1',
@@ -50,7 +50,7 @@ describe('importActivities', () => {
   it('returns { saved: 0 } for empty input without DB calls', async () => {
     const result = await importActivities([])
     expect(result).toEqual({ saved: 0 })
-    expect(mockCreateClient).not.toHaveBeenCalled()
+    expect(mockCreateServiceClient).not.toHaveBeenCalled()
   })
 
   it('upserts activities and metrics, returns saved count', async () => {
@@ -58,7 +58,7 @@ describe('importActivities', () => {
       { data: [{ id: 'db-id-1', provider_activity_id: '111' }], error: null },
       { error: null }
     )
-    mockCreateClient.mockResolvedValue(client)
+    mockCreateServiceClient.mockReturnValue(client)
 
     const result = await importActivities([sampleActivity])
     expect(result).toEqual({ saved: 1 })
@@ -83,7 +83,7 @@ describe('importActivities', () => {
         return { upsert: jest.fn().mockResolvedValue({ error: null }) }
       }),
     }
-    mockCreateClient.mockResolvedValue(client)
+    mockCreateServiceClient.mockReturnValue(client)
 
     await importActivities([sampleActivity])
     expect(capturedRecords[0].ces).toBeGreaterThan(0)
@@ -94,7 +94,7 @@ describe('importActivities', () => {
       select: jest.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } }),
     })
     const client = { from: jest.fn().mockReturnValue({ upsert: mockUpsertActivities }) }
-    mockCreateClient.mockResolvedValue(client)
+    mockCreateServiceClient.mockReturnValue(client)
 
     await expect(importActivities([sampleActivity])).rejects.toThrow(
       'Activity upsert failed: DB error'
