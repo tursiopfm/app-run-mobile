@@ -38,6 +38,7 @@ describe('getDashboardData', () => {
     ]))
     const result = await getDashboardData('user-1')
     expect(result.hasActivities).toBe(true)
+    expect(result.recentActivities).toHaveLength(1)
     const latest = result.dailyMetrics[result.dailyMetrics.length - 1]
     expect(latest.atl).toBeGreaterThan(0)
   })
