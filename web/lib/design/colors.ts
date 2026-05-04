@@ -1,0 +1,73 @@
+// Mirror of ui/theme/Color.kt — source of truth for all chart and JS color usage.
+// For Tailwind className usage, see tailwind.config.ts (trail-* tokens).
+
+export const dark = {
+  background:       '#0A0F0E',
+  surface:          '#111A18',
+  cardBg:           '#162420',
+  border:           '#1E3530',
+  headerBg:         '#101917',
+  subtleText:       '#8BA8A3',
+  text:             '#E2ECE9',
+  greenOk:          '#4ADE80',
+  paleGreen:        '#0A2E1E',
+  runRed:           '#F87171',
+  bikeBlack:        '#38BDF8',
+  chargeOrange:     '#FF6B35',
+  seriesBlue:       '#38BDF8',
+  seriesRed:        '#F87171',
+  seriesOrange:     '#FF6B35',
+  seriesYellow:     '#FBBF24',
+  seriesGreen:      '#4ADE80',
+  pieRuntaf:        '#FF6B35',
+  pieVma:           '#38BDF8',
+  pieSeuil:         '#FBBF24',
+  pieCotes:         '#8B5CF6',
+  pieSortieLongue:  '#4ADE80',
+  pieFooting:       '#F59E0B',
+  pieAutre:         '#6B8A85',
+  progressRunBg:    '#243530',
+  progressRunFg:    '#FF6B35',
+  progressVolumeBg: '#13211E',
+  progressVolumeFg: '#4ADE80',
+  progressDPlusBg:  '#11232A',
+  progressDPlusFg:  '#38BDF8',
+} as const
+
+export const light = {
+  background:       '#F4F7F6',
+  surface:          '#FFFFFF',
+  cardBg:           '#FFFFFF',
+  border:           '#D6E1DD',
+  headerBg:         '#E8F0ED',
+  subtleText:       '#5F7771',
+  text:             '#13201D',
+  greenOk:          '#138A52',
+  paleGreen:        '#DFF5E8',
+  runRed:           '#D94F45',
+  bikeBlack:        '#1D8FC6',
+  chargeOrange:     '#E6612B',
+  seriesBlue:       '#1D8FC6',
+  seriesRed:        '#D94F45',
+  seriesOrange:     '#E6612B',
+  seriesYellow:     '#CC9200',
+  seriesGreen:      '#138A52',
+  pieRuntaf:        '#E6612B',
+  pieVma:           '#1D8FC6',
+  pieSeuil:         '#CC9200',
+  pieCotes:         '#7C56C9',
+  pieSortieLongue:  '#138A52',
+  pieFooting:       '#DF8E16',
+  pieAutre:         '#7B8E88',
+  progressRunBg:    '#FBE2D8',
+  progressRunFg:    '#E6612B',
+  progressVolumeBg: '#DFF5E8',
+  progressVolumeFg: '#138A52',
+  progressDPlusBg:  '#DCF0F7',
+  progressDPlusFg:  '#1D8FC6',
+} as const
+
+// Default export = dark palette (used in chart configs and Canvas-based components)
+export const colors = dark
+
+export type TrailPalette = typeof dark
