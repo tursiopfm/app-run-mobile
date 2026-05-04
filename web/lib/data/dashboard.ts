@@ -1,4 +1,3 @@
-import { cache } from 'react'
 import { createClient } from '@/lib/database/supabase-server'
 import { buildDailyMetrics, type DailyLoad, type DailyMetrics } from '@/lib/analytics/fatigue'
 
@@ -115,7 +114,7 @@ function buildWindowedLoads(rows: ActivityRow[], days: number): DailyLoad[] {
   return result
 }
 
-export const getDashboardData = cache(async function getDashboardData(userId: string): Promise<DashboardData> {
+export async function getDashboardData(userId: string): Promise<DashboardData> {
   const supabase = await createClient()
 
   // Query 365 days for YTD + EWMA
@@ -309,4 +308,4 @@ export const getDashboardData = cache(async function getDashboardData(userId: st
     weekSuffer,
     cumulMonths,
   }
-})
+}
