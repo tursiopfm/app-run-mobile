@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/database/supabase-server'
 import { buildDailyMetrics, type DailyLoad, type DailyMetrics } from '@/lib/analytics/fatigue'
+import { type SportKey, SPORT_TYPE_MAP } from '@/lib/design/sports'
 
 export type ActivityRow = {
   id: string
@@ -13,23 +14,26 @@ export type ActivityRow = {
 }
 
 export type DaySession = {
-  day: string       // 'L' | 'M' | 'M' | 'J' | 'V' | 'S' | 'D'
-  label: string     // session label or activity name
+  day: string
+  label: string
   volumeKm: number
   dPlus: number
 }
 
-export type WeekOverview = {
-  runKm: number
-  runDPlus: number
-  runSessions: number
-  dailyRunKm: number[]    // 7 values Mon[0]..Sun[6]
-  dailyRunDPlus: number[] // 7 values Mon[0]..Sun[6]
-}
-
-export type YtdOverview = {
-  runKm: number
-  runDPlus: number
+export type SportOverview = {
+  weekKm: number
+  weekDPlus: number
+  weekSessions: number
+  dailyKm: number[]
+  dailyDPlus: number[]
+  ytdKm: number
+  ytdDPlus: number
+  monthlyKm: number[]
+  atl: number
+  ctl: number
+  tsb: number
+  weekCes: number
+  last7Tsb: number[]
 }
 
 export type IntensityShare = {
@@ -38,32 +42,28 @@ export type IntensityShare = {
 }
 
 export type WeeklyPoint = {
-  weekLabel: string  // "DD/MM" — ISO Monday of the week
-  km:        number
-  dPlus:     number
+  weekLabel: string
+  km: number
+  dPlus: number
 }
 
 export type MonthSeries = {
-  label:      string    // e.g. "Jan 2025"
-  color:      string    // hex
-  dailyCumul: number[]  // cumulative km for days 1..N of that month
+  label: string
+  color: string
+  dailyCumul: number[]
 }
 
 export type DashboardData = {
   dailyMetrics: DailyMetrics[]
   recentActivities: ActivityRow[]
   hasActivities: boolean
-  weekOverview: WeekOverview
-  monthlyRunKm: number[]   // 12 values Jan[0]..Dec[11]
+  sportOverviews: Record<SportKey, SportOverview>
   weekSessions: DaySession[]
-  ytd: YtdOverview
   intensityBreakdown: IntensityShare[]
-  weeklyPoints: WeeklyPoint[]  // last 10 ISO weeks, oldest first
-  weekSuffer:   number         // sum of CES for current week
-  cumulMonths:  MonthSeries[]  // last 4 calendar months
+  weeklyPoints: WeeklyPoint[]
+  cumulMonths: MonthSeries[]
 }
 
-// Day abbreviations Mon..Sun (French, matching Android dayLabels)
 const DAY_ABBR = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 
 // ISO week day to 0-based Mon index: Sun=6, Mon=0, Tue=1 … Sat=5
@@ -73,8 +73,8 @@ function toMonIndex(jsDay: number): number {
 
 function getWeekStart(date: Date): Date {
   const d = new Date(date)
-  const jsDay = d.getDay()                    // 0=Sun..6=Sat
-  const diff = jsDay === 0 ? -6 : 1 - jsDay  // shift back to Monday
+  const jsDay = d.getDay()
+  const diff = jsDay === 0 ? -6 : 1 - jsDay
   d.setDate(d.getDate() + diff)
   d.setHours(0, 0, 0, 0)
   return d
@@ -90,8 +90,8 @@ function mondayOfCurrentWeek(): Date {
 }
 
 function getIntensityLabel(ces: number): string {
-  if (ces <= 30) return 'Footing'
-  if (ces <= 60) return 'Sortie longue'
+  if (ces <= 30)  return 'Footing'
+  if (ces <= 60)  return 'Sortie longue'
   if (ces <= 100) return 'Seuil'
   if (ces <= 150) return 'VMA'
   return 'Runtaf'
@@ -114,10 +114,73 @@ function buildWindowedLoads(rows: ActivityRow[], days: number): DailyLoad[] {
   return result
 }
 
+function filterSport(activities: ActivityRow[], types: readonly string[] | null): ActivityRow[] {
+  if (!types) return activities
+  return activities.filter((a) => types.includes(a.sport_type))
+}
+
+function buildSportOverview(
+  all365: ActivityRow[],
+  types: readonly string[] | null,
+  monday: Date,
+  nextMonday: Date,
+  janFirst: Date,
+): SportOverview {
+  const acts = filterSport(all365, types)
+
+  const weekActs = acts.filter((a) => {
+    const t = new Date(a.start_time)
+    return t >= monday && t < nextMonday
+  })
+  const dailyKm    = Array(7).fill(0) as number[]
+  const dailyDPlus = Array(7).fill(0) as number[]
+  let weekKm = 0, weekDPlus = 0, weekSessions = 0
+  for (const a of weekActs) {
+    const idx = toMonIndex(new Date(a.start_time).getDay())
+    const km  = (a.distance_m ?? 0) / 1000
+    const dp  = a.elevation_gain_m ?? 0
+    dailyKm[idx]    += km
+    dailyDPlus[idx] += dp
+    weekKm    += km
+    weekDPlus += dp
+    weekSessions++
+  }
+  const weekCes = Math.round(weekActs.reduce((s, a) => s + (a.ces ?? 0), 0))
+
+  const ytdActs = acts.filter((a) => new Date(a.start_time) >= janFirst)
+  const ytdKm    = Math.round(ytdActs.reduce((s, a) => s + (a.distance_m ?? 0) / 1000, 0) * 10) / 10
+  const ytdDPlus = Math.round(ytdActs.reduce((s, a) => s + (a.elevation_gain_m ?? 0), 0))
+  const monthlyKm = Array(12).fill(0) as number[]
+  for (const a of ytdActs) {
+    monthlyKm[new Date(a.start_time).getMonth()] += (a.distance_m ?? 0) / 1000
+  }
+  for (let i = 0; i < 12; i++) monthlyKm[i] = Math.round(monthlyKm[i] * 10) / 10
+
+  const loads   = buildWindowedLoads(acts, 60)
+  const metrics = buildDailyMetrics(loads)
+  const latest  = metrics[metrics.length - 1] ?? { atl: 0, ctl: 0, tsb: 0 }
+  const last7Tsb = metrics.slice(-7).map((m) => m.tsb)
+
+  return {
+    weekKm: Math.round(weekKm * 10) / 10,
+    weekDPlus: Math.round(weekDPlus),
+    weekSessions,
+    dailyKm,
+    dailyDPlus,
+    ytdKm,
+    ytdDPlus,
+    monthlyKm,
+    atl: latest.atl,
+    ctl: latest.ctl,
+    tsb: latest.tsb,
+    weekCes,
+    last7Tsb,
+  }
+}
+
 export async function getDashboardData(userId: string): Promise<DashboardData> {
   const supabase = await createClient()
 
-  // Query 365 days for YTD + EWMA
   const yearAgo = new Date()
   yearAgo.setDate(yearAgo.getDate() - 365)
 
@@ -130,51 +193,31 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
 
   const activities = (rows ?? []) as ActivityRow[]
 
-  // --- EWMA (use 60-day window for chart, 365-day data is fine for init) ---
-  const loads = buildWindowedLoads(activities, 60)
-  const dailyMetrics = buildDailyMetrics(loads)
+  const globalLoads = buildWindowedLoads(activities, 60)
+  const dailyMetrics = buildDailyMetrics(globalLoads)
 
-  // --- Recent activities (last 7 days) ---
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
   const recentActivities = activities
     .filter((r) => new Date(r.start_time) >= sevenDaysAgo)
     .reverse()
 
-  // --- Week overview (Mon–Sun of current week) ---
   const monday = mondayOfCurrentWeek()
   const nextMonday = new Date(monday)
   nextMonday.setDate(nextMonday.getDate() + 7)
+  const janFirst = new Date(new Date().getFullYear(), 0, 1)
+
+  const sportOverviews: Record<SportKey, SportOverview> = {
+    run:  buildSportOverview(activities, SPORT_TYPE_MAP.run,  monday, nextMonday, janFirst),
+    ride: buildSportOverview(activities, SPORT_TYPE_MAP.ride, monday, nextMonday, janFirst),
+    swim: buildSportOverview(activities, SPORT_TYPE_MAP.swim, monday, nextMonday, janFirst),
+    all:  buildSportOverview(activities, SPORT_TYPE_MAP.all,  monday, nextMonday, janFirst),
+  }
 
   const weekActivities = activities.filter((r) => {
     const t = new Date(r.start_time)
     return t >= monday && t < nextMonday
   })
-
-  const dailyRunKm    = Array(7).fill(0) as number[]
-  const dailyRunDPlus = Array(7).fill(0) as number[]
-  let runKm = 0, runDPlus = 0, runSessions = 0
-
-  for (const a of weekActivities) {
-    const dayIdx = toMonIndex(new Date(a.start_time).getDay())
-    const km = (a.distance_m ?? 0) / 1000
-    const dp = a.elevation_gain_m ?? 0
-    dailyRunKm[dayIdx]    += km
-    dailyRunDPlus[dayIdx] += dp
-    runKm      += km
-    runDPlus   += dp
-    runSessions++
-  }
-
-  const weekOverview: WeekOverview = {
-    runKm: Math.round(runKm * 10) / 10,
-    runDPlus: Math.round(runDPlus),
-    runSessions,
-    dailyRunKm,
-    dailyRunDPlus,
-  }
-
-  // --- Week sessions for WeekTable ---
   const sessionsByDay = new Map<number, { label: string; km: number; dPlus: number }>()
   for (const a of weekActivities) {
     const dayIdx = toMonIndex(new Date(a.start_time).getDay())
@@ -189,7 +232,6 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       sessionsByDay.set(dayIdx, { label: a.name, km, dPlus: dp })
     }
   }
-
   const weekSessions: DaySession[] = Array.from({ length: 7 }, (_, i) => {
     const s = sessionsByDay.get(i)
     return {
@@ -200,7 +242,6 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     }
   })
 
-  // --- Weekly points (last 10 ISO weeks) ---
   const weekMap = new Map<string, { ts: number; km: number; dPlus: number }>()
   for (const a of activities) {
     const ws = getWeekStart(new Date(a.start_time))
@@ -210,7 +251,6 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     entry.dPlus += (a.elevation_gain_m ?? 0)
     weekMap.set(isoKey, entry)
   }
-
   const weeklyPoints: WeeklyPoint[] = Array.from(weekMap.entries())
     .map(([isoKey, data]) => {
       const [, m, d] = isoKey.split('-')
@@ -220,13 +260,9 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     .slice(-10)
     .map(({ weekLabel, km, dPlus }) => ({ weekLabel, km, dPlus }))
 
-  const weekSuffer = Math.round(weekActivities.reduce((s, a) => s + (a.ces ?? 0), 0))
-
-  // --- Cumulative km per month (last 4 calendar months) ---
   const MONTH_CUMUL_COLORS = ['#4ADE80', '#FF6B35', '#F87171', '#38BDF8']
   const MONTH_SHORT_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
   const nowDate = new Date()
-
   const monthActivityIndex = new Map<string, ActivityRow[]>()
   for (const a of activities) {
     const ad = new Date(a.start_time)
@@ -235,61 +271,36 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     if (arr) arr.push(a)
     else monthActivityIndex.set(key, [a])
   }
-
   const cumulMonths: MonthSeries[] = Array.from({ length: 4 }, (_, i) => {
     const d = new Date(nowDate.getFullYear(), nowDate.getMonth() - 3 + i, 1)
     const year  = d.getFullYear()
     const month = d.getMonth()
     const isCurrentMonth = year === nowDate.getFullYear() && month === nowDate.getMonth()
     const lastDay = isCurrentMonth ? nowDate.getDate() : new Date(year, month + 1, 0).getDate()
-
     const dailyKm = Array(lastDay).fill(0) as number[]
     const monthActivities = monthActivityIndex.get(`${year}-${month}`) ?? []
     for (const a of monthActivities) {
       const dayIdx = new Date(a.start_time).getDate() - 1
       if (dayIdx < lastDay) dailyKm[dayIdx] += (a.distance_m ?? 0) / 1000
     }
-
     const dailyCumul: number[] = []
     let cumul = 0
     for (let day = 0; day < lastDay; day++) {
       cumul += dailyKm[day]
       dailyCumul.push(Math.round(cumul * 10) / 10)
     }
-
     return { label: `${MONTH_SHORT_FR[month]} ${year}`, color: MONTH_CUMUL_COLORS[i], dailyCumul }
   })
 
-  // --- YTD (Jan 1 of current year) ---
-  const janFirst = new Date(new Date().getFullYear(), 0, 1)
-  const ytdActivities = activities.filter((r) => new Date(r.start_time) >= janFirst)
-  const ytd: YtdOverview = {
-    runKm:    Math.round(ytdActivities.reduce((s, a) => s + (a.distance_m ?? 0) / 1000, 0) * 10) / 10,
-    runDPlus: Math.round(ytdActivities.reduce((s, a) => s + (a.elevation_gain_m ?? 0), 0)),
-  }
-
-  // --- Monthly km (Jan=0..Dec=11, current year only) ---
-  const monthlyRunKm = Array(12).fill(0) as number[]
-  for (const a of ytdActivities) {
-    const month = new Date(a.start_time).getMonth() // 0..11
-    monthlyRunKm[month] += (a.distance_m ?? 0) / 1000
-  }
-  for (let i = 0; i < 12; i++) {
-    monthlyRunKm[i] = Math.round(monthlyRunKm[i] * 10) / 10
-  }
-
-  // --- Intensity breakdown (last 30 days) ---
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
   const recent30 = activities.filter((r) => new Date(r.start_time) >= thirtyDaysAgo)
-
   const intensityMap = new Map<string, number>()
   for (const a of recent30) {
     if (!a.ces || !a.distance_m) continue
     const label = getIntensityLabel(a.ces)
     intensityMap.set(label, (intensityMap.get(label) ?? 0) + a.distance_m / 1000)
   }
-
   const intensityOrder = ['Footing', 'Sortie longue', 'Seuil', 'VMA', 'Runtaf']
   const intensityBreakdown: IntensityShare[] = intensityOrder
     .filter((l) => intensityMap.has(l))
@@ -299,13 +310,10 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     dailyMetrics,
     recentActivities,
     hasActivities: activities.length > 0,
-    weekOverview,
-    monthlyRunKm,
+    sportOverviews,
     weekSessions,
-    ytd,
     intensityBreakdown,
     weeklyPoints,
-    weekSuffer,
     cumulMonths,
   }
 }
