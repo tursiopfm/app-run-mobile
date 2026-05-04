@@ -5,12 +5,11 @@ import { CockpitLineChart } from '@/components/charts/CockpitLineChart'
 import { CockpitComboChart } from '@/components/charts/CockpitComboChart'
 import { CockpitCumulChart } from '@/components/charts/CockpitCumulChart'
 import { CockpitPieChart, type PieSlice } from '@/components/charts/CockpitPieChart'
-import { CockpitKpiTile } from '@/components/ui/CockpitKpiTile'
-import { TsbBadge } from '@/components/ui/TsbBadge'
-import { CompactMetricCard } from '@/components/ui/CompactMetricCard'
 import { WeekTable } from '@/components/ui/WeekTable'
 import { GoalsBlock } from '@/components/cockpit/GoalsBlock'
 import { HistoryPillsBlock } from '@/components/cockpit/HistoryPillsBlock'
+import { ActivitiesBlock } from '@/components/cockpit/ActivitiesBlock'
+import { ChargeBlock } from '@/components/cockpit/ChargeBlock'
 import { createClient } from '@/lib/database/supabase-server'
 import { getDashboardData } from '@/lib/data/dashboard'
 import { colors } from '@/lib/design/colors'
@@ -21,18 +20,6 @@ const INTENSITY_COLORS: Record<string, string> = {
   'Seuil':         colors.pieSeuil,
   'VMA':           colors.pieVma,
   'Runtaf':        colors.pieRuntaf,
-}
-
-function normalize(arr: number[]): number[] {
-  const max = Math.max(...arr, 0.001)
-  return arr.map((v) => v / max)
-}
-
-function normalizeTsb(arr: number[]): number[] {
-  const min = Math.min(...arr)
-  const max = Math.max(...arr)
-  const range = (max - min) || 0.001
-  return arr.map((v) => (v - min) / range)
 }
 
 function SectionCard({ children, title }: { children: React.ReactNode; title?: string }) {
@@ -52,7 +39,6 @@ export default async function DashboardPage() {
   if (!user) redirect('/login')
 
   const {
-    dailyMetrics,
     sportOverviews,
     weekSessions,
     intensityBreakdown,
@@ -60,19 +46,12 @@ export default async function DashboardPage() {
     cumulMonths,
   } = await getDashboardData(user.id)
 
-  const run = sportOverviews.run
-  const latest = dailyMetrics[dailyMetrics.length - 1] ?? { atl: 0, ctl: 0, tsb: 0, dailyLoad: 0, date: '' }
-
-  // KPI tile bar data
-  const weekKmNorm    = normalize(run.dailyKm)
-  const weekKmLabels  = run.dailyKm.map((v) => v > 0 ? `${Math.round(v * 10) / 10}` : '')
-  const weekDPlusNorm   = normalize(run.dailyDPlus)
-  const weekDPlusLabels = run.dailyDPlus.map((v) => v > 0 ? `${Math.round(v)}` : '')
-  const monthlyNorm   = normalize(run.monthlyKm)
-  const monthlyLabels = run.monthlyKm.map((v) => v > 0 ? `${Math.round(v)}` : '')
-  const tsbLast7  = dailyMetrics.slice(-7).map((m) => m.tsb)
-  const tsbNorm   = normalizeTsb(tsbLast7)
-  const tsbLabels = tsbLast7.map((v) => `${Math.round(v)}`)
+  // Intensity pie
+  const pieData: PieSlice[] = intensityBreakdown.map((s) => ({
+    label: s.label,
+    value: s.km,
+    color: INTENSITY_COLORS[s.label] ?? colors.pieAutre,
+  }))
 
   // Run/D+ 10 weeks combo data
   const comboData = weeklyPoints.map((w) => ({ label: w.weekLabel, dPlus: w.dPlus, km: w.km }))
@@ -83,93 +62,21 @@ export default async function DashboardPage() {
     ratio: w.km > 0 ? Math.round((w.dPlus / w.km) * 10) / 10 : 0,
   }))
 
-  // HistoryPills — map weeklyPoints to WeekPill shape
+  // HistoryPills
   const weekPills = weeklyPoints.map((w) => ({ label: w.weekLabel, km: w.km, dPlus: w.dPlus }))
-
-  // Intensity pie
-  const pieData: PieSlice[] = intensityBreakdown.map((s) => ({
-    label: s.label,
-    value: s.km,
-    color: INTENSITY_COLORS[s.label] ?? colors.pieAutre,
-  }))
-
-  const tsbColor = latest.tsb >= 0 ? colors.greenOk : colors.runRed
 
   return (
     <AppShell>
       <div className="px-2 py-2 space-y-2 max-w-lg mx-auto">
 
-        {/* ── 1. Activités ── */}
-        <SectionCard>
-          <div className="flex items-center justify-between mb-[6px]">
-            <div className="flex items-center gap-1">
-              <span className="text-[16px] font-semibold text-trail-muted">Activités —</span>
-              <span className="text-[16px] font-semibold" style={{ color: colors.chargeOrange }}>Course</span>
-              <span className="text-[16px] ml-0.5">🏃</span>
-            </div>
-            <TsbBadge tsb={latest.tsb} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-[6px]">
-            <CockpitKpiTile
-              title="SEMAINE"
-              subline={`${run.weekSessions} séance${run.weekSessions !== 1 ? 's' : ''}`}
-              barValues={weekKmNorm} barLabels={weekKmLabels} barColor={colors.chargeOrange}
-            >
-              <div className="flex items-baseline gap-[3px]">
-                <span className="text-[21px] font-black leading-tight text-trail-text">{run.weekKm}</span>
-                <span className="text-[14px] text-trail-muted">km</span>
-              </div>
-            </CockpitKpiTile>
-
-            <CockpitKpiTile
-              title="D+ SEMAINE"
-              subline="Dénivelé positif"
-              barValues={weekDPlusNorm} barLabels={weekDPlusLabels} barColor={colors.seriesBlue}
-            >
-              <div className="flex items-baseline gap-[3px]">
-                <span className="text-[21px] font-black leading-tight text-trail-text">{run.weekDPlus}</span>
-                <span className="text-[14px] text-trail-muted">m</span>
-              </div>
-            </CockpitKpiTile>
-          </div>
-
-          <div className="h-[6px]" />
-
-          <div className="grid grid-cols-2 gap-[6px]">
-            <CockpitKpiTile
-              title="ANNÉE"
-              subline={`D+ ${run.ytdDPlus.toLocaleString('fr-FR')} m`}
-              barValues={monthlyNorm} barLabels={monthlyLabels} barColor={colors.chargeOrange}
-            >
-              <div className="flex items-baseline gap-[3px]">
-                <span className="text-[18px] font-black leading-tight text-trail-text">{run.ytdKm}</span>
-                <span className="text-[14px] text-trail-muted">km</span>
-              </div>
-            </CockpitKpiTile>
-
-            <CockpitKpiTile
-              icon="⚡"
-              title="CHARGE (RUN)"
-              subline={`TSB ${Math.round(latest.tsb)} • 7 derniers jours`}
-              barValues={tsbNorm} barLabels={tsbLabels} barColor={colors.seriesYellow}
-            >
-              <div className="flex items-center flex-wrap gap-[2px]">
-                <span className="text-[13px] font-bold" style={{ color: colors.chargeOrange }}>ATL </span>
-                <span className="text-[21px] font-black leading-tight" style={{ color: colors.chargeOrange }}>{Math.round(latest.atl)}</span>
-                <span className="text-[13px] text-trail-muted mx-0.5">•</span>
-                <span className="text-[13px] font-bold" style={{ color: colors.seriesBlue }}>CTL </span>
-                <span className="text-[21px] font-black leading-tight" style={{ color: colors.seriesBlue }}>{Math.round(latest.ctl)}</span>
-              </div>
-            </CockpitKpiTile>
-          </div>
-        </SectionCard>
+        {/* ── 1. Activités (swipeable multi-sport) ── */}
+        <ActivitiesBlock sportOverviews={sportOverviews} />
 
         {/* ── 2. Objectifs (configurable) ── */}
         <GoalsBlock
-          weekKm={run.weekKm}
-          weekDPlus={run.weekDPlus}
-          yearKm={run.ytdKm}
+          weekKm={sportOverviews.run.weekKm}
+          weekDPlus={sportOverviews.run.weekDPlus}
+          yearKm={sportOverviews.run.ytdKm}
         />
 
         {/* ── 3. Run / D+ — 10 semaines ── */}
@@ -197,21 +104,14 @@ export default async function DashboardPage() {
           />
         </CockpitChartCard>
 
-        {/* ── 5. Charge d'entraînement ── */}
-        <SectionCard title="Charge d'entraînement">
-          <div className="grid grid-cols-2 gap-2 mt-1">
-            <CompactMetricCard unit="ATL"    value={latest.atl}  description="Fatigue 7j"  color={colors.chargeOrange}  />
-            <CompactMetricCard unit="CTL"    value={latest.ctl}  description="Fitness 28j" color={colors.seriesBlue}    />
-            <CompactMetricCard unit="TSB"    value={latest.tsb}  description="Forme"        color={tsbColor}             />
-            <CompactMetricCard unit="CES"    value={run.weekCes} description="Charge sem." color={colors.seriesYellow}  />
-          </div>
-        </SectionCard>
+        {/* ── 5. Charge d'entraînement (swipeable multi-sport) ── */}
+        <ChargeBlock sportOverviews={sportOverviews} />
 
         {/* ── 6. Historique Running ── */}
         <HistoryPillsBlock
           daySessions={weekSessions.map((s) => ({ label: s.day, volumeKm: s.volumeKm, dPlus: s.dPlus }))}
           weeklyPoints={weekPills}
-          monthlyRunKm={run.monthlyKm}
+          monthlyRunKm={sportOverviews.run.monthlyKm}
         />
 
         {/* ── 7. Cumul km par mois ── */}
