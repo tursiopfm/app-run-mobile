@@ -54,7 +54,7 @@ export function BarStrip({ values, labels, color, className = '' }: BarStripProp
                 x={x + barW / 2}
                 y={inside ? barY + barH / 2 + 4 : barY - 2}
                 textAnchor="middle"
-                fontSize={10}
+                fontSize={11}
                 fontWeight={600}
                 fill={inside ? '#ffffff' : color}
               >
