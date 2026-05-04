@@ -63,7 +63,8 @@ export function ActivitiesBlock({ sportOverviews }: Props) {
   }
 
   function scrollTo(idx: number) {
-    scrollRef.current?.scrollTo({ left: idx * (scrollRef.current.clientWidth), behavior: 'smooth' })
+    const el = scrollRef.current
+    if (el) el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' })
     setCurrentIdx(idx)
   }
 
