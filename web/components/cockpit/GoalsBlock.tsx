@@ -32,7 +32,7 @@ export function GoalsBlock({ weekKm, weekDPlus, yearKm }: Props) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) setGoals(JSON.parse(stored) as Goals)
+      if (stored) setGoals({ ...DEFAULT_GOALS, ...(JSON.parse(stored) as Partial<Goals>) })
     } catch {}
   }, [])
 
