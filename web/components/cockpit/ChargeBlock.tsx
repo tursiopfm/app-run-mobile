@@ -73,7 +73,7 @@ export function ChargeBlock({ sportOverviews }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-[6px]">
         <p className="text-[13px] font-semibold text-trail-text">
-          Charge d'entraînement —{' '}
+          Charge d&apos;entraînement —{' '}
           <span style={{ color: cfg.color }}>{cfg.label}</span>
         </p>
         <button

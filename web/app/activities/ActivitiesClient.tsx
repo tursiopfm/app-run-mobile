@@ -23,7 +23,7 @@ interface SearchState {
 
 interface FilterState {
   sport:     string
-  dateFrom:  string
+  dateFrom:  string  // YYYY-MM-DD (from <input type="date">)
   dateTo:    string
   distFrom:  string
   distTo:    string
@@ -72,10 +72,36 @@ function getPaceSec(a: ActivityRow): number | null {
   return a.moving_time_sec / (a.distance_m / 1000)
 }
 
+// YYYY-MM-DD from <input type="date">
 function parseDate(s: string): Date | null {
-  const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
-  if (!m) return null
-  return new Date(`${m[3]}-${m[2]}-${m[1]}`)
+  if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null
+  return new Date(`${s}T00:00:00`)
+}
+
+function applySearch(list: ActivityRow[], search: SearchState): ActivityRow[] {
+  if (search.field === 'Titre' && search.title.trim()) {
+    const q = search.title.trim().toLowerCase()
+    list = list.filter(a => a.name.toLowerCase().includes(q))
+  }
+  if (search.field === 'Distance') {
+    const from = parseFloat(search.distFrom)
+    const to   = parseFloat(search.distTo)
+    if (!isNaN(from)) list = list.filter(a => a.distance_m != null && a.distance_m / 1000 >= from)
+    if (!isNaN(to))   list = list.filter(a => a.distance_m != null && a.distance_m / 1000 <= to)
+  }
+  if (search.field === 'Durée') {
+    const from = parseDurSec(search.durFrom)
+    const to   = parseDurSec(search.durTo)
+    if (from != null) list = list.filter(a => a.moving_time_sec != null && a.moving_time_sec >= from)
+    if (to   != null) list = list.filter(a => a.moving_time_sec != null && a.moving_time_sec <= to)
+  }
+  if (search.field === 'D+') {
+    const from = parseFloat(search.dPlusFrom)
+    const to   = parseFloat(search.dPlusTo)
+    if (!isNaN(from)) list = list.filter(a => a.elevation_gain_m != null && a.elevation_gain_m >= from)
+    if (!isNaN(to))   list = list.filter(a => a.elevation_gain_m != null && a.elevation_gain_m <= to)
+  }
+  return list
 }
 
 // ── Small UI atoms ─────────────────────────────────────────────────────────────
@@ -138,12 +164,15 @@ function SortButtons({
 }
 
 const inputCls = 'rounded-[8px] border px-3 py-[7px] text-[13px] flex-1 min-w-0'
+const dateInputCls = 'rounded-[8px] border px-2 py-[7px] text-[13px] flex-1 min-w-0'
+
 function inputStyle() {
   return {
     backgroundColor: colors.surface,
     borderColor:     colors.border,
     color:           colors.text,
     outline:         'none',
+    colorScheme:     'dark' as const,
   }
 }
 
@@ -173,13 +202,26 @@ function FilterRow({
 }
 
 // ── Search Panel ───────────────────────────────────────────────────────────────
-function SearchPanel({ state, setState, onClose }: {
-  state:    SearchState
-  setState: (s: SearchState) => void
-  onClose:  () => void
+function SearchPanel({ state, setState, activities, onClose }: {
+  state:      SearchState
+  setState:   (s: SearchState) => void
+  activities: ActivityRow[]
+  onClose:    () => void
 }) {
   const FIELDS: SearchField[] = ['Titre', 'Distance', 'Durée', 'D+']
   const si = inputStyle()
+
+  const hasInput = state.title.trim() !== ''
+    || state.distFrom !== '' || state.distTo !== ''
+    || state.durFrom  !== '' || state.durTo  !== ''
+    || state.dPlusFrom !== '' || state.dPlusTo !== ''
+
+  const results = useMemo(
+    () => hasInput ? applySearch([...activities], state) : [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activities, state.field, state.title, state.distFrom, state.distTo,
+     state.durFrom, state.durTo, state.dPlusFrom, state.dPlusTo, hasInput],
+  )
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: colors.background }}>
@@ -202,7 +244,9 @@ function SearchPanel({ state, setState, onClose }: {
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto p-4 max-w-lg mx-auto w-full">
+      <div className="flex-1 overflow-y-auto p-4 max-w-lg mx-auto w-full space-y-3">
+
+        {/* Search card */}
         <div
           className="rounded-[12px] border p-4 space-y-4"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
@@ -211,7 +255,8 @@ function SearchPanel({ state, setState, onClose }: {
 
           <div className="flex gap-2 flex-wrap">
             {FIELDS.map(f => (
-              <Chip key={f} label={f} active={state.field === f} onClick={() => setState({ ...state, field: f })} />
+              <Chip key={f} label={f} active={state.field === f}
+                onClick={() => setState({ ...state, field: f })} />
             ))}
           </div>
 
@@ -219,6 +264,7 @@ function SearchPanel({ state, setState, onClose }: {
             <div>
               <p className="text-[12px] text-trail-muted mb-1">Titre de l&apos;activité</p>
               <input
+                autoFocus
                 type="text"
                 value={state.title}
                 onChange={e => setState({ ...state, title: e.target.value })}
@@ -264,6 +310,25 @@ function SearchPanel({ state, setState, onClose }: {
             </div>
           )}
         </div>
+
+        {/* Live results */}
+        {hasInput && (
+          <>
+            <p className="text-[13px] text-trail-muted px-1">{results.length} résultat{results.length !== 1 ? 's' : ''}</p>
+            {results.length === 0 ? (
+              <div
+                className="rounded-[12px] border p-[10px]"
+                style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
+              >
+                <p className="text-[13px]" style={{ color: colors.subtleText }}>Aucune activité trouvée.</p>
+              </div>
+            ) : (
+              <div className="space-y-[10px]">
+                {results.map(a => <ActivityCard key={a.id} activity={a} />)}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   )
@@ -287,21 +352,14 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: colors.background }}>
-      {/* Header */}
+      {/* Header — no Appliquer here */}
       <div
-        className="flex items-center justify-between px-4 py-3 border-b"
+        className="flex items-center px-4 py-3 border-b"
         style={{ backgroundColor: colors.headerBg, borderColor: colors.border }}
       >
         <button onClick={onClose} className="flex items-center gap-2" style={{ cursor: 'pointer' }}>
           <BackArrow />
           <span className="text-[16px] font-semibold text-trail-text">Filtre</span>
-        </button>
-        <button
-          onClick={onClose}
-          className="text-[14px] font-bold"
-          style={{ color: colors.chargeOrange, cursor: 'pointer' }}
-        >
-          Appliquer
         </button>
       </div>
 
@@ -332,13 +390,29 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
             </div>
           </div>
 
-          {/* Date */}
-          <FilterRow
-            label="Date"
-            left={<input type="text" value={state.dateFrom} onChange={e => setState({ ...state, dateFrom: e.target.value })} placeholder="JJ/MM/AAAA" className={inputCls} style={si} />}
-            right={<input type="text" value={state.dateTo}   onChange={e => setState({ ...state, dateTo: e.target.value })}   placeholder="JJ/MM/AAAA" className={inputCls} style={si} />}
-            sortField="date" activeField={af} activeDir={ad} onSort={handleSort}
-          />
+          {/* Date — calendrier natif */}
+          <div>
+            <p className="text-[13px] font-semibold text-trail-text mb-[6px]">Date</p>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-trail-muted w-4 flex-shrink-0">De</span>
+              <input
+                type="date"
+                value={state.dateFrom}
+                onChange={e => setState({ ...state, dateFrom: e.target.value })}
+                className={dateInputCls}
+                style={si}
+              />
+              <span className="text-[11px] text-trail-muted flex-shrink-0">à</span>
+              <input
+                type="date"
+                value={state.dateTo}
+                onChange={e => setState({ ...state, dateTo: e.target.value })}
+                className={dateInputCls}
+                style={si}
+              />
+              <SortButtons field="date" activeField={af} activeDir={ad} onSort={handleSort} />
+            </div>
+          </div>
 
           {/* Distance */}
           <FilterRow
@@ -411,33 +485,8 @@ export default function ActivitiesClient({ activities }: { activities: ActivityR
   }, [activities])
 
   const filtered = useMemo(() => {
-    let list = [...activities]
+    let list = applySearch([...activities], search)
 
-    // — Search panel filter —
-    if (search.field === 'Titre' && search.title.trim()) {
-      const q = search.title.trim().toLowerCase()
-      list = list.filter(a => a.name.toLowerCase().includes(q))
-    }
-    if (search.field === 'Distance') {
-      const from = parseFloat(search.distFrom)
-      const to   = parseFloat(search.distTo)
-      if (!isNaN(from)) list = list.filter(a => a.distance_m != null && a.distance_m / 1000 >= from)
-      if (!isNaN(to))   list = list.filter(a => a.distance_m != null && a.distance_m / 1000 <= to)
-    }
-    if (search.field === 'Durée') {
-      const from = parseDurSec(search.durFrom)
-      const to   = parseDurSec(search.durTo)
-      if (from != null) list = list.filter(a => a.moving_time_sec != null && a.moving_time_sec >= from)
-      if (to   != null) list = list.filter(a => a.moving_time_sec != null && a.moving_time_sec <= to)
-    }
-    if (search.field === 'D+') {
-      const from = parseFloat(search.dPlusFrom)
-      const to   = parseFloat(search.dPlusTo)
-      if (!isNaN(from)) list = list.filter(a => a.elevation_gain_m != null && a.elevation_gain_m >= from)
-      if (!isNaN(to))   list = list.filter(a => a.elevation_gain_m != null && a.elevation_gain_m <= to)
-    }
-
-    // — Filter panel —
     if (filter.sport !== 'Toutes') {
       list = list.filter(a => a.sport_type === filter.sport)
     }
@@ -462,7 +511,6 @@ export default function ActivitiesClient({ activities }: { activities: ActivityR
     if (!isNaN(dpFrom)) list = list.filter(a => a.elevation_gain_m != null && a.elevation_gain_m >= dpFrom)
     if (!isNaN(dpTo))   list = list.filter(a => a.elevation_gain_m != null && a.elevation_gain_m <= dpTo)
 
-    // — Sort —
     const dir = filter.sortDir === 'asc' ? 1 : -1
     list.sort((a, b) => {
       switch (filter.sortField) {
@@ -494,7 +542,12 @@ export default function ActivitiesClient({ activities }: { activities: ActivityR
   return (
     <>
       {panel === 'search' && (
-        <SearchPanel state={search} setState={setSearch} onClose={() => setPanel('none')} />
+        <SearchPanel
+          state={search}
+          setState={setSearch}
+          activities={activities}
+          onClose={() => setPanel('none')}
+        />
       )}
       {panel === 'filter' && (
         <FilterPanel
@@ -512,7 +565,6 @@ export default function ActivitiesClient({ activities }: { activities: ActivityR
           className="rounded-[12px] border flex items-center mb-[10px]"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border, padding: '4px 6px' }}
         >
-          {/* Search side */}
           <button
             onClick={() => setPanel('search')}
             className="flex-1 flex items-center gap-2 px-[10px] py-3"
@@ -522,18 +574,13 @@ export default function ActivitiesClient({ activities }: { activities: ActivityR
               <circle cx="11" cy="11" r="7" stroke={hasActiveSearch ? colors.chargeOrange : colors.subtleText} strokeWidth="2" />
               <path d="M16.5 16.5L21 21" stroke={hasActiveSearch ? colors.chargeOrange : colors.subtleText} strokeWidth="2" strokeLinecap="round" />
             </svg>
-            <span
-              className="text-[14px]"
-              style={{ color: hasActiveSearch ? colors.chargeOrange : colors.subtleText }}
-            >
+            <span className="text-[14px]" style={{ color: hasActiveSearch ? colors.chargeOrange : colors.subtleText }}>
               Rechercher
             </span>
           </button>
 
-          {/* Divider */}
           <div className="w-px" style={{ height: 28, backgroundColor: colors.border }} />
 
-          {/* Filter icon */}
           <button
             onClick={() => setPanel('filter')}
             className="px-[14px] py-3"
@@ -542,7 +589,7 @@ export default function ActivitiesClient({ activities }: { activities: ActivityR
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path
                 d="M4 6h16M7 12h10M10 18h4"
-                stroke={hasActiveFilter ? colors.chargeOrange : colors.chargeOrange}
+                stroke={hasActiveFilter ? colors.seriesYellow : colors.chargeOrange}
                 strokeWidth="2"
                 strokeLinecap="round"
               />
