@@ -53,25 +53,23 @@ export default async function DashboardPage() {
 
   const {
     dailyMetrics,
-    weekOverview,
-    monthlyRunKm,
+    sportOverviews,
     weekSessions,
-    ytd,
     intensityBreakdown,
     weeklyPoints,
-    weekSuffer,
     cumulMonths,
   } = await getDashboardData(user.id)
 
+  const run = sportOverviews.run
   const latest = dailyMetrics[dailyMetrics.length - 1] ?? { atl: 0, ctl: 0, tsb: 0, dailyLoad: 0, date: '' }
 
   // KPI tile bar data
-  const weekKmNorm    = normalize(weekOverview.dailyRunKm)
-  const weekKmLabels  = weekOverview.dailyRunKm.map((v) => v > 0 ? `${Math.round(v * 10) / 10}` : '')
-  const weekDPlusNorm   = normalize(weekOverview.dailyRunDPlus)
-  const weekDPlusLabels = weekOverview.dailyRunDPlus.map((v) => v > 0 ? `${Math.round(v)}` : '')
-  const monthlyNorm   = normalize(monthlyRunKm)
-  const monthlyLabels = monthlyRunKm.map((v) => v > 0 ? `${Math.round(v)}` : '')
+  const weekKmNorm    = normalize(run.dailyKm)
+  const weekKmLabels  = run.dailyKm.map((v) => v > 0 ? `${Math.round(v * 10) / 10}` : '')
+  const weekDPlusNorm   = normalize(run.dailyDPlus)
+  const weekDPlusLabels = run.dailyDPlus.map((v) => v > 0 ? `${Math.round(v)}` : '')
+  const monthlyNorm   = normalize(run.monthlyKm)
+  const monthlyLabels = run.monthlyKm.map((v) => v > 0 ? `${Math.round(v)}` : '')
   const tsbLast7  = dailyMetrics.slice(-7).map((m) => m.tsb)
   const tsbNorm   = normalizeTsb(tsbLast7)
   const tsbLabels = tsbLast7.map((v) => `${Math.round(v)}`)
@@ -115,11 +113,11 @@ export default async function DashboardPage() {
           <div className="grid grid-cols-2 gap-[6px]">
             <CockpitKpiTile
               title="SEMAINE"
-              subline={`${weekOverview.runSessions} séance${weekOverview.runSessions !== 1 ? 's' : ''}`}
+              subline={`${run.weekSessions} séance${run.weekSessions !== 1 ? 's' : ''}`}
               barValues={weekKmNorm} barLabels={weekKmLabels} barColor={colors.chargeOrange}
             >
               <div className="flex items-baseline gap-[3px]">
-                <span className="text-[21px] font-black leading-tight text-trail-text">{weekOverview.runKm}</span>
+                <span className="text-[21px] font-black leading-tight text-trail-text">{run.weekKm}</span>
                 <span className="text-[14px] text-trail-muted">km</span>
               </div>
             </CockpitKpiTile>
@@ -130,7 +128,7 @@ export default async function DashboardPage() {
               barValues={weekDPlusNorm} barLabels={weekDPlusLabels} barColor={colors.seriesBlue}
             >
               <div className="flex items-baseline gap-[3px]">
-                <span className="text-[21px] font-black leading-tight text-trail-text">{weekOverview.runDPlus}</span>
+                <span className="text-[21px] font-black leading-tight text-trail-text">{run.weekDPlus}</span>
                 <span className="text-[14px] text-trail-muted">m</span>
               </div>
             </CockpitKpiTile>
@@ -141,11 +139,11 @@ export default async function DashboardPage() {
           <div className="grid grid-cols-2 gap-[6px]">
             <CockpitKpiTile
               title="ANNÉE"
-              subline={`D+ ${ytd.runDPlus.toLocaleString('fr-FR')} m`}
+              subline={`D+ ${run.ytdDPlus.toLocaleString('fr-FR')} m`}
               barValues={monthlyNorm} barLabels={monthlyLabels} barColor={colors.chargeOrange}
             >
               <div className="flex items-baseline gap-[3px]">
-                <span className="text-[18px] font-black leading-tight text-trail-text">{ytd.runKm}</span>
+                <span className="text-[18px] font-black leading-tight text-trail-text">{run.ytdKm}</span>
                 <span className="text-[14px] text-trail-muted">km</span>
               </div>
             </CockpitKpiTile>
@@ -169,9 +167,9 @@ export default async function DashboardPage() {
 
         {/* ── 2. Objectifs (configurable) ── */}
         <GoalsBlock
-          weekKm={weekOverview.runKm}
-          weekDPlus={weekOverview.runDPlus}
-          yearKm={ytd.runKm}
+          weekKm={run.weekKm}
+          weekDPlus={run.weekDPlus}
+          yearKm={run.ytdKm}
         />
 
         {/* ── 3. Run / D+ — 10 semaines ── */}
@@ -205,7 +203,7 @@ export default async function DashboardPage() {
             <CompactMetricCard unit="ATL"    value={latest.atl}  description="Fatigue 7j"  color={colors.chargeOrange}  />
             <CompactMetricCard unit="CTL"    value={latest.ctl}  description="Fitness 28j" color={colors.seriesBlue}    />
             <CompactMetricCard unit="TSB"    value={latest.tsb}  description="Forme"        color={tsbColor}             />
-            <CompactMetricCard unit="Suffer" value={weekSuffer}  description="Charge sem." color={colors.seriesYellow}  />
+            <CompactMetricCard unit="CES"    value={run.weekCes} description="Charge sem." color={colors.seriesYellow}  />
           </div>
         </SectionCard>
 
@@ -213,7 +211,7 @@ export default async function DashboardPage() {
         <HistoryPillsBlock
           daySessions={weekSessions.map((s) => ({ label: s.day, volumeKm: s.volumeKm, dPlus: s.dPlus }))}
           weeklyPoints={weekPills}
-          monthlyRunKm={monthlyRunKm}
+          monthlyRunKm={run.monthlyKm}
         />
 
         {/* ── 7. Cumul km par mois ── */}
