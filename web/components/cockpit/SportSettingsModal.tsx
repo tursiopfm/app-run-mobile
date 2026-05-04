@@ -2,7 +2,7 @@
 'use client'
 
 import { useState } from 'react'
-import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
+import { SPORT_CONFIG, type SportKey } from '@/lib/design/sports'
 
 type Props = {
   title:      string
@@ -87,7 +87,8 @@ export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave
 
         <button
           onClick={() => onSave(localVisible, localDefault)}
-          className="w-full py-2 rounded-[10px] bg-trail-primary text-white font-semibold text-[14px]"
+          disabled={localVisible.length === 0}
+          className={`w-full py-2 rounded-[10px] bg-trail-primary text-white font-semibold text-[14px] ${localVisible.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
         >
           Fermer
         </button>
