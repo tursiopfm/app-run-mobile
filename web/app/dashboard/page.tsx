@@ -5,11 +5,11 @@ import { CockpitLineChart } from '@/components/charts/CockpitLineChart'
 import { CockpitComboChart } from '@/components/charts/CockpitComboChart'
 import { CockpitCumulChart } from '@/components/charts/CockpitCumulChart'
 import { CockpitPieChart, type PieSlice } from '@/components/charts/CockpitPieChart'
-import { WeekTable } from '@/components/ui/WeekTable'
 import { GoalsBlock } from '@/components/cockpit/GoalsBlock'
-import { HistoryPillsBlock } from '@/components/cockpit/HistoryPillsBlock'
 import { ActivitiesBlock } from '@/components/cockpit/ActivitiesBlock'
 import { ChargeBlock } from '@/components/cockpit/ChargeBlock'
+import { HistoryBlock } from '@/components/cockpit/HistoryBlock'
+import { WeekBlock } from '@/components/cockpit/WeekBlock'
 import { createClient } from '@/lib/database/supabase-server'
 import { getDashboardData } from '@/lib/data/dashboard'
 import { colors } from '@/lib/design/colors'
@@ -20,17 +20,6 @@ const INTENSITY_COLORS: Record<string, string> = {
   'Seuil':         colors.pieSeuil,
   'VMA':           colors.pieVma,
   'Runtaf':        colors.pieRuntaf,
-}
-
-function SectionCard({ children, title }: { children: React.ReactNode; title?: string }) {
-  return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-      {title && (
-        <p className="text-[13px] font-semibold text-trail-text mb-[6px] leading-tight">{title}</p>
-      )}
-      {children}
-    </div>
-  )
 }
 
 export default async function DashboardPage() {
@@ -61,9 +50,6 @@ export default async function DashboardPage() {
     date:  w.weekLabel,
     ratio: w.km > 0 ? Math.round((w.dPlus / w.km) * 10) / 10 : 0,
   }))
-
-  // HistoryPills
-  const weekPills = weeklyPoints.map((w) => ({ label: w.weekLabel, km: w.km, dPlus: w.dPlus }))
 
   return (
     <AppShell>
@@ -107,11 +93,10 @@ export default async function DashboardPage() {
         {/* ── 5. Charge d'entraînement (swipeable multi-sport) ── */}
         <ChargeBlock sportOverviews={sportOverviews} />
 
-        {/* ── 6. Historique Running ── */}
-        <HistoryPillsBlock
-          daySessions={weekSessions.map((s) => ({ label: s.day, volumeKm: s.volumeKm, dPlus: s.dPlus }))}
-          weeklyPoints={weekPills}
-          monthlyRunKm={sportOverviews.run.monthlyKm}
+        {/* ── 6. Historique (swipeable multi-sport) ── */}
+        <HistoryBlock
+          sportOverviews={sportOverviews}
+          weeklyPoints={weeklyPoints.map((w) => ({ label: w.weekLabel, km: w.km, dPlus: w.dPlus }))}
         />
 
         {/* ── 7. Cumul km par mois ── */}
@@ -142,9 +127,7 @@ export default async function DashboardPage() {
         </CockpitChartCard>
 
         {/* ── 9. Semaine en cours ── */}
-        <SectionCard title="Semaine en cours">
-          <WeekTable sessions={weekSessions} />
-        </SectionCard>
+        <WeekBlock sportOverviews={sportOverviews} allSessions={weekSessions} />
 
       </div>
     </AppShell>
