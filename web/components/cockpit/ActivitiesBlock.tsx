@@ -187,9 +187,9 @@ export function ActivitiesBlock({ sportOverviews }: Props) {
       {/* Dots */}
       {visibleSports.length > 1 && (
         <div className="flex justify-center gap-[6px] mt-[8px]">
-          {visibleSports.map((_, i) => (
+          {visibleSports.map((sportKey, i) => (
             <button
-              key={i}
+              key={sportKey}
               onClick={() => scrollTo(i)}
               aria-label={`Sport ${i + 1}`}
               className={`w-[6px] h-[6px] rounded-full transition-colors ${
