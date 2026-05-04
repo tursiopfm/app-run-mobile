@@ -363,8 +363,8 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
         </button>
       </div>
 
-      {/* Body */}
-      <div className="flex-1 overflow-y-auto p-4 max-w-lg mx-auto w-full">
+      {/* Body — scrollable, boutons inclus dans le flux */}
+      <div className="flex-1 overflow-y-auto p-4 max-w-lg mx-auto w-full space-y-3">
         <div
           className="rounded-[12px] border p-4 space-y-5"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
@@ -446,27 +446,24 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
             sortField="dplus" activeField={af} activeDir={ad} onSort={handleSort}
           />
         </div>
-      </div>
 
-      {/* Bottom buttons */}
-      <div
-        className="px-4 py-4 border-t flex gap-3 max-w-lg mx-auto w-full"
-        style={{ borderColor: colors.border }}
-      >
-        <button
-          onClick={onReset}
-          className="flex-1 py-3 rounded-[12px] border text-[14px] font-semibold"
-          style={{ borderColor: colors.border, color: colors.subtleText, backgroundColor: 'transparent', cursor: 'pointer' }}
-        >
-          Réinitialiser
-        </button>
-        <button
-          onClick={onClose}
-          className="flex-1 py-3 rounded-[12px] text-[14px] font-bold"
-          style={{ backgroundColor: colors.chargeOrange, color: '#fff', cursor: 'pointer' }}
-        >
-          Appliquer
-        </button>
+        {/* Boutons directement sous le bloc, dans le flux scrollable */}
+        <div className="flex gap-3 pb-4">
+          <button
+            onClick={onReset}
+            className="flex-1 py-3 rounded-[12px] border text-[14px] font-semibold"
+            style={{ borderColor: colors.border, color: colors.subtleText, backgroundColor: 'transparent', cursor: 'pointer' }}
+          >
+            Réinitialiser
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 rounded-[12px] text-[14px] font-bold"
+            style={{ backgroundColor: colors.chargeOrange, color: '#fff', cursor: 'pointer' }}
+          >
+            Appliquer
+          </button>
+        </div>
       </div>
     </div>
   )
