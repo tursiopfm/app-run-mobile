@@ -2,6 +2,7 @@ import { AppShell } from '@/components/navigation/AppShell'
 import { StravaSection } from '@/components/settings/StravaSection'
 import { AccountSection } from '@/components/settings/AccountSection'
 import { AppearanceSection } from '@/components/settings/AppearanceSection'
+import { ProfileSection, type ProfileData } from '@/components/settings/ProfileSection'
 import { createClient } from '@/lib/database/supabase-server'
 import { colors } from '@/lib/design/colors'
 import { settings as settingsLabels } from '@/lib/design/labels'
@@ -53,8 +54,19 @@ export default async function SettingsPage() {
 
   let stravaConnected = false
   let stravaAthleteName: string | null = null
+  let profileData: ProfileData = {
+    first_name: null, last_name: null,
+    max_hr: null, threshold_hr: null, resting_hr: null,
+    ftp_watts: null, weight_kg: null, year_goal_km: null,
+  }
 
   if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('first_name,last_name,max_hr,threshold_hr,resting_hr,ftp_watts,weight_kg,year_goal_km')
+      .eq('id', user.id)
+      .single()
+    if (profile) profileData = profile as ProfileData
     const { data: connection } = await supabase
       .from('provider_connections')
       .select('athlete_data')
@@ -126,6 +138,13 @@ export default async function SettingsPage() {
             value="Hebdomadaire"
             accent={colors.greenOk}
           />
+        </SectionCard>
+
+        {/* ── Profil athlète ── */}
+        <SectionCard>
+          <SectionTitle>Profil athlète</SectionTitle>
+          <div className="h-[10px]" />
+          <ProfileSection initial={profileData} />
         </SectionCard>
 
         {/* ── À venir ── */}
