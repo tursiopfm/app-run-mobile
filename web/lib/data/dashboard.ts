@@ -144,13 +144,12 @@ export const getDashboardData = cache(async function getDashboardData(userId: st
 
   // --- Week overview (Mon–Sun of current week) ---
   const monday = mondayOfCurrentWeek()
-  const sunday = new Date(monday)
-  sunday.setDate(monday.getDate() + 6)
-  sunday.setHours(23, 59, 59, 999)
+  const nextMonday = new Date(monday)
+  nextMonday.setDate(nextMonday.getDate() + 7)
 
   const weekActivities = activities.filter((r) => {
     const t = new Date(r.start_time)
-    return t >= monday && t <= sunday
+    return t >= monday && t < nextMonday
   })
 
   const dailyRunKm    = Array(7).fill(0) as number[]
@@ -229,6 +228,15 @@ export const getDashboardData = cache(async function getDashboardData(userId: st
   const MONTH_SHORT_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
   const nowDate = new Date()
 
+  const monthActivityIndex = new Map<string, ActivityRow[]>()
+  for (const a of activities) {
+    const ad = new Date(a.start_time)
+    const key = `${ad.getFullYear()}-${ad.getMonth()}`
+    const arr = monthActivityIndex.get(key)
+    if (arr) arr.push(a)
+    else monthActivityIndex.set(key, [a])
+  }
+
   const cumulMonths: MonthSeries[] = Array.from({ length: 4 }, (_, i) => {
     const d = new Date(nowDate.getFullYear(), nowDate.getMonth() - 3 + i, 1)
     const year  = d.getFullYear()
@@ -236,12 +244,11 @@ export const getDashboardData = cache(async function getDashboardData(userId: st
     const isCurrentMonth = year === nowDate.getFullYear() && month === nowDate.getMonth()
     const lastDay = isCurrentMonth ? nowDate.getDate() : new Date(year, month + 1, 0).getDate()
 
-    const dailyKm = Array(31).fill(0) as number[]
-    for (const a of activities) {
-      const ad = new Date(a.start_time)
-      if (ad.getFullYear() === year && ad.getMonth() === month) {
-        dailyKm[ad.getDate() - 1] += (a.distance_m ?? 0) / 1000
-      }
+    const dailyKm = Array(lastDay).fill(0) as number[]
+    const monthActivities = monthActivityIndex.get(`${year}-${month}`) ?? []
+    for (const a of monthActivities) {
+      const dayIdx = new Date(a.start_time).getDate() - 1
+      if (dayIdx < lastDay) dailyKm[dayIdx] += (a.distance_m ?? 0) / 1000
     }
 
     const dailyCumul: number[] = []
