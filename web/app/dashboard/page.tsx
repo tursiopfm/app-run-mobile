@@ -27,13 +27,9 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const {
-    sportOverviews,
-    weekSessions,
-    intensityBreakdown,
-    weeklyPoints,
-    cumulMonths,
-  } = await getDashboardData(user.id)
+  const { sportOverviews, weekSessions } = await getDashboardData(user.id)
+
+  const { weeklyPoints, cumulMonths, intensityBreakdown } = sportOverviews.all
 
   // Intensity pie
   const pieData: PieSlice[] = intensityBreakdown.map((s) => ({
@@ -96,7 +92,7 @@ export default async function DashboardPage() {
         {/* ── 6. Historique (swipeable multi-sport) ── */}
         <HistoryBlock
           sportOverviews={sportOverviews}
-          weeklyPoints={weeklyPoints.map((w) => ({ label: w.weekLabel, km: w.km, dPlus: w.dPlus }))}
+          weeklyPoints={sportOverviews.all.weeklyPoints.map((w) => ({ label: w.weekLabel, km: w.km, dPlus: w.dPlus }))}
         />
 
         {/* ── 7. Cumul km par mois ── */}

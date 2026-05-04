@@ -34,6 +34,9 @@ export type SportOverview = {
   tsb: number
   weekCes: number
   last7Tsb: number[]
+  weeklyPoints: WeeklyPoint[]
+  cumulMonths: MonthSeries[]
+  intensityBreakdown: IntensityShare[]
 }
 
 export type IntensityShare = {
@@ -59,12 +62,12 @@ export type DashboardData = {
   hasActivities: boolean
   sportOverviews: Record<SportKey, SportOverview>
   weekSessions: DaySession[]
-  intensityBreakdown: IntensityShare[]
-  weeklyPoints: WeeklyPoint[]
-  cumulMonths: MonthSeries[]
 }
 
 const DAY_ABBR = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+const MONTH_CUMUL_COLORS = ['#4ADE80', '#FF6B35', '#F87171', '#38BDF8']
+const MONTH_SHORT_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+const INTENSITY_ORDER = ['Footing', 'Sortie longue', 'Seuil', 'VMA', 'Runtaf']
 
 // ISO week day to 0-based Mon index: Sun=6, Mon=0, Tue=1 … Sat=5
 function toMonIndex(jsDay: number): number {
@@ -125,6 +128,7 @@ function buildSportOverview(
   monday: Date,
   nextMonday: Date,
   janFirst: Date,
+  now: Date,
 ): SportOverview {
   const acts = filterSport(all365, types)
 
@@ -161,6 +165,67 @@ function buildSportOverview(
   const latest  = metrics[metrics.length - 1] ?? { atl: 0, ctl: 0, tsb: 0 }
   const last7Tsb = metrics.slice(-7).map((m) => m.tsb)
 
+  // Weekly points (last 10 weeks)
+  const weekMap = new Map<string, { ts: number; km: number; dPlus: number }>()
+  for (const a of acts) {
+    const ws = getWeekStart(new Date(a.start_time))
+    const isoKey = ws.toISOString().slice(0, 10)
+    const entry = weekMap.get(isoKey) ?? { ts: ws.getTime(), km: 0, dPlus: 0 }
+    entry.km    += (a.distance_m       ?? 0) / 1000
+    entry.dPlus += (a.elevation_gain_m ?? 0)
+    weekMap.set(isoKey, entry)
+  }
+  const weeklyPoints: WeeklyPoint[] = Array.from(weekMap.entries())
+    .map(([isoKey, data]) => {
+      const [, m, d] = isoKey.split('-')
+      return { weekLabel: `${d}/${m}`, ts: data.ts, km: Math.round(data.km * 10) / 10, dPlus: Math.round(data.dPlus) }
+    })
+    .sort((a, b) => a.ts - b.ts)
+    .slice(-10)
+    .map(({ weekLabel, km, dPlus }) => ({ weekLabel, km, dPlus }))
+
+  // Cumulative km per month (last 4 months)
+  const monthActIndex = new Map<string, ActivityRow[]>()
+  for (const a of acts) {
+    const ad = new Date(a.start_time)
+    const key = `${ad.getFullYear()}-${ad.getMonth()}`
+    const arr = monthActIndex.get(key)
+    if (arr) arr.push(a)
+    else monthActIndex.set(key, [a])
+  }
+  const cumulMonths: MonthSeries[] = Array.from({ length: 4 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 3 + i, 1)
+    const year  = d.getFullYear()
+    const month = d.getMonth()
+    const isCurrentMonth = year === now.getFullYear() && month === now.getMonth()
+    const lastDay = isCurrentMonth ? now.getDate() : new Date(year, month + 1, 0).getDate()
+    const dayKm = Array(lastDay).fill(0) as number[]
+    for (const a of (monthActIndex.get(`${year}-${month}`) ?? [])) {
+      const dayIdx = new Date(a.start_time).getDate() - 1
+      if (dayIdx < lastDay) dayKm[dayIdx] += (a.distance_m ?? 0) / 1000
+    }
+    const dailyCumul: number[] = []
+    let cumul = 0
+    for (let day = 0; day < lastDay; day++) {
+      cumul += dayKm[day]
+      dailyCumul.push(Math.round(cumul * 10) / 10)
+    }
+    return { label: `${MONTH_SHORT_FR[month]} ${year}`, color: MONTH_CUMUL_COLORS[i], dailyCumul }
+  })
+
+  // Intensity breakdown (last 30 days)
+  const thirtyDaysAgo = new Date(now)
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  const intensityMap = new Map<string, number>()
+  for (const a of acts.filter((r) => new Date(r.start_time) >= thirtyDaysAgo)) {
+    if (!a.ces || !a.distance_m) continue
+    const label = getIntensityLabel(a.ces)
+    intensityMap.set(label, (intensityMap.get(label) ?? 0) + a.distance_m / 1000)
+  }
+  const intensityBreakdown: IntensityShare[] = INTENSITY_ORDER
+    .filter((l) => intensityMap.has(l))
+    .map((l) => ({ label: l, km: Math.round((intensityMap.get(l) ?? 0) * 10) / 10 }))
+
   return {
     weekKm: Math.round(weekKm * 10) / 10,
     weekDPlus: Math.round(weekDPlus),
@@ -175,6 +240,9 @@ function buildSportOverview(
     tsb: latest.tsb,
     weekCes,
     last7Tsb,
+    weeklyPoints,
+    cumulMonths,
+    intensityBreakdown,
   }
 }
 
@@ -202,16 +270,17 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     .filter((r) => new Date(r.start_time) >= sevenDaysAgo)
     .reverse()
 
+  const now = new Date()
   const monday = mondayOfCurrentWeek()
   const nextMonday = new Date(monday)
   nextMonday.setDate(nextMonday.getDate() + 7)
-  const janFirst = new Date(new Date().getFullYear(), 0, 1)
+  const janFirst = new Date(now.getFullYear(), 0, 1)
 
   const sportOverviews: Record<SportKey, SportOverview> = {
-    run:  buildSportOverview(activities, SPORT_TYPE_MAP.run,  monday, nextMonday, janFirst),
-    ride: buildSportOverview(activities, SPORT_TYPE_MAP.ride, monday, nextMonday, janFirst),
-    swim: buildSportOverview(activities, SPORT_TYPE_MAP.swim, monday, nextMonday, janFirst),
-    all:  buildSportOverview(activities, SPORT_TYPE_MAP.all,  monday, nextMonday, janFirst),
+    run:  buildSportOverview(activities, SPORT_TYPE_MAP.run,  monday, nextMonday, janFirst, now),
+    ride: buildSportOverview(activities, SPORT_TYPE_MAP.ride, monday, nextMonday, janFirst, now),
+    swim: buildSportOverview(activities, SPORT_TYPE_MAP.swim, monday, nextMonday, janFirst, now),
+    all:  buildSportOverview(activities, SPORT_TYPE_MAP.all,  monday, nextMonday, janFirst, now),
   }
 
   const weekActivities = activities.filter((r) => {
@@ -242,78 +311,11 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     }
   })
 
-  const weekMap = new Map<string, { ts: number; km: number; dPlus: number }>()
-  for (const a of activities) {
-    const ws = getWeekStart(new Date(a.start_time))
-    const isoKey = ws.toISOString().slice(0, 10)
-    const entry = weekMap.get(isoKey) ?? { ts: ws.getTime(), km: 0, dPlus: 0 }
-    entry.km    += (a.distance_m       ?? 0) / 1000
-    entry.dPlus += (a.elevation_gain_m ?? 0)
-    weekMap.set(isoKey, entry)
-  }
-  const weeklyPoints: WeeklyPoint[] = Array.from(weekMap.entries())
-    .map(([isoKey, data]) => {
-      const [, m, d] = isoKey.split('-')
-      return { weekLabel: `${d}/${m}`, ts: data.ts, km: Math.round(data.km * 10) / 10, dPlus: Math.round(data.dPlus) }
-    })
-    .sort((a, b) => a.ts - b.ts)
-    .slice(-10)
-    .map(({ weekLabel, km, dPlus }) => ({ weekLabel, km, dPlus }))
-
-  const MONTH_CUMUL_COLORS = ['#4ADE80', '#FF6B35', '#F87171', '#38BDF8']
-  const MONTH_SHORT_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
-  const nowDate = new Date()
-  const monthActivityIndex = new Map<string, ActivityRow[]>()
-  for (const a of activities) {
-    const ad = new Date(a.start_time)
-    const key = `${ad.getFullYear()}-${ad.getMonth()}`
-    const arr = monthActivityIndex.get(key)
-    if (arr) arr.push(a)
-    else monthActivityIndex.set(key, [a])
-  }
-  const cumulMonths: MonthSeries[] = Array.from({ length: 4 }, (_, i) => {
-    const d = new Date(nowDate.getFullYear(), nowDate.getMonth() - 3 + i, 1)
-    const year  = d.getFullYear()
-    const month = d.getMonth()
-    const isCurrentMonth = year === nowDate.getFullYear() && month === nowDate.getMonth()
-    const lastDay = isCurrentMonth ? nowDate.getDate() : new Date(year, month + 1, 0).getDate()
-    const dailyKm = Array(lastDay).fill(0) as number[]
-    const monthActivities = monthActivityIndex.get(`${year}-${month}`) ?? []
-    for (const a of monthActivities) {
-      const dayIdx = new Date(a.start_time).getDate() - 1
-      if (dayIdx < lastDay) dailyKm[dayIdx] += (a.distance_m ?? 0) / 1000
-    }
-    const dailyCumul: number[] = []
-    let cumul = 0
-    for (let day = 0; day < lastDay; day++) {
-      cumul += dailyKm[day]
-      dailyCumul.push(Math.round(cumul * 10) / 10)
-    }
-    return { label: `${MONTH_SHORT_FR[month]} ${year}`, color: MONTH_CUMUL_COLORS[i], dailyCumul }
-  })
-
-  const thirtyDaysAgo = new Date()
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-  const recent30 = activities.filter((r) => new Date(r.start_time) >= thirtyDaysAgo)
-  const intensityMap = new Map<string, number>()
-  for (const a of recent30) {
-    if (!a.ces || !a.distance_m) continue
-    const label = getIntensityLabel(a.ces)
-    intensityMap.set(label, (intensityMap.get(label) ?? 0) + a.distance_m / 1000)
-  }
-  const intensityOrder = ['Footing', 'Sortie longue', 'Seuil', 'VMA', 'Runtaf']
-  const intensityBreakdown: IntensityShare[] = intensityOrder
-    .filter((l) => intensityMap.has(l))
-    .map((l) => ({ label: l, km: Math.round((intensityMap.get(l) ?? 0) * 10) / 10 }))
-
   return {
     dailyMetrics,
     recentActivities,
     hasActivities: activities.length > 0,
     sportOverviews,
     weekSessions,
-    intensityBreakdown,
-    weeklyPoints,
-    cumulMonths,
   }
 }

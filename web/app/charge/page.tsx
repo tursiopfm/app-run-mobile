@@ -51,7 +51,8 @@ export default async function ChargePage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { dailyMetrics, intensityBreakdown } = await getDashboardData(user.id)
+  const { dailyMetrics, sportOverviews } = await getDashboardData(user.id)
+  const { intensityBreakdown } = sportOverviews.all
 
   const latest  = dailyMetrics[dailyMetrics.length - 1] ?? { atl: 0, ctl: 0, tsb: 0, dailyLoad: 0, date: '' }
   const status  = tsbStatus(latest.tsb)
