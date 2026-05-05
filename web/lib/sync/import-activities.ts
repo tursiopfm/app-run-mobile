@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/database/supabase-server'
+import { createServiceClient } from '@/lib/database/supabase-server'
 import { computeCesResult } from '@/lib/analytics/effort-score'
 import type { NormalizedActivity } from '@/lib/providers/strava/mapper'
 import type { ActivityInput, CesResult } from '@/lib/analytics/types'
@@ -25,7 +25,7 @@ function toActivityInput(act: NormalizedActivity): ActivityInput {
 export async function importActivities(activities: NormalizedActivity[]): Promise<ImportResult> {
   if (activities.length === 0) return { saved: 0 }
 
-  const supabase = await createClient()
+  const supabase = createServiceClient()
 
   const cesMap = new Map<string, CesResult>(
     activities.map((act) => [act.providerActivityId, computeCesResult(toActivityInput(act))])

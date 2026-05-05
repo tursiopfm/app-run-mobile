@@ -1,21 +1,22 @@
 import type { StravaActivity } from './mapper'
 
 const STRAVA_BASE = 'https://www.strava.com/api/v3'
+const PER_PAGE = 200
 
 export type FetchActivitiesOptions = {
   after?: number
-  perPage?: number
-  page?: number
+  maxActivities?: number
 }
 
-export async function fetchStravaActivities(
+async function fetchPage(
   accessToken: string,
-  options: FetchActivitiesOptions = {}
+  page: number,
+  after?: number
 ): Promise<StravaActivity[]> {
   const params = new URLSearchParams({
-    per_page: String(options.perPage ?? 200),
-    page: String(options.page ?? 1),
-    ...(options.after !== undefined ? { after: String(options.after) } : {}),
+    per_page: String(PER_PAGE),
+    page: String(page),
+    ...(after !== undefined ? { after: String(after) } : {}),
   })
 
   const res = await fetch(`${STRAVA_BASE}/athlete/activities?${params}`, {
@@ -25,4 +26,22 @@ export async function fetchStravaActivities(
   if (!res.ok) throw new Error(`Strava API error: ${res.status}`)
 
   return res.json() as Promise<StravaActivity[]>
+}
+
+export async function fetchStravaActivities(
+  accessToken: string,
+  options: FetchActivitiesOptions = {}
+): Promise<StravaActivity[]> {
+  const max = options.maxActivities ?? 1000
+  const all: StravaActivity[] = []
+  let page = 1
+
+  while (all.length < max) {
+    const batch = await fetchPage(accessToken, page, options.after)
+    all.push(...batch)
+    if (batch.length < PER_PAGE) break
+    page++
+  }
+
+  return all.slice(0, max)
 }

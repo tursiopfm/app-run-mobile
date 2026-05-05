@@ -5,15 +5,18 @@ export const metadata: Metadata = {
   title: 'Trail Cockpit',
   description: 'Your trail running dashboard',
   manifest: '/manifest.json',
+  icons: {
+    apple: '/icons/icon-192.png',
+  },
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
+    statusBarStyle: 'default',
     title: 'Trail Cockpit',
   },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#f97316',
+  themeColor: '#FF6B35',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,

@@ -92,7 +92,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-trail-accent text-white font-semibold rounded-xl py-2.5 text-sm disabled:opacity-50"
+            className="w-full bg-trail-primary text-white font-semibold rounded-xl py-2.5 text-sm disabled:opacity-50"
           >
             {loading ? 'Création…' : 'Créer mon compte'}
           </button>

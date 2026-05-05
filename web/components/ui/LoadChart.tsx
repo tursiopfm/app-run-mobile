@@ -13,20 +13,20 @@ export function LoadChart({ data, height = 180 }: LoadChartProps) {
       <AreaChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
         <defs>
           <linearGradient id="gradAtl" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor="#f97316" stopOpacity={0.3} />
-            <stop offset="95%" stopColor="#f97316" stopOpacity={0}   />
+            <stop offset="5%"  stopColor="#FF6B35" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="#FF6B35" stopOpacity={0}   />
           </linearGradient>
           <linearGradient id="gradCtl" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor="#22d3ee" stopOpacity={0.3} />
-            <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}   />
+            <stop offset="5%"  stopColor="#38BDF8" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="#38BDF8" stopOpacity={0}   />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#2a2f45" vertical={false} />
-        <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-        <YAxis tick={{ fill: '#6b7280', fontSize: 10 }} tickLine={false} axisLine={false} />
-        <Tooltip contentStyle={{ background: '#1e2235', border: '1px solid #2a2f45', borderRadius: 8, fontSize: 12 }} labelStyle={{ color: '#e8eaf0' }} />
-        <Area type="monotone" dataKey="atl" stroke="#f97316" strokeWidth={2} fill="url(#gradAtl)" name="Fatigue" />
-        <Area type="monotone" dataKey="ctl" stroke="#22d3ee" strokeWidth={2} fill="url(#gradCtl)" name="Fitness" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#1E3530" vertical={false} />
+        <XAxis dataKey="date" tick={{ fill: '#8BA8A3', fontSize: 10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+        <YAxis tick={{ fill: '#8BA8A3', fontSize: 10 }} tickLine={false} axisLine={false} />
+        <Tooltip contentStyle={{ background: '#162420', border: '1px solid #1E3530', borderRadius: 8, fontSize: 12 }} labelStyle={{ color: '#E2ECE9' }} />
+        <Area type="monotone" dataKey="atl" stroke="#FF6B35" strokeWidth={2} fill="url(#gradAtl)" name="Fatigue" />
+        <Area type="monotone" dataKey="ctl" stroke="#38BDF8" strokeWidth={2} fill="url(#gradCtl)" name="Fitness" />
       </AreaChart>
     </ResponsiveContainer>
   )

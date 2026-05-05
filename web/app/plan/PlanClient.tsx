@@ -224,7 +224,12 @@ function PlanHeroCard({ week, selectedDate, weekIndex, total, onPrev, onNext, on
   week: PlanWeek; selectedDate: Date; weekIndex: number; total: number
   onPrev: () => void; onNext: () => void; onToday: () => void
 }) {
-  const projected = { km: Math.max(0, week.targetKm - week.actualKm), dPlus: Math.max(0, week.targetDPlus - week.actualDPlus) }
+  const projected = {
+    km: Math.max(0, week.targetKm - week.actualKm),
+    dPlus: Math.max(0, week.targetDPlus - week.actualDPlus),
+    load: Math.max(0, week.targetLoad - week.actualLoad),
+  }
+  const total2 = { km: week.actualKm + projected.km, load: week.actualLoad + projected.load }
   const plannedSessions = week.sessions.filter(s => !s.isRest && s.title).length
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
@@ -265,8 +270,16 @@ function PlanHeroCard({ week, selectedDate, weekIndex, total, onPrev, onNext, on
 
       {/* Progress lines */}
       <div className="mt-3 space-y-2">
-        <PlanProgressLine label="Volume semaine" current={week.actualKm + projected.km} target={week.targetKm} unit="km" color={colors.chargeOrange} />
+        <PlanProgressLine label="Volume semaine" current={total2.km} target={week.targetKm} unit="km" color={colors.chargeOrange} />
         <PlanProgressLine label="Dénivelé" current={week.actualDPlus + projected.dPlus} target={week.targetDPlus} unit="m" color={colors.seriesBlue} />
+        <PlanProgressLine label="Charge prévue vs cible" current={total2.load} target={week.targetLoad} unit="pts" color={colors.seriesYellow} />
+      </div>
+
+      {/* Mini badges */}
+      <div className="flex gap-2 mt-3">
+        <PlanMiniBadge label="Réalisé" value={`${fmt1(week.actualKm)} km`} color={colors.greenOk} />
+        <PlanMiniBadge label="Planifié" value={`${fmt1(total2.km)} km`} color={colors.seriesBlue} />
+        <PlanMiniBadge label="Restant" value={`${fmt1(projected.km)} km`} color={colors.chargeOrange} />
       </div>
 
       {week.note && (
@@ -276,29 +289,6 @@ function PlanHeroCard({ week, selectedDate, weekIndex, total, onPrev, onNext, on
   )
 }
 
-function PlanWeekLoadCard({ week }: { week: PlanWeek }) {
-  const projected = {
-    km: Math.max(0, week.targetKm - week.actualKm),
-    dPlus: Math.max(0, week.targetDPlus - week.actualDPlus),
-    load: Math.max(0, week.targetLoad - week.actualLoad),
-  }
-  const total = { km: week.actualKm + projected.km, dPlus: week.actualDPlus + projected.dPlus, load: week.actualLoad + projected.load }
-  return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-      <p className="text-[15px] font-bold text-trail-text mb-[10px]">Charge de la semaine</p>
-      <div className="space-y-2">
-        <PlanProgressLine label="Km prévus vs objectif" current={total.km} target={week.targetKm} unit="km" color={colors.chargeOrange} />
-        <PlanProgressLine label="D+ prévu vs objectif" current={total.dPlus} target={week.targetDPlus} unit="m" color={colors.seriesBlue} />
-        <PlanProgressLine label="Charge prévue vs cible" current={total.load} target={week.targetLoad} unit="pts" color={colors.seriesYellow} />
-      </div>
-      <div className="flex gap-2 mt-3">
-        <PlanMiniBadge label="Réalisé" value={`${fmt1(week.actualKm)} km`} color={colors.greenOk} />
-        <PlanMiniBadge label="Planifié" value={`${fmt1(total.km)} km`} color={colors.seriesBlue} />
-        <PlanMiniBadge label="Restant" value={`${fmt1(projected.km)} km`} color={colors.chargeOrange} />
-      </div>
-    </div>
-  )
-}
 
 function PlanCalendarCard({ weeks, visibleMonth, selectedDate, onMonthChange, onSelectDate }: {
   weeks: PlanWeek[]
@@ -535,8 +525,6 @@ export default function PlanClient() {
             }}
             onToday={goToToday}
           />
-
-          <PlanWeekLoadCard week={week} />
 
           <PlanCalendarCard
             weeks={PLAN_WEEKS}

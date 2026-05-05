@@ -20,12 +20,15 @@ const RECENT_WEBHOOKS = [
 ]
 
 export default async function AdminPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/settings')
+  // Local development bypass only. Do not enable in production.
+  if (process.env.NODE_ENV !== 'development') {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) redirect('/settings')
+  }
 
   return (
-    <AppShell title="Admin">
+    <AppShell>
       <div className="px-4 py-4 space-y-4">
         <div className="bg-trail-warning/10 border border-trail-warning/30 rounded-2xl px-4 py-3">
           <p className="text-xs text-trail-warning font-medium">⚠ Zone admin — accès restreint</p>

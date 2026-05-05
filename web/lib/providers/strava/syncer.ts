@@ -28,7 +28,10 @@ export const stravaSyncer: ProviderSyncer = {
       }
     }
 
-    const stravaActivities = await fetchStravaActivities(accessToken, { after })
+    const stravaActivities = await fetchStravaActivities(accessToken, {
+      after,
+      maxActivities: options?.fullSync ? 1000 : 200,
+    })
     return stravaActivities.map((a) => stravaToNormalized(userId, a))
   },
 }

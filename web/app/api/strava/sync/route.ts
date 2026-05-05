@@ -3,7 +3,7 @@ import { createClient } from '@/lib/database/supabase-server'
 import { stravaSyncer } from '@/lib/providers/strava/syncer'
 import { importActivities } from '@/lib/sync/import-activities'
 
-export async function POST() {
+export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -17,8 +17,10 @@ export async function POST() {
 
   if (!connection) return NextResponse.json({ error: 'Strava not connected' }, { status: 404 })
 
+  const fullSync = new URL(request.url).searchParams.get('full') === 'true'
+
   try {
-    const activities = await stravaSyncer.fetchActivities(user.id)
+    const activities = await stravaSyncer.fetchActivities(user.id, { fullSync })
     const result = await importActivities(activities)
     return NextResponse.json(result)
   } catch (err) {
