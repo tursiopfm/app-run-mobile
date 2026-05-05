@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import {
   DndContext,
   closestCenter,
@@ -124,7 +125,8 @@ function AddBlockPanel({
   onRestore: (id: BlockId) => void
   onClose: () => void
 }) {
-  return (
+  if (typeof document === 'undefined') return null
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/60"
       onClick={onClose}
@@ -152,7 +154,8 @@ function AddBlockPanel({
           })}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
