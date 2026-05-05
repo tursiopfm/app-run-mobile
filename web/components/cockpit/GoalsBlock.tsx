@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { GoalProgressRow } from '@/components/ui/GoalProgressRow'
 import { SportSettingsModal } from './SportSettingsModal'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
+import { colors } from '@/lib/design/colors'
 import type { SportOverview } from '@/lib/data/dashboard'
 
 const SETTINGS_KEY = 'cockpit_goals_settings'
@@ -147,11 +148,11 @@ export function GoalsBlock({ sportOverviews }: Props) {
 
                 <div className="space-y-[10px]">
                   <GoalProgressRow
-                    label="Distance hebdo"
+                    label="Km semaine"
                     current={sov.weekKm}
                     target={tgt.weekKm}
                     unit="km"
-                    color={cfg.color}
+                    color={colors.progressRunFg}
                   />
                   {sport !== 'swim' && (
                     <GoalProgressRow
@@ -159,15 +160,15 @@ export function GoalsBlock({ sportOverviews }: Props) {
                       current={sov.weekDPlus}
                       target={tgt.weekDPlus}
                       unit="m"
-                      color={cfg.color}
+                      color={colors.progressDPlusFg}
                     />
                   )}
                   <GoalProgressRow
-                    label="Distance annuelle"
+                    label="Km année"
                     current={sov.ytdKm}
                     target={tgt.yearKm}
                     unit="km"
-                    color={cfg.color}
+                    color={colors.progressVolumeFg}
                   />
                 </div>
               </div>
