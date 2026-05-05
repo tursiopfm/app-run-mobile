@@ -125,7 +125,7 @@ export function InstallPrompt() {
             </div>
             <div className="flex-1">
               <h2 className="text-trail-text font-semibold text-base">Installer Trail Cockpit</h2>
-              <p className="text-trail-muted text-13 mt-0.5">Ajoute l'app à ton écran d'accueil</p>
+              <p className="text-trail-muted text-13 mt-0.5">Ajoute l&apos;app à ton écran d&apos;accueil</p>
             </div>
             <button
               onClick={handleDismiss}
@@ -139,13 +139,13 @@ export function InstallPrompt() {
           <ol className="space-y-3">
             <li className="flex items-center gap-3 bg-trail-surface border border-trail-border rounded-xl p-3">
               <span className="w-6 h-6 rounded-full bg-trail-primary/20 text-trail-primary text-xs font-bold flex items-center justify-center shrink-0">1</span>
-              <span className="text-trail-text text-sm flex-1">Appuie sur l'icône Partager</span>
+              <span className="text-trail-text text-sm flex-1">Appuie sur l&apos;icône Partager</span>
               <Share className="text-trail-accent shrink-0" size={20} />
             </li>
             <li className="flex items-center gap-3 bg-trail-surface border border-trail-border rounded-xl p-3">
               <span className="w-6 h-6 rounded-full bg-trail-primary/20 text-trail-primary text-xs font-bold flex items-center justify-center shrink-0">2</span>
               <span className="text-trail-text text-sm flex-1">
-                Choisis <span className="font-semibold">« Sur l'écran d'accueil »</span>
+                Choisis <span className="font-semibold">« Sur l&apos;écran d&apos;accueil »</span>
               </span>
               <Plus className="text-trail-accent shrink-0" size={20} />
             </li>
@@ -159,7 +159,7 @@ export function InstallPrompt() {
             onClick={handleDismiss}
             className="mt-4 w-full py-3 rounded-xl bg-trail-primary text-white font-semibold text-sm active:scale-[0.98] transition-transform"
           >
-            J'ai compris
+            J&apos;ai compris
           </button>
         </div>
       </div>
@@ -178,7 +178,7 @@ export function InstallPrompt() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-trail-text font-semibold text-sm leading-tight">Installer Trail Cockpit</p>
-          <p className="text-trail-muted text-xs mt-0.5 leading-snug">Accès rapide depuis ton écran d'accueil</p>
+          <p className="text-trail-muted text-xs mt-0.5 leading-snug">Accès rapide depuis ton écran d&apos;accueil</p>
         </div>
         <button
           onClick={handleInstall}
