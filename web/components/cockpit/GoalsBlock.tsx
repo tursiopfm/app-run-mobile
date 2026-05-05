@@ -21,9 +21,9 @@ const DEFAULT_GOALS: Record<SportKey, Goals> = {
 type Settings = { visible: SportKey[]; default: SportKey }
 const DEFAULT_SETTINGS: Settings = { visible: ['run', 'ride', 'swim', 'all'], default: 'run' }
 
-type Props = { sportOverviews: Record<SportKey, SportOverview> }
+type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
-export function GoalsBlock({ sportOverviews }: Props) {
+export function GoalsBlock({ sportOverviews, onHide }: Props) {
   const [settings,   setSettings]   = useState<Settings>(DEFAULT_SETTINGS)
   const [targets,    setTargets]    = useState<Record<SportKey, Goals>>(DEFAULT_GOALS)
   const [activeIdx,  setActiveIdx]  = useState(0)
@@ -204,6 +204,7 @@ export function GoalsBlock({ sportOverviews }: Props) {
           defaultKey={settings.default}
           onSave={saveSettings}
           onClose={() => setShowConfig(false)}
+          onHide={onHide}
         />
       )}
 

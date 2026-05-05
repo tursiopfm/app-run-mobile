@@ -14,9 +14,9 @@ type Settings = { visible: SportKey[]; default: SportKey }
 const DEFAULT_SETTINGS: Settings = { visible: ['run', 'ride', 'swim', 'all'], default: 'run' }
 const STORAGE_KEY = 'cockpit_weekly_settings'
 
-type Props = { sportOverviews: Record<SportKey, SportOverview> }
+type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
-export function WeeklyStatsBlock({ sportOverviews }: Props) {
+export function WeeklyStatsBlock({ sportOverviews, onHide }: Props) {
   const [settings,   setSettings]   = useState<Settings>(DEFAULT_SETTINGS)
   const [currentIdx, setCurrentIdx] = useState(0)
   const [showModal,  setShowModal]  = useState(false)
@@ -177,6 +177,7 @@ export function WeeklyStatsBlock({ sportOverviews }: Props) {
           defaultKey={settings.default}
           onSave={handleSave}
           onClose={() => setShowModal(false)}
+          onHide={onHide}
         />
       )}
     </div>

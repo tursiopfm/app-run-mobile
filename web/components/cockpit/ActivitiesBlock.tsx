@@ -25,9 +25,9 @@ function normalizeTsb(arr: number[]): number[] {
   return arr.map((v) => (v - min) / range)
 }
 
-type Props = { sportOverviews: Record<SportKey, SportOverview> }
+type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
-export function ActivitiesBlock({ sportOverviews }: Props) {
+export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
   const [settings,    setSettings]    = useState<Settings>(DEFAULT_SETTINGS)
   const [currentIdx,  setCurrentIdx]  = useState(0)
   const [showModal,   setShowModal]   = useState(false)
@@ -208,6 +208,7 @@ export function ActivitiesBlock({ sportOverviews }: Props) {
           defaultKey={settings.default}
           onSave={handleSave}
           onClose={() => setShowModal(false)}
+          onHide={onHide}
         />
       )}
     </div>

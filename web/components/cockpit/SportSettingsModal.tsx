@@ -11,9 +11,10 @@ type Props = {
   defaultKey: SportKey
   onSave:     (visible: SportKey[], defaultKey: SportKey) => void
   onClose:    () => void
+  onHide?:    () => void
 }
 
-export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave, onClose }: Props) {
+export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave, onClose, onHide }: Props) {
   const [localVisible, setLocalVisible] = useState<SportKey[]>(visible)
   const [localDefault, setLocalDefault] = useState<SportKey>(defaultKey)
 
@@ -85,13 +86,21 @@ export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave
           })}
         </div>
 
-        <button
-          onClick={() => onSave(localVisible, localDefault)}
-          disabled={localVisible.length === 0}
-          className={`w-full py-2 rounded-[10px] bg-trail-primary text-white font-semibold text-[14px] ${localVisible.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
-        >
-          Fermer
-        </button>
+        {localVisible.length === 0 ? (
+          <button
+            onClick={() => { onHide?.(); onClose() }}
+            className="w-full py-2 rounded-[10px] bg-red-600 text-white font-semibold text-[14px]"
+          >
+            Masquer le bloc
+          </button>
+        ) : (
+          <button
+            onClick={() => onSave(localVisible, localDefault)}
+            className="w-full py-2 rounded-[10px] bg-trail-primary text-white font-semibold text-[14px]"
+          >
+            Fermer
+          </button>
+        )}
       </div>
     </div>
   )

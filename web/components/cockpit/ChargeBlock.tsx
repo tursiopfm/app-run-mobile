@@ -12,9 +12,9 @@ type Settings = { visible: SportKey[]; default: SportKey }
 const DEFAULT_SETTINGS: Settings = { visible: ['all', 'run', 'ride', 'swim'], default: 'all' }
 const STORAGE_KEY = 'cockpit_charge_settings'
 
-type Props = { sportOverviews: Record<SportKey, SportOverview> }
+type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
-export function ChargeBlock({ sportOverviews }: Props) {
+export function ChargeBlock({ sportOverviews, onHide }: Props) {
   const [settings,   setSettings]   = useState<Settings>(DEFAULT_SETTINGS)
   const [currentIdx, setCurrentIdx] = useState(0)
   const [showModal,  setShowModal]  = useState(false)
@@ -135,6 +135,7 @@ export function ChargeBlock({ sportOverviews }: Props) {
           defaultKey={settings.default}
           onSave={handleSave}
           onClose={() => setShowModal(false)}
+          onHide={onHide}
         />
       )}
     </div>

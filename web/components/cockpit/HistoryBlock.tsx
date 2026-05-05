@@ -18,6 +18,7 @@ const DAY_ABBR = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 type Props = {
   sportOverviews: Record<SportKey, SportOverview>
   weeklyPoints: { label: string; km: number; dPlus: number }[]
+  onHide?: () => void
 }
 
 function HistoryPill({
@@ -61,7 +62,7 @@ function HistoryPill({
   )
 }
 
-export function HistoryBlock({ sportOverviews, weeklyPoints }: Props) {
+export function HistoryBlock({ sportOverviews, weeklyPoints, onHide }: Props) {
   const [settings,   setSettings]   = useState<Settings>(DEFAULT_SETTINGS)
   const [currentIdx, setCurrentIdx] = useState(0)
   const [showModal,  setShowModal]  = useState(false)
@@ -237,6 +238,7 @@ export function HistoryBlock({ sportOverviews, weeklyPoints }: Props) {
           defaultKey={settings.default}
           onSave={handleSave}
           onClose={() => setShowModal(false)}
+          onHide={onHide}
         />
       )}
     </div>
