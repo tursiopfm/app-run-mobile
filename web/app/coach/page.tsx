@@ -9,7 +9,7 @@ const SUGGESTIONS = [
 
 export default function CoachPage() {
   return (
-    <AppShell title="Coach IA">
+    <AppShell>
       <div className="flex flex-col px-4 py-4 min-h-[calc(100vh-8rem)]">
         <div className="flex items-center gap-3 mb-6 p-4 bg-trail-card border border-trail-border rounded-2xl">
           <div className="w-10 h-10 rounded-xl bg-trail-accent/15 flex items-center justify-center flex-shrink-0">
