@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { ActivityCard, ActivityRow } from '@/components/ui/ActivityCard'
 import { EditActivityModal } from '@/components/ui/EditActivityModal'
 import { colors } from '@/lib/design/colors'
@@ -208,11 +209,12 @@ function FilterRow({
 }
 
 // ── Search Panel ───────────────────────────────────────────────────────────────
-function SearchPanel({ state, setState, activities, onClose }: {
+function SearchPanel({ state, setState, activities, onClose, onNavigate }: {
   state:      SearchState
   setState:   (s: SearchState) => void
   activities: ActivityRow[]
   onClose:    () => void
+  onNavigate: (id: string) => void
 }) {
   const FIELDS: SearchField[] = ['Titre', 'Distance', 'Durée', 'D+']
   const si = inputStyle()
@@ -330,7 +332,7 @@ function SearchPanel({ state, setState, activities, onClose }: {
               </div>
             ) : (
               <div className="space-y-[10px]">
-                {results.map(a => <ActivityCard key={a.id} activity={a} />)}
+                {results.map(a => <ActivityCard key={a.id} activity={a} onClick={() => onNavigate(a.id)} />)}
               </div>
             )}
           </>
@@ -482,6 +484,7 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
   const [search,          setSearch]          = useState<SearchState>(DEFAULT_SEARCH)
   const [filter,          setFilter]          = useState<FilterState>(DEFAULT_FILTER)
   const [editingActivity, setEditingActivity] = useState<ActivityRow | null>(null)
+  const router = useRouter()
 
   function handleSaved(updated: ActivityRow) {
     setLocalActivities(prev => prev.map(a => a.id === updated.id ? updated : a))
@@ -562,6 +565,7 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
           setState={setSearch}
           activities={localActivities}
           onClose={() => setPanel('none')}
+          onNavigate={(id) => router.push(`/activities/${id}`)}
         />
       )}
       {panel === 'filter' && (
@@ -627,7 +631,7 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
         ) : (
           <div className="space-y-[10px]">
             {filtered.map(a => (
-              <ActivityCard key={a.id} activity={a} onEdit={setEditingActivity} />
+              <ActivityCard key={a.id} activity={a} onEdit={setEditingActivity} onClick={() => router.push(`/activities/${a.id}`)} />
             ))}
           </div>
         )}

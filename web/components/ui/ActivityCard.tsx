@@ -128,9 +128,11 @@ export type ActivityRow = {
 export function ActivityCard({
   activity: a,
   onEdit,
+  onClick,
 }: {
   activity: ActivityRow
   onEdit?: (a: ActivityRow) => void
+  onClick?: () => void
 }) {
   const effectiveSport     = a.manual_sport_type     ?? a.sport_type
   const effectiveDistance  = a.manual_distance_m     ?? a.distance_m
@@ -147,7 +149,11 @@ export function ActivityCard({
   const intensityEmoji = INTENSITY_EMOJI[intensityKey] ?? '❓'
 
   return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
+    <div
+      className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]"
+      style={onClick ? { cursor: 'pointer' } : undefined}
+      onClick={onClick}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-[6px]">
@@ -168,7 +174,7 @@ export function ActivityCard({
         <div className="flex flex-col items-end flex-shrink-0 gap-1">
           {onEdit && (
             <button
-              onClick={() => onEdit(a)}
+              onClick={(e) => { e.stopPropagation(); if (onEdit) onEdit(a) }}
               aria-label="Modifier l'activité"
               style={{
                 color:      colors.subtleText,
