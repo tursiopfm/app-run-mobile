@@ -38,6 +38,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const event = (await request.json()) as StravaWebhookEvent
 
+  console.log('[webhook-recv]', event.object_type, event.aspect_type, event.object_id, event.owner_id)
+
   if (event.object_type === 'activity') {
     waitUntil(processActivityEvent(event))
   }
@@ -77,9 +79,10 @@ async function processActivityEvent(event: StravaWebhookEvent) {
       const stravaActivity = await fetchStravaActivity(accessToken, event.object_id)
       const normalized = stravaToNormalized(userId, stravaActivity)
       await upsertActivity(supabase, normalized)
+      console.log('[webhook-ok]', event.object_id, 'attempt', i)
       return
     } catch (err) {
-      if (i === delays.length - 1) console.error('[strava-webhook] failed after retries', err)
+      console.error('[webhook-err]', event.object_id, 'attempt', i, String(err))
     }
   }
 }
