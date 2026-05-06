@@ -32,7 +32,7 @@ export const sports = {
 // Strava sport_type → display label mapping
 export const sportLabel: Record<string, string> = {
   Run:           sports.run,
-  TrailRun:      sports.trailRun,
+  TrailRun:      sports.run,
   Ride:          sports.bike,
   GravelRide:    sports.bike,
   VirtualRide:   sports.virtualRide,
