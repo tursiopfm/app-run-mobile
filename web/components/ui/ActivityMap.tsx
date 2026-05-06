@@ -1,0 +1,70 @@
+'use client'
+
+import { useEffect } from 'react'
+import { MapContainer, TileLayer, Polyline, useMap } from 'react-leaflet'
+import polylineLib from '@mapbox/polyline'
+import 'leaflet/dist/leaflet.css'
+
+type LatLng = [number, number]
+
+function FitBounds({ positions }: { positions: LatLng[] }) {
+  const map = useMap()
+  useEffect(() => {
+    if (positions.length > 1) {
+      map.fitBounds(positions, { padding: [20, 20] })
+    }
+  }, [map, positions])
+  return null
+}
+
+export function ActivityMap({ encodedPolyline }: { encodedPolyline: string }) {
+  const positions: LatLng[] = polylineLib
+    .decode(encodedPolyline)
+    .map(([lat, lng]) => [lat, lng])
+
+  const start = positions[0]
+  const end   = positions[positions.length - 1]
+
+  return (
+    <MapContainer
+      center={start ?? [46.5, 2.5]}
+      zoom={13}
+      style={{ width: '100%', height: '100%' }}
+      zoomControl={false}
+      attributionControl={false}
+    >
+      <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+      <Polyline
+        positions={positions}
+        pathOptions={{ color: '#e8651a', weight: 3, opacity: 0.9 }}
+      />
+      {start && (
+        <Polyline
+          positions={[start]}
+          pathOptions={{ color: '#4caf50', weight: 8, opacity: 0.9 }}
+        />
+      )}
+      {end && (
+        <Polyline
+          positions={[end]}
+          pathOptions={{ color: '#e8651a', weight: 8, opacity: 0.9 }}
+        />
+      )}
+      <FitBounds positions={positions} />
+    </MapContainer>
+  )
+}
+
+export function ActivityMapPlaceholder() {
+  return (
+    <div
+      style={{
+        width: '100%', height: '100%',
+        background: '#141824',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}
+    >
+      <span style={{ color: '#4a5568', fontSize: '13px' }}>Carte non disponible</span>
+    </div>
+  )
+}
