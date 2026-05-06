@@ -8,8 +8,8 @@ const INTENSITY_EMOJI: Record<string, string> = {
   cotes:         '⛰️',
   vma:           '🔥',
   seuil:         '🎯',
-  runtaf:        '🏃',
-  velotaf:       '🚴',
+  runtaf:        '🏃‍♂️🏢',
+  velotaf:       '🚴🏻🏢',
   course:        '🏁',
   autre:         '❓',
 }

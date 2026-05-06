@@ -60,6 +60,7 @@ export function guessIntensity(name: string, ces: number | null, sport: string):
   if (n.includes('runtaf') || n.includes('run taf') || (n.includes('taf') && sport === 'Run'))
     return 'runtaf'
   if (n.includes('vélotaf') || n.includes('velotaf') || n.includes('vélo taf')
+      || name.includes('Home 🚴🏻') || name.includes('🚴🏻 Home')
       || (n.includes('taf') && (sport === 'Ride' || sport === 'EBikeRide')))
     return 'velotaf'
   if (n.includes('course') || n.includes('compet') || n.includes('race')
