@@ -55,6 +55,11 @@ const DEFAULT_FILTER: FilterState = {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
+// TrailRun is grouped with Run under the "Course" label in the Activités tab.
+function normalizeSportType(s: string): string {
+  return s === 'TrailRun' ? 'Run' : s
+}
+
 function parsePaceSec(s: string): number | null {
   const m = s.match(/^(\d+):(\d{2})$/)
   if (!m) return null
@@ -477,7 +482,7 @@ export default function ActivitiesClient({ activities }: { activities: ActivityR
 
   const sportTypes = useMemo(() => {
     const seen = new Set<string>()
-    for (const a of activities) seen.add(a.sport_type)
+    for (const a of activities) seen.add(normalizeSportType(a.sport_type))
     return Array.from(seen).sort()
   }, [activities])
 
@@ -485,7 +490,7 @@ export default function ActivitiesClient({ activities }: { activities: ActivityR
     let list = applySearch([...activities], search)
 
     if (filter.sport !== 'Toutes') {
-      list = list.filter(a => a.sport_type === filter.sport)
+      list = list.filter(a => normalizeSportType(a.sport_type) === filter.sport)
     }
     const dateFrom = parseDate(filter.dateFrom)
     const dateTo   = parseDate(filter.dateTo)
@@ -516,7 +521,7 @@ export default function ActivitiesClient({ activities }: { activities: ActivityR
         case 'pace':     return dir * ((getPaceSec(a) ?? Infinity) - (getPaceSec(b) ?? Infinity))
         case 'duration': return dir * ((a.moving_time_sec ?? 0) - (b.moving_time_sec ?? 0))
         case 'dplus':    return dir * ((a.elevation_gain_m ?? 0) - (b.elevation_gain_m ?? 0))
-        case 'sport':    return dir * a.sport_type.localeCompare(b.sport_type)
+        case 'sport':    return dir * normalizeSportType(a.sport_type).localeCompare(normalizeSportType(b.sport_type))
         default:         return 0
       }
     })
