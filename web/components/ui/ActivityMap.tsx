@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { MapContainer, TileLayer, Polyline, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from 'react-leaflet'
 import polylineLib from '@mapbox/polyline'
 import 'leaflet/dist/leaflet.css'
 
@@ -39,16 +39,10 @@ export function ActivityMap({ encodedPolyline }: { encodedPolyline: string }) {
         pathOptions={{ color: '#e8651a', weight: 3, opacity: 0.9 }}
       />
       {start && (
-        <Polyline
-          positions={[start]}
-          pathOptions={{ color: '#4caf50', weight: 8, opacity: 0.9 }}
-        />
+        <CircleMarker center={start} radius={6} pathOptions={{ color: '#4caf50', fillColor: '#4caf50', fillOpacity: 1 }} />
       )}
       {end && (
-        <Polyline
-          positions={[end]}
-          pathOptions={{ color: '#e8651a', weight: 8, opacity: 0.9 }}
-        />
+        <CircleMarker center={end} radius={6} pathOptions={{ color: '#e8651a', fillColor: '#e8651a', fillOpacity: 1 }} />
       )}
       <FitBounds positions={positions} />
     </MapContainer>
