@@ -19,9 +19,13 @@ export async function PATCH(
     manual_elevation_gain_m?: number | null
   }
 
+  const { name, manual_sport_type, manual_intensity,
+          manual_distance_m, manual_moving_time_sec, manual_elevation_gain_m } = body
+
   const { error } = await supabase
     .from('activities')
-    .update(body)
+    .update({ name, manual_sport_type, manual_intensity,
+              manual_distance_m, manual_moving_time_sec, manual_elevation_gain_m })
     .eq('id', id)
     .eq('user_id', user.id)
 

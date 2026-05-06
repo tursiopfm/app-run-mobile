@@ -155,6 +155,7 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
       onDeleted()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur inconnue')
+    } finally {
       setSaving(false)
     }
   }
