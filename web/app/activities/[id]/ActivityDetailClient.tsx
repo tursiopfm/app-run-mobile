@@ -106,9 +106,9 @@ function StatTile({ label, value, unit, valueStyle }: {
 }) {
   return (
     <div style={{ background: '#181c29', border: '1px solid #232738', borderRadius: 10, padding: '9px 10px 8px' }}>
-      <div style={{ fontSize: 8, color: '#8892a4', marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: 11, color: '#8892a4', marginBottom: 3 }}>{label}</div>
       <div style={{ fontSize: 17, fontWeight: 800, lineHeight: 1, color: '#e8eaf0', ...valueStyle }}>{value}</div>
-      {unit && <div style={{ fontSize: 8, color: '#8892a4' }}>{unit}</div>}
+      {unit && <div style={{ fontSize: 11, color: '#8892a4' }}>{unit}</div>}
     </div>
   )
 }
@@ -191,32 +191,23 @@ export function ActivityDetailClient({
   return (
     <div style={{ background: '#0f1219', minHeight: '100vh', color: '#e8eaf0', fontFamily: "-apple-system, 'Inter', sans-serif" }}>
 
-      {/* Map section */}
-      <div style={{ position: 'relative', height: 230, overflow: 'hidden' }}>
+      {/* Map section — isolation:isolate confines Leaflet's internal z-indexes */}
+      <div style={{ position: 'relative', height: 230, overflow: 'hidden', isolation: 'isolate' }}>
         {/* Map */}
         <div style={{ width: '100%', height: '100%' }}>
           {polyline ? <DynamicActivityMap encodedPolyline={polyline} /> : <ActivityMapPlaceholder />}
         </div>
 
-        {/* Fade into content */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: 70,
-          background: 'linear-gradient(to bottom, transparent 0%, #0f1219 100%)',
-          pointerEvents: 'none',
-        }} />
-      </div>
-
-      {/* Floating buttons — outside map div so z-index is independent */}
-      <div style={{ position: 'relative', height: 0, zIndex: 60 }}>
+        {/* Buttons — inside isolated map stacking context, on top of Leaflet tiles */}
         <button
           onClick={() => router.back()}
           style={{
-            position: 'absolute', top: -214, left: 16,
-            width: 34, height: 34, borderRadius: '50%',
-            background: 'rgba(15,18,25,0.72)', backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255,255,255,0.28)',
+            position: 'absolute', top: 16, left: 16, zIndex: 9999,
+            width: 36, height: 36, borderRadius: '50%',
+            background: 'rgba(10,12,20,0.82)', backdropFilter: 'blur(14px)',
+            border: '2px solid rgba(255,255,255,0.45)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 16, color: '#ffffff', cursor: 'pointer',
+            fontSize: 17, color: '#ffffff', cursor: 'pointer',
           }}
         >
           ←
@@ -224,20 +215,27 @@ export function ActivityDetailClient({
         <button
           onClick={() => setShowEdit(true)}
           style={{
-            position: 'absolute', top: -214, right: 16,
-            width: 34, height: 34, borderRadius: '50%',
-            background: 'rgba(232,101,26,0.72)', backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(232,101,26,0.9)',
+            position: 'absolute', top: 16, right: 16, zIndex: 9999,
+            width: 36, height: 36, borderRadius: '50%',
+            background: 'rgba(232,101,26,0.85)', backdropFilter: 'blur(14px)',
+            border: '2px solid rgba(232,101,26,1)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 15, cursor: 'pointer',
+            fontSize: 16, cursor: 'pointer',
           }}
         >
           ✏️
         </button>
+
+        {/* Fade into content */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 50,
+          background: 'linear-gradient(to bottom, transparent 0%, #0f1219 100%)',
+          pointerEvents: 'none', zIndex: 1,
+        }} />
       </div>
 
-      {/* Content body — overlaps map slightly, solid bg covers gradient */}
-      <div style={{ padding: '0 16px', marginTop: -10, position: 'relative', zIndex: 10, background: '#0f1219' }}>
+      {/* Content body — solid bg, overlaps map gradient */}
+      <div style={{ padding: '0 16px', marginTop: -20, position: 'relative', zIndex: 20, background: '#0f1219' }}>
 
         {/* Activity header */}
         <div style={{ paddingBottom: 12 }}>

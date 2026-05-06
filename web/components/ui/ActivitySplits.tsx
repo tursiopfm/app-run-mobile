@@ -19,9 +19,9 @@ export function ActivitySplits({
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {/* Header: segment count + best split */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <span style={{ fontSize: 12, color: '#6b7a96' }}>{splits.length} segments</span>
+        <span style={{ fontSize: 16, color: '#6b7a96' }}>{splits.length} segments</span>
         {minPace !== null && (
-          <span style={{ fontSize: 12, fontWeight: 700, color: splitColor(minPace, avgPaceSec) }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: splitColor(minPace, avgPaceSec) }}>
             ★ Meilleur {fmtPaceSec(minPace)}
           </span>
         )}
@@ -48,7 +48,7 @@ export function ActivitySplits({
               width: 22, height: 22, borderRadius: '50%',
               background: '#181c29', border: '1px solid #252836',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 8, fontWeight: 700, color: '#8892a4', flexShrink: 0,
+              fontSize: 11, fontWeight: 700, color: '#8892a4', flexShrink: 0,
             }}>
               {split.split}
             </div>
@@ -60,7 +60,7 @@ export function ActivitySplits({
 
             {/* Pace */}
             <span style={{
-              fontSize: 11, fontWeight: 800, width: 34, textAlign: 'right',
+              fontSize: 14, fontWeight: 800, width: 40, textAlign: 'right',
               color, flexShrink: 0,
             }}>
               {fmtPaceSec(pace)}
@@ -68,7 +68,7 @@ export function ActivitySplits({
 
             {/* Elevation */}
             <span style={{
-              fontSize: 9, width: 34, textAlign: 'right', flexShrink: 0,
+              fontSize: 12, width: 38, textAlign: 'right', flexShrink: 0,
               color: elev > 0 ? '#8bc34a' : elev < 0 ? '#4db6f0' : '#8892a4',
             }}>
               {elev > 0 ? `↑${elev}m` : elev < 0 ? `↓${Math.abs(elev)}m` : ''}
