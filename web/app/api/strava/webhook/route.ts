@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { waitUntil } from '@vercel/functions'
 import { createClient } from '@supabase/supabase-js'
 import { fetchStravaActivity } from '@/lib/providers/strava/api'
 import { stravaToNormalized } from '@/lib/providers/strava/mapper'
@@ -8,7 +7,6 @@ import type { StravaWebhookEvent } from '@/lib/providers/strava/webhook'
 import type { ActivityInput } from '@/lib/analytics/types'
 import type { NormalizedActivity } from '@/lib/providers/strava/mapper'
 
-// Edge runtime: ~0ms cold start — critical for Strava's 2s timeout
 export const runtime = 'edge'
 
 const VERIFY_TOKEN = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN!
@@ -21,7 +19,6 @@ function serviceClient() {
   )
 }
 
-// GET: Strava webhook subscription verification
 export async function GET(request: NextRequest) {
   const params    = request.nextUrl.searchParams
   const mode      = params.get('hub.mode')
@@ -34,30 +31,38 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 }
 
-// POST: respond 200 immediately, process in background
+// POST: process synchronously within Strava's 2s window.
+// On failure, return 500 — Strava retries (1min, 5min, 30min schedule).
 export async function POST(request: NextRequest) {
   const event = (await request.json()) as StravaWebhookEvent
 
   console.log('[webhook-recv]', event.object_type, event.aspect_type, event.object_id, event.owner_id)
 
-  if (event.object_type === 'activity') {
-    waitUntil(processActivityEvent(event))
+  if (event.object_type !== 'activity') {
+    return NextResponse.json({ ok: true })
   }
 
-  return NextResponse.json({ ok: true })
+  try {
+    await processActivityEvent(event)
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('[webhook-err]', event.object_id, String(err))
+    return NextResponse.json({ error: 'processing failed' }, { status: 500 })
+  }
 }
 
 async function processActivityEvent(event: StravaWebhookEvent) {
   const supabase = serviceClient()
 
-  const { data: conn } = await supabase
+  const { data: conn, error: connErr } = await supabase
     .from('provider_connections')
     .select('user_id, access_token, refresh_token, token_expires_at')
     .eq('provider', 'strava')
     .eq('provider_user_id', String(event.owner_id))
     .single()
 
-  if (!conn) return
+  if (connErr) throw new Error(`conn lookup: ${connErr.message}`)
+  if (!conn) throw new Error(`no connection for owner ${event.owner_id}`)
 
   const userId = conn.user_id as string
 
@@ -72,19 +77,19 @@ async function processActivityEvent(event: StravaWebhookEvent) {
   }
 
   const accessToken = await resolveAccessToken(supabase, userId, conn as ConnectionRow)
-  const delays = [0, 3000, 8000, 20000]
-  for (let i = 0; i < delays.length; i++) {
-    if (delays[i] > 0) await new Promise(r => setTimeout(r, delays[i]))
-    try {
-      const stravaActivity = await fetchStravaActivity(accessToken, event.object_id)
-      const normalized = stravaToNormalized(userId, stravaActivity)
-      await upsertActivity(supabase, normalized)
-      console.log('[webhook-ok]', event.object_id, 'attempt', i)
-      return
-    } catch (err) {
-      console.error('[webhook-err]', event.object_id, 'attempt', i, String(err))
-    }
+
+  // One quick retry inside the 2s window for the "activity not ready" race
+  let stravaActivity
+  try {
+    stravaActivity = await fetchStravaActivity(accessToken, event.object_id)
+  } catch (err) {
+    await new Promise(r => setTimeout(r, 500))
+    stravaActivity = await fetchStravaActivity(accessToken, event.object_id)
   }
+
+  const normalized = stravaToNormalized(userId, stravaActivity)
+  await upsertActivity(supabase, normalized)
+  console.log('[webhook-ok]', event.object_id)
 }
 
 async function upsertActivity(
