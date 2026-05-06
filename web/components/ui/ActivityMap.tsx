@@ -36,14 +36,18 @@ export function ActivityMap({ encodedPolyline }: { encodedPolyline: string }) {
       zoomControl={false}
       attributionControl={false}
     >
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-      {/* Glow layer */}
-      <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 12, opacity: 0.15 }} />
-      {/* Main route */}
-      <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 3, opacity: 0.95 }} />
-      <CircleMarker center={start} radius={6} pathOptions={{ color: '#4caf50', fillColor: '#4caf50', fillOpacity: 1 }} />
+      <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+      {/* Outer diffuse glow */}
+      <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 28, opacity: 0.08 }} />
+      {/* Middle glow */}
+      <Polyline positions={positions} pathOptions={{ color: '#ff8c42', weight: 14, opacity: 0.22 }} />
+      {/* Inner glow */}
+      <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 6, opacity: 0.55 }} />
+      {/* Core route */}
+      <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 3, opacity: 1 }} />
+      <CircleMarker center={start} radius={7} pathOptions={{ color: '#fff', weight: 2, fillColor: '#4caf50', fillOpacity: 1 }} />
       {end && (
-        <CircleMarker center={end} radius={6} pathOptions={{ color: '#e8651a', fillColor: '#e8651a', fillOpacity: 1 }} />
+        <CircleMarker center={end} radius={7} pathOptions={{ color: '#fff', weight: 2, fillColor: '#e8651a', fillOpacity: 1 }} />
       )}
       <FitBounds positions={positions} />
     </MapContainer>
@@ -52,14 +56,8 @@ export function ActivityMap({ encodedPolyline }: { encodedPolyline: string }) {
 
 export function ActivityMapPlaceholder() {
   return (
-    <div
-      style={{
-        width: '100%', height: '100%',
-        background: '#141824',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}
-    >
-      <span style={{ color: '#4a5568', fontSize: '13px' }}>Carte non disponible</span>
+    <div style={{ width: '100%', height: '100%', background: '#e8eaed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <span style={{ color: '#9aa0ac', fontSize: '13px' }}>Carte non disponible</span>
     </div>
   )
 }

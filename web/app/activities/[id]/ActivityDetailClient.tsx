@@ -193,36 +193,6 @@ export function ActivityDetailClient({
 
       {/* Map section */}
       <div style={{ position: 'relative', height: 230, overflow: 'hidden' }}>
-        {/* Back button */}
-        <button
-          onClick={() => router.back()}
-          style={{
-            position: 'absolute', top: 16, left: 16, zIndex: 50,
-            width: 32, height: 32, borderRadius: '50%',
-            background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255,255,255,0.12)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 14, color: '#e8eaf0', cursor: 'pointer',
-          }}
-        >
-          ←
-        </button>
-
-        {/* Edit button */}
-        <button
-          onClick={() => setShowEdit(true)}
-          style={{
-            position: 'absolute', top: 16, right: 16, zIndex: 50,
-            width: 32, height: 32, borderRadius: '50%',
-            background: 'rgba(232,101,26,0.22)', backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(232,101,26,0.45)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 13, cursor: 'pointer',
-          }}
-        >
-          ✏️
-        </button>
-
         {/* Map */}
         <div style={{ width: '100%', height: '100%' }}>
           {polyline ? <DynamicActivityMap encodedPolyline={polyline} /> : <ActivityMapPlaceholder />}
@@ -230,14 +200,44 @@ export function ActivityDetailClient({
 
         {/* Fade into content */}
         <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: 90,
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 70,
           background: 'linear-gradient(to bottom, transparent 0%, #0f1219 100%)',
           pointerEvents: 'none',
         }} />
       </div>
 
-      {/* Content body — overlaps map slightly */}
-      <div style={{ padding: '0 16px', marginTop: -10, position: 'relative', zIndex: 10 }}>
+      {/* Floating buttons — outside map div so z-index is independent */}
+      <div style={{ position: 'relative', height: 0, zIndex: 60 }}>
+        <button
+          onClick={() => router.back()}
+          style={{
+            position: 'absolute', top: -214, left: 16,
+            width: 34, height: 34, borderRadius: '50%',
+            background: 'rgba(15,18,25,0.72)', backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.28)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 16, color: '#ffffff', cursor: 'pointer',
+          }}
+        >
+          ←
+        </button>
+        <button
+          onClick={() => setShowEdit(true)}
+          style={{
+            position: 'absolute', top: -214, right: 16,
+            width: 34, height: 34, borderRadius: '50%',
+            background: 'rgba(232,101,26,0.72)', backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(232,101,26,0.9)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 15, cursor: 'pointer',
+          }}
+        >
+          ✏️
+        </button>
+      </div>
+
+      {/* Content body — overlaps map slightly, solid bg covers gradient */}
+      <div style={{ padding: '0 16px', marginTop: -10, position: 'relative', zIndex: 10, background: '#0f1219' }}>
 
         {/* Activity header */}
         <div style={{ paddingBottom: 12 }}>
@@ -256,12 +256,12 @@ export function ActivityDetailClient({
 
         {/* Stats grid 3×2 */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 16 }}>
-          <StatTile label="Distance"   value={fmtDist(dist)}                                 unit="km"   valueStyle={{ color: '#e8651a' }} />
-          <StatTile label="D+"         value={fmtElev(elev)}                                 unit="m"    valueStyle={{ color: '#4db6f0' }} />
-          <StatTile label="Durée"      value={fmtDurationSec(movingTime)}                    unit=""     valueStyle={{ color: '#4caf50', fontSize: 14 }} />
-          <StatTile label={paceLabel}  value={paceValue}                                     unit={paceUnit} valueStyle={{ color: '#e8eaf0', fontSize: 14 }} />
-          <StatTile label="Calories"   value={a.calories != null ? String(a.calories) : '—'} unit="kcal" valueStyle={{ color: '#ff7043', fontSize: 15 }} />
-          <StatTile label="Tps écoulé" value={fmtDurationSec(a.duration_sec)}                unit=""     valueStyle={{ color: '#4caf50', fontSize: 13 }} />
+          <StatTile label="Distance"   value={fmtDist(dist)}                                 unit="km"   valueStyle={{ color: '#e8651a', fontSize: 20 }} />
+          <StatTile label="D+"         value={fmtElev(elev)}                                 unit="m"    valueStyle={{ color: '#4db6f0', fontSize: 20 }} />
+          <StatTile label="Durée"      value={fmtDurationSec(movingTime)}                    unit=""     valueStyle={{ color: '#4caf50', fontSize: 17 }} />
+          <StatTile label={paceLabel}  value={paceValue}                                     unit={paceUnit} valueStyle={{ color: '#e8eaf0', fontSize: 17 }} />
+          <StatTile label="Calories"   value={a.calories != null ? String(a.calories) : '—'} unit="kcal" valueStyle={{ color: '#ff7043', fontSize: 18 }} />
+          <StatTile label="Tps écoulé" value={fmtDurationSec(a.duration_sec)}                unit=""     valueStyle={{ color: '#4caf50', fontSize: 16 }} />
         </div>
 
         {/* Tabs — full width, breaking out of padding */}

@@ -19,9 +19,9 @@ export function ActivitySplits({
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {/* Header: segment count + best split */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <span style={{ fontSize: 10, color: '#6b7a96' }}>{splits.length} segments</span>
+        <span style={{ fontSize: 12, color: '#6b7a96' }}>{splits.length} segments</span>
         {minPace !== null && (
-          <span style={{ fontSize: 10, fontWeight: 700, color: splitColor(minPace, avgPaceSec) }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: splitColor(minPace, avgPaceSec) }}>
             ★ Meilleur {fmtPaceSec(minPace)}
           </span>
         )}
@@ -54,8 +54,8 @@ export function ActivitySplits({
             </div>
 
             {/* Progress bar */}
-            <div style={{ flex: 1, height: 5, background: '#181c29', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{ width: `${barPct}%`, height: '100%', borderRadius: 3, backgroundColor: color }} />
+            <div style={{ flex: 1, height: 8, background: '#181c29', borderRadius: 4, overflow: 'hidden' }}>
+              <div style={{ width: `${barPct}%`, height: '100%', borderRadius: 4, backgroundColor: color }} />
             </div>
 
             {/* Pace */}
