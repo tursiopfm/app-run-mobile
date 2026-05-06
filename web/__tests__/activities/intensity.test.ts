@@ -40,6 +40,8 @@ describe('guessIntensity', () => {
   it('detects côtes keywords', () => {
     expect(guessIntensity('Côtes 200m', null, 'Run')).toBe('cotes')
     expect(guessIntensity('Montée répétées', null, 'Run')).toBe('cotes')
+    expect(guessIntensity("Côte d'Igny - 1000m D+", null, 'TrailRun')).toBe('cotes')
+    expect(guessIntensity('Montee du Puy', null, 'TrailRun')).toBe('cotes')
   })
   it('detects vma keywords', () => {
     expect(guessIntensity('VMA 400m x8', null, 'Run')).toBe('vma')

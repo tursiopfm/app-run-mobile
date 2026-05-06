@@ -11,8 +11,8 @@ export const INTENSITY_OPTIONS: IntensityOption[] = [
   { key: 'cotes',         label: '⛰️ Côtes'           },
   { key: 'vma',           label: '🔥 VMA'             },
   { key: 'seuil',         label: '🎯 Seuil'           },
-  { key: 'runtaf',        label: '🏢🏃 Runtaf'        },
-  { key: 'velotaf',       label: '🏢🚴 Vélotaf'       },
+  { key: 'runtaf',        label: '🏢🏃‍♂️➡️🏃‍♂️🏠 Runtaf'   },
+  { key: 'velotaf',       label: '🏢🚴🏻➡️🚴🏻🏠 Vélotaf'  },
   { key: 'course',        label: '🏁 Course'          },
   { key: 'autre',         label: '❓ Autre'            },
 ]
@@ -50,7 +50,7 @@ export function guessIntensity(name: string, ces: number | null, sport: string):
     return 'footing'
   if (n.includes('sortie longue') || n.includes('sl ') || n.includes('long run') || n.includes('lsl'))
     return 'sortie_longue'
-  if (n.includes('côtes') || n.includes('cotes') || n.includes('cote') || n.includes('montée'))
+  if (n.includes('côtes') || n.includes('cotes') || n.includes('côte') || n.includes('cote') || n.includes('montée') || n.includes('montee'))
     return 'cotes'
   if (n.includes('400') || n.includes('200') || n.includes('vma') || n.includes('interval')
       || n.includes('fractionné') || n.includes('répétition'))

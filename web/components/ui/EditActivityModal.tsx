@@ -263,8 +263,9 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
             disabled={saving}
             className={btnBase}
             style={{
-              backgroundColor: '#ef4444',
-              color:           '#fff',
+              border:          '1px solid #ef4444',
+              color:           '#ef4444',
+              backgroundColor: 'transparent',
               cursor:          saving ? 'not-allowed' : 'pointer',
               opacity:         saving ? 0.7 : 1,
             }}
@@ -290,8 +291,9 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
             disabled={saving}
             className={btnBase}
             style={{
-              backgroundColor: colors.chargeOrange,
-              color:           '#fff',
+              border:          `1px solid ${colors.chargeOrange}`,
+              color:           colors.chargeOrange,
+              backgroundColor: 'transparent',
               cursor:          saving ? 'not-allowed' : 'pointer',
               opacity:         saving ? 0.7 : 1,
             }}
