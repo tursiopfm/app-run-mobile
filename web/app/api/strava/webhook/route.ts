@@ -1,12 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { waitUntil } from '@vercel/functions'
-import { createServiceClient } from '@/lib/database/supabase-server'
+import { createClient } from '@supabase/supabase-js'
 import { fetchStravaActivity } from '@/lib/providers/strava/api'
 import { stravaToNormalized } from '@/lib/providers/strava/mapper'
-import { importActivities } from '@/lib/sync/import-activities'
+import { computeCesResult } from '@/lib/analytics/effort-score'
 import type { StravaWebhookEvent } from '@/lib/providers/strava/webhook'
+import type { ActivityInput } from '@/lib/analytics/types'
+import type { NormalizedActivity } from '@/lib/providers/strava/mapper'
+
+// Edge runtime: ~0ms cold start — critical for Strava's 2s timeout
+export const runtime = 'edge'
 
 const VERIFY_TOKEN = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN!
+
+function serviceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  )
+}
 
 // GET: Strava webhook subscription verification
 export async function GET(request: NextRequest) {
@@ -21,22 +34,19 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 }
 
-// POST: Receive Strava webhook events — respond immediately, process in background
+// POST: respond 200 immediately, process in background
 export async function POST(request: NextRequest) {
   const event = (await request.json()) as StravaWebhookEvent
 
-  if (event.object_type !== 'activity') {
-    return NextResponse.json({ ok: true })
+  if (event.object_type === 'activity') {
+    waitUntil(processActivityEvent(event))
   }
-
-  // Return 200 immediately (Strava requires < 2s), process in background
-  waitUntil(processActivityEvent(event))
 
   return NextResponse.json({ ok: true })
 }
 
 async function processActivityEvent(event: StravaWebhookEvent) {
-  const supabase = createServiceClient()
+  const supabase = serviceClient()
 
   const { data: conn } = await supabase
     .from('provider_connections')
@@ -63,20 +73,70 @@ async function processActivityEvent(event: StravaWebhookEvent) {
     const accessToken = await resolveAccessToken(supabase, userId, conn as ConnectionRow)
     const stravaActivity = await fetchStravaActivity(accessToken, event.object_id)
     const normalized = stravaToNormalized(userId, stravaActivity)
-    await importActivities([normalized])
+    await upsertActivity(supabase, normalized)
   } catch (err) {
-    console.error('[strava-webhook] sync error:', err)
+    console.error('[strava-webhook]', err)
   }
 }
 
-type ConnectionRow = {
-  access_token: string
-  refresh_token: string
-  token_expires_at: string
+async function upsertActivity(
+  supabase: ReturnType<typeof serviceClient>,
+  act: NormalizedActivity
+) {
+  const input: ActivityInput = {
+    id: act.providerActivityId,
+    rawSportType: act.sportType,
+    name: act.name,
+    startDate: act.startTime,
+    movingTimeSeconds: act.movingTimeSec,
+    elapsedTimeSeconds: act.durationSec,
+    distanceMeters: act.distanceM,
+    elevationGainMeters: act.elevationGainM,
+    averageHeartrate: act.avgHr ?? undefined,
+    maxHeartrate: act.maxHr ?? undefined,
+    averageWatts: act.avgPower ?? undefined,
+    calories: act.calories ?? undefined,
+  }
+  const ces = computeCesResult(input)
+
+  const { data: rows, error } = await supabase
+    .from('activities')
+    .upsert({
+      user_id: act.userId,
+      provider: act.provider,
+      provider_activity_id: act.providerActivityId,
+      sport_type: act.sportType,
+      name: act.name,
+      start_time: act.startTime,
+      duration_sec: act.durationSec,
+      moving_time_sec: act.movingTimeSec,
+      distance_m: act.distanceM,
+      elevation_gain_m: act.elevationGainM,
+      avg_hr: act.avgHr,
+      max_hr: act.maxHr,
+      avg_power: act.avgPower,
+      calories: act.calories,
+      external_training_load: act.externalTrainingLoad,
+      ces: ces.ces,
+      raw_payload: act.rawPayload,
+    }, { onConflict: 'user_id,provider,provider_activity_id' })
+    .select('id, provider_activity_id')
+
+  if (error) throw new Error(`Activity upsert failed: ${error.message}`)
+  if (!rows?.length) return
+
+  await supabase.from('activity_metrics').upsert([
+    { activity_id: rows[0].id, metric_key: 'ces',              metric_value: ces.ces },
+    { activity_id: rows[0].id, metric_key: 'cardio_load',      metric_value: ces.cardioLoad },
+    { activity_id: rows[0].id, metric_key: 'muscle_load',      metric_value: ces.muscleLoad },
+    { activity_id: rows[0].id, metric_key: 'intensity_factor', metric_value: ces.intensityFactor },
+  ], { onConflict: 'activity_id,metric_key' })
 }
 
+type ConnectionRow = { access_token: string; refresh_token: string; token_expires_at: string }
+
 async function resolveAccessToken(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: ReturnType<typeof serviceClient>,
   userId: string,
   conn: ConnectionRow
 ): Promise<string> {
@@ -94,7 +154,6 @@ async function resolveAccessToken(
     }),
   })
   if (!res.ok) throw new Error(`Token refresh failed: ${res.status}`)
-
   const json = await res.json() as { access_token: string; refresh_token: string; expires_at: number }
 
   await supabase
