@@ -192,7 +192,7 @@ export function ActivityDetailClient({
     <div style={{ background: '#0f1219', minHeight: '100vh', color: '#e8eaf0', fontFamily: "-apple-system, 'Inter', sans-serif" }}>
 
       {/* Map section — isolation:isolate confines Leaflet's internal z-indexes */}
-      <div style={{ position: 'relative', height: 230, overflow: 'hidden', isolation: 'isolate' }}>
+      <div style={{ position: 'relative', height: 307, overflow: 'hidden', isolation: 'isolate' }}>
         {/* Map */}
         <div style={{ width: '100%', height: '100%' }}>
           {polyline ? <DynamicActivityMap encodedPolyline={polyline} /> : <ActivityMapPlaceholder />}
