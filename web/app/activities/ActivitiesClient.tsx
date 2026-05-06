@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { ActivityCard, ActivityRow } from '@/components/ui/ActivityCard'
+import { EditActivityModal } from '@/components/ui/EditActivityModal'
 import { colors } from '@/lib/design/colors'
 import { sportLabel } from '@/lib/design/labels'
 
@@ -475,19 +476,31 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-export default function ActivitiesClient({ activities }: { activities: ActivityRow[] }) {
-  const [panel,  setPanel]  = useState<'none' | 'search' | 'filter'>('none')
-  const [search, setSearch] = useState<SearchState>(DEFAULT_SEARCH)
-  const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER)
+export default function ActivitiesClient({ activities: initialActivities }: { activities: ActivityRow[] }) {
+  const [localActivities, setLocalActivities] = useState<ActivityRow[]>(initialActivities)
+  const [panel,           setPanel]           = useState<'none' | 'search' | 'filter'>('none')
+  const [search,          setSearch]          = useState<SearchState>(DEFAULT_SEARCH)
+  const [filter,          setFilter]          = useState<FilterState>(DEFAULT_FILTER)
+  const [editingActivity, setEditingActivity] = useState<ActivityRow | null>(null)
+
+  function handleSaved(updated: ActivityRow) {
+    setLocalActivities(prev => prev.map(a => a.id === updated.id ? updated : a))
+    setEditingActivity(null)
+  }
+
+  function handleDeleted(id: string) {
+    setLocalActivities(prev => prev.filter(a => a.id !== id))
+    setEditingActivity(null)
+  }
 
   const sportTypes = useMemo(() => {
     const seen = new Set<string>()
-    for (const a of activities) seen.add(normalizeSportType(a.sport_type))
+    for (const a of localActivities) seen.add(normalizeSportType(a.sport_type))
     return Array.from(seen).sort()
-  }, [activities])
+  }, [localActivities])
 
   const filtered = useMemo(() => {
-    let list = applySearch([...activities], search)
+    let list = applySearch([...localActivities], search)
 
     if (filter.sport !== 'Toutes') {
       list = list.filter(a => normalizeSportType(a.sport_type) === filter.sport)
@@ -527,7 +540,7 @@ export default function ActivitiesClient({ activities }: { activities: ActivityR
     })
 
     return list
-  }, [activities, search, filter])
+  }, [localActivities, search, filter])
 
   const hasActiveSearch = search.title.trim() !== ''
     || search.distFrom !== '' || search.distTo !== ''
@@ -547,7 +560,7 @@ export default function ActivitiesClient({ activities }: { activities: ActivityR
         <SearchPanel
           state={search}
           setState={setSearch}
-          activities={activities}
+          activities={localActivities}
           onClose={() => setPanel('none')}
         />
       )}
@@ -606,17 +619,27 @@ export default function ActivitiesClient({ activities }: { activities: ActivityR
             style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
           >
             <p className="text-[14px]" style={{ color: colors.subtleText }}>
-              {activities.length === 0
+              {localActivities.length === 0
                 ? 'Connecte Strava dans Réglages pour importer tes activités.'
                 : 'Aucune activité ne correspond aux filtres.'}
             </p>
           </div>
         ) : (
           <div className="space-y-[10px]">
-            {filtered.map(a => <ActivityCard key={a.id} activity={a} />)}
+            {filtered.map(a => (
+              <ActivityCard key={a.id} activity={a} onEdit={setEditingActivity} />
+            ))}
           </div>
         )}
       </div>
+      {editingActivity && (
+        <EditActivityModal
+          activity={editingActivity}
+          onSaved={handleSaved}
+          onDeleted={() => handleDeleted(editingActivity.id)}
+          onClose={() => setEditingActivity(null)}
+        />
+      )}
     </>
   )
 }
