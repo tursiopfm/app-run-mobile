@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { BottomNav } from './BottomNav'
+import { PullToRefresh } from './PullToRefresh'
 import { MoreVertical } from 'lucide-react'
 import { createClient } from '@/lib/database/supabase-server'
 
@@ -46,9 +47,9 @@ export async function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="flex-1 pb-24 overflow-y-auto">
+      <PullToRefresh>
         {children}
-      </main>
+      </PullToRefresh>
       <BottomNav />
     </div>
   )

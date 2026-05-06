@@ -28,6 +28,17 @@ async function fetchPage(
   return res.json() as Promise<StravaActivity[]>
 }
 
+export async function fetchStravaActivity(
+  accessToken: string,
+  activityId: number
+): Promise<StravaActivity> {
+  const res = await fetch(`${STRAVA_BASE}/activities/${activityId}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!res.ok) throw new Error(`Strava API error: ${res.status}`)
+  return res.json() as Promise<StravaActivity>
+}
+
 export async function fetchStravaActivities(
   accessToken: string,
   options: FetchActivitiesOptions = {}
