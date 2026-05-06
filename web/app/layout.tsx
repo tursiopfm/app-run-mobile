@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { InstallPrompt } from '@/components/ui/InstallPrompt'
 import { ServiceWorkerRegistrar } from '@/components/ui/ServiceWorkerRegistrar'
 
@@ -33,14 +34,16 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="bg-trail-bg text-trail-text min-h-screen">
-        {children}
-        <ServiceWorkerRegistrar />
-        <InstallPrompt />
+        <ThemeProvider>
+          {children}
+          <ServiceWorkerRegistrar />
+          <InstallPrompt />
+        </ThemeProvider>
       </body>
     </html>
   )
