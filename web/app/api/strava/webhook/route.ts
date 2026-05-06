@@ -69,13 +69,18 @@ async function processActivityEvent(event: StravaWebhookEvent) {
     return
   }
 
-  try {
-    const accessToken = await resolveAccessToken(supabase, userId, conn as ConnectionRow)
-    const stravaActivity = await fetchStravaActivity(accessToken, event.object_id)
-    const normalized = stravaToNormalized(userId, stravaActivity)
-    await upsertActivity(supabase, normalized)
-  } catch (err) {
-    console.error('[strava-webhook]', err)
+  const accessToken = await resolveAccessToken(supabase, userId, conn as ConnectionRow)
+  const delays = [0, 3000, 8000, 20000]
+  for (let i = 0; i < delays.length; i++) {
+    if (delays[i] > 0) await new Promise(r => setTimeout(r, delays[i]))
+    try {
+      const stravaActivity = await fetchStravaActivity(accessToken, event.object_id)
+      const normalized = stravaToNormalized(userId, stravaActivity)
+      await upsertActivity(supabase, normalized)
+      return
+    } catch (err) {
+      if (i === delays.length - 1) console.error('[strava-webhook] failed after retries', err)
+    }
   }
 }
 
