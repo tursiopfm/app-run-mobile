@@ -37,7 +37,7 @@ export function BarStrip({ values, labels, color, className = '' }: BarStripProp
               <span
                 className="absolute w-full text-center leading-none"
                 style={{
-                  fontSize: 8,
+                  fontSize: 9,
                   fontWeight: 600,
                   color,
                   bottom: barH + 1,
@@ -51,7 +51,7 @@ export function BarStrip({ values, labels, color, className = '' }: BarStripProp
               style={{ height: barH, backgroundColor: color, borderRadius: 2 }}
             >
               {label && inside && (
-                <span style={{ fontSize: 8, fontWeight: 600, color: '#ffffff', lineHeight: 1 }}>
+                <span style={{ fontSize: 9, fontWeight: 600, color: '#ffffff', lineHeight: 1 }}>
                   {label}
                 </span>
               )}
