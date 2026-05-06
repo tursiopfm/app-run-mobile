@@ -11,7 +11,7 @@ export default async function ActivitiesPage() {
 
   const { data: rows } = await supabase
     .from('activities')
-    .select('id, name, sport_type, start_time, ces, distance_m, elevation_gain_m, moving_time_sec')
+    .select('id, name, sport_type, start_time, ces, distance_m, elevation_gain_m, moving_time_sec, manual_sport_type, manual_intensity, manual_distance_m, manual_moving_time_sec, manual_elevation_gain_m')
     .eq('user_id', user.id)
     .order('start_time', { ascending: false })
     .limit(200)
