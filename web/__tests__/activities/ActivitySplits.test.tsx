@@ -31,12 +31,12 @@ describe('ActivitySplits', () => {
 
   it('formats pace correctly', () => {
     render(<ActivitySplits splits={splits} avgPaceSec={AVG_PACE} />)
-    // split 1: 330 sec / 1000m * 1000 = 330 sec/km → 5:30
-    expect(screen.getByText('5:30 /km')).toBeInTheDocument()
+    // split 1: 330 sec/km → 5:30 (no /km suffix)
+    expect(screen.getByText('5:30')).toBeInTheDocument()
     // split 2: 360 sec/km → 6:00
-    expect(screen.getByText('6:00 /km')).toBeInTheDocument()
+    expect(screen.getByText('6:00')).toBeInTheDocument()
     // split 3: 345 sec/km → 5:45
-    expect(screen.getByText('5:45 /km')).toBeInTheDocument()
+    expect(screen.getByText('5:45')).toBeInTheDocument()
   })
 
   it('shows ↑Xm for positive elevation, ↓Xm for negative, nothing for 0', () => {

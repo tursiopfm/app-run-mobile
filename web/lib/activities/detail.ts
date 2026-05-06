@@ -48,11 +48,11 @@ export function splitPaceSec(
 export function splitColor(splitPace: number, avgPace: number): string {
   if (!avgPace) return '#8892a4'
   const ratio = (splitPace - avgPace) / avgPace
-  if (ratio <= -0.10) return '#4caf50'
-  if (ratio <= 0)     return '#8bc34a'
-  if (ratio <= 0.10)  return '#ffb300'
-  if (ratio <= 0.20)  return '#ff7043'
-  return '#e8651a'
+  if (ratio <= -0.10) return '#e8651a'  // ≥10% faster → orange/red (max effort)
+  if (ratio <= 0)     return '#ff7043'  // faster → orange
+  if (ratio <= 0.10)  return '#ffb300'  // slightly slower → yellow
+  if (ratio <= 0.20)  return '#8bc34a'  // slower → light green
+  return '#4caf50'                       // ≥20% slower → green (easy)
 }
 
 // ── Heart rate zones ──────────────────────────────────────────────────────────

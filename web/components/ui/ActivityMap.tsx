@@ -37,10 +37,10 @@ export function ActivityMap({ encodedPolyline }: { encodedPolyline: string }) {
       attributionControl={false}
     >
       <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-      <Polyline
-        positions={positions}
-        pathOptions={{ color: '#e8651a', weight: 3, opacity: 0.9 }}
-      />
+      {/* Glow layer */}
+      <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 12, opacity: 0.15 }} />
+      {/* Main route */}
+      <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 3, opacity: 0.95 }} />
       <CircleMarker center={start} radius={6} pathOptions={{ color: '#4caf50', fillColor: '#4caf50', fillOpacity: 1 }} />
       {end && (
         <CircleMarker center={end} radius={6} pathOptions={{ color: '#e8651a', fillColor: '#e8651a', fillOpacity: 1 }} />

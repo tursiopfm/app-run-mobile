@@ -58,20 +58,20 @@ describe('splitPaceSec', () => {
 describe('splitColor', () => {
   // avgPace = 648 sec/km (10:48/km)
   const avg = 648
-  it('returns green for splits ≤ -10% faster', () => {
-    expect(splitColor(580, avg)).toBe('#4caf50')   // 580/648 = -10.5%
+  it('returns orange/red for splits ≤ -10% faster', () => {
+    expect(splitColor(580, avg)).toBe('#e8651a')   // 580/648 = -10.5%
   })
-  it('returns light green for splits -10% to 0%', () => {
-    expect(splitColor(610, avg)).toBe('#8bc34a')   // 610/648 = -5.9%
+  it('returns orange for splits -10% to 0%', () => {
+    expect(splitColor(610, avg)).toBe('#ff7043')   // 610/648 = -5.9%
   })
   it('returns yellow for splits 0% to +10%', () => {
     expect(splitColor(680, avg)).toBe('#ffb300')   // 680/648 = +4.9%
   })
-  it('returns orange for splits +10% to +20%', () => {
-    expect(splitColor(745, avg)).toBe('#ff7043')   // 745/648 = +15%
+  it('returns light green for splits +10% to +20%', () => {
+    expect(splitColor(745, avg)).toBe('#8bc34a')   // 745/648 = +15%
   })
-  it('returns red for splits > +20%', () => {
-    expect(splitColor(800, avg)).toBe('#e8651a')   // 800/648 = +23.5%
+  it('returns green for splits > +20%', () => {
+    expect(splitColor(800, avg)).toBe('#4caf50')   // 800/648 = +23.5%
   })
   it('returns muted for null avg', () => {
     expect(splitColor(600, 0)).toBe('#8892a4')

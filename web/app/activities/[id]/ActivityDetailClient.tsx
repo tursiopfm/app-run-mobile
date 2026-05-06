@@ -96,23 +96,26 @@ function SportBadge({ type }: { type: string }) {
   )
 }
 
-function IntensityBadge({ intensity, ces }: { intensity: string | null; ces: number | null }) {
+function IntensityEmoji({ intensity }: { intensity: string | null }) {
   const emoji = intensity ? (INTENSITY_EMOJI[intensity] ?? '') : ''
-  const score = ces != null ? Math.round(ces) : null
-  if (!emoji && score === null) return null
+  if (!emoji) return null
+  return <span className="text-lg leading-none">{emoji}</span>
+}
+
+function EffortBadge({ ces }: { ces: number | null }) {
+  if (ces === null) return null
   return (
-    <span className="text-xs text-gray-400">
-      {emoji && <span className="mr-1">{emoji}</span>}
-      {score !== null && <span>⚡ Effort {score}</span>}
+    <span className="text-sm font-bold" style={{ color: colors.seriesYellow }}>
+      ⚡ Effort {Math.round(ces)}
     </span>
   )
 }
 
-function StatTile({ label, value, unit }: { label: string; value: string; unit: string }) {
+function StatTile({ label, value, unit, valueColor }: { label: string; value: string; unit: string; valueColor?: string }) {
   return (
     <div className="rounded-xl bg-trail-surface px-3 py-2">
       <p className="text-[11px] text-gray-500">{label}</p>
-      <p className="text-base font-bold text-trail-text mt-0.5">
+      <p className="text-base font-bold mt-0.5" style={{ color: valueColor ?? '#e8e8e8' }}>
         {value}
         {unit && <span className="text-[11px] text-gray-400 ml-0.5">{unit}</span>}
       </p>
@@ -213,9 +216,12 @@ export function ActivityDetailClient({
         <div className="absolute top-4 right-4 z-50">
           <button
             onClick={() => setShowEdit(true)}
-            className="flex items-center justify-center w-9 h-9 rounded-full bg-black/60 text-white text-lg backdrop-blur-sm"
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-black/60 text-white backdrop-blur-sm"
           >
-            ✏️
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
           </button>
         </div>
         {polyline
@@ -227,9 +233,12 @@ export function ActivityDetailClient({
       {/* Content below map */}
       <div className="flex flex-col px-4 py-3 gap-4">
         {/* Sport + Effort header */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <SportBadge type={effectiveSport} />
-          <IntensityBadge intensity={a.manual_intensity} ces={a.ces} />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <SportBadge type={effectiveSport} />
+            <IntensityEmoji intensity={a.manual_intensity} />
+          </div>
+          <EffortBadge ces={a.ces} />
         </div>
 
         {/* Name + date */}
@@ -240,12 +249,12 @@ export function ActivityDetailClient({
 
         {/* Stats grid 3×2 */}
         <div className="grid grid-cols-3 gap-2">
-          <StatTile label="Distance"   value={fmtDist(dist)}                                              unit="km"   />
-          <StatTile label="D+"         value={fmtElev(elev)}                                              unit="m"    />
-          <StatTile label="Durée"      value={fmtDurationSec(movingTime)}                                 unit=""     />
-          <StatTile label={paceLabel}  value={paceValue}                                                  unit={paceUnit} />
-          <StatTile label="Cal."       value={a.calories != null ? String(a.calories) : '—'}              unit="kcal" />
-          <StatTile label="Tps écoulé" value={fmtDurationSec(a.duration_sec)}                             unit=""     />
+          <StatTile label="Distance"   value={fmtDist(dist)}                                 unit="km"       />
+          <StatTile label="D+"         value={fmtElev(elev)}                                 unit="m"        valueColor="#42a5f5" />
+          <StatTile label="Durée"      value={fmtDurationSec(movingTime)}                    unit=""         />
+          <StatTile label={paceLabel}  value={paceValue}                                     unit={paceUnit} valueColor={colors.seriesGreen} />
+          <StatTile label="Calories"   value={a.calories != null ? String(a.calories) : '—'} unit="kcal"     valueColor={a.calories != null ? colors.chargeOrange : undefined} />
+          <StatTile label="Tps écoulé" value={fmtDurationSec(a.duration_sec)}                unit=""         />
         </div>
 
         {/* Tabs */}
@@ -257,7 +266,7 @@ export function ActivityDetailClient({
                   className={`px-4 py-2 text-sm font-medium ${activeTab === 'splits' ? 'text-trail-text border-b-2 border-orange-500' : 'text-gray-500'}`}
                   onClick={() => setActiveTab('splits')}
                 >
-                  Splits
+                  SPLITS
                 </button>
               )}
               {showZones && (
@@ -265,7 +274,7 @@ export function ActivityDetailClient({
                   className={`px-4 py-2 text-sm font-medium ${activeTab === 'zones' ? 'text-trail-text border-b-2 border-orange-500' : 'text-gray-500'}`}
                   onClick={() => setActiveTab('zones')}
                 >
-                  Zones FC
+                  ZONES FC
                 </button>
               )}
             </div>
