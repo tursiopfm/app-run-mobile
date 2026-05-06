@@ -2,9 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Palette Sombre (défaut) ─────────────────────────── */
+:root {
+  --trail-bg:               #0A0F0E;
+  --trail-surface:          #111A18;
+  --trail-card:             #162420;
+  --trail-border:           #1E3530;
+  --trail-header:           #101917;
+  --trail-muted:            #8BA8A3;
+  --trail-text:             #E2ECE9;
+  --trail-primary:          #FF6B35;
+  --trail-primary-dim:      #CC5528;
+  --trail-accent:           #38BDF8;
+  --trail-success:          #4ADE80;
+  --trail-warning:          #FBBF24;
+  --trail-danger:           #F87171;
+  --trail-pale-green:       #0A2E1E;
+  --trail-pie-cotes:        #8B5CF6;
+  --trail-pie-footing:      #F59E0B;
+  --trail-pie-autre:        #6B8A85;
+  --trail-progress-run-bg:    #243530;
+  --trail-progress-volume-bg: #13211E;
+  --trail-progress-dplus-bg:  #11232A;
+}
+
+/* ── Palette Claire ──────────────────────────────────── */
+.light {
+  --trail-bg:               #F4F7F6;
+  --trail-surface:          #FFFFFF;
+  --trail-card:             #FFFFFF;
+  --trail-border:           #D6E1DD;
+  --trail-header:           #E8F0ED;
+  --trail-muted:            #5F7771;
+  --trail-text:             #13201D;
+  --trail-primary:          #E6612B;
+  --trail-primary-dim:      #CC5226;
+  --trail-accent:           #1D8FC6;
+  --trail-success:          #138A52;
+  --trail-warning:          #CC9200;
+  --trail-danger:           #D94F45;
+  --trail-pale-green:       #DFF5E8;
+  --trail-pie-cotes:        #7C56C9;
+  --trail-pie-footing:      #DF8E16;
+  --trail-pie-autre:        #7B8E88;
+  --trail-progress-run-bg:    #FBE2D8;
+  --trail-progress-volume-bg: #DFF5E8;
+  --trail-progress-dplus-bg:  #DCF0F7;
+}
+
 html, body {
-  background-color: #0A0F0E;
-  color: #E2ECE9;
+  background-color: var(--trail-bg);
+  color: var(--trail-text);
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
 }
@@ -14,5 +62,5 @@ html, body {
 }
 
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #111A18; }
-::-webkit-scrollbar-thumb { background: #1E3530; border-radius: 2px; }
+::-webkit-scrollbar-track { background: var(--trail-surface); }
+::-webkit-scrollbar-thumb { background: var(--trail-border); border-radius: 2px; }
