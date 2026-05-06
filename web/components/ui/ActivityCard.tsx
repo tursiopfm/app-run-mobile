@@ -1,22 +1,18 @@
-// Mirror of ActivityCard + TypeBadge + ActivityMetricTile composables
-// from ui/screens/DashboardScreen.kt (lines 2305, 8334, 8354).
-
 import { colors } from '@/lib/design/colors'
 import { sportLabel } from '@/lib/design/labels'
 
-// Sport → badge color mapping (mirrors activityTypeColor() in DashboardScreen.kt)
 const SPORT_COLORS: Record<string, string> = {
-  Run:           colors.chargeOrange,
-  TrailRun:      colors.chargeOrange,
-  Ride:          colors.seriesGreen,
-  GravelRide:    colors.seriesGreen,
-  VirtualRide:   colors.seriesGreen,
-  EBikeRide:     colors.seriesGreen,
+  Run:              colors.chargeOrange,
+  TrailRun:         colors.chargeOrange,
+  Ride:             colors.seriesGreen,
+  GravelRide:       colors.seriesGreen,
+  VirtualRide:      colors.seriesGreen,
+  EBikeRide:        colors.seriesGreen,
   MountainBikeRide: colors.seriesGreen,
-  Swim:          colors.pieVma,
-  Walk:          colors.seriesGreen,
-  Hike:          colors.seriesGreen,
-  WeightTraining:colors.subtleText,
+  Swim:             colors.pieVma,
+  Walk:             colors.seriesGreen,
+  Hike:             colors.seriesGreen,
+  WeightTraining:   colors.subtleText,
 }
 
 function toHex(color: string, opacity: number): string {
@@ -41,16 +37,8 @@ function TypeBadge({ type }: { type: string }) {
   )
 }
 
-function MetricTile({
-  label,
-  value,
-  unit,
-  color,
-}: {
-  label: string
-  value: string
-  unit:  string
-  color: string
+function MetricTile({ label, value, unit, color }: {
+  label: string; value: string; unit: string; color: string
 }) {
   return (
     <div className="rounded-[10px] bg-trail-surface px-[10px] py-[8px] flex-shrink-0">
@@ -108,49 +96,79 @@ function fourthMetric(sport: string, distM: number | null, timeSec: number | nul
 }
 
 export type ActivityRow = {
-  id:              string
-  sport_type:      string
-  name:            string
-  start_time:      string
-  ces:             number | null
-  distance_m:      number | null
-  elevation_gain_m:number | null
-  moving_time_sec: number | null
+  id:                      string
+  sport_type:              string
+  name:                    string
+  start_time:              string
+  ces:                     number | null
+  distance_m:              number | null
+  elevation_gain_m:        number | null
+  moving_time_sec:         number | null
+  manual_sport_type:       string | null
+  manual_intensity:        string | null
+  manual_distance_m:       number | null
+  manual_moving_time_sec:  number | null
+  manual_elevation_gain_m: number | null
 }
 
-export function ActivityCard({ activity: a }: { activity: ActivityRow }) {
-  const km    = a.distance_m != null ? fmt1(a.distance_m / 1000) : '—'
-  const dPlus = a.elevation_gain_m != null ? Math.round(a.elevation_gain_m).toString() : '—'
-  const dur   = fmtDuration(a.moving_time_sec)
+export function ActivityCard({
+  activity: a,
+  onEdit,
+}: {
+  activity: ActivityRow
+  onEdit?: (a: ActivityRow) => void
+}) {
+  const effectiveSport     = a.manual_sport_type     ?? a.sport_type
+  const effectiveDistance  = a.manual_distance_m     ?? a.distance_m
+  const effectiveDuration  = a.manual_moving_time_sec ?? a.moving_time_sec
+  const effectiveElevation = a.manual_elevation_gain_m ?? a.elevation_gain_m
+
+  const km    = effectiveDistance  != null ? fmt1(effectiveDistance / 1000)           : '—'
+  const dPlus = effectiveElevation != null ? Math.round(effectiveElevation).toString() : '—'
+  const dur   = fmtDuration(effectiveDuration)
   const ces   = a.ces != null ? Math.round(a.ces).toString() : '—'
-  const fourth = fourthMetric(a.sport_type, a.distance_m, a.moving_time_sec, a.ces)
+  const fourth = fourthMetric(effectiveSport, effectiveDistance, effectiveDuration, a.ces)
 
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       <div className="flex items-start justify-between gap-2">
-        {/* Left column */}
         <div className="flex-1 min-w-0">
-          {/* TypeBadge + date */}
           <div className="flex items-center gap-[6px]">
-            <TypeBadge type={a.sport_type} />
+            <TypeBadge type={effectiveSport} />
             <span className="text-[14px] text-trail-muted">{fmtDate(a.start_time)}</span>
           </div>
-          {/* Name — ChargeOrange fidèle Android (DashboardScreen.kt:2330) */}
-          <p className="text-[18px] font-medium truncate mt-[6px]" style={{ color: colors.chargeOrange }}>{a.name}</p>
-          {/* Metric tiles row — Distance / Durée / D+ / Allure|Vitesse|CES selon sport */}
+          <p className="text-[18px] font-medium truncate mt-[6px]" style={{ color: colors.chargeOrange }}>
+            {a.name}
+          </p>
           <div className="flex gap-[6px] mt-[4px] overflow-x-auto pb-0.5">
-            <MetricTile label="Distance"   value={km}           unit="km"        color={colors.chargeOrange} />
-            <MetricTile label="Durée"      value={dur}          unit=""          color={colors.seriesGreen} />
-            <MetricTile label="D+"         value={dPlus}        unit="m"         color={colors.seriesBlue} />
-            <MetricTile label={fourth.label} value={fourth.value} unit={fourth.unit} color={fourth.color} />
+            <MetricTile label="Distance"    value={km}           unit="km"         color={colors.chargeOrange} />
+            <MetricTile label="Durée"       value={dur}          unit=""           color={colors.seriesGreen}  />
+            <MetricTile label="D+"          value={dPlus}        unit="m"          color={colors.seriesBlue}   />
+            <MetricTile label={fourth.label} value={fourth.value} unit={fourth.unit} color={fourth.color}      />
           </div>
         </div>
 
-        {/* Right column: CES badge — "⚡: {ces}" fidèle Android */}
-        <div className="flex flex-col items-end flex-shrink-0">
+        <div className="flex flex-col items-end flex-shrink-0 gap-1">
           <span className="text-[18px] font-bold" style={{ color: colors.seriesYellow }}>
             ⚡: {ces}
           </span>
+          {onEdit && (
+            <button
+              onClick={() => onEdit(a)}
+              aria-label="Modifier l'activité"
+              style={{
+                color:      colors.subtleText,
+                cursor:     'pointer',
+                background: 'none',
+                border:     'none',
+                padding:    '2px 4px',
+                fontSize:   '20px',
+                lineHeight: 1,
+              }}
+            >
+              ⋮
+            </button>
+          )}
         </div>
       </div>
     </div>
