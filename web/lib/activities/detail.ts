@@ -22,8 +22,9 @@ export type HrZone = {
 
 export function fmtPaceSec(sec: number | null): string {
   if (!sec) return '—'
-  const mins = Math.floor(sec / 60)
-  const secs = Math.round(sec % 60)
+  const totalSecs = Math.round(sec)
+  const mins = Math.floor(totalSecs / 60)
+  const secs = totalSecs % 60
   return `${mins}:${String(secs).padStart(2, '0')}`
 }
 

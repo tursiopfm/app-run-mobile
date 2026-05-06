@@ -17,6 +17,11 @@ describe('fmtPaceSec', () => {
     expect(fmtPaceSec(null)).toBe('—')
     expect(fmtPaceSec(0)).toBe('—')
   })
+  it('handles fractional seconds without producing :60', () => {
+    expect(fmtPaceSec(59.6)).toBe('1:00')   // rounds up, no :60
+    expect(fmtPaceSec(119.6)).toBe('2:00')  // carries over correctly
+    expect(fmtPaceSec(648.4)).toBe('10:48') // rounds down, matches existing test
+  })
 })
 
 // ── fmtDurationSec ────────────────────────────────────────────────────────────
