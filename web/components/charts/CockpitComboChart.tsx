@@ -43,7 +43,7 @@ export function CockpitComboChart({
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart
           data={data}
-          margin={{ top: chart.topPadCombo, right: 4, left: 0, bottom: 0 }}
+          margin={{ top: chart.topPadCombo, right: 0, left: 0, bottom: 0 }}
           barCategoryGap={gap}
         >
           <CartesianGrid strokeDasharray="3 3" stroke={colors.border} vertical={false} />
