@@ -36,7 +36,7 @@ export function ActivityMap({ encodedPolyline }: { encodedPolyline: string }) {
       zoomControl={false}
       attributionControl={false}
     >
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+      <TileLayer url="https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png" />
       {/* Outer diffuse glow */}
       <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 28, opacity: 0.08 }} />
       {/* Middle glow */}
