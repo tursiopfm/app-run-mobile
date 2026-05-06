@@ -178,7 +178,7 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
   const btnBase  = 'flex-1 py-3 rounded-[12px] text-[14px] font-bold'
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: colors.background }}>
+    <div className="fixed inset-0 z-[60] flex flex-col" style={{ backgroundColor: colors.background }}>
 
       {/* Header */}
       <div
