@@ -11,7 +11,6 @@ import type { ActivityRow } from '@/components/ui/ActivityCard'
 import { fmtPaceSec, fmtDurationSec } from '@/lib/activities/detail'
 import type { StravaSplit } from '@/lib/activities/detail'
 import { sportLabel } from '@/lib/design/labels'
-import { colors } from '@/lib/design/colors'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -39,7 +38,7 @@ export type ActivityDetail = {
   } | null
 }
 
-// ── Dynamic import ─────────────────────────────────────────────────────────────
+// ── Dynamic map import ─────────────────────────────────────────────────────────
 
 const DynamicActivityMap = dynamic(
   () => import('@/components/ui/ActivityMap').then(m => ({ default: m.ActivityMap })),
@@ -49,29 +48,17 @@ const DynamicActivityMap = dynamic(
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const SPORT_COLORS: Record<string, string> = {
-  Run:              colors.chargeOrange,
-  TrailRun:         colors.chargeOrange,
-  Ride:             colors.seriesGreen,
-  GravelRide:       colors.seriesGreen,
-  VirtualRide:      colors.seriesGreen,
-  EBikeRide:        colors.seriesGreen,
-  MountainBikeRide: colors.seriesGreen,
-  Swim:             colors.pieVma,
-  Walk:             colors.seriesGreen,
-  Hike:             colors.seriesGreen,
-  WeightTraining:   colors.subtleText,
+  Run: '#e8651a', TrailRun: '#e8651a',
+  Ride: '#4caf50', GravelRide: '#4caf50', VirtualRide: '#4caf50',
+  EBikeRide: '#4caf50', MountainBikeRide: '#4caf50',
+  Swim: '#42a5f5',
+  Walk: '#4caf50', Hike: '#4caf50',
+  WeightTraining: '#8892a4',
 }
 
 const INTENSITY_EMOJI: Record<string, string> = {
-  footing:       '🦶',
-  sortie_longue: '🐢',
-  cotes:         '⛰️',
-  vma:           '🔥',
-  seuil:         '🎯',
-  runtaf:        '🏃‍♂️🏢',
-  velotaf:       '🚴🏻🏢',
-  course:        '🏁',
-  autre:         '❓',
+  footing: '🦶', sortie_longue: '🐢', cotes: '⛰️', vma: '🔥',
+  seuil: '🎯', runtaf: '🏃‍♂️🏢', velotaf: '🚴🏻🏢', course: '🏁', autre: '❓',
 }
 
 const RIDE_TYPES = new Set(['Ride', 'GravelRide', 'VirtualRide', 'EBikeRide', 'MountainBikeRide'])
@@ -80,17 +67,14 @@ const RUN_TYPES  = new Set(['Run', 'TrailRun'])
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
 function SportBadge({ type }: { type: string }) {
-  const color = SPORT_COLORS[type] ?? colors.subtleText
+  const color = SPORT_COLORS[type] ?? '#8892a4'
   const label = sportLabel[type] ?? type
   return (
-    <span
-      className="text-xs font-semibold px-2 py-1 rounded-full border"
-      style={{
-        color,
-        borderColor: color + '59',
-        backgroundColor: color + '28',
-      }}
-    >
+    <span style={{
+      background: `${color}2e`, border: `1px solid ${color}66`,
+      color, fontSize: 9, fontWeight: 700,
+      padding: '2px 8px', borderRadius: 20,
+    }}>
       {label}
     </span>
   )
@@ -99,26 +83,32 @@ function SportBadge({ type }: { type: string }) {
 function IntensityEmoji({ intensity }: { intensity: string | null }) {
   const emoji = intensity ? (INTENSITY_EMOJI[intensity] ?? '') : ''
   if (!emoji) return null
-  return <span className="text-lg leading-none">{emoji}</span>
+  return <span style={{ fontSize: 13, lineHeight: 1 }}>{emoji}</span>
 }
 
 function EffortBadge({ ces }: { ces: number | null }) {
   if (ces === null) return null
   return (
-    <span className="text-sm font-bold" style={{ color: colors.seriesYellow }}>
+    <span style={{
+      display: 'flex', alignItems: 'center', gap: 3,
+      background: 'rgba(255,193,7,0.1)', border: '1px solid rgba(255,193,7,0.28)',
+      padding: '3px 9px', borderRadius: 20,
+      fontSize: 10, fontWeight: 800, color: '#ffc107',
+    }}>
       ⚡ Effort {Math.round(ces)}
     </span>
   )
 }
 
-function StatTile({ label, value, unit, valueColor }: { label: string; value: string; unit: string; valueColor?: string }) {
+function StatTile({ label, value, unit, valueStyle }: {
+  label: string; value: string; unit: string
+  valueStyle?: React.CSSProperties
+}) {
   return (
-    <div className="rounded-xl bg-trail-surface px-3 py-2">
-      <p className="text-[11px] text-gray-500">{label}</p>
-      <p className="text-base font-bold mt-0.5" style={{ color: valueColor ?? '#e8e8e8' }}>
-        {value}
-        {unit && <span className="text-[11px] text-gray-400 ml-0.5">{unit}</span>}
-      </p>
+    <div style={{ background: '#181c29', border: '1px solid #232738', borderRadius: 10, padding: '9px 10px 8px' }}>
+      <div style={{ fontSize: 8, color: '#8892a4', marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: 17, fontWeight: 800, lineHeight: 1, color: '#e8eaf0', ...valueStyle }}>{value}</div>
+      {unit && <div style={{ fontSize: 8, color: '#8892a4' }}>{unit}</div>}
     </div>
   )
 }
@@ -161,16 +151,15 @@ export function ActivityDetailClient({
 
   const a = activity
   const effectiveSport = a.manual_sport_type ?? a.sport_type
-  const dist      = a.manual_distance_m     ?? a.distance_m
-  const elev      = a.manual_elevation_gain_m ?? a.elevation_gain_m
-  const movingTime = a.manual_moving_time_sec ?? a.moving_time_sec
+  const dist       = a.manual_distance_m       ?? a.distance_m
+  const elev       = a.manual_elevation_gain_m  ?? a.elevation_gain_m
+  const movingTime = a.manual_moving_time_sec   ?? a.moving_time_sec
 
   const polyline = a.raw_payload?.map?.summary_polyline ?? null
 
-  const avgPaceSec =
-    dist && movingTime && dist > 0
-      ? Math.round(movingTime / (dist / 1000))
-      : 0
+  const avgPaceSec = dist && movingTime && dist > 0
+    ? Math.round(movingTime / (dist / 1000))
+    : 0
 
   const showSplits = splits !== null && splits.length > 0
   const showZones  = a.avg_hr !== null && a.max_hr !== null
@@ -187,10 +176,9 @@ export function ActivityDetailClient({
     paceUnit  = '/km'
   } else if (RIDE_TYPES.has(effectiveSport)) {
     paceLabel = 'Vitesse'
-    paceValue =
-      dist && movingTime && movingTime > 0
-        ? ((dist / 1000) / (movingTime / 3600)).toFixed(1)
-        : '—'
+    paceValue = dist && movingTime && movingTime > 0
+      ? ((dist / 1000) / (movingTime / 3600)).toFixed(1)
+      : '—'
     paceUnit = 'km/h'
   } else {
     paceLabel = 'Effort'
@@ -198,88 +186,129 @@ export function ActivityDetailClient({
     paceUnit  = ''
   }
 
-  // EditActivityModal expects ActivityRow — ActivityDetail is a superset
   const activityAsActivityRow = activity as unknown as ActivityRow
 
   return (
-    <div className="relative flex flex-col min-h-screen bg-trail-bg text-trail-text">
+    <div style={{ background: '#0f1219', minHeight: '100vh', color: '#e8eaf0', fontFamily: "-apple-system, 'Inter', sans-serif" }}>
+
       {/* Map section */}
-      <div className="relative" style={{ height: 230 }}>
-        <div className="absolute top-4 left-4 z-50">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center justify-center w-9 h-9 rounded-full bg-black/60 text-white text-lg backdrop-blur-sm"
-          >
-            ←
-          </button>
+      <div style={{ position: 'relative', height: 230, overflow: 'hidden' }}>
+        {/* Back button */}
+        <button
+          onClick={() => router.back()}
+          style={{
+            position: 'absolute', top: 16, left: 16, zIndex: 50,
+            width: 32, height: 32, borderRadius: '50%',
+            background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 14, color: '#e8eaf0', cursor: 'pointer',
+          }}
+        >
+          ←
+        </button>
+
+        {/* Edit button */}
+        <button
+          onClick={() => setShowEdit(true)}
+          style={{
+            position: 'absolute', top: 16, right: 16, zIndex: 50,
+            width: 32, height: 32, borderRadius: '50%',
+            background: 'rgba(232,101,26,0.22)', backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(232,101,26,0.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 13, cursor: 'pointer',
+          }}
+        >
+          ✏️
+        </button>
+
+        {/* Map */}
+        <div style={{ width: '100%', height: '100%' }}>
+          {polyline ? <DynamicActivityMap encodedPolyline={polyline} /> : <ActivityMapPlaceholder />}
         </div>
-        <div className="absolute top-4 right-4 z-50">
-          <button
-            onClick={() => setShowEdit(true)}
-            className="flex items-center justify-center w-9 h-9 rounded-full bg-black/60 text-white backdrop-blur-sm"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
-          </button>
-        </div>
-        {polyline
-          ? <DynamicActivityMap encodedPolyline={polyline} />
-          : <ActivityMapPlaceholder />
-        }
+
+        {/* Fade into content */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 90,
+          background: 'linear-gradient(to bottom, transparent 0%, #0f1219 100%)',
+          pointerEvents: 'none',
+        }} />
       </div>
 
-      {/* Content below map */}
-      <div className="flex flex-col px-4 py-3 gap-4">
-        {/* Sport + Effort header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <SportBadge type={effectiveSport} />
-            <IntensityEmoji intensity={a.manual_intensity} />
-          </div>
-          <EffortBadge ces={a.ces} />
-        </div>
+      {/* Content body — overlaps map slightly */}
+      <div style={{ padding: '0 16px', marginTop: -10, position: 'relative', zIndex: 10 }}>
 
-        {/* Name + date */}
-        <div>
-          <p className="text-lg font-bold text-trail-text">{a.name}</p>
-          <p className="text-sm text-gray-400">{fmtDetailDate(a.start_time)}</p>
+        {/* Activity header */}
+        <div style={{ paddingBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <SportBadge type={effectiveSport} />
+              <IntensityEmoji intensity={a.manual_intensity} />
+            </div>
+            <EffortBadge ces={a.ces} />
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 800, color: '#f0f2f8', lineHeight: 1.15, marginBottom: 3 }}>
+            {a.name}
+          </div>
+          <div style={{ fontSize: 10, color: '#8892a4' }}>{fmtDetailDate(a.start_time)}</div>
         </div>
 
         {/* Stats grid 3×2 */}
-        <div className="grid grid-cols-3 gap-2">
-          <StatTile label="Distance"   value={fmtDist(dist)}                                 unit="km"       />
-          <StatTile label="D+"         value={fmtElev(elev)}                                 unit="m"        valueColor="#42a5f5" />
-          <StatTile label="Durée"      value={fmtDurationSec(movingTime)}                    unit=""         />
-          <StatTile label={paceLabel}  value={paceValue}                                     unit={paceUnit} valueColor={colors.seriesGreen} />
-          <StatTile label="Calories"   value={a.calories != null ? String(a.calories) : '—'} unit="kcal"     valueColor={a.calories != null ? colors.chargeOrange : undefined} />
-          <StatTile label="Tps écoulé" value={fmtDurationSec(a.duration_sec)}                unit=""         />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 16 }}>
+          <StatTile label="Distance"   value={fmtDist(dist)}                                 unit="km"   valueStyle={{ color: '#e8651a' }} />
+          <StatTile label="D+"         value={fmtElev(elev)}                                 unit="m"    valueStyle={{ color: '#4db6f0' }} />
+          <StatTile label="Durée"      value={fmtDurationSec(movingTime)}                    unit=""     valueStyle={{ color: '#4caf50', fontSize: 14 }} />
+          <StatTile label={paceLabel}  value={paceValue}                                     unit={paceUnit} valueStyle={{ color: '#e8eaf0', fontSize: 14 }} />
+          <StatTile label="Calories"   value={a.calories != null ? String(a.calories) : '—'} unit="kcal" valueStyle={{ color: '#ff7043', fontSize: 15 }} />
+          <StatTile label="Tps écoulé" value={fmtDurationSec(a.duration_sec)}                unit=""     valueStyle={{ color: '#4caf50', fontSize: 13 }} />
         </div>
 
-        {/* Tabs */}
+        {/* Tabs — full width, breaking out of padding */}
         {(showSplits || showZones) && (
           <>
-            <div className="flex border-b border-gray-800">
+            <div style={{
+              display: 'flex',
+              borderBottom: '1px solid #1e2230',
+              margin: '0 -16px',
+              background: '#0f1219',
+              position: 'sticky', top: 0, zIndex: 30,
+            }}>
               {showSplits && (
                 <button
-                  className={`px-4 py-2 text-sm font-medium ${activeTab === 'splits' ? 'text-trail-text border-b-2 border-orange-500' : 'text-gray-500'}`}
                   onClick={() => setActiveTab('splits')}
+                  style={{
+                    flex: 1, padding: '9px 0',
+                    fontSize: 10, fontWeight: 700, textAlign: 'center',
+                    textTransform: 'uppercase', letterSpacing: '0.9px',
+                    color: activeTab === 'splits' ? '#e8651a' : '#6b7a96',
+                    background: 'none', border: 'none',
+                    borderBottom: activeTab === 'splits' ? '2px solid #e8651a' : '2px solid transparent',
+                    cursor: 'pointer',
+                  }}
                 >
-                  SPLITS
+                  Splits
                 </button>
               )}
               {showZones && (
                 <button
-                  className={`px-4 py-2 text-sm font-medium ${activeTab === 'zones' ? 'text-trail-text border-b-2 border-orange-500' : 'text-gray-500'}`}
                   onClick={() => setActiveTab('zones')}
+                  style={{
+                    flex: 1, padding: '9px 0',
+                    fontSize: 10, fontWeight: 700, textAlign: 'center',
+                    textTransform: 'uppercase', letterSpacing: '0.9px',
+                    color: activeTab === 'zones' ? '#e8651a' : '#6b7a96',
+                    background: 'none', border: 'none',
+                    borderBottom: activeTab === 'zones' ? '2px solid #e8651a' : '2px solid transparent',
+                    cursor: 'pointer',
+                  }}
                 >
-                  ZONES FC
+                  Zones FC
                 </button>
               )}
             </div>
 
-            <div className="pt-2">
+            <div style={{ paddingTop: 12, paddingBottom: 20 }}>
               {activeTab === 'splits' && showSplits && (
                 <ActivitySplits splits={splits!} avgPaceSec={avgPaceSec} />
               )}
