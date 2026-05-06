@@ -16,12 +16,12 @@ export function ActivitySplits({
   const minPace = validPaces.length ? Math.min(...validPaces) : null
 
   return (
-    <div className="flex flex-col">
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
       {/* Header: segment count + best split */}
-      <div className="flex items-center justify-between mb-2 px-1">
-        <span className="text-xs text-gray-500">{splits.length} segments</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <span style={{ fontSize: 10, color: '#6b7a96' }}>{splits.length} segments</span>
         {minPace !== null && (
-          <span className="text-xs font-mono" style={{ color: splitColor(minPace, avgPaceSec) }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: splitColor(minPace, avgPaceSec) }}>
             ★ Meilleur {fmtPaceSec(minPace)}
           </span>
         )}
@@ -36,30 +36,41 @@ export function ActivitySplits({
         const elev = Math.round(split.elevation_difference)
 
         return (
-          <div key={split.split} className="flex items-center gap-2 py-1.5">
-            {/* Circular badge */}
-            <div
-              className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-gray-400 shrink-0"
-              style={{ backgroundColor: '#1e2433' }}
-            >
+          <div
+            key={split.split}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '7px 0', borderBottom: '1px solid #161a24',
+            }}
+          >
+            {/* Circular km badge */}
+            <div style={{
+              width: 22, height: 22, borderRadius: '50%',
+              background: '#181c29', border: '1px solid #252836',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 8, fontWeight: 700, color: '#8892a4', flexShrink: 0,
+            }}>
               {split.split}
             </div>
 
-            <div className="flex-1 bg-gray-800 rounded-full h-1.5">
-              <div
-                className="h-1.5 rounded-full"
-                style={{ width: `${barPct}%`, backgroundColor: color }}
-              />
+            {/* Progress bar */}
+            <div style={{ flex: 1, height: 5, background: '#181c29', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ width: `${barPct}%`, height: '100%', borderRadius: 3, backgroundColor: color }} />
             </div>
 
-            <span
-              className="w-12 text-right text-xs font-mono shrink-0"
-              style={{ color }}
-            >
+            {/* Pace */}
+            <span style={{
+              fontSize: 11, fontWeight: 800, width: 34, textAlign: 'right',
+              color, flexShrink: 0,
+            }}>
               {fmtPaceSec(pace)}
             </span>
 
-            <span className="w-8 text-xs text-gray-500 shrink-0">
+            {/* Elevation */}
+            <span style={{
+              fontSize: 9, width: 34, textAlign: 'right', flexShrink: 0,
+              color: elev > 0 ? '#8bc34a' : elev < 0 ? '#4db6f0' : '#8892a4',
+            }}>
               {elev > 0 ? `↑${elev}m` : elev < 0 ? `↓${Math.abs(elev)}m` : ''}
             </span>
           </div>
