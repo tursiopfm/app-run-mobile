@@ -20,13 +20,14 @@ export default function ResetPasswordPage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         recovered = true
+        setExpired(false)
         setReady(true)
       }
     })
 
     const timer = setTimeout(() => {
       if (!recovered) setExpired(true)
-    }, 3000)
+    }, 5000)
 
     return () => {
       subscription.unsubscribe()
