@@ -1,16 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { colors } from '@/lib/design/colors'
+import { useTheme } from 'next-themes'
+import { useColors } from '@/lib/design/useColors'
+import { type TrailPalette } from '@/lib/design/colors'
 import { settings as settingsLabels } from '@/lib/design/labels'
 
-type Theme = 'Dark' | 'Light' | 'System'
+type ThemeOption = 'Dark' | 'Light' | 'System'
 type Lang  = 'fr' | 'en' | 'system'
 
-const THEME_OPTIONS: { value: Theme; label: string }[] = [
-  { value: 'Dark',   label: settingsLabels.themeDark },
-  { value: 'Light',  label: settingsLabels.themeLight },
-  { value: 'System', label: settingsLabels.themeSystem },
+const THEME_OPTIONS: { value: ThemeOption; nextTheme: string; label: string }[] = [
+  { value: 'Dark',   nextTheme: 'dark',   label: settingsLabels.themeDark },
+  { value: 'Light',  nextTheme: 'light',  label: settingsLabels.themeLight },
+  { value: 'System', nextTheme: 'system', label: settingsLabels.themeSystem },
 ]
 
 const LANG_OPTIONS: { value: Lang; label: string }[] = [
@@ -19,14 +21,17 @@ const LANG_OPTIONS: { value: Lang; label: string }[] = [
   { value: 'system', label: settingsLabels.langSystem },
 ]
 
-const THEME_DESC: Record<Theme, string> = {
+const THEME_DESC: Record<ThemeOption, string> = {
   Dark:   'Interface sombre optimisée pour la lecture en extérieur.',
   Light:  'Interface claire adaptée aux environnements bien éclairés.',
-  System: 'Suit automatiquement le réglage système de l\'appareil.',
+  System: "Suit automatiquement le réglage système de l'appareil.",
 }
 
-// Mirror of ActionChip composable (DashboardScreen.kt line 6404)
-function ActionChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+function ActionChip({
+  label, active, onClick, colors,
+}: {
+  label: string; active: boolean; onClick: () => void; colors: TrailPalette
+}) {
   return (
     <button
       onClick={onClick}
@@ -43,9 +48,16 @@ function ActionChip({ label, active, onClick }: { label: string; active: boolean
   )
 }
 
-function SettingsRow({ title, value, accent }: { title: string; value: string; accent: string }) {
+function SettingsRow({
+  title, value, accent, colors,
+}: {
+  title: string; value: string; accent: string; colors: TrailPalette
+}) {
   return (
-    <div className="flex items-center justify-between rounded-[12px]" style={{ padding: '10px 12px', backgroundColor: colors.surface }}>
+    <div
+      className="flex items-center justify-between rounded-[12px]"
+      style={{ padding: '10px 12px', backgroundColor: colors.surface }}
+    >
       <span className="text-[14px] text-trail-muted">{title}</span>
       <span className="text-[14px] font-semibold" style={{ color: accent }}>{value}</span>
     </div>
@@ -53,9 +65,11 @@ function SettingsRow({ title, value, accent }: { title: string; value: string; a
 }
 
 export function AppearanceSection() {
-  const [theme, setTheme] = useState<Theme>('Dark')
-  const [lang,  setLang]  = useState<Lang>('fr')
+  const { theme, setTheme } = useTheme()
+  const [lang, setLang] = useState<Lang>('fr')
+  const colors = useColors()
 
+  const activeOption = THEME_OPTIONS.find(o => o.nextTheme === theme) ?? THEME_OPTIONS[0]
   const selectedLang = LANG_OPTIONS.find(l => l.value === lang)!
 
   return (
@@ -63,17 +77,36 @@ export function AppearanceSection() {
       {/* Theme chips */}
       <div className="flex gap-2 overflow-x-auto pb-0.5">
         {THEME_OPTIONS.map(opt => (
-          <ActionChip key={opt.value} label={opt.label} active={theme === opt.value} onClick={() => setTheme(opt.value)} />
+          <ActionChip
+            key={opt.value}
+            label={opt.label}
+            active={activeOption.value === opt.value}
+            onClick={() => setTheme(opt.nextTheme)}
+            colors={colors}
+          />
         ))}
       </div>
-      <p className="text-[11px] text-trail-muted leading-[16px] mt-[10px]">{THEME_DESC[theme]}</p>
+      <p className="text-[11px] text-trail-muted leading-[16px] mt-[10px]">
+        {THEME_DESC[activeOption.value]}
+      </p>
 
       {/* Language row + chips */}
       <div className="mt-[14px] space-y-2">
-        <SettingsRow title="Langue" value={selectedLang.label} accent={colors.seriesBlue} />
+        <SettingsRow
+          title="Langue"
+          value={selectedLang.label}
+          accent={colors.seriesBlue}
+          colors={colors}
+        />
         <div className="flex gap-2 overflow-x-auto pb-0.5">
           {LANG_OPTIONS.map(opt => (
-            <ActionChip key={opt.value} label={opt.label} active={lang === opt.value} onClick={() => setLang(opt.value)} />
+            <ActionChip
+              key={opt.value}
+              label={opt.label}
+              active={lang === opt.value}
+              onClick={() => setLang(opt.value)}
+              colors={colors}
+            />
           ))}
         </div>
       </div>
