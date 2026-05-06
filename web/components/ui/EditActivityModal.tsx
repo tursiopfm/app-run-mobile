@@ -106,6 +106,20 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
   const [intensity, setIntensity] = useState<IntensityKey>(
     (a.manual_intensity as IntensityKey | null) ?? guessIntensity(a.name, a.ces, effectiveSport)
   )
+
+  function availableIntensities(s: string) {
+    return INTENSITY_OPTIONS.filter(({ key }) => {
+      if (key === 'runtaf')  return s === 'Run'
+      if (key === 'velotaf') return s === 'Ride' || s === 'EBikeRide'
+      return true
+    })
+  }
+
+  function handleSportChange(s: string) {
+    setSport(s)
+    const available = availableIntensities(s).map(i => i.key)
+    if (!available.includes(intensity)) setIntensity('autre')
+  }
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState<string | null>(null)
 
@@ -238,14 +252,14 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
           <ChipRow
             options={SPORT_OPTIONS}
             selected={sport}
-            onSelect={setSport}
+            onSelect={handleSportChange}
           />
         </SectionCard>
 
         {/* Intensité */}
         <SectionCard title="Intensité">
           <ChipRow
-            options={INTENSITY_OPTIONS.map(i => ({ value: i.key, label: i.label }))}
+            options={availableIntensities(sport).map(i => ({ value: i.key, label: i.label }))}
             selected={intensity}
             onSelect={v => setIntensity(v as IntensityKey)}
           />
