@@ -12,6 +12,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  LabelList,
 } from 'recharts'
 import { colors } from '@/lib/design/colors'
 import { chart } from '@/lib/design/layout'
@@ -94,7 +95,14 @@ export function CockpitComboChart({
             fillOpacity={0.7}
             radius={[2, 2, 0, 0]}
             isAnimationActive={false}
-          />
+          >
+            <LabelList
+              dataKey="dPlus"
+              position="top"
+              style={{ fontSize: 9, fill: barColor, fontWeight: 600 }}
+              formatter={(v: number) => v > 0 ? v.toLocaleString('fr-FR') : ''}
+            />
+          </Bar>
           <Line
             yAxisId="line"
             type="monotone"
@@ -102,10 +110,17 @@ export function CockpitComboChart({
             name="km"
             stroke={lineColor}
             strokeWidth={chart.strokeWidth}
-            dot={{ r: chart.dotRadius, fill: lineColor, strokeWidth: 0 }}
-            activeDot={{ r: chart.dotRadius + 1 }}
+            dot={{ r: 3, fill: lineColor, strokeWidth: 0 }}
+            activeDot={{ r: 4 }}
             isAnimationActive={false}
-          />
+          >
+            <LabelList
+              dataKey="km"
+              position="top"
+              style={{ fontSize: 9, fill: lineColor, fontWeight: 600 }}
+              formatter={(v: number) => v > 0 ? Math.round(v) : ''}
+            />
+          </Line>
         </ComposedChart>
       </ResponsiveContainer>
     </div>

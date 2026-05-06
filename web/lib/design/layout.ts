@@ -8,7 +8,7 @@ export const chart = {
   rightPadCombo:   44,   // ComboBarLineChart uses dual Y-axis (right label space)
   topPad:          35,   // LineChart (increased for label room)
   topPadBar:       18,   // BarChart
-  topPadCombo:     20,   // ComboBarLineChart
+  topPadCombo:     30,   // ComboBarLineChart
   bottomPadLabels: 86,   // With rotated x-axis labels
   bottomPadNoLabels: 12, // Without x-axis labels
 
@@ -20,7 +20,7 @@ export const chart = {
   strokeWidth:     4,    // Series line stroke (px)
   dotRadius:       5.5,  // Line series dot radius (px)
   barWidthRatio:   0.55, // Bar width as fraction of slot width
-  comboBarRatio:   0.45, // ComboBarLineChart bar width ratio
+  comboBarRatio:   0.72, // ComboBarLineChart bar width ratio
   pieRingRatio:    0.55, // Donut ring thickness as fraction of radius
   yTickCount:      5,    // Default number of Y-axis grid lines
   comboYTickCount: 4,    // ComboBarLineChart Y-axis ticks
