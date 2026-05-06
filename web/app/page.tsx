@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BarChart3, Zap, Brain, Mountain } from 'lucide-react'
-import { AppShell } from '@/components/navigation/AppShell'
 import { createClient } from '@/lib/database/supabase-client'
 
 type Mode = 'login' | 'signup'
@@ -66,8 +65,7 @@ export default function HomePage() {
   }
 
   return (
-    <AppShell>
-      <div className="min-h-screen bg-trail-bg flex flex-col">
+    <div className="min-h-screen bg-trail-bg flex flex-col">
         {/* Hero */}
         <div className="flex-1 flex flex-col items-center justify-center px-6 text-center pt-16 pb-8">
           <div className="mb-6">
@@ -150,7 +148,6 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-      </div>
-    </AppShell>
+    </div>
   )
 }
