@@ -98,8 +98,8 @@ export function CockpitComboChart({
           >
             <LabelList
               dataKey="dPlus"
-              position="top"
-              style={{ fontSize: 9, fill: barColor, fontWeight: 600 }}
+              position="insideTop"
+              style={{ fontSize: 10, fill: '#fff', fontWeight: 600 }}
               formatter={(v: number) => v > 0 ? v.toLocaleString('fr-FR') : ''}
             />
           </Bar>
@@ -117,7 +117,8 @@ export function CockpitComboChart({
             <LabelList
               dataKey="km"
               position="top"
-              style={{ fontSize: 9, fill: lineColor, fontWeight: 600 }}
+              offset={6}
+              style={{ fontSize: 10, fill: lineColor, fontWeight: 600 }}
               formatter={(v: number) => v > 0 ? Math.round(v) : ''}
             />
           </Line>
