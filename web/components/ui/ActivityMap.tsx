@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useMemo, useEffect } from 'react'
 import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from 'react-leaflet'
 import polylineLib from '@mapbox/polyline'
 import 'leaflet/dist/leaflet.css'
@@ -18,16 +18,19 @@ function FitBounds({ positions }: { positions: LatLng[] }) {
 }
 
 export function ActivityMap({ encodedPolyline }: { encodedPolyline: string }) {
-  const positions: LatLng[] = polylineLib
-    .decode(encodedPolyline)
-    .map(([lat, lng]) => [lat, lng])
+  const positions = useMemo<LatLng[]>(
+    () => (encodedPolyline ? polylineLib.decode(encodedPolyline) as LatLng[] : []),
+    [encodedPolyline]
+  )
+
+  if (positions.length === 0) return <ActivityMapPlaceholder />
 
   const start = positions[0]
-  const end   = positions[positions.length - 1]
+  const end = positions.length > 1 ? positions[positions.length - 1] : undefined
 
   return (
     <MapContainer
-      center={start ?? [46.5, 2.5]}
+      center={start}
       zoom={13}
       style={{ width: '100%', height: '100%' }}
       zoomControl={false}
@@ -38,9 +41,7 @@ export function ActivityMap({ encodedPolyline }: { encodedPolyline: string }) {
         positions={positions}
         pathOptions={{ color: '#e8651a', weight: 3, opacity: 0.9 }}
       />
-      {start && (
-        <CircleMarker center={start} radius={6} pathOptions={{ color: '#4caf50', fillColor: '#4caf50', fillOpacity: 1 }} />
-      )}
+      <CircleMarker center={start} radius={6} pathOptions={{ color: '#4caf50', fillColor: '#4caf50', fillOpacity: 1 }} />
       {end && (
         <CircleMarker center={end} radius={6} pathOptions={{ color: '#e8651a', fillColor: '#e8651a', fillOpacity: 1 }} />
       )}
