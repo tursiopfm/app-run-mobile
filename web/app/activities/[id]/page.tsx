@@ -50,6 +50,7 @@ export default async function ActivityDetailPage({
             },
           })
           .eq('id', id)
+          .eq('user_id', user.id)
       }
     } catch {
       // Token expired or rate limited — show page without splits
