@@ -8,16 +8,21 @@ export function ActivitySplits({
   splits: StravaSplit[]
   avgPaceSec: number
 }) {
-  const paces = splits.map(s => splitPaceSec(s) ?? 0)
-  const maxPace = Math.max(...paces, 1)
+  if (!splits.length) return null
+
+  const paces = splits.map(s => splitPaceSec(s))
+  const validPaces = paces.filter((p): p is number => p !== null)
+  const maxPace = validPaces.length ? Math.max(...validPaces) : 1
 
   return (
     <div className="flex flex-col">
       {splits.map((split, i) => {
         const pace = paces[i]
+        if (pace === null) return null
+
         const barPct = (pace / maxPace) * 100
         const color = splitColor(pace, avgPaceSec)
-        const elev = split.elevation_difference
+        const elev = Math.round(split.elevation_difference)
 
         return (
           <div key={split.split} className="flex items-center gap-2 py-1.5">
