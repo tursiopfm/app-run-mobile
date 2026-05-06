@@ -75,7 +75,7 @@ export default function LoginPage() {
           </button>
           <p className="text-xs text-trail-muted text-center">
             Pas encore de compte ?{' '}
-            <a href="/signup" className="text-trail-accent underline">Créer un compte</a>
+            <a href="/" className="text-trail-accent underline">Créer un compte</a>
           </p>
         </form>
       </div>
