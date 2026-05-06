@@ -155,7 +155,6 @@ export function ActivityDetailClient({
 }) {
   const router = useRouter()
   const [showEdit, setShowEdit] = useState(false)
-  const [activeTab, setActiveTab] = useState<Tab>('splits')
 
   const a = activity
   const effectiveSport = a.manual_sport_type ?? a.sport_type
@@ -172,6 +171,8 @@ export function ActivityDetailClient({
 
   const showSplits = splits !== null && splits.length > 0
   const showZones  = a.avg_hr !== null && a.max_hr !== null
+
+  const [activeTab, setActiveTab] = useState<Tab>(showSplits ? 'splits' : 'zones')
 
   // Pace / speed tile
   let paceLabel: string
@@ -277,7 +278,7 @@ export function ActivityDetailClient({
                 <ActivityHeartRateZones
                   avgHr={a.avg_hr!}
                   maxHr={a.max_hr!}
-                  movingTimeSec={a.moving_time_sec ?? a.manual_moving_time_sec ?? 0}
+                  movingTimeSec={a.manual_moving_time_sec ?? a.moving_time_sec ?? 0}
                 />
               )}
             </div>
