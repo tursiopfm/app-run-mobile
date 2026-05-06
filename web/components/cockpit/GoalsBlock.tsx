@@ -151,7 +151,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                     current={sov.weekKm}
                     target={tgt.weekKm}
                     unit="km"
-                    color={cfg.color}
+                    color="#38BDF8"
                   />
                   {sport !== 'swim' && (
                     <GoalProgressRow
@@ -159,7 +159,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                       current={sov.weekDPlus}
                       target={tgt.weekDPlus}
                       unit="m"
-                      color={cfg.color}
+                      color="#FF6B35"
                     />
                   )}
                   <GoalProgressRow
@@ -167,7 +167,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                     current={sov.ytdKm}
                     target={tgt.yearKm}
                     unit="km"
-                    color={cfg.color}
+                    color="#4ADE80"
                   />
                 </div>
               </div>
