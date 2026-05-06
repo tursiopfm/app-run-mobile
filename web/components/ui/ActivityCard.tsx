@@ -1,5 +1,18 @@
 import { colors } from '@/lib/design/colors'
 import { sportLabel } from '@/lib/design/labels'
+import { guessIntensity } from '@/lib/activities/intensity'
+
+const INTENSITY_EMOJI: Record<string, string> = {
+  footing:       '🦶',
+  sortie_longue: '🐢',
+  cotes:         '⛰️',
+  vma:           '🔥',
+  seuil:         '🎯',
+  runtaf:        '🏃',
+  velotaf:       '🚴',
+  course:        '🏁',
+  autre:         '❓',
+}
 
 const SPORT_COLORS: Record<string, string> = {
   Run:              colors.chargeOrange,
@@ -65,11 +78,12 @@ function fmtDuration(seconds: number | null): string {
 
 function fmtDate(iso: string): string {
   const d = new Date(iso)
-  const dd = String(d.getDate()).padStart(2, '0')
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mn = String(d.getMinutes()).padStart(2, '0')
-  return `${dd}/${mm} · ${hh}:${mn}`
+  const dd   = String(d.getDate()).padStart(2, '0')
+  const mm   = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  const hh   = String(d.getHours()).padStart(2, '0')
+  const mn   = String(d.getMinutes()).padStart(2, '0')
+  return `${dd}/${mm}/${yyyy} · ${hh}:${mn}`
 }
 
 function fmtPace(distM: number | null, timeSec: number | null): string {
@@ -129,6 +143,9 @@ export function ActivityCard({
   const ces   = a.ces != null ? Math.round(a.ces).toString() : '—'
   const fourth = fourthMetric(effectiveSport, effectiveDistance, effectiveDuration, a.ces)
 
+  const intensityKey   = (a.manual_intensity as string | null) ?? guessIntensity(a.name, a.ces, effectiveSport)
+  const intensityEmoji = INTENSITY_EMOJI[intensityKey] ?? '❓'
+
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       <div className="flex items-start justify-between gap-2">
@@ -149,9 +166,6 @@ export function ActivityCard({
         </div>
 
         <div className="flex flex-col items-end flex-shrink-0 gap-1">
-          <span className="text-[18px] font-bold" style={{ color: colors.seriesYellow }}>
-            ⚡: {ces}
-          </span>
           {onEdit && (
             <button
               onClick={() => onEdit(a)}
@@ -169,6 +183,10 @@ export function ActivityCard({
               ⋮
             </button>
           )}
+          <span className="text-[18px] font-bold" style={{ color: colors.seriesYellow }}>
+            ⚡ {ces}
+          </span>
+          <span className="text-[18px] leading-none">{intensityEmoji}</span>
         </div>
       </div>
     </div>
