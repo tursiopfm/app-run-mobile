@@ -270,14 +270,9 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
           <p className="text-[13px] px-1" style={{ color: '#ef4444' }}>{error}</p>
         )}
 
-      </div>
-
-      {/* Footer — fixed outside scroll area */}
-      <div
-        className="flex-shrink-0 flex gap-2 px-4 py-3 border-t"
-        style={{ backgroundColor: colors.headerBg, borderColor: colors.border }}
-      >
-        <button
+        {/* Boutons */}
+        <div className="flex gap-2 pb-8 pt-2">
+          <button
             onClick={handleDelete}
             disabled={saving}
             className={btnBase}
@@ -320,6 +315,8 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
             {saving ? '…' : 'Enregistrer'}
           </button>
         </div>
+
+      </div>
     </div>
   )
 }
