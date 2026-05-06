@@ -72,8 +72,8 @@ function SportBadge({ type }: { type: string }) {
   return (
     <span style={{
       background: `${color}2e`, border: `1px solid ${color}66`,
-      color, fontSize: 9, fontWeight: 700,
-      padding: '2px 8px', borderRadius: 20,
+      color, fontSize: 12, fontWeight: 700,
+      padding: '4px 12px', borderRadius: 20,
     }}>
       {label}
     </span>
@@ -83,7 +83,7 @@ function SportBadge({ type }: { type: string }) {
 function IntensityEmoji({ intensity }: { intensity: string | null }) {
   const emoji = intensity ? (INTENSITY_EMOJI[intensity] ?? '') : ''
   if (!emoji) return null
-  return <span style={{ fontSize: 13, lineHeight: 1 }}>{emoji}</span>
+  return <span style={{ fontSize: 16, lineHeight: 1 }}>{emoji}</span>
 }
 
 function EffortBadge({ ces }: { ces: number | null }) {
@@ -91,9 +91,9 @@ function EffortBadge({ ces }: { ces: number | null }) {
   return (
     <span style={{
       display: 'flex', alignItems: 'center', gap: 3,
-      background: 'rgba(255,193,7,0.1)', border: '1px solid rgba(255,193,7,0.28)',
-      padding: '3px 9px', borderRadius: 20,
-      fontSize: 10, fontWeight: 800, color: '#ffc107',
+      background: 'rgba(255,193,7,0.1)', border: '1px solid rgba(255,193,7,0.35)',
+      padding: '4px 12px', borderRadius: 20,
+      fontSize: 13, fontWeight: 800, color: '#ffc107',
     }}>
       ⚡ Effort {Math.round(ces)}
     </span>
@@ -217,8 +217,8 @@ export function ActivityDetailClient({
           style={{
             position: 'absolute', top: 16, right: 16, zIndex: 9999,
             width: 36, height: 36, borderRadius: '50%',
-            background: 'rgba(232,101,26,0.85)', backdropFilter: 'blur(14px)',
-            border: '2px solid rgba(232,101,26,1)',
+            background: 'rgba(232,101,26,0.28)', backdropFilter: 'blur(14px)',
+            border: '2px solid rgba(232,101,26,0.85)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 16, cursor: 'pointer',
           }}
@@ -234,11 +234,11 @@ export function ActivityDetailClient({
         }} />
       </div>
 
-      {/* Content body — solid bg, overlaps map gradient */}
-      <div style={{ padding: '0 16px', marginTop: -20, position: 'relative', zIndex: 20, background: '#0f1219' }}>
+      {/* Content body — solid bg below map */}
+      <div style={{ padding: '0 16px', marginTop: 0, position: 'relative', zIndex: 20, background: '#0f1219' }}>
 
         {/* Activity header */}
-        <div style={{ paddingBottom: 12 }}>
+        <div style={{ paddingTop: 14, paddingBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <SportBadge type={effectiveSport} />
@@ -249,7 +249,7 @@ export function ActivityDetailClient({
           <div style={{ fontSize: 17, fontWeight: 800, color: '#f0f2f8', lineHeight: 1.15, marginBottom: 3 }}>
             {a.name}
           </div>
-          <div style={{ fontSize: 10, color: '#8892a4' }}>{fmtDetailDate(a.start_time)}</div>
+          <div style={{ fontSize: 11, color: '#8892a4' }}>{fmtDetailDate(a.start_time)}</div>
         </div>
 
         {/* Stats grid 3×2 */}
@@ -277,7 +277,7 @@ export function ActivityDetailClient({
                   onClick={() => setActiveTab('splits')}
                   style={{
                     flex: 1, padding: '9px 0',
-                    fontSize: 10, fontWeight: 700, textAlign: 'center',
+                    fontSize: 14, fontWeight: 700, textAlign: 'center',
                     textTransform: 'uppercase', letterSpacing: '0.9px',
                     color: activeTab === 'splits' ? '#e8651a' : '#6b7a96',
                     background: 'none', border: 'none',
@@ -293,7 +293,7 @@ export function ActivityDetailClient({
                   onClick={() => setActiveTab('zones')}
                   style={{
                     flex: 1, padding: '9px 0',
-                    fontSize: 10, fontWeight: 700, textAlign: 'center',
+                    fontSize: 14, fontWeight: 700, textAlign: 'center',
                     textTransform: 'uppercase', letterSpacing: '0.9px',
                     color: activeTab === 'zones' ? '#e8651a' : '#6b7a96',
                     background: 'none', border: 'none',

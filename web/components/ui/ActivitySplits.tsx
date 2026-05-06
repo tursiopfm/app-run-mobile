@@ -19,9 +19,9 @@ export function ActivitySplits({
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {/* Header: segment count + best split */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <span style={{ fontSize: 16, color: '#6b7a96' }}>{splits.length} segments</span>
+        <span style={{ fontSize: 12, color: '#6b7a96' }}>{splits.length} segments</span>
         {minPace !== null && (
-          <span style={{ fontSize: 16, fontWeight: 700, color: splitColor(minPace, avgPaceSec) }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: splitColor(minPace, avgPaceSec) }}>
             ★ Meilleur {fmtPaceSec(minPace)}
           </span>
         )}
@@ -45,7 +45,7 @@ export function ActivitySplits({
           >
             {/* Circular km badge */}
             <div style={{
-              width: 22, height: 22, borderRadius: '50%',
+              width: 26, height: 26, borderRadius: '50%',
               background: '#181c29', border: '1px solid #252836',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 11, fontWeight: 700, color: '#8892a4', flexShrink: 0,
