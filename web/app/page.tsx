@@ -72,7 +72,7 @@ export default function HomePage() {
             <img
               src="/icons/icon-192.png"
               alt="Trail Cockpit"
-              className="w-16 h-16 rounded-2xl"
+              className="w-32 h-32 rounded-2xl"
             />
           </div>
           <h1 className="text-3xl font-bold text-trail-text mb-3 tracking-tight">Trail Cockpit</h1>
