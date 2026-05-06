@@ -278,7 +278,8 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
               border:          `1px solid ${colors.border}`,
               color:           colors.subtleText,
               backgroundColor: 'transparent',
-              cursor:          'pointer',
+              cursor:          saving ? 'not-allowed' : 'pointer',
+              opacity:         saving ? 0.7 : 1,
             }}
           >
             Annuler
