@@ -1,4 +1,4 @@
-const STRAVA_SCOPES = 'activity:read_all,profile:read_all'
+const STRAVA_SCOPES = 'activity:read_all,activity:write,profile:read_all'
 
 export function buildStravaAuthUrl(redirectUri: string, state: string): string {
   const url = new URL('https://www.strava.com/oauth/authorize')
