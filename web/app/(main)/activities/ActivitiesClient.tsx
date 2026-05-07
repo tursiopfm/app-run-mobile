@@ -212,12 +212,13 @@ function FilterRow({
 }
 
 // ── Search Panel ───────────────────────────────────────────────────────────────
-function SearchPanel({ state, setState, activities, onClose, onNavigate }: {
+function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset }: {
   state:      SearchState
   setState:   (s: SearchState) => void
   activities: ActivityRow[]
   onClose:    () => void
   onNavigate: (id: string) => void
+  onReset:    () => void
 }) {
   const FIELDS: SearchField[] = ['Titre', 'Distance', 'Durée', 'D+']
   const si = inputStyle()
@@ -320,6 +321,14 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate }: {
               </div>
             </div>
           )}
+
+          <button
+            onClick={onReset}
+            className="w-full py-2 rounded-[10px] border text-[13px] font-semibold"
+            style={{ borderColor: colors.border, color: colors.subtleText, backgroundColor: 'transparent', cursor: 'pointer' }}
+          >
+            Réinitialiser
+          </button>
         </div>
 
         {/* Live results */}
@@ -616,6 +625,10 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
           activities={localActivities}
           onClose={() => setPanel('none')}
           onNavigate={navigateToActivity}
+          onReset={() => {
+            sessionStorage.removeItem('tc_activities_search')
+            setSearch(DEFAULT_SEARCH)
+          }}
         />
       )}
       {panel === 'filter' && (

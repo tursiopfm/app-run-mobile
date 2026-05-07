@@ -288,7 +288,7 @@ export function ActivityDetailClient({
       {/* Map section */}
       <div style={{
         position: 'relative',
-        height: mapExpanded ? 'calc(100svh - 80px)' : 'calc(100svh - 170px)',
+        height: mapExpanded ? 'calc(100svh - 80px)' : 307,
         transition: 'height 0.3s ease',
         overflow: 'hidden',
         isolation: 'isolate',
@@ -337,7 +337,7 @@ export function ActivityDetailClient({
           onClick={() => setMapExpanded(!mapExpanded)}
           style={{
             position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
-            zIndex: 20, cursor: 'pointer',
+            zIndex: 9999, cursor: 'pointer',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
             padding: '8px 22px',
             background: 'rgba(10,12,22,0.72)',

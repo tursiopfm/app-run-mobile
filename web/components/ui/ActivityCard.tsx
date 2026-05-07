@@ -184,11 +184,12 @@ export function ActivityCard({
             </div>
           </div>
 
-          <div className="flex flex-col items-end flex-shrink-0 justify-between self-stretch">
+          <div className="flex flex-col items-end flex-shrink-0 self-stretch relative">
             {onEdit && (
               <button
                 onClick={(e) => { e.stopPropagation(); if (onEdit) onEdit(a) }}
                 aria-label="Modifier l'activité"
+                className="absolute top-0 right-0"
                 style={{
                   color:      colors.subtleText,
                   cursor:     'pointer',
@@ -202,7 +203,7 @@ export function ActivityCard({
                 ⋮
               </button>
             )}
-            <div className="flex flex-col items-end gap-[4px]">
+            <div className="flex-1 flex flex-col items-end justify-center gap-[14px]">
               <button
                 onClick={(e) => { e.stopPropagation(); setPopup('effort') }}
                 className="flex items-center justify-center text-[18px] font-bold leading-none"
