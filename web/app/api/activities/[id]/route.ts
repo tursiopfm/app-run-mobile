@@ -55,30 +55,32 @@ export async function DELETE(
     return NextResponse.json({ error: 'Activité introuvable' }, { status: 404 })
   }
 
-  // For Strava activities, delete from Strava first so the next sync doesn't re-insert it
+  // Tente la suppression côté Strava (best-effort).
+  // Strava n'autorise la suppression via API que pour les activités créées par l'app —
+  // les activités GPS (Garmin, Apple Watch…) retournent 404. Dans ce cas on supprime
+  // quand même localement et on informe l'utilisateur de supprimer aussi sur Strava.
+  let stravaWarning: string | null = null
   if (activity.provider === 'strava' && activity.provider_activity_id) {
-    console.log('[delete] suppression Strava activity_id=', activity.provider_activity_id)
+    console.log('[delete] strava_id=', activity.provider_activity_id)
     try {
       const accessToken = await getValidStravaToken(user.id)
-      const res = await fetch(
+      const stravaRes = await fetch(
         `https://www.strava.com/api/v3/activities/${activity.provider_activity_id}`,
         { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } },
       )
-      // 204 = supprimée, 404 = déjà absente côté Strava — les deux sont OK
-      if (!res.ok && res.status !== 404) {
-        const msg = res.status === 403
-          ? 'Strava refuse la suppression de cette activité (droits insuffisants — supprime-la directement sur Strava)'
-          : `Erreur Strava ${res.status} — réessaie ou supprime sur Strava`
-        console.warn('[delete] Strava error', res.status)
-        return NextResponse.json({ error: msg }, { status: 400 })
+      console.log('[delete] strava_status=', stravaRes.status)
+      if (stravaRes.status === 204) {
+        // Vraiment supprimée sur Strava — ne reviendra pas au prochain sync
+      } else if (stravaRes.status === 404 || stravaRes.status === 403) {
+        // Activité enregistrée par GPS ou droits insuffisants — on supprime localement
+        // mais elle peut revenir au prochain sync si toujours présente sur Strava
+        stravaWarning = 'Supprimée de l\'app. Si elle réapparaît, supprime-la aussi sur Strava — la prochaine sync la retirera définitivement.'
+      } else {
+        stravaWarning = `Strava ${stravaRes.status} — supprimée localement, vérifie sur Strava.`
       }
-      console.log('[delete] Strava ok status=', res.status)
     } catch (err) {
-      console.error('[delete] Strava unreachable', err)
-      return NextResponse.json(
-        { error: `Impossible de contacter Strava : ${err instanceof Error ? err.message : err}` },
-        { status: 500 },
-      )
+      console.warn('[delete] strava_unreachable', err)
+      stravaWarning = 'Strava inaccessible — supprimée localement uniquement.'
     }
   }
 
@@ -89,6 +91,6 @@ export async function DELETE(
     .eq('user_id', user.id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  console.log('[delete] supprimée localement id=', id)
-  return NextResponse.json({ ok: true })
+  console.log('[delete] local_ok id=', id)
+  return NextResponse.json({ ok: true, warning: stravaWarning })
 }

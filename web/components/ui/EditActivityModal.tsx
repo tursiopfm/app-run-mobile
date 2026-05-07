@@ -169,6 +169,12 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
         const json = await res.json().catch(() => ({})) as { error?: string }
         throw new Error(json.error ?? 'Erreur lors de la suppression')
       }
+      const json = await res.json() as { warning?: string }
+      if (json.warning) {
+        // Affiche le warning puis supprime de l'UI
+        setError(json.warning)
+        await new Promise(r => setTimeout(r, 3000))
+      }
       onDeleted()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur inconnue')
