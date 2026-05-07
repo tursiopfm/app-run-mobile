@@ -269,6 +269,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     .select('id, sport_type, name, start_time, ces, distance_m, elevation_gain_m, moving_time_sec')
     .eq('user_id', userId)
     .gte('start_time', yearAgo.toISOString())
+    .is('deleted_at', null)
     .order('start_time', { ascending: true })
 
   const activities = (rows ?? []) as ActivityRow[]

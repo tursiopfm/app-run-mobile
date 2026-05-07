@@ -37,6 +37,7 @@ export async function POST(request: Request) {
         .eq('user_id', user.id)
         .eq('provider', 'strava')
         .gte('start_time', cutoff)
+        .is('deleted_at', null)
 
       const orphanIds = (existing ?? [])
         .filter(a => !stravaIds.has(a.provider_activity_id as string))
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
 
       console.log('[sync] orphelins à supprimer:', orphanIds.length)
       if (orphanIds.length > 0) {
-        await supabase.from('activities').delete().in('id', orphanIds)
+        await supabase.from('activities').update({ deleted_at: new Date().toISOString() }).in('id', orphanIds)
         deleted = orphanIds.length
       }
     }
