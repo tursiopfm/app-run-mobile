@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { useColors } from '@/lib/design/useColors'
 import { type TrailPalette } from '@/lib/design/colors'
@@ -69,6 +69,25 @@ export function AppearanceSection() {
   const [lang, setLang] = useState<Lang>('fr')
   const colors = useColors()
 
+  useEffect(() => {
+    const saved = localStorage.getItem('tc_lang') as Lang | null
+    if (saved && ['fr', 'en', 'system'].includes(saved)) setLang(saved)
+  }, [])
+
+  function handleLang(newLang: Lang) {
+    let effective: Lang = newLang
+    if (newLang === 'system') {
+      effective = navigator.language.startsWith('en') ? 'en' : 'fr'
+      localStorage.setItem('tc_lang', 'system')
+      setLang('system')
+      document.documentElement.lang = effective === 'en' ? 'en' : 'fr'
+      return
+    }
+    localStorage.setItem('tc_lang', newLang)
+    setLang(newLang)
+    document.documentElement.lang = newLang === 'en' ? 'en' : 'fr'
+  }
+
   const activeOption = THEME_OPTIONS.find(o => o.nextTheme === theme) ?? THEME_OPTIONS[0]
   const selectedLang = LANG_OPTIONS.find(l => l.value === lang)!
 
@@ -104,7 +123,7 @@ export function AppearanceSection() {
               key={opt.value}
               label={opt.label}
               active={lang === opt.value}
-              onClick={() => setLang(opt.value)}
+              onClick={() => handleLang(opt.value)}
               colors={colors}
             />
           ))}

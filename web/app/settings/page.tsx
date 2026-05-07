@@ -1,8 +1,8 @@
+import Link from 'next/link'
 import { AppShell } from '@/components/navigation/AppShell'
 import { StravaSection } from '@/components/settings/StravaSection'
 import { AccountSection } from '@/components/settings/AccountSection'
 import { AppearanceSection } from '@/components/settings/AppearanceSection'
-import { ProfileSection, type ProfileData } from '@/components/settings/ProfileSection'
 import { createClient } from '@/lib/database/supabase-server'
 import { colors } from '@/lib/design/colors'
 import { settings as settingsLabels } from '@/lib/design/labels'
@@ -54,19 +54,8 @@ export default async function SettingsPage() {
 
   let stravaConnected = false
   let stravaAthleteName: string | null = null
-  let profileData: ProfileData = {
-    first_name: null, last_name: null,
-    max_hr: null, threshold_hr: null, resting_hr: null,
-    ftp_watts: null, weight_kg: null, year_goal_km: null,
-  }
 
   if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('first_name,last_name,max_hr,threshold_hr,resting_hr,ftp_watts,weight_kg,year_goal_km')
-      .eq('id', user.id)
-      .single()
-    if (profile) profileData = profile as ProfileData
     const { data: connection } = await supabase
       .from('provider_connections')
       .select('athlete_data')
@@ -119,33 +108,16 @@ export default async function SettingsPage() {
           <AppearanceSection />
         </SectionCard>
 
-        {/* ── Préférences Cockpit ── */}
-        <SectionCard>
-          <SectionTitle>Préférences Cockpit</SectionTitle>
-          <div className="h-[10px]" />
-          <SettingsRow
-            title={settingsLabels.sectionStartup}
-            value="Cockpit"
-            accent={colors.chargeOrange}
-          />
-          <SettingsRow
-            title="Source de données"
-            value={stravaConnected ? 'Strava connecté' : 'Local'}
-            accent={colors.seriesBlue}
-          />
-          <SettingsRow
-            title="Granularité stats"
-            value="Hebdomadaire"
-            accent={colors.greenOk}
-          />
-        </SectionCard>
-
-        {/* ── Profil athlète ── */}
-        <SectionCard>
-          <SectionTitle>Profil athlète</SectionTitle>
-          <div className="h-[10px]" />
-          <ProfileSection initial={profileData} />
-        </SectionCard>
+        {/* Lien vers le profil */}
+        <Link href="/profile">
+          <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity">
+            <div>
+              <p className="text-[15px] font-bold text-trail-text">Profil sportif</p>
+              <p className="text-[13px] text-trail-muted mt-[2px]">Zones FC, données physiologiques</p>
+            </div>
+            <span className="text-[20px] text-trail-muted">›</span>
+          </div>
+        </Link>
 
         {/* ── À venir ── */}
         <SectionCard>
