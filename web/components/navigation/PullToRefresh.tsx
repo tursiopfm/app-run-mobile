@@ -14,8 +14,9 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
   const [syncing, setSyncing] = useState(false)
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
-    if (ref.current?.scrollTop === 0) {
+    if ((ref.current?.scrollTop ?? 0) <= 0) {
       startY.current = e.touches[0].clientY
+      console.log('[PTR] touchStart captured at y=', startY.current)
     }
   }, [])
 
@@ -27,12 +28,15 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
   }, [syncing])
 
   const onTouchEnd = useCallback(async () => {
+    console.log('[PTR] touchEnd pull=', Math.round(pull), 'threshold=', THRESHOLD)
     if (pull >= THRESHOLD && !syncing) {
+      console.log('[PTR] syncing...')
       setSyncing(true)
       setPull(0)
       startY.current = null
       try {
-        await fetch('/api/strava/sync', { method: 'POST' })
+        const res = await fetch('/api/strava/sync', { method: 'POST' })
+        console.log('[PTR] sync done status=', res.status)
       } finally {
         router.refresh()
         setSyncing(false)
@@ -43,14 +47,16 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
     }
   }, [pull, syncing, router])
 
-  const progress  = Math.min(pull / THRESHOLD, 1)
-  const showPull  = pull > 8 || syncing
-  const iconY     = syncing ? 12 : Math.max(pull - 44, -32)
+  const progress = Math.min(pull / THRESHOLD, 1)
+  const showPull = pull > 8 || syncing
+  // Keep icon within the visible area (top: 4px when just starting to show, up to 36px at threshold)
+  const iconY    = syncing ? 12 : Math.max(4, pull * 0.5)
 
   return (
     <main
       ref={ref}
-      className="flex-1 pb-24 overflow-y-auto relative"
+      // overscroll-y-contain prevents Chrome/Safari from intercepting the pull gesture with their native PTR
+      className="flex-1 pb-24 overflow-y-auto relative overscroll-y-contain"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}

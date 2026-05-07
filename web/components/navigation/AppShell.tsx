@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { BottomNav } from './BottomNav'
 import { PullToRefresh } from './PullToRefresh'
+import { SyncOnFocus } from './SyncOnFocus'
 import { MoreVertical } from 'lucide-react'
 import { createClient } from '@/lib/database/supabase-server'
 import { getServerUser } from '@/lib/database/get-user'
@@ -51,6 +52,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <PullToRefresh>
+        <SyncOnFocus />
         {children}
       </PullToRefresh>
       <BottomNav isAdmin={isAdmin} />

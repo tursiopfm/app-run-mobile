@@ -165,7 +165,10 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
     setError(null)
     try {
       const res = await fetch(`/api/activities/${a.id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Erreur lors de la suppression')
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({})) as { error?: string }
+        throw new Error(json.error ?? 'Erreur lors de la suppression')
+      }
       onDeleted()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur inconnue')

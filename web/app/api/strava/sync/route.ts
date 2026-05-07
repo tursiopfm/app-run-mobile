@@ -20,8 +20,12 @@ export async function POST(request: Request) {
   const fullSync = new URL(request.url).searchParams.get('full') === 'true'
 
   try {
+    console.log('[sync] début — user=', user.id, 'fullSync=', fullSync)
     const activities = await stravaSyncer.fetchActivities(user.id, { fullSync })
+    console.log('[sync] Strava retourne', activities.length, 'activité(s)')
+
     const result = await importActivities(activities)
+    console.log('[sync] upsert:', result.saved, 'sauvegardée(s)')
 
     let deleted = 0
     if (!fullSync) {
@@ -38,14 +42,17 @@ export async function POST(request: Request) {
         .filter(a => !stravaIds.has(a.provider_activity_id as string))
         .map(a => a.id as string)
 
+      console.log('[sync] orphelins à supprimer:', orphanIds.length)
       if (orphanIds.length > 0) {
         await supabase.from('activities').delete().in('id', orphanIds)
         deleted = orphanIds.length
       }
     }
 
+    console.log('[sync] fin — saved=', result.saved, 'deleted=', deleted)
     return NextResponse.json({ ...result, deleted })
   } catch (err) {
+    console.error('[sync] erreur:', err)
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Sync failed' },
       { status: 500 }
