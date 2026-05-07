@@ -12,9 +12,9 @@ export const SPORT_TYPE_MAP = {
 
 export const SPORT_CONFIG = {
   run:  { label: 'Course',   shortLabel: 'RUN', emoji: '🏃', color: colors.chargeOrange },
-  ride: { label: 'Vélo',     shortLabel: 'VÉL', emoji: '🚴', color: colors.seriesBlue   },
-  swim: { label: 'Natation', shortLabel: 'NAT', emoji: '🏊', color: colors.seriesGreen  },
-  all:  { label: 'Toutes',   shortLabel: 'ALL', emoji: '⚡', color: colors.seriesYellow },
+  ride: { label: 'Vélo',     shortLabel: 'VÉL', emoji: '🚴', color: colors.seriesGreen  },
+  swim: { label: 'Natation', shortLabel: 'NAT', emoji: '🏊', color: colors.seriesBlue   },
+  all:  { label: 'Toutes',   shortLabel: 'ALL', emoji: '🌎', color: colors.seriesYellow },
 } as const
 
 export const ALL_SPORT_KEYS: SportKey[] = ['run', 'ride', 'swim', 'all']
