@@ -83,18 +83,23 @@ function SortableBlock({
         position:   'relative',
       }}
     >
-      {/* Drag handle */}
+      {/* Drag handle — keep the touch-action:none zone tight around the dots so
+          the rest of the block top stays scrollable on Android. */}
       <div
-        {...attributes}
-        {...listeners}
-        className="absolute top-0 inset-x-0 z-10 flex justify-center items-center h-5 cursor-grab active:cursor-grabbing touch-none select-none"
-        aria-label={`Déplacer le bloc ${BLOCK_META[id].label}`}
-        style={{ touchAction: 'none' }}
+        className="absolute top-0 inset-x-0 z-10 flex justify-center items-center h-5 pointer-events-none"
       >
-        <div className="flex gap-[3px] opacity-30">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <span key={i} className="w-[3px] h-[3px] rounded-full bg-trail-muted" />
-          ))}
+        <div
+          {...attributes}
+          {...listeners}
+          aria-label={`Déplacer le bloc ${BLOCK_META[id].label}`}
+          className="cursor-grab active:cursor-grabbing select-none pointer-events-auto px-3 py-1.5"
+          style={{ touchAction: 'none' }}
+        >
+          <div className="flex gap-[3px] opacity-30">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <span key={i} className="w-[3px] h-[3px] rounded-full bg-trail-muted" />
+            ))}
+          </div>
         </div>
       </div>
 
