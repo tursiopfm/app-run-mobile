@@ -17,7 +17,7 @@ export async function TabWebhooks() {
   if (logs.length === 0) {
     return (
       <div className="bg-trail-card border border-trail-border rounded-2xl p-4 text-center">
-        <p className="text-xs text-trail-muted">Aucun webhook enregistré pour l'instant.</p>
+        <p className="text-xs text-trail-muted">Aucun webhook enregistré pour l&apos;instant.</p>
       </div>
     )
   }
