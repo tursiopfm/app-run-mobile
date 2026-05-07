@@ -173,7 +173,7 @@ export function ActivityCard({
               <TypeBadge type={effectiveSport} />
               <span className="text-[14px] text-trail-muted">{fmtDate(a.start_time)}</span>
             </div>
-            <p className="text-[18px] font-medium truncate mt-[6px]" style={{ color: colors.chargeOrange }}>
+            <p className="text-[18px] font-medium truncate mt-[6px] text-trail-text">
               {a.name}
             </p>
             <div className="flex gap-[6px] mt-[4px] overflow-x-auto pb-0.5">
