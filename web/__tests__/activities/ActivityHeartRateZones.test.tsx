@@ -8,11 +8,11 @@ const MOVING_TIME = 3600
 describe('ActivityHeartRateZones', () => {
   it('renders 5 zone rows', () => {
     render(<ActivityHeartRateZones avgHr={AVG_HR} maxHr={MAX_HR} movingTimeSec={MOVING_TIME} />)
-    expect(screen.getByText('Z1 Récup')).toBeInTheDocument()
-    expect(screen.getByText('Z2 Aérobie')).toBeInTheDocument()
-    expect(screen.getByText('Z3 Tempo')).toBeInTheDocument()
-    expect(screen.getByText('Z4 Seuil')).toBeInTheDocument()
-    expect(screen.getByText('Z5 VO2max')).toBeInTheDocument()
+    expect(screen.getByText(/Récupération/)).toBeInTheDocument()
+    expect(screen.getByText(/Endurance active/)).toBeInTheDocument()
+    expect(screen.getByText(/Tempo/)).toBeInTheDocument()
+    expect(screen.getByText(/Seuil/)).toBeInTheDocument()
+    expect(screen.getByText(/VO₂max/)).toBeInTheDocument()
   })
 
   it('shows avgHr and maxHr in the header', () => {
@@ -21,15 +21,21 @@ describe('ActivityHeartRateZones', () => {
     expect(screen.getByText('185')).toBeInTheDocument()
   })
 
-  it('renders zone labels Z1 Récup and Z3 Tempo', () => {
-    render(<ActivityHeartRateZones avgHr={AVG_HR} maxHr={MAX_HR} movingTimeSec={MOVING_TIME} />)
-    expect(screen.getByText('Z1 Récup')).toBeInTheDocument()
-    expect(screen.getByText('Z3 Tempo')).toBeInTheDocument()
-  })
-
   it('shows a non-dash duration for at least one zone', () => {
     render(<ActivityHeartRateZones avgHr={AVG_HR} maxHr={MAX_HR} movingTimeSec={MOVING_TIME} />)
     const durations = screen.queryAllByText(/\d+min|\dh\d+/)
     expect(durations.length).toBeGreaterThan(0)
+  })
+
+  it('uses profile zones when athleteProfile is provided', () => {
+    render(
+      <ActivityHeartRateZones
+        avgHr={AVG_HR}
+        maxHr={MAX_HR}
+        movingTimeSec={MOVING_TIME}
+        athleteProfile={{ max_hr: 190, threshold_hr: 170, aerobic_threshold_hr: 148, resting_hr: 45 }}
+      />
+    )
+    expect(screen.getByText(/Récupération/)).toBeInTheDocument()
   })
 })

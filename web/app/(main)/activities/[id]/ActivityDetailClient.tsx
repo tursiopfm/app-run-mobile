@@ -229,12 +229,22 @@ function fmtDetailDate(iso: string): string {
 
 type Tab = 'splits' | 'zones' | 'stats'
 
+type AthleteHrProfile = {
+  max_hr?:               number | null
+  resting_hr?:           number | null
+  aerobic_threshold_hr?: number | null
+  threshold_hr?:         number | null
+  birth_year?:           number | null
+} | null
+
 export function ActivityDetailClient({
   activity,
   splits,
+  athleteProfile,
 }: {
-  activity: ActivityDetail
-  splits: StravaSplit[] | null
+  activity:       ActivityDetail
+  splits:         StravaSplit[] | null
+  athleteProfile: AthleteHrProfile
 }) {
   const router = useRouter()
   const [showEdit, setShowEdit] = useState(false)
@@ -457,6 +467,7 @@ export function ActivityDetailClient({
                 avgHr={a.avg_hr!}
                 maxHr={a.max_hr!}
                 movingTimeSec={a.manual_moving_time_sec ?? a.moving_time_sec ?? 0}
+                athleteProfile={athleteProfile}
               />
             )}
             {activeTab === 'stats' && (

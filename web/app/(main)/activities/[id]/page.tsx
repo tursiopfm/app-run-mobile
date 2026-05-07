@@ -68,5 +68,11 @@ export default async function ActivityDetailPage({
     }
   }
 
-  return <ActivityDetailClient activity={activity} splits={splits} />
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year')
+    .eq('id', user.id)
+    .single()
+
+  return <ActivityDetailClient activity={activity} splits={splits} athleteProfile={profile} />
 }

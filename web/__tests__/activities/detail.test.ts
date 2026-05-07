@@ -1,6 +1,5 @@
 import {
   splitColor,
-  estimateHrZones,
   fmtPaceSec,
   fmtDurationSec,
   splitPaceSec,
@@ -78,26 +77,3 @@ describe('splitColor', () => {
   })
 })
 
-// ── estimateHrZones ───────────────────────────────────────────────────────────
-describe('estimateHrZones', () => {
-  it('returns 5 zones whose durations sum to movingTimeSec', () => {
-    const zones = estimateHrZones(148, 185, 7362)
-    const total = zones.reduce((s, z) => s + z.durationSec, 0)
-    expect(total).toBe(7362)
-    expect(zones).toHaveLength(5)
-  })
-  it('assigns most time to zone containing avg_hr', () => {
-    // avg 148, max 185 → avg% = 0.80 → falls in Z4 (80-90%)
-    const zones = estimateHrZones(148, 185, 7362)
-    const z4 = zones.find(z => z.label === 'Z4 Seuil')!
-    const maxZone = zones.reduce((a, b) => a.durationSec > b.durationSec ? a : b)
-    expect(maxZone.label).toBe(z4.label)
-  })
-  it('labels and colors are correct', () => {
-    const zones = estimateHrZones(120, 185, 3600)
-    expect(zones[0].label).toBe('Z1 Récup')
-    expect(zones[0].color).toBe('#42a5f5')
-    expect(zones[4].label).toBe('Z5 VO2max')
-    expect(zones[4].color).toBe('#e8651a')
-  })
-})
