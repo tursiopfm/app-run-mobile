@@ -134,13 +134,10 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                     </button>
                     <button
                       onClick={() => setShowConfig(true)}
-                      className="text-trail-muted hover:text-trail-text transition-colors p-0.5"
+                      className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
                       aria-label="Paramètres"
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                      </svg>
+                      ⋮
                     </button>
                   </div>
                 </div>
@@ -162,13 +159,28 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                       color="#FF6B35"
                     />
                   )}
-                  <GoalProgressRow
-                    label="Distance annuelle"
-                    current={sov.ytdKm}
-                    target={tgt.yearKm}
-                    unit="km"
-                    color="#4ADE80"
-                  />
+                  {(() => {
+                    const now = new Date()
+                    const start = new Date(now.getFullYear(), 0, 1)
+                    const dayOfYear = Math.ceil((now.getTime() - start.getTime()) / 86400000)
+                    const expectedKm = (tgt.yearKm * dayOfYear) / 365
+                    const diff = sov.ytdKm - expectedKm
+                    const diffLabel = `${diff >= 0 ? '+' : ''}${Math.round(diff)} km vs objectif`
+                    return (
+                      <div>
+                        <GoalProgressRow
+                          label="Distance annuelle"
+                          current={sov.ytdKm}
+                          target={tgt.yearKm}
+                          unit="km"
+                          color="#4ADE80"
+                        />
+                        <p className="text-[12px] text-right mt-[3px]" style={{ color: diff >= 0 ? '#4ADE80' : '#ef4444' }}>
+                          {diffLabel}
+                        </p>
+                      </div>
+                    )
+                  })()}
                 </div>
               </div>
             )

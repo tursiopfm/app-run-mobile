@@ -128,7 +128,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
             >
               <div className="grid grid-cols-2 gap-[6px]">
                 <CockpitKpiTile
-                  title="SEMAINE"
+                  title="Km semaine"
                   subline={`${sov.weekSessions} séance${sov.weekSessions !== 1 ? 's' : ''}`}
                   barValues={kmNorm} barLabels={kmLabels} barColor={scfg.color}
                 >
@@ -139,7 +139,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
                 </CockpitKpiTile>
 
                 <CockpitKpiTile
-                  title="D+ SEMAINE"
+                  title="D+ semaine"
                   subline="Dénivelé positif"
                   barValues={dpNorm} barLabels={dpLabels} barColor={colors.seriesBlue}
                 >
@@ -154,7 +154,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
 
               <div className="grid grid-cols-2 gap-[6px]">
                 <CockpitKpiTile
-                  title="ANNÉE"
+                  title="Km année"
                   subline={`D+ ${sov.ytdDPlus.toLocaleString('fr-FR')} m`}
                   barValues={mNorm} barLabels={mLabels} barColor={scfg.color}
                 >
