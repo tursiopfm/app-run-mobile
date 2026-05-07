@@ -5,7 +5,7 @@
 - [x] Au clic sur le niveau d'effort dans la liste, ouvrir un popup expliquant la valeur "comme à un enfant de 10 ans"
 - [x] Au clic sur l'emoji intensité dans la liste, ouvrir un popup avec tous les emoji intensité et leurs descriptions
 - [x] Ajouter un filtre par type d'intensité entre les filtres "activité" et "date"
-- [ ] Mettre le titre des activités en blanc en thème sombre, en noir en thème clair *(→ EN ATTENTE validation visuelle — voir message ci-dessous)*
+- [x] Mettre le titre des activités en blanc en thème sombre, en noir en thème clair
 - [x] Centrer verticalement dans leur bloc la valeur du niveau d'effort et l'emoji intensité
 - [x] Conserver la recherche/filtre actif lors du retour depuis le détail d'une activité (corriger la perte d'état)
 
@@ -48,17 +48,6 @@
 - [x] Retirer le bloc "Préférences cockpit"
 
 ---
-
-## Point bloquant en attente
-
-### Titre des activités blanc/noir selon thème
-Validation visuelle demandée avant mise en production.
-
-**Changement proposé :**
-- Avant : titre orange (`#F97316`) dans tous les thèmes
-- Après : blanc en thème sombre, noir en thème clair (classe Tailwind `text-trail-text`)
-
-Répondre pour valider et que le changement soit appliqué.
 
 ---
 
