@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ActivityCard, ActivityRow } from '@/components/ui/ActivityCard'
 import { EditActivityModal } from '@/components/ui/EditActivityModal'
@@ -507,6 +507,23 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
   const [editingActivity, setEditingActivity] = useState<ActivityRow | null>(null)
   const router = useRouter()
 
+  useEffect(() => {
+    const savedSearch = sessionStorage.getItem('tc_activities_search')
+    const savedFilter = sessionStorage.getItem('tc_activities_filter')
+    if (savedSearch) {
+      try { setSearch(JSON.parse(savedSearch)) } catch {}
+    }
+    if (savedFilter) {
+      try { setFilter(JSON.parse(savedFilter)) } catch {}
+    }
+  }, [])
+
+  function navigateToActivity(id: string) {
+    sessionStorage.setItem('tc_activities_search', JSON.stringify(search))
+    sessionStorage.setItem('tc_activities_filter', JSON.stringify(filter))
+    router.push(`/activities/${id}`)
+  }
+
   function handleSaved(updated: ActivityRow) {
     setLocalActivities(prev => prev.map(a => a.id === updated.id ? updated : a))
     setEditingActivity(null)
@@ -593,7 +610,7 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
           setState={setSearch}
           activities={localActivities}
           onClose={() => setPanel('none')}
-          onNavigate={(id) => router.push(`/activities/${id}`)}
+          onNavigate={navigateToActivity}
         />
       )}
       {panel === 'filter' && (
@@ -602,7 +619,11 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
           setState={setFilter}
           sportTypes={sportTypes}
           onClose={() => setPanel('none')}
-          onReset={() => setFilter(DEFAULT_FILTER)}
+          onReset={() => {
+            sessionStorage.removeItem('tc_activities_search')
+            sessionStorage.removeItem('tc_activities_filter')
+            setFilter(DEFAULT_FILTER)
+          }}
         />
       )}
 
@@ -659,7 +680,7 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
         ) : (
           <div className="space-y-[10px]">
             {filtered.map(a => (
-              <ActivityCard key={a.id} activity={a} onEdit={setEditingActivity} onClick={() => router.push(`/activities/${a.id}`)} />
+              <ActivityCard key={a.id} activity={a} onEdit={setEditingActivity} onClick={() => navigateToActivity(a.id)} />
             ))}
           </div>
         )}
