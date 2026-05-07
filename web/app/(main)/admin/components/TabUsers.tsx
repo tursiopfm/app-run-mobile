@@ -1,5 +1,6 @@
 import { createServiceClient } from '@/lib/database/supabase-server'
 import { formatRelativeTime, lastLoginColor } from '@/lib/admin/format'
+import { UserActions } from './UserActions'
 
 async function fetchUsers() {
   const supabase = createServiceClient()
@@ -79,6 +80,7 @@ export async function TabUsers() {
               {u.activityCount} activités
             </span>
           </div>
+          <UserActions userId={u.id} email={u.email} />
         </div>
       ))}
     </div>
