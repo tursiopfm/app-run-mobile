@@ -2,9 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutGrid, Dumbbell, Calendar, Footprints, Trophy, Settings } from 'lucide-react'
+import { LayoutGrid, Dumbbell, Calendar, Footprints, Trophy, Settings, ShieldCheck } from 'lucide-react'
 
-const NAV_ITEMS = [
+const BASE_NAV = [
   { href: '/dashboard',  icon: LayoutGrid, label: 'Cockpit'   },
   { href: '/charge',     icon: Dumbbell,   label: 'Charge'    },
   { href: '/plan',       icon: Calendar,   label: 'Plan'      },
@@ -13,13 +13,16 @@ const NAV_ITEMS = [
   { href: '/settings',   icon: Settings,   label: 'Réglages'  },
 ]
 
-export function BottomNav() {
+const ADMIN_NAV = { href: '/admin', icon: ShieldCheck, label: 'Admin' }
+
+export function BottomNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname()
+  const items = isAdmin ? [...BASE_NAV, ADMIN_NAV] : BASE_NAV
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-trail-surface border-t border-trail-border pb-safe">
       <div className="flex items-stretch max-w-lg mx-auto">
-        {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
+        {items.map(({ href, icon: Icon, label }) => {
           const active = pathname.startsWith(href)
           return (
             <Link

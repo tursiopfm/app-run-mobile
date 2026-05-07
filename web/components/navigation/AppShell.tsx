@@ -5,6 +5,7 @@ import { PullToRefresh } from './PullToRefresh'
 import { MoreVertical } from 'lucide-react'
 import { createClient } from '@/lib/database/supabase-server'
 import { getServerUser } from '@/lib/database/get-user'
+import { getIsAdmin } from '@/lib/database/get-admin'
 
 async function fetchDisplayName(): Promise<string | null> {
   try {
@@ -24,7 +25,8 @@ async function fetchDisplayName(): Promise<string | null> {
 }
 
 export async function AppShell({ children }: { children: ReactNode }) {
-  const displayName = await fetchDisplayName()
+  const [displayName, user] = await Promise.all([fetchDisplayName(), getServerUser()])
+  const isAdmin = user ? await getIsAdmin(user.id) : false
 
   return (
     <div className="flex flex-col min-h-screen bg-trail-bg">
@@ -51,7 +53,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
       <PullToRefresh>
         {children}
       </PullToRefresh>
-      <BottomNav />
+      <BottomNav isAdmin={isAdmin} />
     </div>
   )
 }
