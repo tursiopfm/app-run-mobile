@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/database/supabase-server'
-import { AppShell } from '@/components/navigation/AppShell'
+import { getServerUser } from '@/lib/database/get-user'
 import { Users, Plug, Activity, Webhook, RefreshCw, AlertTriangle, Brain } from 'lucide-react'
 
 const STATS = [
@@ -22,14 +21,12 @@ const RECENT_WEBHOOKS = [
 export default async function AdminPage() {
   // Local development bypass only. Do not enable in production.
   if (process.env.NODE_ENV !== 'development') {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getServerUser()
     if (!user) redirect('/settings')
   }
 
   return (
-    <AppShell>
-      <div className="px-4 py-4 space-y-4">
+    <div className="px-4 py-4 space-y-4">
         <div className="bg-trail-warning/10 border border-trail-warning/30 rounded-2xl px-4 py-3">
           <p className="text-xs text-trail-warning font-medium">⚠ Zone admin — accès restreint</p>
         </div>
@@ -56,7 +53,6 @@ export default async function AdminPage() {
             </div>
           ))}
         </div>
-      </div>
-    </AppShell>
+    </div>
   )
 }

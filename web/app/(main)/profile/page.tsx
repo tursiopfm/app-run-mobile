@@ -1,13 +1,11 @@
-import { AppShell } from '@/components/navigation/AppShell'
 import { createClient } from '@/lib/database/supabase-server'
-import { redirect } from 'next/navigation'
+import { getServerUser } from '@/lib/database/get-user'
 import { ProfileSection, type ProfileData } from '@/components/settings/ProfileSection'
 import { HrZoneMethod } from '@/components/settings/HrZoneMethod'
 
 export default async function ProfilePage() {
+  const user = await getServerUser()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
 
   let profileData: ProfileData = {
     first_name: null, last_name: null,
@@ -18,17 +16,16 @@ export default async function ProfilePage() {
   const { data: profile } = await supabase
     .from('profiles')
     .select('first_name,last_name,max_hr,threshold_hr,resting_hr,ftp_watts,weight_kg,year_goal_km')
-    .eq('id', user.id)
+    .eq('id', user!.id)
     .single()
   if (profile) profileData = profile as ProfileData
 
   const displayName = profileData.first_name
     ? `${profileData.first_name} ${profileData.last_name ?? ''}`.trim()
-    : user.email?.split('@')[0] ?? 'Athlète'
+    : user!.email?.split('@')[0] ?? 'Athlète'
 
   return (
-    <AppShell>
-      <div className="px-3 py-3 space-y-3 max-w-lg mx-auto">
+    <div className="px-3 py-3 space-y-3 max-w-lg mx-auto">
 
         <div className="px-1">
           <p className="text-[22px] font-black text-trail-text">{displayName}</p>
@@ -46,7 +43,6 @@ export default async function ProfilePage() {
           <HrZoneMethod />
         </div>
 
-      </div>
-    </AppShell>
+    </div>
   )
 }

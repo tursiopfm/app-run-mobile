@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache'
 import { createClient } from '@/lib/database/supabase-server'
 import { buildDailyMetrics, type DailyLoad, type DailyMetrics } from '@/lib/analytics/fatigue'
 import { type SportKey, SPORT_TYPE_MAP } from '@/lib/design/sports'
@@ -250,7 +251,7 @@ function buildSportOverview(
   }
 }
 
-export async function getDashboardData(userId: string): Promise<DashboardData> {
+async function _getDashboardData(userId: string): Promise<DashboardData> {
   const supabase = await createClient()
 
   const yearAgo = new Date()
@@ -323,3 +324,9 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     weekSessions,
   }
 }
+
+export const getDashboardData = unstable_cache(
+  _getDashboardData,
+  ['dashboard-data'],
+  { revalidate: 300 },
+)

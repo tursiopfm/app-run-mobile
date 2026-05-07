@@ -1,4 +1,3 @@
-import { AppShell } from '@/components/navigation/AppShell'
 import { Brain, Send } from 'lucide-react'
 
 const SUGGESTIONS = [
@@ -9,8 +8,7 @@ const SUGGESTIONS = [
 
 export default function CoachPage() {
   return (
-    <AppShell>
-      <div className="flex flex-col px-4 py-4 min-h-[calc(100vh-8rem)]">
+    <div className="flex flex-col px-4 py-4 min-h-[calc(100vh-8rem)]">
         <div className="flex items-center gap-3 mb-6 p-4 bg-trail-card border border-trail-border rounded-2xl">
           <div className="w-10 h-10 rounded-xl bg-trail-accent/15 flex items-center justify-center flex-shrink-0">
             <Brain size={20} className="text-trail-accent" />
@@ -43,7 +41,6 @@ export default function CoachPage() {
         <p className="text-center text-xs text-trail-muted mt-3">
           Coach IA disponible après connexion Strava
         </p>
-      </div>
-    </AppShell>
+    </div>
   )
 }

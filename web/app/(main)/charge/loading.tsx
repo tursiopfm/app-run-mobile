@@ -1,5 +1,3 @@
-import { AppShell } from '@/components/navigation/AppShell'
-
 function SkeletonCard({ rows = 1 }: { rows?: number }) {
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px] animate-pulse">
@@ -13,14 +11,12 @@ function SkeletonCard({ rows = 1 }: { rows?: number }) {
 
 export default function Loading() {
   return (
-    <AppShell>
-      <div className="px-2 py-2 space-y-2 max-w-lg mx-auto">
-        <SkeletonCard rows={1} />
-        <SkeletonCard rows={3} />
-        <SkeletonCard rows={3} />
-        <SkeletonCard rows={2} />
-        <SkeletonCard rows={2} />
-      </div>
-    </AppShell>
+    <div className="px-2 py-2 space-y-2 max-w-lg mx-auto">
+      <SkeletonCard rows={1} />
+      <SkeletonCard rows={3} />
+      <SkeletonCard rows={3} />
+      <SkeletonCard rows={2} />
+      <SkeletonCard rows={2} />
+    </div>
   )
 }

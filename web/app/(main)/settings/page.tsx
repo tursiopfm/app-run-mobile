@@ -1,9 +1,9 @@
 import Link from 'next/link'
-import { AppShell } from '@/components/navigation/AppShell'
 import { StravaSection } from '@/components/settings/StravaSection'
 import { AccountSection } from '@/components/settings/AccountSection'
 import { AppearanceSection } from '@/components/settings/AppearanceSection'
 import { createClient } from '@/lib/database/supabase-server'
+import { getServerUser } from '@/lib/database/get-user'
 import { colors } from '@/lib/design/colors'
 import { settings as settingsLabels } from '@/lib/design/labels'
 
@@ -49,8 +49,8 @@ function SectionCard({ children }: { children: React.ReactNode }) {
 }
 
 export default async function SettingsPage() {
+  const user = await getServerUser()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
   let stravaConnected = false
   let stravaAthleteName: string | null = null
@@ -73,9 +73,7 @@ export default async function SettingsPage() {
   }
 
   return (
-    <AppShell>
-      {/* Android: contentPadding=12dp, spacedBy=12dp */}
-      <div className="px-3 py-3 space-y-3 max-w-lg mx-auto">
+    <div className="px-3 py-3 space-y-3 max-w-lg mx-auto">
 
         {/* ── Compte / Strava ── */}
         <SectionCard>
@@ -134,7 +132,6 @@ export default async function SettingsPage() {
           <AccountSection />
         </div>
 
-      </div>
-    </AppShell>
+    </div>
   )
 }

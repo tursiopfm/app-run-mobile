@@ -4,12 +4,13 @@ import { BottomNav } from './BottomNav'
 import { PullToRefresh } from './PullToRefresh'
 import { MoreVertical } from 'lucide-react'
 import { createClient } from '@/lib/database/supabase-server'
+import { getServerUser } from '@/lib/database/get-user'
 
 async function fetchDisplayName(): Promise<string | null> {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getServerUser()
     if (!user) return null
+    const supabase = await createClient()
     const { data } = await supabase
       .from('profiles')
       .select('first_name,last_name')

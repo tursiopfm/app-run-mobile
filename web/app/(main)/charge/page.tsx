@@ -1,11 +1,9 @@
-import { redirect } from 'next/navigation'
-import { AppShell } from '@/components/navigation/AppShell'
 import { CockpitChartCard } from '@/components/charts/CockpitChartCard'
 import { CockpitAreaChart, type AreaPoint } from '@/components/charts/CockpitAreaChart'
 import { CockpitLineChart } from '@/components/charts/CockpitLineChart'
 import { CockpitBarChart, type BarPoint } from '@/components/charts/CockpitBarChart'
 import { CockpitPieChart, type PieSlice } from '@/components/charts/CockpitPieChart'
-import { createClient } from '@/lib/database/supabase-server'
+import { getServerUser } from '@/lib/database/get-user'
 import { getDashboardData } from '@/lib/data/dashboard'
 import { colors } from '@/lib/design/colors'
 import { charge as chargeLabels } from '@/lib/design/labels'
@@ -47,11 +45,8 @@ function toHex(color: string, opacity: number): string {
 }
 
 export default async function ChargePage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { dailyMetrics, sportOverviews } = await getDashboardData(user.id)
+  const user = await getServerUser()
+  const { dailyMetrics, sportOverviews } = await getDashboardData(user!.id)
   const { intensityBreakdown } = sportOverviews.all
 
   const latest  = dailyMetrics[dailyMetrics.length - 1] ?? { atl: 0, ctl: 0, tsb: 0, dailyLoad: 0, date: '' }
@@ -89,9 +84,7 @@ export default async function ChargePage() {
   }))
 
   return (
-    <AppShell>
-      {/* Android: contentPadding=12dp, spacedBy=12dp */}
-      <div className="px-3 py-3 space-y-3 max-w-lg mx-auto">
+    <div className="px-3 py-3 space-y-3 max-w-lg mx-auto">
 
         {/* ── 1. Charge hebdomadaire (AreaChart ATL) ── */}
         <CockpitChartCard title={chargeLabels.weeklyTitle} minHeight={200}>
@@ -168,7 +161,6 @@ export default async function ChargePage() {
           <CockpitPieChart data={pieData} height={220} />
         </CockpitChartCard>
 
-      </div>
-    </AppShell>
+    </div>
   )
 }
