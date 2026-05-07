@@ -30,6 +30,7 @@ export type SportOverview = {
   ytdKm: number
   ytdDPlus: number
   monthlyKm: number[]
+  monthlyDPlus: number[]
   atl: number
   ctl: number
   tsb: number
@@ -157,11 +158,17 @@ function buildSportOverview(
   const ytdActs = acts.filter((a) => new Date(a.start_time) >= janFirst)
   const ytdKm    = Math.round(ytdActs.reduce((s, a) => s + (a.distance_m ?? 0) / 1000, 0) * 10) / 10
   const ytdDPlus = Math.round(ytdActs.reduce((s, a) => s + (a.elevation_gain_m ?? 0), 0))
-  const monthlyKm = Array(12).fill(0) as number[]
+  const monthlyKm   = Array(12).fill(0) as number[]
+  const monthlyDPlus = Array(12).fill(0) as number[]
   for (const a of ytdActs) {
-    monthlyKm[new Date(a.start_time).getMonth()] += (a.distance_m ?? 0) / 1000
+    const mo = new Date(a.start_time).getMonth()
+    monthlyKm[mo]   += (a.distance_m    ?? 0) / 1000
+    monthlyDPlus[mo] += (a.elevation_gain_m ?? 0)
   }
-  for (let i = 0; i < 12; i++) monthlyKm[i] = Math.round(monthlyKm[i] * 10) / 10
+  for (let i = 0; i < 12; i++) {
+    monthlyKm[i]   = Math.round(monthlyKm[i] * 10) / 10
+    monthlyDPlus[i] = Math.round(monthlyDPlus[i])
+  }
 
   const loads   = buildWindowedLoads(acts, 60)
   const metrics = buildDailyMetrics(loads)
@@ -239,6 +246,7 @@ function buildSportOverview(
     ytdKm,
     ytdDPlus,
     monthlyKm,
+    monthlyDPlus,
     atl: latest.atl,
     ctl: latest.ctl,
     tsb: latest.tsb,

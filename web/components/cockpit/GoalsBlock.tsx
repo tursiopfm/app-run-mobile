@@ -144,7 +144,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
 
                 <div className="space-y-[10px]">
                   <GoalProgressRow
-                    label="Distance hebdo"
+                    label="Km semaine"
                     current={sov.weekKm}
                     target={tgt.weekKm}
                     unit="km"
@@ -169,7 +169,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                     return (
                       <div>
                         <GoalProgressRow
-                          label="Distance annuelle"
+                          label="Km année"
                           current={sov.ytdKm}
                           target={tgt.yearKm}
                           unit="km"

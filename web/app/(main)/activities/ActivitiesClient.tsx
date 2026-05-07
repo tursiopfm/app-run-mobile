@@ -510,17 +510,22 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
   useEffect(() => {
     const savedSearch = sessionStorage.getItem('tc_activities_search')
     const savedFilter = sessionStorage.getItem('tc_activities_filter')
+    const savedPanel  = sessionStorage.getItem('tc_activities_panel')
     if (savedSearch) {
       try { setSearch(JSON.parse(savedSearch)) } catch {}
     }
     if (savedFilter) {
       try { setFilter(JSON.parse(savedFilter)) } catch {}
     }
+    if (savedPanel === 'search' || savedPanel === 'filter') {
+      setPanel(savedPanel)
+    }
   }, [])
 
   function navigateToActivity(id: string) {
     sessionStorage.setItem('tc_activities_search', JSON.stringify(search))
     sessionStorage.setItem('tc_activities_filter', JSON.stringify(filter))
+    sessionStorage.setItem('tc_activities_panel',  panel)
     router.push(`/activities/${id}`)
   }
 

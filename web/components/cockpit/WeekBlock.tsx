@@ -1,38 +1,58 @@
 'use client'
 
 import { useState } from 'react'
-import { WeekTable, type DaySession } from '@/components/ui/WeekTable'
 import { colors } from '@/lib/design/colors'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import { type SportOverview } from '@/lib/data/dashboard'
 
 type Props = {
   sportOverviews: Record<SportKey, SportOverview>
-  allSessions: DaySession[]
+  allSessions: { day: string; label: string; volumeKm: number; dPlus: number }[]
 }
 
 const DAY_ABBR = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 
-export function WeekBlock({ sportOverviews, allSessions }: Props) {
-  const [activeSport, setActiveSport] = useState<SportKey>('all')
+function fmtDuration(totalKm: number, sessions: { volumeKm: number; dPlus: number }[]): string {
+  // Estimate total duration from km (rough: ~6min/km average)
+  // We use the totalDPlus adjustment: +1min per 100m D+
+  const totalDPlus = sessions.reduce((s, r) => s + r.dPlus, 0)
+  const estSec = Math.round(totalKm * 360 + totalDPlus * 0.6)
+  if (estSec === 0) return '—'
+  const h = Math.floor(estSec / 3600)
+  const m = Math.floor((estSec % 3600) / 60)
+  return h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m}min`
+}
 
-  const sessions: DaySession[] =
-    activeSport === 'all'
-      ? allSessions
-      : DAY_ABBR.map((day, i) => ({
-          day,
-          label: sportOverviews[activeSport].dailyLabels?.[i] ?? '',
-          volumeKm: sportOverviews[activeSport].dailyKm[i] ?? 0,
-          dPlus: Math.round(sportOverviews[activeSport].dailyDPlus[i] ?? 0),
-        }))
+export function WeekBlock({ sportOverviews, allSessions }: Props) {
+  const [activeSport, setActiveSport] = useState<SportKey>('run')
+
+  const sessions = activeSport === 'all'
+    ? allSessions
+    : DAY_ABBR.map((day, i) => ({
+        day,
+        label:    sportOverviews[activeSport].dailyLabels?.[i] ?? '',
+        volumeKm: sportOverviews[activeSport].dailyKm[i]    ?? 0,
+        dPlus:    Math.round(sportOverviews[activeSport].dailyDPlus[i] ?? 0),
+      }))
+
+  const cfg      = SPORT_CONFIG[activeSport]
+  const totalKm  = sessions.reduce((s, r) => s + r.volumeKm, 0)
+  const totalDp  = sessions.reduce((s, r) => s + r.dPlus, 0)
+  const durLabel = fmtDuration(totalKm, sessions)
+
+  function fmtKm(v: number) {
+    if (v === 0) return null
+    return v < 10 ? v.toFixed(1) : Math.round(v).toString()
+  }
 
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-      <div className="flex items-center justify-between mb-[6px]">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-[10px]">
         <p className="text-[13px] font-semibold text-trail-text">Semaine en cours</p>
         <div className="flex gap-1">
           {ALL_SPORT_KEYS.map((sport) => {
-            const cfg = SPORT_CONFIG[sport]
+            const scfg = SPORT_CONFIG[sport]
             const isActive = activeSport === sport
             return (
               <button
@@ -40,18 +60,75 @@ export function WeekBlock({ sportOverviews, allSessions }: Props) {
                 onClick={() => setActiveSport(sport)}
                 className="text-[11px] font-semibold px-2 py-0.5 rounded-full transition-colors"
                 style={{
-                  backgroundColor: isActive ? cfg.color : 'transparent',
-                  color: isActive ? '#fff' : colors.subtleText,
-                  border: `1px solid ${isActive ? cfg.color : colors.border}`,
+                  backgroundColor: isActive ? scfg.color : 'transparent',
+                  color:           isActive ? '#fff' : colors.subtleText,
+                  border:          `1px solid ${isActive ? scfg.color : colors.border}`,
                 }}
               >
-                {cfg.shortLabel}
+                {scfg.shortLabel}
               </button>
             )
           })}
         </div>
       </div>
-      <WeekTable sessions={sessions} />
+
+      {/* Day cards */}
+      <div className="flex gap-[4px]">
+        {sessions.map((s, i) => {
+          const km = fmtKm(s.volumeKm)
+          const hasActivity = km !== null
+          return (
+            <div
+              key={i}
+              className="flex-1 flex flex-col items-center gap-[2px] py-[7px] px-[2px] rounded-[8px]"
+              style={{
+                backgroundColor: hasActivity ? `${cfg.color}18` : 'transparent',
+                border:          `1px solid ${hasActivity ? cfg.color + '45' : 'transparent'}`,
+              }}
+            >
+              <span style={{ fontSize: 9, fontWeight: 700, color: colors.subtleText }}>{s.day}</span>
+              {hasActivity ? (
+                <>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: cfg.color, lineHeight: 1 }}>{km}</span>
+                  <span style={{ fontSize: 8, color: colors.subtleText, lineHeight: 1 }}>km</span>
+                  {s.dPlus > 0 && (
+                    <span style={{ fontSize: 9, fontWeight: 600, color: '#4db6f0', lineHeight: 1 }}>
+                      {s.dPlus}m
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span style={{ fontSize: 12, color: '#2a3040', fontWeight: 700 }}>—</span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Summary row */}
+      <div
+        className="flex justify-around items-center mt-[8px] pt-[8px]"
+        style={{ borderTop: `1px solid ${colors.border}` }}
+      >
+        <div className="flex flex-col items-center gap-[1px]">
+          <span style={{ fontSize: 13, fontWeight: 800, color: cfg.color }}>
+            {totalKm > 0 ? (totalKm < 10 ? totalKm.toFixed(1) : Math.round(totalKm)) : '—'}
+            {totalKm > 0 && <span style={{ fontSize: 9, fontWeight: 400, color: colors.subtleText }}> km</span>}
+          </span>
+          <span style={{ fontSize: 9, color: colors.subtleText }}>Total</span>
+        </div>
+        <div className="flex flex-col items-center gap-[1px]">
+          <span style={{ fontSize: 13, fontWeight: 800, color: '#4db6f0' }}>
+            {totalDp > 0 ? `${totalDp}` : '—'}
+            {totalDp > 0 && <span style={{ fontSize: 9, fontWeight: 400, color: colors.subtleText }}> m</span>}
+          </span>
+          <span style={{ fontSize: 9, color: colors.subtleText }}>D+</span>
+        </div>
+        <div className="flex flex-col items-center gap-[1px]">
+          <span style={{ fontSize: 13, fontWeight: 800, color: '#4caf50' }}>{durLabel}</span>
+          <span style={{ fontSize: 9, color: colors.subtleText }}>Durée</span>
+        </div>
+      </div>
     </div>
   )
 }

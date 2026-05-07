@@ -117,7 +117,6 @@ export function IntensityPopup({ intensityKey, onClose }: { intensityKey: string
                   border: active ? `1px solid ${colors.chargeOrange}60` : '1px solid transparent',
                 }}
               >
-                <span className="text-[18px] leading-none flex-shrink-0">{INTENSITY_EMOJI[opt.key] ?? '❓'}</span>
                 <div className="flex-1 min-w-0">
                   <p
                     className="text-[13px] font-semibold"

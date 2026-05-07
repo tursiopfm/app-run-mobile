@@ -183,8 +183,8 @@ export function HistoryBlock({ sportOverviews, weeklyPoints, onHide }: Props) {
               case 'year':
                 return MONTH_LETTERS.map((letter, i) => ({
                   label: letter,
-                  km:    sov.monthlyKm[i] ?? 0,
-                  dPlus: 0,
+                  km:    sov.monthlyKm[i]   ?? 0,
+                  dPlus: sov.monthlyDPlus[i] ?? 0,
                 }))
             }
           })()

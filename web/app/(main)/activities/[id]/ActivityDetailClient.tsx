@@ -198,7 +198,6 @@ function ActivityStats({ activity: a }: { activity: ActivityDetail }) {
       <StatsSection title="Temps" tiles={[
         { label: 'Temps actif', value: fmtDurationSec(movingTime), unit: '' },
         { label: 'Temps total', value: fmtDurationSec(elapsed ?? a.duration_sec), unit: '' },
-        { label: 'CES', value: a.ces != null ? Math.round(a.ces).toString() : '—', unit: '' },
       ]} />
     </div>
   )
@@ -289,7 +288,7 @@ export function ActivityDetailClient({
       {/* Map section */}
       <div style={{
         position: 'relative',
-        height: mapExpanded ? '70vh' : 307,
+        height: mapExpanded ? 'calc(100svh - 80px)' : 'calc(100svh - 170px)',
         transition: 'height 0.3s ease',
         overflow: 'hidden',
         isolation: 'isolate',
@@ -337,17 +336,21 @@ export function ActivityDetailClient({
         <div
           onClick={() => setMapExpanded(!mapExpanded)}
           style={{
-            position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)',
-            zIndex: 10, cursor: 'pointer',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-            padding: '6px 16px',
+            position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 20, cursor: 'pointer',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+            padding: '8px 22px',
+            background: 'rgba(10,12,22,0.72)',
+            backdropFilter: 'blur(12px)',
+            borderRadius: 20,
+            border: '1px solid rgba(255,255,255,0.15)',
           }}
         >
-          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.6)' }} />
-          <svg width="12" height="6" viewBox="0 0 12 6" fill="none">
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.8)' }} />
+          <svg width="12" height="7" viewBox="0 0 12 7" fill="none">
             <path
-              d={mapExpanded ? "M1 5L6 1L11 5" : "M1 1L6 5L11 1"}
-              stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinecap="round"
+              d={mapExpanded ? "M1 6L6 1L11 6" : "M1 1L6 6L11 1"}
+              stroke="rgba(255,255,255,0.85)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
             />
           </svg>
         </div>

@@ -1,47 +1,68 @@
 import { createClient } from '@/lib/database/supabase-server'
 import { getServerUser } from '@/lib/database/get-user'
-import { ProfileSection, type ProfileData } from '@/components/settings/ProfileSection'
 import { HrZoneMethod } from '@/components/settings/HrZoneMethod'
+import { ProfileSourceSection } from '@/components/settings/ProfileSourceSection'
+import { ProfileCardioSection, type ProfileCardioData } from '@/components/settings/ProfileCardioSection'
+import { HrZonesDisplay } from '@/components/settings/HrZonesDisplay'
 
 export default async function ProfilePage() {
-  const user = await getServerUser()
+  const user     = await getServerUser()
   const supabase = await createClient()
 
-  let profileData: ProfileData = {
+  let data: ProfileCardioData = {
     first_name: null, last_name: null,
-    max_hr: null, threshold_hr: null, resting_hr: null,
-    ftp_watts: null, weight_kg: null, year_goal_km: null,
+    max_hr: null, aerobic_threshold_hr: null, threshold_hr: null,
+    resting_hr: null, ftp_watts: null, weight_kg: null,
+    year_goal_km: null, birth_year: null,
   }
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('first_name,last_name,max_hr,threshold_hr,resting_hr,ftp_watts,weight_kg,year_goal_km')
+    .select('first_name,last_name,max_hr,aerobic_threshold_hr,threshold_hr,resting_hr,ftp_watts,weight_kg,year_goal_km,birth_year')
     .eq('id', user!.id)
     .single()
-  if (profile) profileData = profile as ProfileData
+  if (profile) data = profile as ProfileCardioData
 
-  const displayName = profileData.first_name
-    ? `${profileData.first_name} ${profileData.last_name ?? ''}`.trim()
+  const displayName = data.first_name
+    ? `${data.first_name} ${data.last_name ?? ''}`.trim()
     : user!.email?.split('@')[0] ?? 'Athlète'
 
   return (
-    <div className="px-3 py-3 space-y-3 max-w-lg mx-auto">
+    <div className="px-3 py-3 space-y-3 max-w-lg mx-auto pb-8">
 
-        <div className="px-1">
-          <p className="text-[22px] font-black text-trail-text">{displayName}</p>
-          <p className="text-[13px] text-trail-muted">Ce profil sert à calibrer les zones de fréquence cardiaque et à mieux interpréter le niveau d&apos;effort.</p>
-        </div>
+      {/* En-tête */}
+      <div className="px-1">
+        <p className="text-[22px] font-black text-trail-text">{displayName}</p>
+        <p className="text-[12px] text-trail-muted leading-[16px] mt-1">
+          Ce profil calibre tes zones de fréquence cardiaque et améliore l&apos;interprétation de l&apos;effort.
+        </p>
+      </div>
 
-        <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px] space-y-2">
-          <p className="text-[15px] font-bold text-trail-text">Profil athlète</p>
-          <div className="h-[6px]" />
-          <ProfileSection initial={profileData} />
-        </div>
+      {/* Méthode de calcul des zones */}
+      <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[10px]">
+        <p className="text-[14px] font-bold text-trail-text">Méthode de calcul des zones</p>
+        <HrZoneMethod />
+      </div>
 
-        <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px] space-y-3">
-          <p className="text-[15px] font-bold text-trail-text">Méthode de calcul des zones</p>
-          <HrZoneMethod />
-        </div>
+      {/* Source des valeurs */}
+      <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[10px]">
+        <p className="text-[14px] font-bold text-trail-text">Source des valeurs</p>
+        <ProfileSourceSection />
+      </div>
+
+      {/* Données cardio + Infos athlète + Save */}
+      <ProfileCardioSection initial={data} />
+
+      {/* Zones FC utilisées */}
+      <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[10px]">
+        <p className="text-[14px] font-bold text-trail-text">Zones FC utilisées</p>
+        <HrZonesDisplay
+          maxHr={data.max_hr}
+          restingHr={data.resting_hr}
+          aerobicThresholdHr={data.aerobic_threshold_hr}
+          thresholdHr={data.threshold_hr}
+        />
+      </div>
 
     </div>
   )

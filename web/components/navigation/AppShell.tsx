@@ -39,9 +39,9 @@ export async function AppShell({ children }: { children: ReactNode }) {
               <span className="text-sm font-semibold text-trail-primary">{displayName}</span>
             )}
             <Link
-              href="/settings"
+              href="/profile"
               className="text-trail-muted hover:text-trail-text p-1 -mr-1"
-              aria-label="Paramètres"
+              aria-label="Profil"
             >
               <MoreVertical size={18} />
             </Link>

@@ -184,7 +184,7 @@ export function ActivityCard({
             </div>
           </div>
 
-          <div className="flex flex-col items-end flex-shrink-0 gap-1 justify-between self-stretch">
+          <div className="flex flex-col items-end flex-shrink-0 justify-between self-stretch">
             {onEdit && (
               <button
                 onClick={(e) => { e.stopPropagation(); if (onEdit) onEdit(a) }}
@@ -202,20 +202,22 @@ export function ActivityCard({
                 ⋮
               </button>
             )}
-            <button
-              onClick={(e) => { e.stopPropagation(); setPopup('effort') }}
-              className="flex items-center justify-center text-[18px] font-bold leading-none"
-              style={{ color: colors.seriesYellow, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-            >
-              ⚡ {ces}
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); setPopup('intensity') }}
-              className="flex items-center justify-center text-[18px] leading-none"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-            >
-              {intensityEmoji}
-            </button>
+            <div className="flex flex-col items-end gap-[4px]">
+              <button
+                onClick={(e) => { e.stopPropagation(); setPopup('effort') }}
+                className="flex items-center justify-center text-[18px] font-bold leading-none"
+                style={{ color: colors.seriesYellow, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                ⚡ {ces}
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setPopup('intensity') }}
+                className="flex items-center justify-center text-[18px] leading-none"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                {intensityEmoji}
+              </button>
+            </div>
           </div>
         </div>
       </div>
