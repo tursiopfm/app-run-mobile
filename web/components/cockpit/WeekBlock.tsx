@@ -21,7 +21,7 @@ export function WeekBlock({ sportOverviews, allSessions }: Props) {
       ? allSessions
       : DAY_ABBR.map((day, i) => ({
           day,
-          label: '',
+          label: sportOverviews[activeSport].dailyLabels?.[i] ?? '',
           volumeKm: sportOverviews[activeSport].dailyKm[i] ?? 0,
           dPlus: Math.round(sportOverviews[activeSport].dailyDPlus[i] ?? 0),
         }))

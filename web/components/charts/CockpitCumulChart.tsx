@@ -27,6 +27,33 @@ type Props = {
   height?: number
 }
 
+type DotProps = {
+  cx?: number; cy?: number; index?: number;
+  payload?: Record<string, unknown>;
+  dataKey?: string; color?: string; lastIndex?: number;
+}
+
+function EndDot({ cx, cy, index, payload, dataKey, color, lastIndex }: DotProps) {
+  if (index !== lastIndex || cx == null || cy == null) return null
+  const val = payload?.[dataKey as string]
+  if (val == null) return null
+  const rounded = Math.round(val as number)
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={3} fill={color} />
+      <text
+        x={cx} y={cy - 6}
+        textAnchor="middle"
+        fontSize={10}
+        fill={color}
+        fontWeight={700}
+      >
+        {rounded}
+      </text>
+    </g>
+  )
+}
+
 export function CockpitCumulChart({ months, height = 220 }: Props) {
   const maxDays = Math.max(...months.map((m) => m.dailyCumul.length), 0)
 
@@ -81,18 +108,22 @@ export function CockpitCumulChart({ months, height = 220 }: Props) {
             labelFormatter={(v) => `Jour ${v}`}
             itemStyle={{ color: colors.text }}
           />
-          {months.map((m) => (
-            <Line
-              key={m.label}
-              type="monotone"
-              dataKey={m.label}
-              stroke={m.color}
-              strokeWidth={2.5}
-              dot={false}
-              connectNulls={false}
-              isAnimationActive={false}
-            />
-          ))}
+          {months.map((m) => {
+            const lastIdx = m.dailyCumul.length - 1
+            return (
+              <Line
+                key={m.label}
+                type="monotone"
+                dataKey={m.label}
+                stroke={m.color}
+                strokeWidth={2.5}
+                dot={(props) => <EndDot {...props} color={m.color} lastIndex={lastIdx} />}
+                activeDot={{ r: 3 }}
+                connectNulls={false}
+                isAnimationActive={false}
+              />
+            )
+          })}
         </LineChart>
       </ResponsiveContainer>
     </div>

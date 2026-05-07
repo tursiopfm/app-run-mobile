@@ -26,6 +26,7 @@ export type SportOverview = {
   weekSessions: number
   dailyKm: number[]
   dailyDPlus: number[]
+  dailyLabels: string[]
   ytdKm: number
   ytdDPlus: number
   monthlyKm: number[]
@@ -136,8 +137,9 @@ function buildSportOverview(
     const t = new Date(a.start_time)
     return t >= monday && t < nextMonday
   })
-  const dailyKm    = Array(7).fill(0) as number[]
-  const dailyDPlus = Array(7).fill(0) as number[]
+  const dailyKm     = Array(7).fill(0) as number[]
+  const dailyDPlus  = Array(7).fill(0) as number[]
+  const dailyLabels = Array(7).fill('') as string[]
   let weekKm = 0, weekDPlus = 0, weekSessions = 0
   for (const a of weekActs) {
     const idx = toMonIndex(new Date(a.start_time).getDay())
@@ -145,6 +147,7 @@ function buildSportOverview(
     const dp  = a.elevation_gain_m ?? 0
     dailyKm[idx]    += km
     dailyDPlus[idx] += dp
+    if (!dailyLabels[idx]) dailyLabels[idx] = a.name
     weekKm    += km
     weekDPlus += dp
     weekSessions++
@@ -232,6 +235,7 @@ function buildSportOverview(
     weekSessions,
     dailyKm,
     dailyDPlus,
+    dailyLabels,
     ytdKm,
     ytdDPlus,
     monthlyKm,
