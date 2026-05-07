@@ -37,7 +37,17 @@ export default async function ActivityDetailPage({
     try {
       const token = await getValidStravaToken(user.id)
       const detail = await fetchStravaActivity(token, Number(activity.provider_activity_id))
-      const stravaDetail = detail as unknown as { splits_metric?: unknown[] }
+      const stravaDetail = detail as unknown as { splits_metric?: unknown[]; calories?: number }
+
+      if (activity.calories == null && stravaDetail.calories != null) {
+        await supabase
+          .from('activities')
+          .update({ calories: stravaDetail.calories })
+          .eq('id', id)
+          .eq('user_id', user.id)
+        activity.calories = stravaDetail.calories
+      }
+
       if (Array.isArray(stravaDetail.splits_metric)) {
         splits = stravaDetail.splits_metric as unknown as StravaSplit[]
         // Cache splits in raw_payload for future requests
