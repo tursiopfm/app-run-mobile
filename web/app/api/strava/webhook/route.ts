@@ -48,14 +48,18 @@ export async function POST(request: NextRequest) {
 
   console.log('[webhook-recv]', event.object_type, event.aspect_type, event.object_id, event.owner_id)
 
+  const eventType = event.aspect_type
+    ? `${event.object_type}.${event.aspect_type}`
+    : (event.object_type ?? 'unknown')
+
   if (event.object_type !== 'activity') {
     // Log non-activity events too
     try {
       const client = serviceClient()
       await client.from('webhook_logs').insert({
         provider: 'strava',
-        event_type: event.aspect_type ? `${event.object_type}.${event.aspect_type}` : (event.object_type ?? 'unknown'),
-        user_id: event.owner_id ? await resolveUserId(Number(event.owner_id), client) : null,
+        event_type: eventType,
+        user_id: event.owner_id != null ? await resolveUserId(Number(event.owner_id), client) : null,
         status_code: 200,
         payload: event,
       })
@@ -66,8 +70,9 @@ export async function POST(request: NextRequest) {
   }
 
   let statusCode = 200
+  let activityUserId: string | null = null
   try {
-    await processActivityEvent(event)
+    activityUserId = await processActivityEvent(event)
   } catch (err) {
     console.error('[webhook-err]', event.object_id, String(err))
     statusCode = 500
@@ -78,8 +83,8 @@ export async function POST(request: NextRequest) {
     const client = serviceClient()
     await client.from('webhook_logs').insert({
       provider: 'strava',
-      event_type: event.aspect_type ? `${event.object_type}.${event.aspect_type}` : (event.object_type ?? 'unknown'),
-      user_id: event.owner_id ? await resolveUserId(Number(event.owner_id), client) : null,
+      event_type: eventType,
+      user_id: activityUserId,
       status_code: statusCode,
       payload: event,
     })
@@ -93,7 +98,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ ok: true })
 }
 
-async function processActivityEvent(event: StravaWebhookEvent) {
+async function processActivityEvent(event: StravaWebhookEvent): Promise<string | null> {
   const supabase = serviceClient()
 
   const { data: conn, error: connErr } = await supabase
@@ -115,7 +120,7 @@ async function processActivityEvent(event: StravaWebhookEvent) {
       .eq('user_id', userId)
       .eq('provider', 'strava')
       .eq('provider_activity_id', String(event.object_id))
-    return
+    return userId
   }
 
   const accessToken = await resolveAccessToken(supabase, userId, conn as ConnectionRow)
@@ -132,6 +137,7 @@ async function processActivityEvent(event: StravaWebhookEvent) {
   const normalized = stravaToNormalized(userId, stravaActivity)
   await upsertActivity(supabase, normalized)
   console.log('[webhook-ok]', event.object_id)
+  return userId
 }
 
 async function upsertActivity(
