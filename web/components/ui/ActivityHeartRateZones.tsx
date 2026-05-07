@@ -48,12 +48,18 @@ export function ActivityHeartRateZones({
   const maxHrForCalc = result.maxHrUsed ?? maxHr
   const sigma = maxHrForCalc * 0.10
 
-  const centers = result.zones.map(z =>
-    z.min == null ? Math.round(z.max * 0.70) : Math.round((z.min + z.max) / 2)
-  )
+  // Cap each zone at the activity's actual maxHr — zones above it get weight 0
+  const centers = result.zones.map(z => {
+    const zMin = z.min ?? 0
+    if (zMin >= maxHr) return null                         // zone entirely unreachable
+    const effectiveMax = Math.min(z.max, maxHr)
+    return z.min == null
+      ? Math.round(effectiveMax * 0.70)
+      : Math.round((zMin + effectiveMax) / 2)
+  })
 
   const rawWeights = centers.map(c =>
-    Math.exp(-0.5 * ((avgHr - c) / sigma) ** 2)
+    c === null ? 0 : Math.exp(-0.5 * ((avgHr - c) / sigma) ** 2)
   )
   const total = rawWeights.reduce((s, w) => s + w, 0)
 
