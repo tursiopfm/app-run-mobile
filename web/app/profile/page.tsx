@@ -32,7 +32,7 @@ export default async function ProfilePage() {
 
         <div className="px-1">
           <p className="text-[22px] font-black text-trail-text">{displayName}</p>
-          <p className="text-[13px] text-trail-muted">Ce profil sert à calibrer les zones de fréquence cardiaque et à mieux interpréter le niveau d'effort.</p>
+          <p className="text-[13px] text-trail-muted">Ce profil sert à calibrer les zones de fréquence cardiaque et à mieux interpréter le niveau d&apos;effort.</p>
         </div>
 
         <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px] space-y-2">
