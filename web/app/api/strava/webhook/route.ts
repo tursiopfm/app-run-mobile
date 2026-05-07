@@ -116,7 +116,7 @@ async function processActivityEvent(event: StravaWebhookEvent): Promise<string |
   if (event.aspect_type === 'delete') {
     await supabase
       .from('activities')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('user_id', userId)
       .eq('provider', 'strava')
       .eq('provider_activity_id', String(event.object_id))
