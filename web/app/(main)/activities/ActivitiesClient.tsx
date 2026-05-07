@@ -627,7 +627,9 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
           onNavigate={navigateToActivity}
           onReset={() => {
             sessionStorage.removeItem('tc_activities_search')
+            sessionStorage.removeItem('tc_activities_panel')
             setSearch(DEFAULT_SEARCH)
+            setPanel('none')
           }}
         />
       )}
