@@ -19,6 +19,16 @@ function serviceClient() {
   )
 }
 
+async function resolveUserId(stravaAthleteId: number, client: ReturnType<typeof serviceClient>) {
+  const { data } = await client
+    .from('provider_connections')
+    .select('user_id')
+    .eq('provider', 'strava')
+    .eq('provider_user_id', String(stravaAthleteId))
+    .single()
+  return data?.user_id ?? null
+}
+
 export async function GET(request: NextRequest) {
   const params    = request.nextUrl.searchParams
   const mode      = params.get('hub.mode')
@@ -39,16 +49,48 @@ export async function POST(request: NextRequest) {
   console.log('[webhook-recv]', event.object_type, event.aspect_type, event.object_id, event.owner_id)
 
   if (event.object_type !== 'activity') {
+    // Log non-activity events too
+    try {
+      const client = serviceClient()
+      await client.from('webhook_logs').insert({
+        provider: 'strava',
+        event_type: event.aspect_type ? `${event.object_type}.${event.aspect_type}` : (event.object_type ?? 'unknown'),
+        user_id: event.owner_id ? await resolveUserId(Number(event.owner_id), client) : null,
+        status_code: 200,
+        payload: event,
+      })
+    } catch {
+      // logging failure should not affect webhook response
+    }
     return NextResponse.json({ ok: true })
   }
 
+  let statusCode = 200
   try {
     await processActivityEvent(event)
-    return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('[webhook-err]', event.object_id, String(err))
+    statusCode = 500
+  }
+
+  // Log webhook event
+  try {
+    const client = serviceClient()
+    await client.from('webhook_logs').insert({
+      provider: 'strava',
+      event_type: event.aspect_type ? `${event.object_type}.${event.aspect_type}` : (event.object_type ?? 'unknown'),
+      user_id: event.owner_id ? await resolveUserId(Number(event.owner_id), client) : null,
+      status_code: statusCode,
+      payload: event,
+    })
+  } catch {
+    // logging failure should not affect webhook response
+  }
+
+  if (statusCode !== 200) {
     return NextResponse.json({ error: 'processing failed' }, { status: 500 })
   }
+  return NextResponse.json({ ok: true })
 }
 
 async function processActivityEvent(event: StravaWebhookEvent) {
