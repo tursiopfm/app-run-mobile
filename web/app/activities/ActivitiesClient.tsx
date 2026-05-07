@@ -6,6 +6,7 @@ import { ActivityCard, ActivityRow } from '@/components/ui/ActivityCard'
 import { EditActivityModal } from '@/components/ui/EditActivityModal'
 import { colors } from '@/lib/design/colors'
 import { sportLabel } from '@/lib/design/labels'
+import { INTENSITY_OPTIONS, guessIntensity } from '@/lib/activities/intensity'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type SearchField = 'Titre' | 'Distance' | 'Durée' | 'D+'
@@ -25,6 +26,7 @@ interface SearchState {
 
 interface FilterState {
   sport:     string
+  intensity: string
   dateFrom:  string  // YYYY-MM-DD (from <input type="date">)
   dateTo:    string
   distFrom:  string
@@ -48,6 +50,7 @@ const DEFAULT_SEARCH: SearchState = {
 
 const DEFAULT_FILTER: FilterState = {
   sport: 'Toutes',
+  intensity: 'Toutes',
   dateFrom: '', dateTo: '',
   distFrom: '', distTo: '',
   paceFrom: '', paceTo: '',
@@ -398,6 +401,24 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
             </div>
           </div>
 
+          {/* Intensité */}
+          <div>
+            <p className="text-[13px] font-semibold text-trail-text mb-[6px]">Intensité</p>
+            <div className="flex items-center gap-2">
+              <select
+                value={state.intensity}
+                onChange={e => setState({ ...state, intensity: e.target.value })}
+                className="rounded-[8px] border px-3 py-[7px] text-[13px] flex-1"
+                style={{ ...si, cursor: 'pointer' }}
+              >
+                <option value="Toutes">Toutes</option>
+                {INTENSITY_OPTIONS.map(opt => (
+                  <option key={opt.key} value={opt.key}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* Date — calendrier natif */}
           <div>
             <p className="text-[13px] font-semibold text-trail-text mb-[6px]">Date</p>
@@ -508,6 +529,12 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
     if (filter.sport !== 'Toutes') {
       list = list.filter(a => normalizeSportType(a.sport_type) === filter.sport)
     }
+    if (filter.intensity !== 'Toutes') {
+      list = list.filter(a => {
+        const key = (a.manual_intensity ?? guessIntensity(a.name, a.ces, a.manual_sport_type ?? a.sport_type))
+        return key === filter.intensity
+      })
+    }
     const dateFrom = parseDate(filter.dateFrom)
     const dateTo   = parseDate(filter.dateTo)
     if (dateFrom) list = list.filter(a => new Date(a.start_time) >= dateFrom)
@@ -551,6 +578,7 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
     || search.dPlusFrom !== '' || search.dPlusTo !== ''
 
   const hasActiveFilter = filter.sport !== 'Toutes'
+    || filter.intensity !== 'Toutes'
     || filter.dateFrom !== '' || filter.dateTo !== ''
     || filter.distFrom !== '' || filter.distTo !== ''
     || filter.paceFrom !== '' || filter.paceTo !== ''
