@@ -9,10 +9,10 @@ describe('ActivityHeartRateZones', () => {
   it('renders 5 zone rows', () => {
     render(<ActivityHeartRateZones avgHr={AVG_HR} maxHr={MAX_HR} movingTimeSec={MOVING_TIME} />)
     expect(screen.getByText(/Récupération/)).toBeInTheDocument()
+    expect(screen.getByText(/Endurance fondamentale/)).toBeInTheDocument()
     expect(screen.getByText(/Endurance active/)).toBeInTheDocument()
-    expect(screen.getByText(/Tempo/)).toBeInTheDocument()
     expect(screen.getByText(/Seuil/)).toBeInTheDocument()
-    expect(screen.getByText(/VO₂max/)).toBeInTheDocument()
+    expect(screen.getByText(/Très intense/)).toBeInTheDocument()
   })
 
   it('shows avgHr and maxHr in the header', () => {
