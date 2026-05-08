@@ -14,6 +14,7 @@ import type { StravaSplit } from '@/lib/activities/detail'
 import { sportLabel } from '@/lib/design/labels'
 import { guessIntensity } from '@/lib/activities/intensity'
 import { calculateHrZones, type HrZoneMethod } from '@/lib/health/hr-zones'
+import { Dumbbell } from 'lucide-react'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -104,16 +105,6 @@ function cesColor(ces: number): { bg: string; border: string; color: string } {
   return                 { bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.35)',   color: '#ef4444' }
 }
 
-function DumbbellIcon() {
-  return (
-    <svg width="15" height="9" viewBox="0 0 32 14" fill="currentColor" style={{ flexShrink: 0 }}>
-      <rect x="0" y="1" width="6" height="12" rx="2"/>
-      <rect x="6" y="5.5" width="20" height="3" rx="1.5"/>
-      <rect x="26" y="1" width="6" height="12" rx="2"/>
-    </svg>
-  )
-}
-
 function EffortBadge({ ces, onClick }: { ces: number | null; onClick?: () => void }) {
   if (ces === null) return null
   const c = cesColor(Math.round(ces))
@@ -128,7 +119,7 @@ function EffortBadge({ ces, onClick }: { ces: number | null; onClick?: () => voi
         cursor: onClick ? 'pointer' : undefined,
       }}
     >
-      <DumbbellIcon />
+      <Dumbbell size={14} strokeWidth={2.2} />
       {Math.round(ces)}
     </span>
   )

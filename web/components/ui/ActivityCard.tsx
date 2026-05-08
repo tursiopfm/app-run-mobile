@@ -6,6 +6,7 @@ import { sportLabel } from '@/lib/design/labels'
 import { guessIntensity } from '@/lib/activities/intensity'
 import type { HrZone } from '@/lib/health/hr-zones'
 import { EffortPopup, IntensityPopup } from '@/components/ui/ActivityPopups'
+import { Dumbbell } from 'lucide-react'
 
 const INTENSITY_EMOJI: Record<string, string> = {
   footing:       '🦶',
@@ -219,11 +220,7 @@ export function ActivityCard({
                 className="flex items-center justify-center text-[18px] font-bold leading-none"
                 style={{ color: effortColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}
               >
-                <svg width="14" height="9" viewBox="0 0 32 14" fill="currentColor" style={{ flexShrink: 0 }}>
-                  <rect x="0" y="1" width="6" height="12" rx="2"/>
-                  <rect x="6" y="5.5" width="20" height="3" rx="1.5"/>
-                  <rect x="26" y="1" width="6" height="12" rx="2"/>
-                </svg>
+                <Dumbbell size={14} strokeWidth={2.2} />
                 {ces}
               </button>
               <button

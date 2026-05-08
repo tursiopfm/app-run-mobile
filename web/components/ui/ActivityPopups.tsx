@@ -2,6 +2,7 @@
 
 import { colors } from '@/lib/design/colors'
 import { INTENSITY_OPTIONS } from '@/lib/activities/intensity'
+import { Dumbbell } from 'lucide-react'
 
 const INTENSITY_EMOJI: Record<string, string> = {
   footing:       '🦶',
@@ -49,11 +50,7 @@ export function EffortPopup({ ces, onClose }: { ces: number | null; onClose: () 
         onClick={e => e.stopPropagation()}
       >
         <p className="text-[18px] font-bold text-white mb-2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <svg width="18" height="11" viewBox="0 0 32 14" fill="currentColor" style={{ flexShrink: 0 }}>
-            <rect x="0" y="1" width="6" height="12" rx="2"/>
-            <rect x="6" y="5.5" width="20" height="3" rx="1.5"/>
-            <rect x="26" y="1" width="6" height="12" rx="2"/>
-          </svg>
+          <Dumbbell size={20} strokeWidth={2.2} />
           Charge d&apos;entraînement (CES)
         </p>
         <p className="text-[14px] mb-4" style={{ color: colors.subtleText }}>
