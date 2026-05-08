@@ -116,15 +116,11 @@ function buildConfidenceAndWarnings(
   let confidence: CesConfidence = 'high'
 
   // Pas d'allure seuil personnalisée pour run/trail
-  if ((sport === 'run' || sport === 'trail_run') && ifResult.model !== 'pace_threshold') {
+  if (sport === 'run' && !profile.threshold_pace_run_sec_per_km) {
     warnings.push("Score calculé avec une allure seuil par défaut. Renseigne ton allure seuil pour améliorer la précision.")
     confidence = 'low'
-  } else if (sport === 'run' && ifResult.model === 'pace_threshold' && !profile.threshold_pace_run_sec_per_km) {
-    // Run mais utilise allure seuil défaut config
-    warnings.push("Score calculé avec une allure seuil par défaut. Renseigne ton allure seuil pour améliorer la précision.")
-    confidence = 'low'
-  } else if (sport === 'trail_run' && ifResult.model === 'pace_threshold' && !profile.threshold_pace_trail_sec_per_km) {
-    warnings.push("Score trail calculé avec l'allure seuil run. Renseigne une allure seuil trail pour plus de précision.")
+  } else if (sport === 'trail_run' && !profile.threshold_pace_trail_sec_per_km) {
+    warnings.push("Score trail calculé avec une allure seuil par défaut. Renseigne ton allure seuil trail pour plus de précision.")
     confidence = 'medium'
   }
 
