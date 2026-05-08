@@ -571,7 +571,7 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
     }
     if (filter.intensity !== 'Toutes') {
       list = list.filter(a => {
-        const key = (a.manual_intensity ?? guessIntensity(a.name, a.ces, a.manual_sport_type ?? a.sport_type, a.avg_hr, hrZones))
+        const key = (a.manual_intensity ?? guessIntensity(a.name, a.manual_sport_type ?? a.sport_type, a.avg_hr, hrZones))
         return key === filter.intensity
       })
     }

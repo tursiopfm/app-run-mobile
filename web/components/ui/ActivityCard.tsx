@@ -156,7 +156,7 @@ export function ActivityCard({
   const ces   = a.ces != null ? Math.round(a.ces).toString() : '—'
   const fourth = fourthMetric(effectiveSport, effectiveDistance, effectiveDuration, a.ces)
 
-  const intensityKey   = (a.manual_intensity as string | null) ?? guessIntensity(a.name, a.ces, effectiveSport, a.avg_hr, hrZones)
+  const intensityKey   = (a.manual_intensity as string | null) ?? guessIntensity(a.name, effectiveSport, a.avg_hr, hrZones)
   const intensityEmoji = INTENSITY_EMOJI[intensityKey] ?? '❓'
   const cesVal = a.ces ?? 0
   const effortColor =

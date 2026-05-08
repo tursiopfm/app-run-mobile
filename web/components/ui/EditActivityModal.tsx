@@ -104,7 +104,7 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
   )
   const [sport,     setSport]     = useState(effectiveSport)
   const [intensity, setIntensity] = useState<IntensityKey>(
-    (a.manual_intensity as IntensityKey | null) ?? guessIntensity(a.name, a.ces, effectiveSport)
+    (a.manual_intensity as IntensityKey | null) ?? guessIntensity(a.name, effectiveSport)
   )
 
   function availableIntensities(s: string) {
