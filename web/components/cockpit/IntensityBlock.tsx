@@ -20,6 +20,14 @@ const INTENSITY_COLORS: Record<string, string> = {
   'Runtaf':         colors.pieRuntaf,
 }
 
+const INTENSITY_EMOJI: Record<string, string> = {
+  'Footing':        '🦶',
+  'Sortie longue':  '🐢',
+  'Seuil':          '🎯',
+  'VMA':            '🔥',
+  'Runtaf':         '🏃',
+}
+
 type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
 export function IntensityBlock({ sportOverviews, onHide }: Props) {
@@ -107,6 +115,7 @@ export function IntensityBlock({ sportOverviews, onHide }: Props) {
             label: s.label,
             value: s.km,
             color: INTENSITY_COLORS[s.label] ?? colors.pieAutre,
+            emoji: INTENSITY_EMOJI[s.label],
           }))
 
           return (
