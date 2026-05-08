@@ -687,7 +687,7 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path
                 d="M4 6h16M7 12h10M10 18h4"
-                stroke={hasActiveFilter ? colors.seriesYellow : colors.chargeOrange}
+                stroke={hasActiveFilter ? colors.chargeOrange : colors.subtleText}
                 strokeWidth="2"
                 strokeLinecap="round"
               />
