@@ -35,3 +35,42 @@ describe('hrZoneForAvgHr', () => {
     expect(hrZoneForAvgHr(210, zones)).toBe(5)
   })
 })
+
+describe('zone names', () => {
+  it('correct for all 5 zones', () => {
+    const { zones } = calculateHrZones({ method: 'pct_max', maxHr: 195 })
+    expect(zones[0].name).toBe('Récupération')
+    expect(zones[1].name).toBe('Endurance fondamentale')
+    expect(zones[2].name).toBe('Endurance active')
+    expect(zones[3].name).toBe('Seuil')
+    expect(zones[4].name).toBe('Très intense')
+  })
+})
+
+describe('pct_max FCmax 195 — no overlap', () => {
+  const { zones } = calculateHrZones({ method: 'pct_max', maxHr: 195 })
+  it('Z1 max = 140', () => expect(zones[0].max).toBe(140))
+  it('Z2 min = 141, max = 152', () => { expect(zones[1].min).toBe(141); expect(zones[1].max).toBe(152) })
+  it('Z3 min = 153, max = 166', () => { expect(zones[2].min).toBe(153); expect(zones[2].max).toBe(166) })
+  it('Z4 min = 167, max = 179', () => { expect(zones[3].min).toBe(167); expect(zones[3].max).toBe(179) })
+  it('Z5 min = 180, max = 195', () => { expect(zones[4].min).toBe(180); expect(zones[4].max).toBe(195) })
+  it('no overlap between any zones', () => {
+    for (let i = 1; i < zones.length; i++) {
+      expect(zones[i].min).toBe((zones[i - 1].max as number) + 1)
+    }
+  })
+})
+
+describe('karvonen FCmax 195 FCrepos 57 — no overlap', () => {
+  const { zones } = calculateHrZones({ method: 'karvonen', maxHr: 195, restingHr: 57 })
+  it('Z1 max = 140', () => expect(zones[0].max).toBe(140))
+  it('Z2 min = 141, max = 154', () => { expect(zones[1].min).toBe(141); expect(zones[1].max).toBe(154) })
+  it('Z3 min = 155, max = 167', () => { expect(zones[2].min).toBe(155); expect(zones[2].max).toBe(167) })
+  it('Z4 min = 168, max = 181', () => { expect(zones[3].min).toBe(168); expect(zones[3].max).toBe(181) })
+  it('Z5 min = 182, max = 195', () => { expect(zones[4].min).toBe(182); expect(zones[4].max).toBe(195) })
+  it('no overlap between any zones', () => {
+    for (let i = 1; i < zones.length; i++) {
+      expect(zones[i].min).toBe((zones[i - 1].max as number) + 1)
+    }
+  })
+})

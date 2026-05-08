@@ -16,7 +16,7 @@ export type HrZoneResult = {
   missing:    string[]
 }
 
-const ZONE_NAMES  = ['Récupération', 'Endurance active', 'Tempo / vallonné', 'Seuil', 'VO₂max / intensif']
+const ZONE_NAMES  = ['Récupération', 'Endurance fondamentale', 'Endurance active', 'Seuil', 'Très intense']
 const ZONE_COLORS = ['#4caf50', '#38bdf8', '#f59e0b', '#e8651a', '#ef4444']
 
 function makeZones(ranges: [number | null, number][]): HrZone[] {
@@ -29,11 +29,12 @@ function makeZones(ranges: [number | null, number][]): HrZone[] {
   }))
 }
 
-function pctRanges(base: number, pcts: [number, number | null][], maxHr: number): [number | null, number][] {
-  return pcts.map(([lo, hi], i) => [
-    i === 0 && lo === 0 ? null : Math.round(base * lo),
-    hi == null ? maxHr : Math.round(base * hi),
-  ])
+/**
+ * Builds zone ranges from an array of max values per zone.
+ * min of zone N = max of zone N-1 + 1 (no overlap, no gap).
+ */
+function pctRanges(maxes: number[]): [number | null, number][] {
+  return maxes.map((max, i) => [i === 0 ? null : maxes[i - 1] + 1, max])
 }
 
 export function hrZoneForAvgHr(avgHr: number, zones: HrZone[]): number | null {
@@ -81,45 +82,30 @@ export function calculateHrZones(params: {
       const max  = need(maxHr, 'FC max')
       const lthr = need(thresholdHr, 'Seuil anaérobie / LTHR')
       if (!max || !lthr) return { zones: [], method, confidence: 'Très bien', maxHrUsed: max ?? null, missing }
-      return {
-        zones: makeZones(pctRanges(lthr, [[0, 0.85], [0.85, 0.89], [0.90, 0.94], [0.95, 0.99], [1.0, null]], max)),
-        method, confidence: 'Très bien', maxHrUsed: max, missing,
-      }
+      const maxes = [0.85, 0.89, 0.94, 0.99].map(p => Math.round(lthr * p)).concat([max])
+      return { zones: makeZones(pctRanges(maxes)), method, confidence: 'Très bien', maxHrUsed: max, missing }
     }
     case 'karvonen': {
       const max  = need(maxHr, 'FC max')
       const rest = need(restingHr, 'FC repos')
       if (!max || !rest) return { zones: [], method, confidence: 'Bien', maxHrUsed: max ?? null, missing }
       const reserve = max - rest
-      const t = (pct: number) => Math.round(rest + pct * reserve)
-      return {
-        zones: makeZones([
-          [null,    t(0.60)],
-          [t(0.60), t(0.70)],
-          [t(0.70), t(0.80)],
-          [t(0.80), t(0.90)],
-          [t(0.90), max],
-        ]),
-        method, confidence: 'Bien', maxHrUsed: max, missing,
-      }
+      const maxes = [0.60, 0.70, 0.80, 0.90].map(p => Math.round(rest + p * reserve)).concat([max])
+      return { zones: makeZones(pctRanges(maxes)), method, confidence: 'Bien', maxHrUsed: max, missing }
     }
     case 'pct_max': {
       const max = need(maxHr, 'FC max')
       if (!max) return { zones: [], method, confidence: 'Correcte', maxHrUsed: null, missing }
-      return {
-        zones: makeZones(pctRanges(max, [[0, 0.72], [0.72, 0.78], [0.78, 0.85], [0.85, 0.92], [0.92, null]], max)),
-        method, confidence: 'Correcte', maxHrUsed: max, missing,
-      }
+      const maxes = [0.72, 0.78, 0.85, 0.92].map(p => Math.round(max * p)).concat([max])
+      return { zones: makeZones(pctRanges(maxes)), method, confidence: 'Correcte', maxHrUsed: max, missing }
     }
     case 'auto': {
       const by = need(birthYear, 'Année de naissance')
       if (!by) return { zones: [], method, confidence: 'Approximative', maxHrUsed: null, missing }
       const age = new Date().getFullYear() - by
       const estMax = Math.round(208 - 0.7 * age)
-      return {
-        zones: makeZones(pctRanges(estMax, [[0, 0.72], [0.72, 0.78], [0.78, 0.85], [0.85, 0.92], [0.92, null]], estMax)),
-        method, confidence: 'Approximative', maxHrUsed: estMax, missing,
-      }
+      const maxes = [0.72, 0.78, 0.85, 0.92].map(p => Math.round(estMax * p)).concat([estMax])
+      return { zones: makeZones(pctRanges(maxes)), method, confidence: 'Approximative', maxHrUsed: estMax, missing }
     }
     default:
       return { zones: [], method, confidence: 'Personnalisée', maxHrUsed: null, missing }
