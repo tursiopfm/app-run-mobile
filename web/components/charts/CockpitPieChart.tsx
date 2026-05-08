@@ -76,7 +76,7 @@ export function CockpitPieChart({ data, height = chart.minHeight }: Props) {
               <div key={entry.label} className="flex items-center gap-[5px] min-w-0">
                 <span
                   className="flex-shrink-0 rounded-sm"
-                  style={{ width: 8, height: 8, backgroundColor: entry.color }}
+                  style={{ width: 11, height: 11, backgroundColor: entry.color }}
                 />
                 {entry.emoji && (
                   <span className="flex-shrink-0 text-[13px] leading-none">{entry.emoji}</span>
