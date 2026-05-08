@@ -107,18 +107,12 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
     (a.manual_intensity as IntensityKey | null) ?? guessIntensity(a.name, effectiveSport)
   )
 
-  function availableIntensities(s: string) {
-    return INTENSITY_OPTIONS.filter(({ key }) => {
-      if (key === 'runtaf')  return s === 'Run'
-      if (key === 'velotaf') return s === 'Ride' || s === 'EBikeRide'
-      return true
-    })
+  function availableIntensities(_s: string) {
+    return INTENSITY_OPTIONS
   }
 
   function handleSportChange(s: string) {
     setSport(s)
-    const available = availableIntensities(s).map(i => i.key)
-    if (!available.includes(intensity)) setIntensity('autre')
   }
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState<string | null>(null)

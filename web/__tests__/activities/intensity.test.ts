@@ -152,8 +152,8 @@ describe('guessWorkoutType', () => {
 })
 
 describe('INTENSITY_OPTIONS', () => {
-  it('has 11 entries (IntensityKey for UI — includes recuperation + endurance_active)', () => {
-    expect(INTENSITY_OPTIONS).toHaveLength(11)
+  it('has 8 entries (workout types runtaf/velotaf/course removed — kept in WorkoutType only)', () => {
+    expect(INTENSITY_OPTIONS).toHaveLength(8)
   })
 })
 

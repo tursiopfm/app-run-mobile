@@ -8,7 +8,7 @@ import { hrZoneForAvgHr } from '@/lib/health/hr-zones'
 export type IntensityKey =
   | 'recuperation' | 'footing' | 'endurance_active'
   | 'sortie_longue' | 'cotes' | 'vma'
-  | 'seuil' | 'runtaf' | 'velotaf' | 'course' | 'autre'
+  | 'seuil' | 'autre'
 
 /** Type de séance déduit du nom — orthogonal à l'intensité cardiaque */
 export type WorkoutType =
@@ -31,9 +31,6 @@ export const INTENSITY_OPTIONS: IntensityOption[] = [
   { key: 'cotes',            label: '⛰️ Côtes'            },
   { key: 'vma',              label: '🔥 VMA'              },
   { key: 'seuil',            label: '🎯 Seuil'            },
-  { key: 'runtaf',           label: '🏃‍♂️🏢 Runtaf'    },
-  { key: 'velotaf',          label: '🚴🏻🏢 Vélotaf'   },
-  { key: 'course',           label: '🏁 Course'           },
   { key: 'autre',            label: '❓ Autre'             },
 ]
 
