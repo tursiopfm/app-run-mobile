@@ -157,6 +157,10 @@ export function ActivityCard({
 
   const intensityKey   = (a.manual_intensity as string | null) ?? guessIntensity(a.name, a.ces, effectiveSport, a.avg_hr, hrZones)
   const intensityEmoji = INTENSITY_EMOJI[intensityKey] ?? '❓'
+  const effortColor = ({
+    footing: '#4ade80', sortie_longue: '#38bdf8', cotes: '#38bdf8',
+    seuil: '#ffa500', vma: '#ef4444', runtaf: '#ef4444', course: '#ef4444',
+  } as Record<string, string>)[intensityKey] ?? colors.seriesYellow
 
   return (
     <>
@@ -211,7 +215,7 @@ export function ActivityCard({
               <button
                 onClick={(e) => { e.stopPropagation(); setPopup('effort') }}
                 className="flex items-center justify-center text-[18px] font-bold leading-none"
-                style={{ color: colors.seriesYellow, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                style={{ color: effortColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
               >
                 ⚡ {ces}
               </button>

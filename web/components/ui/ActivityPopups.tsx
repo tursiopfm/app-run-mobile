@@ -28,11 +28,11 @@ const INTENSITY_DESC: Record<string, string> = {
 }
 
 export const CES_RANGES = [
-  { min: 0,   max: 30,  label: '0–30',   desc: 'Très facile (récup)' },
-  { min: 31,  max: 60,  label: '31–60',  desc: 'Modéré (footing)' },
-  { min: 61,  max: 90,  label: '61–90',  desc: 'Intense (seuil)' },
-  { min: 91,  max: 120, label: '91–120', desc: 'Très intense (VMA)' },
-  { min: 121, max: Infinity, label: '120+', desc: 'Effort extrême (course)' },
+  { min: 0,   max: 40,  label: '0–40',    desc: 'Séance légère (récup, mobilité)' },
+  { min: 41,  max: 80,  label: '41–80',   desc: 'Charge modérée (footing, sortie courte)' },
+  { min: 81,  max: 130, label: '81–130',  desc: 'Charge significative (sortie longue, tempo)' },
+  { min: 131, max: 200, label: '131–200', desc: 'Charge élevée (trail avec D+, compétition)' },
+  { min: 201, max: Infinity, label: '200+', desc: 'Charge très élevée (ultra, effort prolongé)' },
 ]
 
 export function EffortPopup({ ces, onClose }: { ces: number | null; onClose: () => void }) {
@@ -50,7 +50,7 @@ export function EffortPopup({ ces, onClose }: { ces: number | null; onClose: () 
       >
         <p className="text-[18px] font-bold text-white mb-2">⚡ Score d&apos;effort (CES)</p>
         <p className="text-[14px] mb-4" style={{ color: colors.subtleText }}>
-          Ce chiffre mesure à quel point ton corps a travaillé pendant cette séance. Plus c&apos;est grand, plus c&apos;était dur !
+          La CES mesure la charge d&apos;entraînement globale — durée × intensité × dénivelé. Une longue sortie en endurance peut avoir une CES élevée. L&apos;emoji d&apos;intensité (🦶🐢🎯🔥) reflète l&apos;effort physiologique réel via les zones FC.
         </p>
         <div className="space-y-[6px]">
           {CES_RANGES.map(r => {
