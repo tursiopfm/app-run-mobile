@@ -157,10 +157,12 @@ export function ActivityCard({
 
   const intensityKey   = (a.manual_intensity as string | null) ?? guessIntensity(a.name, a.ces, effectiveSport, a.avg_hr, hrZones)
   const intensityEmoji = INTENSITY_EMOJI[intensityKey] ?? '❓'
-  const effortColor = ({
-    footing: '#4ade80', sortie_longue: '#38bdf8', cotes: '#38bdf8',
-    seuil: '#ffa500', vma: '#ef4444', runtaf: '#ef4444', course: '#ef4444',
-  } as Record<string, string>)[intensityKey] ?? colors.seriesYellow
+  const cesVal = a.ces ?? 0
+  const effortColor =
+    cesVal <= 40  ? '#38bdf8' :
+    cesVal <= 80  ? '#4ade80' :
+    cesVal <= 130 ? '#fbbf24' :
+    cesVal <= 200 ? '#f97316' : '#ef4444'
 
   return (
     <>
@@ -215,9 +217,14 @@ export function ActivityCard({
               <button
                 onClick={(e) => { e.stopPropagation(); setPopup('effort') }}
                 className="flex items-center justify-center text-[18px] font-bold leading-none"
-                style={{ color: effortColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                style={{ color: effortColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}
               >
-                ⚡ {ces}
+                <svg width="14" height="9" viewBox="0 0 32 14" fill="currentColor" style={{ flexShrink: 0 }}>
+                  <rect x="0" y="1" width="6" height="12" rx="2"/>
+                  <rect x="6" y="5.5" width="20" height="3" rx="1.5"/>
+                  <rect x="26" y="1" width="6" height="12" rx="2"/>
+                </svg>
+                {ces}
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); setPopup('intensity') }}

@@ -28,11 +28,11 @@ const INTENSITY_DESC: Record<string, string> = {
 }
 
 export const CES_RANGES = [
-  { min: 0,   max: 40,  label: '0–40',    desc: 'Séance légère (récup, mobilité)' },
-  { min: 41,  max: 80,  label: '41–80',   desc: 'Charge modérée (footing, sortie courte)' },
-  { min: 81,  max: 130, label: '81–130',  desc: 'Charge significative (sortie longue, tempo)' },
-  { min: 131, max: 200, label: '131–200', desc: 'Charge élevée (trail avec D+, compétition)' },
-  { min: 201, max: Infinity, label: '200+', desc: 'Charge très élevée (ultra, effort prolongé)' },
+  { min: 0,   max: 40,  label: '0–40',    desc: 'Séance légère (récup, mobilité)',             color: '#38bdf8' },
+  { min: 41,  max: 80,  label: '41–80',   desc: 'Charge modérée (footing, sortie courte)',     color: '#4ade80' },
+  { min: 81,  max: 130, label: '81–130',  desc: 'Charge significative (sortie longue, tempo)', color: '#fbbf24' },
+  { min: 131, max: 200, label: '131–200', desc: 'Charge élevée (trail avec D+, compétition)',  color: '#f97316' },
+  { min: 201, max: Infinity, label: '200+', desc: 'Charge très élevée (ultra, effort prolongé)', color: '#ef4444' },
 ]
 
 export function EffortPopup({ ces, onClose }: { ces: number | null; onClose: () => void }) {
@@ -48,7 +48,14 @@ export function EffortPopup({ ces, onClose }: { ces: number | null; onClose: () 
         style={{ backgroundColor: colors.cardBg }}
         onClick={e => e.stopPropagation()}
       >
-        <p className="text-[18px] font-bold text-white mb-2">⚡ Score d&apos;effort (CES)</p>
+        <p className="text-[18px] font-bold text-white mb-2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <svg width="18" height="11" viewBox="0 0 32 14" fill="currentColor" style={{ flexShrink: 0 }}>
+            <rect x="0" y="1" width="6" height="12" rx="2"/>
+            <rect x="6" y="5.5" width="20" height="3" rx="1.5"/>
+            <rect x="26" y="1" width="6" height="12" rx="2"/>
+          </svg>
+          Charge d&apos;entraînement (CES)
+        </p>
         <p className="text-[14px] mb-4" style={{ color: colors.subtleText }}>
           La CES mesure la charge d&apos;entraînement globale — durée × intensité × dénivelé. Une longue sortie en endurance peut avoir une CES élevée. L&apos;emoji d&apos;intensité (🦶🐢🎯🔥) reflète l&apos;effort physiologique réel via les zones FC.
         </p>
@@ -60,19 +67,19 @@ export function EffortPopup({ ces, onClose }: { ces: number | null; onClose: () 
                 key={r.label}
                 className="flex items-center justify-between rounded-[10px] px-3 py-[8px]"
                 style={{
-                  backgroundColor: active ? `${colors.chargeOrange}26` : 'transparent',
-                  border: active ? `1px solid ${colors.chargeOrange}60` : '1px solid transparent',
+                  backgroundColor: active ? `${r.color}22` : 'transparent',
+                  border: active ? `1px solid ${r.color}55` : '1px solid transparent',
                 }}
               >
                 <span
-                  className="text-[13px] font-semibold"
-                  style={{ color: active ? colors.chargeOrange : colors.subtleText }}
+                  className="text-[13px] font-bold"
+                  style={{ color: r.color, opacity: active ? 1 : 0.55 }}
                 >
                   {r.label}
                 </span>
                 <span
                   className="text-[13px]"
-                  style={{ color: active ? colors.chargeOrange : colors.subtleText }}
+                  style={{ color: r.color, opacity: active ? 1 : 0.55 }}
                 >
                   {r.desc}
                 </span>

@@ -96,32 +96,40 @@ function IntensityEmoji({ intensity, onClick }: { intensity: string | null; onCl
   )
 }
 
-const EFFORT_COLORS: Record<string, { bg: string; border: string; color: string }> = {
-  footing:       { bg: 'rgba(74,222,128,0.12)',  border: 'rgba(74,222,128,0.35)',  color: '#4ade80' },
-  sortie_longue: { bg: 'rgba(56,189,248,0.12)',  border: 'rgba(56,189,248,0.35)',  color: '#38bdf8' },
-  cotes:         { bg: 'rgba(56,189,248,0.12)',  border: 'rgba(56,189,248,0.35)',  color: '#38bdf8' },
-  seuil:         { bg: 'rgba(255,165,0,0.12)',   border: 'rgba(255,165,0,0.35)',   color: '#ffa500' },
-  vma:           { bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.35)',   color: '#ef4444' },
-  runtaf:        { bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.35)',   color: '#ef4444' },
-  course:        { bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.35)',   color: '#ef4444' },
+function cesColor(ces: number): { bg: string; border: string; color: string } {
+  if (ces <= 40)  return { bg: 'rgba(56,189,248,0.12)',  border: 'rgba(56,189,248,0.35)',  color: '#38bdf8' }
+  if (ces <= 80)  return { bg: 'rgba(74,222,128,0.12)',  border: 'rgba(74,222,128,0.35)',  color: '#4ade80' }
+  if (ces <= 130) return { bg: 'rgba(251,191,36,0.12)',  border: 'rgba(251,191,36,0.35)',  color: '#fbbf24' }
+  if (ces <= 200) return { bg: 'rgba(249,115,22,0.12)',  border: 'rgba(249,115,22,0.35)',  color: '#f97316' }
+  return                 { bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.35)',   color: '#ef4444' }
 }
-const DEFAULT_EFFORT_COLORS = { bg: 'rgba(255,193,7,0.10)', border: 'rgba(255,193,7,0.35)', color: '#ffc107' }
 
-function EffortBadge({ ces, intensityKey, onClick }: { ces: number | null; intensityKey?: string | null; onClick?: () => void }) {
+function DumbbellIcon() {
+  return (
+    <svg width="15" height="9" viewBox="0 0 32 14" fill="currentColor" style={{ flexShrink: 0 }}>
+      <rect x="0" y="1" width="6" height="12" rx="2"/>
+      <rect x="6" y="5.5" width="20" height="3" rx="1.5"/>
+      <rect x="26" y="1" width="6" height="12" rx="2"/>
+    </svg>
+  )
+}
+
+function EffortBadge({ ces, onClick }: { ces: number | null; onClick?: () => void }) {
   if (ces === null) return null
-  const c = (intensityKey ? EFFORT_COLORS[intensityKey] : undefined) ?? DEFAULT_EFFORT_COLORS
+  const c = cesColor(Math.round(ces))
   return (
     <span
       onClick={onClick}
       style={{
-        display: 'flex', alignItems: 'center', gap: 3,
+        display: 'flex', alignItems: 'center', gap: 5,
         background: c.bg, border: `1px solid ${c.border}`,
         padding: '4px 12px', borderRadius: 20,
         fontSize: 13, fontWeight: 800, color: c.color,
         cursor: onClick ? 'pointer' : undefined,
       }}
     >
-      ⚡ Effort {Math.round(ces)}
+      <DumbbellIcon />
+      {Math.round(ces)}
     </span>
   )
 }
@@ -413,7 +421,7 @@ export function ActivityDetailClient({
               <SportBadge type={effectiveSport} />
               <IntensityEmoji intensity={intensityKey} onClick={() => setPopup('intensity')} />
             </div>
-            <EffortBadge ces={a.ces} intensityKey={intensityKey} onClick={() => setPopup('effort')} />
+            <EffortBadge ces={a.ces} onClick={() => setPopup('effort')} />
           </div>
           <div style={{ fontSize: 17, fontWeight: 800, color: '#f0f2f8', lineHeight: 1.15, marginBottom: 3 }}>
             {a.name}
