@@ -37,7 +37,6 @@ function PctLabel(props: {
 }
 
 export function CockpitPieChart({ data, height = chart.minHeight }: Props) {
-  const total = data.reduce((s, d) => s + d.value, 0)
   const empty = data.length === 0
   const renderData = empty ? [{ label: '', value: 1, color: '#1E3530' }] : data
 
@@ -73,7 +72,6 @@ export function CockpitPieChart({ data, height = chart.minHeight }: Props) {
           <span className="text-[14px] text-trail-muted">Aucune donnée</span>
         ) : (
           data.map((entry) => {
-            const pct = total > 0 ? Math.round((entry.value / total) * 100) : 0
             return (
               <div key={entry.label} className="flex items-center gap-[5px] min-w-0">
                 <span
@@ -83,12 +81,9 @@ export function CockpitPieChart({ data, height = chart.minHeight }: Props) {
                 {entry.emoji && (
                   <span className="flex-shrink-0 text-[13px] leading-none">{entry.emoji}</span>
                 )}
-                <span className="text-[13px] text-trail-muted truncate flex-1">{entry.label}</span>
+                <span className="text-[13px] font-bold text-trail-text truncate flex-1">{entry.label}</span>
                 <span className="text-[13px] font-semibold text-trail-text flex-shrink-0">
                   {entry.value.toFixed(1)} km
-                </span>
-                <span className="text-[11px] text-trail-muted flex-shrink-0 w-[28px] text-right">
-                  {pct}%
                 </span>
               </div>
             )
