@@ -17,7 +17,16 @@ function FitBounds({ positions }: { positions: LatLng[] }) {
   return null
 }
 
-export function ActivityMap({ encodedPolyline }: { encodedPolyline: string }) {
+function MapResizer({ expanded }: { expanded: boolean }) {
+  const map = useMap()
+  useEffect(() => {
+    const timer = setTimeout(() => map.invalidateSize(), 310)
+    return () => clearTimeout(timer)
+  }, [map, expanded])
+  return null
+}
+
+export function ActivityMap({ encodedPolyline, expanded = false }: { encodedPolyline: string; expanded?: boolean }) {
   const positions = useMemo<LatLng[]>(
     () => (encodedPolyline ? polylineLib.decode(encodedPolyline) as LatLng[] : []),
     [encodedPolyline]
@@ -50,6 +59,7 @@ export function ActivityMap({ encodedPolyline }: { encodedPolyline: string }) {
         <CircleMarker center={end} radius={7} pathOptions={{ color: '#fff', weight: 2, fillColor: '#e8651a', fillOpacity: 1 }} />
       )}
       <FitBounds positions={positions} />
+      <MapResizer expanded={expanded} />
     </MapContainer>
   )
 }

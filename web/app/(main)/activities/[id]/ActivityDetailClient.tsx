@@ -304,7 +304,7 @@ export function ActivityDetailClient({
         isolation: 'isolate',
       }}>
         <div style={{ width: '100%', height: '100%' }}>
-          {polyline ? <DynamicActivityMap encodedPolyline={polyline} /> : <ActivityMapPlaceholder />}
+          {polyline ? <DynamicActivityMap encodedPolyline={polyline} expanded={mapExpanded} /> : <ActivityMapPlaceholder />}
         </div>
 
         {/* Back button */}
