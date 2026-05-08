@@ -111,3 +111,33 @@ export function calculateHrZones(params: {
       return { zones: [], method, confidence: 'Personnalisée', maxHrUsed: null, missing }
   }
 }
+
+export type HrZoneRecommendation = {
+  mode:          HrZoneMethod
+  confidence:    'high' | 'good' | 'medium' | 'low' | 'very_low' | null
+  canCompute:    boolean
+  missingFields: string[]
+}
+
+export function getRecommendedHeartRateZoneMode(profile: {
+  max_hr?:               number | null
+  aerobic_threshold_hr?: number | null
+  threshold_hr?:         number | null
+  resting_hr?:           number | null
+  birth_year?:           number | null
+}): HrZoneRecommendation {
+  const { max_hr, aerobic_threshold_hr, threshold_hr, resting_hr, birth_year } = profile
+
+  if (max_hr && aerobic_threshold_hr && threshold_hr)
+    return { mode: 'seuils',   confidence: 'high',     canCompute: true,  missingFields: [] }
+  if (max_hr && threshold_hr)
+    return { mode: 'test30',   confidence: 'good',     canCompute: true,  missingFields: [] }
+  if (max_hr && resting_hr)
+    return { mode: 'karvonen', confidence: 'medium',   canCompute: true,  missingFields: [] }
+  if (max_hr)
+    return { mode: 'pct_max',  confidence: 'low',      canCompute: true,  missingFields: [] }
+  if (birth_year)
+    return { mode: 'auto',     confidence: 'very_low', canCompute: true,  missingFields: ['FC max'] }
+
+  return { mode: 'pct_max', confidence: null, canCompute: false, missingFields: ['FC max'] }
+}

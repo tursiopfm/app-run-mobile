@@ -1,4 +1,4 @@
-import { calculateHrZones, hrZoneForAvgHr } from '@/lib/health/hr-zones'
+import { calculateHrZones, hrZoneForAvgHr, getRecommendedHeartRateZoneMode } from '@/lib/health/hr-zones'
 
 describe('hrZoneForAvgHr', () => {
   const zones = calculateHrZones({ method: 'karvonen', maxHr: 195, restingHr: 57 }).zones
@@ -72,5 +72,50 @@ describe('karvonen FCmax 195 FCrepos 57 — no overlap', () => {
     for (let i = 1; i < zones.length; i++) {
       expect(zones[i].min).toBe((zones[i - 1].max as number) + 1)
     }
+  })
+})
+
+describe('getRecommendedHeartRateZoneMode', () => {
+  it('seuils / high when max + aerobic + threshold available', () => {
+    const r = getRecommendedHeartRateZoneMode({ max_hr: 195, aerobic_threshold_hr: 155, threshold_hr: 170 })
+    expect(r.mode).toBe('seuils')
+    expect(r.confidence).toBe('high')
+    expect(r.canCompute).toBe(true)
+  })
+
+  it('test30 / good when max + threshold only', () => {
+    const r = getRecommendedHeartRateZoneMode({ max_hr: 195, threshold_hr: 170 })
+    expect(r.mode).toBe('test30')
+    expect(r.confidence).toBe('good')
+  })
+
+  it('karvonen / medium when max + resting only', () => {
+    const r = getRecommendedHeartRateZoneMode({ max_hr: 195, resting_hr: 57 })
+    expect(r.mode).toBe('karvonen')
+    expect(r.confidence).toBe('medium')
+  })
+
+  it('pct_max / low when max only', () => {
+    const r = getRecommendedHeartRateZoneMode({ max_hr: 195 })
+    expect(r.mode).toBe('pct_max')
+    expect(r.confidence).toBe('low')
+  })
+
+  it('auto / very_low when only birth_year', () => {
+    const r = getRecommendedHeartRateZoneMode({ birth_year: 1985 })
+    expect(r.mode).toBe('auto')
+    expect(r.confidence).toBe('very_low')
+    expect(r.canCompute).toBe(true)
+  })
+
+  it('canCompute = false when nothing available', () => {
+    const r = getRecommendedHeartRateZoneMode({})
+    expect(r.canCompute).toBe(false)
+  })
+
+  it('prefers karvonen over pct_max when resting_hr present (no threshold)', () => {
+    const r = getRecommendedHeartRateZoneMode({ max_hr: 195, resting_hr: 57 })
+    expect(r.mode).toBe('karvonen')
+    expect(r.mode).not.toBe('pct_max')
   })
 })
