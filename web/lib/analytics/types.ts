@@ -36,6 +36,7 @@ export type UserProfileForCes = {
   max_hr?:                          number | null
   resting_hr?:                      number | null
   threshold_hr?:                    number | null
+  aerobic_threshold_hr?:            number | null
   ftp_watts?:                       number | null
   threshold_pace_run_sec_per_km?:   number | null
   threshold_pace_trail_sec_per_km?: number | null
