@@ -61,8 +61,8 @@ const SPORT_COLORS: Record<string, string> = {
 }
 
 const INTENSITY_EMOJI: Record<string, string> = {
-  footing: '🦶', sortie_longue: '🐢', cotes: '⛰️', vma: '🔥',
-  seuil: '🎯', runtaf: '🏃‍♂️🏢', velotaf: '🚴🏻🏢', course: '🏁', autre: '❓',
+  recuperation: '😴', footing: '🦶', endurance_active: '🔄',
+  sortie_longue: '🐢', cotes: '⛰️', vma: '🔥', seuil: '🎯', autre: '❓',
 }
 
 const RIDE_TYPES = new Set(['Ride', 'GravelRide', 'VirtualRide', 'EBikeRide', 'MountainBikeRide'])

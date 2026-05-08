@@ -13,7 +13,6 @@ const INTENSITY_COLORS: Record<string, string> = {
   'Sortie longue': colors.pieSortieLongue,
   'Seuil':         colors.pieSeuil,
   'VMA':           colors.pieVma,
-  'Runtaf':        colors.pieRuntaf,
 }
 
 type StatusLevel = 'fresh' | 'balanced' | 'loaded' | 'overloaded' | 'rest'

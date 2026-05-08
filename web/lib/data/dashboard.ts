@@ -72,7 +72,7 @@ export type DashboardData = {
 const DAY_ABBR = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 const MONTH_CUMUL_COLORS = ['#4ADE80', '#FF6B35', '#F87171', '#38BDF8']
 const MONTH_SHORT_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
-const INTENSITY_ORDER = ['Footing', 'Sortie longue', 'Seuil', 'VMA', 'Runtaf']
+const INTENSITY_ORDER = ['Footing', 'Sortie longue', 'Seuil', 'VMA']
 
 // ISO week day to 0-based Mon index: Sun=6, Mon=0, Tue=1 … Sat=5
 function toMonIndex(jsDay: number): number {
@@ -105,13 +105,13 @@ function intensityFromZone(zone: number): string {
 }
 
 const MANUAL_TO_LABEL: Record<string, string> = {
-  footing:       'Footing',
-  sortie_longue: 'Sortie longue',
-  cotes:         'Footing',
-  vma:           'VMA',
-  seuil:         'Seuil',
-  runtaf:        'Runtaf',
-  course:        'Seuil',
+  recuperation:     'Footing',
+  footing:          'Footing',
+  endurance_active: 'Sortie longue',
+  sortie_longue:    'Sortie longue',
+  cotes:            'Footing',
+  vma:              'VMA',
+  seuil:            'Seuil',
 }
 
 function getIntensityLabel(
@@ -133,20 +133,13 @@ function getIntensityLabel(
     return 'VMA'
   if (n.includes('seuil') || n.includes('tempo') || n.includes('threshold'))
     return 'Seuil'
-  if (n.includes('runtaf') || n.includes('run taf'))
-    return 'Runtaf'
 
   if (avgHr != null && zones.length > 0) {
     const zone = hrZoneForAvgHr(avgHr, zones)
     if (zone !== null) return intensityFromZone(zone)
   }
 
-  if (ces == null) return null
-  if (ces <= 30)  return 'Footing'
-  if (ces <= 60)  return 'Sortie longue'
-  if (ces <= 100) return 'Seuil'
-  if (ces <= 150) return 'VMA'
-  return 'Runtaf'
+  return null
 }
 
 function buildWindowedLoads(rows: ActivityRow[], days: number): DailyLoad[] {

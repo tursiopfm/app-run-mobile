@@ -188,7 +188,6 @@ export const profile = {
 
 // --- Intensity categories (pie chart) ---
 export const intensity = {
-  runtaf:       'Runtaf',
   vma:          'VMA',
   seuil:        'Seuil',
   cotes:        'Côtes',

@@ -17,7 +17,6 @@ const INTENSITY_COLORS: Record<string, string> = {
   'Sortie longue':  colors.pieSortieLongue,
   'Seuil':          colors.pieSeuil,
   'VMA':            colors.pieVma,
-  'Runtaf':         colors.pieRuntaf,
 }
 
 const INTENSITY_EMOJI: Record<string, string> = {
@@ -25,7 +24,6 @@ const INTENSITY_EMOJI: Record<string, string> = {
   'Sortie longue':  '🐢',
   'Seuil':          '🎯',
   'VMA':            '🔥',
-  'Runtaf':         '🏃',
 }
 
 type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }

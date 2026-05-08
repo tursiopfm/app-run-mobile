@@ -9,15 +9,14 @@ import { EffortPopup, IntensityPopup } from '@/components/ui/ActivityPopups'
 import { Dumbbell } from 'lucide-react'
 
 const INTENSITY_EMOJI: Record<string, string> = {
-  footing:       '🦶',
-  sortie_longue: '🐢',
-  cotes:         '⛰️',
-  vma:           '🔥',
-  seuil:         '🎯',
-  runtaf:        '🏃‍♂️🏢',
-  velotaf:       '🚴🏻🏢',
-  course:        '🏁',
-  autre:         '❓',
+  recuperation:     '😴',
+  footing:          '🦶',
+  endurance_active: '🔄',
+  sortie_longue:    '🐢',
+  cotes:            '⛰️',
+  vma:              '🔥',
+  seuil:            '🎯',
+  autre:            '❓',
 }
 
 const SPORT_COLORS: Record<string, string> = {

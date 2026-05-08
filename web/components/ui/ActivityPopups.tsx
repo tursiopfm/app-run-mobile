@@ -5,27 +5,25 @@ import { INTENSITY_OPTIONS } from '@/lib/activities/intensity'
 import { Dumbbell } from 'lucide-react'
 
 const INTENSITY_EMOJI: Record<string, string> = {
-  footing:       '🦶',
-  sortie_longue: '🐢',
-  cotes:         '⛰️',
-  vma:           '🔥',
-  seuil:         '🎯',
-  runtaf:        '🏃‍♂️🏢',
-  velotaf:       '🚴🏻🏢',
-  course:        '🏁',
-  autre:         '❓',
+  recuperation:     '😴',
+  footing:          '🦶',
+  endurance_active: '🔄',
+  sortie_longue:    '🐢',
+  cotes:            '⛰️',
+  vma:              '🔥',
+  seuil:            '🎯',
+  autre:            '❓',
 }
 
 const INTENSITY_DESC: Record<string, string> = {
-  footing:       'Endurance fondamentale, allure confortable',
-  sortie_longue: 'Longue durée, rythme lent et régulier',
-  cotes:         'Montées répétées, développe la force',
-  vma:           'Effort maximal court, fractionné',
-  seuil:         'Allure soutenue proche du seuil anaérobie',
-  runtaf:        'Course domicile-travail',
-  velotaf:       'Vélo domicile-travail',
-  course:        'Compétition officielle',
-  autre:         'Autre type de séance',
+  recuperation:     'Récupération active, très basse intensité',
+  footing:          'Endurance fondamentale, allure confortable',
+  endurance_active: 'Allure aérobie soutenue (Z3)',
+  sortie_longue:    'Longue durée, rythme lent et régulier',
+  cotes:            'Montées répétées, développe la force',
+  vma:              'Effort maximal court, fractionné',
+  seuil:            'Allure soutenue proche du seuil anaérobie',
+  autre:            'Autre type de séance',
 }
 
 export const CES_RANGES = [
