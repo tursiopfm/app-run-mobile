@@ -165,7 +165,7 @@ export function ActivityMap({ encodedPolyline, expanded = false }: { encodedPoly
         onClick={() => setLayer(cur => CYCLE[cur])}
         style={{
           position: 'absolute',
-          bottom: 14,
+          bottom: expanded ? 72 : 14,
           right: 10,
           zIndex: 1000,
           width: 38,
