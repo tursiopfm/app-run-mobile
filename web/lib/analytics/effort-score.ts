@@ -1,7 +1,10 @@
-import type { ActivityInput, CesResult, EffortLabel, SportCategory, SportConfig } from './types'
+import type {
+  ActivityInput, CesResult, CesConfidence, CesModel,
+  EffortLabel, SportCategory, SportConfig, UserProfileForCes,
+} from './types'
 
-// Simplified muscular load ratio: approximates Blueprint K_muscular without per-sport muscularSensitivity
 const MUSCLE_LOAD_RATIO = 0.6
+const CES_VERSION = 'v2.0'
 
 const SPORT_CONFIGS = {
   run:          { sportBase: 100, sportFactor: 1.00, defaultIF: 0.75, minIF: 0.4, maxIF: 1.3, elevationSensitivity: 8,  thresholdPaceSecPerKm: 300, thresholdPower: null },
@@ -22,18 +25,18 @@ const SPORT_CONFIGS = {
 export function normalizeSportType(rawSportType: string, name?: string): SportCategory {
   const raw   = rawSportType.toLowerCase()
   const title = (name ?? '').toLowerCase()
-  if (raw.includes('trail'))                                                    return 'trail_run'
-  if (raw.includes('run'))       return title.includes('trail') ? 'trail_run' : 'run'
-  if (raw.includes('walk'))                                                     return 'walk'
-  if (raw.includes('hike'))                                                     return 'hike'
-  if (raw.includes('gravel'))                                                   return 'gravel_ride'
-  if (raw.includes('mountain') || raw.includes('mtb'))                          return 'mountain_bike'
+  if (raw.includes('trail'))                                                           return 'trail_run'
+  if (raw.includes('run'))        return title.includes('trail') ? 'trail_run' : 'run'
+  if (raw.includes('walk'))                                                            return 'walk'
+  if (raw.includes('hike'))                                                            return 'hike'
+  if (raw.includes('gravel'))                                                          return 'gravel_ride'
+  if (raw.includes('mountain') || raw.includes('mtb'))                                 return 'mountain_bike'
   if (raw.includes('virtualride') || raw.includes('indoor') || raw.includes('trainer')) return 'indoor_ride'
-  if (raw.includes('ride') || raw.includes('bike') || raw.includes('cycling'))  return 'road_ride'
-  if (raw.includes('swim'))                                                     return 'swim'
-  if (raw.includes('strength') || raw.includes('weight') || raw.includes('muscu')) return 'strength'
-  if (raw.includes('yoga') || raw.includes('mobility') || raw.includes('stretch')) return 'mobility'
-  if (raw.includes('cardio'))                                                    return 'cardio_other'
+  if (raw.includes('ride') || raw.includes('bike') || raw.includes('cycling'))         return 'road_ride'
+  if (raw.includes('swim'))                                                            return 'swim'
+  if (raw.includes('strength') || raw.includes('weight') || raw.includes('muscu'))    return 'strength'
+  if (raw.includes('yoga') || raw.includes('mobility') || raw.includes('stretch'))    return 'mobility'
+  if (raw.includes('cardio'))                                                          return 'cardio_other'
   return 'other'
 }
 
@@ -50,18 +53,50 @@ function effortLabel(ces: number): EffortLabel {
   return 'extreme'
 }
 
-function calcIF(a: ActivityInput, cfg: SportConfig): number {
-  if (cfg.thresholdPaceSecPerKm !== null && a.distanceMeters != null && a.distanceMeters > 200 && a.movingTimeSeconds > 0) {
-    const paceSecPerKm = a.movingTimeSeconds / (a.distanceMeters / 1000)
-    return clamp(cfg.thresholdPaceSecPerKm / paceSecPerKm, cfg.minIF, cfg.maxIF)
+type IFResult = {
+  value:  number
+  source: string
+  model:  CesModel
+}
+
+function calcIF(
+  a:       ActivityInput,
+  cfg:     SportConfig,
+  sport:   SportCategory,
+  profile: UserProfileForCes,
+): IFResult {
+  // Cycling : FTP utilisateur
+  if (profile.ftp_watts && cfg.thresholdPower !== null) {
+    const ftp = profile.ftp_watts
+    if (a.normalizedPowerWatts != null)
+      return { value: clamp(a.normalizedPowerWatts / ftp, cfg.minIF, cfg.maxIF), source: `FTP utilisateur ${ftp}W (NP)`, model: 'power' }
+    if (a.averageWatts != null)
+      return { value: clamp(a.averageWatts / ftp, cfg.minIF, cfg.maxIF), source: `FTP utilisateur ${ftp}W (avg)`, model: 'power' }
   }
-  if (cfg.thresholdPower !== null && a.normalizedPowerWatts != null) {
-    return clamp(a.normalizedPowerWatts / cfg.thresholdPower, cfg.minIF, cfg.maxIF)
+
+  // Cycling : FTP par défaut
+  if (cfg.thresholdPower !== null) {
+    if (a.normalizedPowerWatts != null)
+      return { value: clamp(a.normalizedPowerWatts / cfg.thresholdPower, cfg.minIF, cfg.maxIF), source: `FTP défaut ${cfg.thresholdPower}W (NP)`, model: 'power' }
+    if (a.averageWatts != null)
+      return { value: clamp(a.averageWatts / cfg.thresholdPower, cfg.minIF, cfg.maxIF), source: `FTP défaut ${cfg.thresholdPower}W (avg)`, model: 'power' }
   }
-  if (cfg.thresholdPower !== null && a.averageWatts != null) {
-    return clamp(a.averageWatts / cfg.thresholdPower, cfg.minIF, cfg.maxIF)
-  }
-  return cfg.defaultIF
+
+  const hasPace = a.distanceMeters != null && a.distanceMeters > 200 && a.movingTimeSeconds > 0
+  if (!hasPace) return { value: cfg.defaultIF, source: 'Facteur par défaut (pas de distance)', model: 'legacy' }
+  const pace = a.movingTimeSeconds / (a.distanceMeters! / 1000)
+
+  // Run : allure seuil utilisateur
+  if (sport === 'run' && profile.threshold_pace_run_sec_per_km)
+    return { value: clamp(profile.threshold_pace_run_sec_per_km / pace, cfg.minIF, cfg.maxIF), source: `Allure seuil utilisateur ${profile.threshold_pace_run_sec_per_km}s/km`, model: 'pace_threshold' }
+  if (sport === 'trail_run' && profile.threshold_pace_trail_sec_per_km)
+    return { value: clamp(profile.threshold_pace_trail_sec_per_km / pace, cfg.minIF, cfg.maxIF), source: `Allure seuil trail utilisateur ${profile.threshold_pace_trail_sec_per_km}s/km`, model: 'pace_threshold' }
+
+  // Run/Trail : allure seuil par défaut
+  if (cfg.thresholdPaceSecPerKm !== null)
+    return { value: clamp(cfg.thresholdPaceSecPerKm / pace, cfg.minIF, cfg.maxIF), source: `Allure seuil défaut ${cfg.thresholdPaceSecPerKm}s/km`, model: 'pace_threshold' }
+
+  return { value: cfg.defaultIF, source: 'Facteur par défaut', model: 'legacy' }
 }
 
 function calcElevationFactor(a: ActivityInput, cfg: SportConfig): number {
@@ -71,26 +106,77 @@ function calcElevationFactor(a: ActivityInput, cfg: SportConfig): number {
   return 1.0 + per100m * cfg.elevationSensitivity * 0.01
 }
 
-export function computeCesResult(a: ActivityInput): CesResult {
+function buildConfidenceAndWarnings(
+  sport:     SportCategory,
+  ifResult:  IFResult,
+  a:         ActivityInput,
+  profile:   UserProfileForCes,
+): { confidence: CesConfidence; warnings: string[] } {
+  const warnings: string[] = []
+  let confidence: CesConfidence = 'high'
+
+  // Pas d'allure seuil personnalisée pour run/trail
+  if ((sport === 'run' || sport === 'trail_run') && ifResult.model !== 'pace_threshold') {
+    warnings.push("Score calculé avec une allure seuil par défaut. Renseigne ton allure seuil pour améliorer la précision.")
+    confidence = 'low'
+  } else if (sport === 'run' && ifResult.model === 'pace_threshold' && !profile.threshold_pace_run_sec_per_km) {
+    // Run mais utilise allure seuil défaut config
+    warnings.push("Score calculé avec une allure seuil par défaut. Renseigne ton allure seuil pour améliorer la précision.")
+    confidence = 'low'
+  } else if (sport === 'trail_run' && ifResult.model === 'pace_threshold' && !profile.threshold_pace_trail_sec_per_km) {
+    warnings.push("Score trail calculé avec l'allure seuil run. Renseigne une allure seuil trail pour plus de précision.")
+    confidence = 'medium'
+  }
+
+  // Trail avec D+ uniquement
+  if (sport === 'trail_run' && (a.elevationGainMeters ?? 0) > 0) {
+    warnings.push("Le score trail utilise uniquement le D+. La descente et la technicité ne sont pas encore prises en compte.")
+    if (confidence === 'high') confidence = 'medium'
+  }
+
+  // Vélo sans puissance (utilise IF par défaut)
+  if (ifResult.model === 'legacy' && (sport === 'road_ride' || sport === 'gravel_ride' || sport === 'mountain_bike' || sport === 'indoor_ride')) {
+    warnings.push("Score vélo calculé sans données de puissance. Renseigne ton FTP pour améliorer la précision.")
+    confidence = 'low'
+  }
+
+  return { confidence, warnings }
+}
+
+export function computeCesResult(a: ActivityInput, profile: UserProfileForCes = {}): CesResult {
   const durationHours = Math.max(a.movingTimeSeconds / 3600, 0.01)
   const sport         = normalizeSportType(a.rawSportType, a.name)
   const cfg           = SPORT_CONFIGS[sport]
-  const IF            = calcIF(a, cfg)
+  const ifResult      = calcIF(a, cfg, sport, profile)
   const elevFactor    = calcElevationFactor(a, cfg)
-  const baseScore     = durationHours * cfg.sportBase * (IF * IF)
+  const baseScore     = durationHours * cfg.sportBase * (ifResult.value * ifResult.value)
   const finalScore    = baseScore * cfg.sportFactor * elevFactor
-  const ces = Math.round(finalScore)
+  const ces           = Math.round(finalScore)
+
+  const { confidence, warnings } = buildConfidenceAndWarnings(sport, ifResult, a, profile)
+
   return {
     ces,
     cardioLoad:      Math.round(baseScore * cfg.sportFactor),
     muscleLoad:      Math.round(finalScore * MUSCLE_LOAD_RATIO),
     label:           effortLabel(ces),
-    intensityFactor: Math.round(IF * 100) / 100,
+    intensityFactor: Math.round(ifResult.value * 100) / 100,
+    model:           ifResult.model,
+    confidence,
+    components: {
+      durationHours,
+      intensityFactor: ifResult.value,
+      thresholdSource: ifResult.source,
+      elevationFactor: elevFactor,
+      sportFactor:     cfg.sportFactor,
+    },
+    warnings,
+    version: CES_VERSION,
   }
 }
 
-export function computeCes(a: ActivityInput): number {
-  return computeCesResult(a).ces
+export function computeCes(a: ActivityInput, profile?: UserProfileForCes): number {
+  return computeCesResult(a, profile).ces
 }
 
-export type { ActivityInput, CesResult, EffortLabel, SportCategory }
+export type { ActivityInput, CesResult, EffortLabel, SportCategory, UserProfileForCes }

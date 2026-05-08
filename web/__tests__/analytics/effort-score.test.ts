@@ -55,3 +55,69 @@ describe('computeCesResult', () => {
     expect(r.muscleLoad).toBeGreaterThan(0)
   })
 })
+
+describe('CES v2 — profile-aware', () => {
+  const BASE_RUN: ActivityInput = {
+    id: '1', rawSportType: 'Run', name: 'Run', startDate: '2026-05-08',
+    movingTimeSeconds: 3600, distanceMeters: 12000, elevationGainMeters: 0,
+  }
+
+  it('1h run flat at threshold pace → CES ≈ 100 (±5)', () => {
+    // threshold_pace = 300 s/km, distance at 300s/km for 1h = 12000m
+    const profile = { threshold_pace_run_sec_per_km: 300 }
+    const r = computeCesResult(BASE_RUN, profile)
+    expect(r.ces).toBeGreaterThanOrEqual(95)
+    expect(r.ces).toBeLessThanOrEqual(105)
+  })
+
+  it('uses user ftp_watts for cycling (not default 220W)', () => {
+    const activity: ActivityInput = {
+      id: '2', rawSportType: 'Ride', name: 'Ride', startDate: '2026-05-08',
+      movingTimeSeconds: 3600, averageWatts: 200, elevationGainMeters: 0,
+    }
+    const withUserFtp    = computeCesResult(activity, { ftp_watts: 200 })
+    const withDefaultFtp = computeCesResult(activity)
+    // At 200W with ftp=200: IF=1.0 (full threshold). With default 220W: IF≈0.91
+    expect(withUserFtp.ces).toBeGreaterThan(withDefaultFtp.ces)
+    expect(withUserFtp.components.thresholdSource).toContain('utilisateur')
+  })
+
+  it('run without user threshold_pace produces warning', () => {
+    const r = computeCesResult(BASE_RUN)
+    expect(r.warnings.some(w => w.includes('allure seuil'))).toBe(true)
+    expect(r.confidence).toBe('low')
+  })
+
+  it('run with user threshold_pace has higher confidence', () => {
+    const r = computeCesResult(BASE_RUN, { threshold_pace_run_sec_per_km: 300 })
+    expect(r.confidence).toBe('high')
+    expect(r.warnings.filter(w => w.includes('allure seuil'))).toHaveLength(0)
+  })
+
+  it('trail with D+ — confidence ≤ medium + descent warning', () => {
+    const trail: ActivityInput = {
+      id: '3', rawSportType: 'TrailRun', name: 'Trail', startDate: '2026-05-08',
+      movingTimeSeconds: 7200, distanceMeters: 20000, elevationGainMeters: 1000,
+    }
+    const r = computeCesResult(trail, { threshold_pace_trail_sec_per_km: 360 })
+    expect(['medium', 'low']).toContain(r.confidence)
+    expect(r.warnings.some(w => w.includes('D+'))).toBe(true)
+  })
+
+  it('result includes version string', () => {
+    const r = computeCesResult(BASE_RUN)
+    expect(typeof r.version).toBe('string')
+    expect(r.version.startsWith('v')).toBe(true)
+  })
+
+  it('result includes model field', () => {
+    const r = computeCesResult(BASE_RUN, { threshold_pace_run_sec_per_km: 300 })
+    expect(['power', 'pace_threshold', 'pace_effort_distance', 'hr_proxy', 'legacy']).toContain(r.model)
+  })
+
+  it('components includes durationHours and elevationFactor', () => {
+    const r = computeCesResult(BASE_RUN, { threshold_pace_run_sec_per_km: 300 })
+    expect(r.components.durationHours).toBeCloseTo(1.0, 1)
+    expect(r.components.elevationFactor).toBe(1.0)
+  })
+})
