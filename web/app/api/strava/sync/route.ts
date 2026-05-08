@@ -24,7 +24,14 @@ export async function POST(request: Request) {
     const activities = await stravaSyncer.fetchActivities(user.id, { fullSync })
     console.log('[sync] Strava retourne', activities.length, 'activité(s)')
 
-    const result = await importActivities(activities)
+    const { data: profileRow } = await supabase
+      .from('profiles')
+      .select('max_hr, resting_hr, threshold_hr, aerobic_threshold_hr, ftp_watts, threshold_pace_run_sec_per_km, threshold_pace_trail_sec_per_km')
+      .eq('id', user.id)
+      .single()
+    const profile = profileRow ?? {}
+
+    const result = await importActivities(activities, profile)
     console.log('[sync] upsert:', result.saved, 'sauvegardée(s)')
 
     let deleted = 0

@@ -1,4 +1,4 @@
-import { computeEwma, buildDailyMetrics, type DailyLoad } from '@/lib/analytics/fatigue'
+import { computeEwma, buildDailyMetrics, buildFatigueResult, type DailyLoad } from '@/lib/analytics/fatigue'
 
 function makeLoads(days: number, cesPerDay: number): DailyLoad[] {
   return Array.from({ length: days }, (_, i) => {
@@ -48,5 +48,41 @@ describe('buildDailyMetrics', () => {
     const result = buildDailyMetrics(loads)
     const last = result[result.length - 1]
     expect(last.atl).toBeGreaterThan(last.ctl)
+  })
+})
+
+describe('buildFatigueResult — confidence', () => {
+  function makeDailyLoads(n: number) {
+    const base = new Date(Date.UTC(2026, 0, 1))
+    return Array.from({ length: n }, (_, i) => {
+      const d = new Date(base)
+      d.setUTCDate(d.getUTCDate() + i)
+      return { date: d.toISOString().split('T')[0], ces: 50 }
+    })
+  }
+
+  it('confidence = low when history < 14 days', () => {
+    const r = buildFatigueResult(makeDailyLoads(7))
+    expect(r.confidence).toBe('low')
+    expect(r.warnings.length).toBeGreaterThan(0)
+  })
+
+  it('confidence = medium when history 14–41 days', () => {
+    const r = buildFatigueResult(makeDailyLoads(30))
+    expect(r.confidence).toBe('medium')
+    expect(r.warnings.some(w => w.includes('42'))).toBe(true)
+  })
+
+  it('confidence = high when history >= 42 days', () => {
+    const r = buildFatigueResult(makeDailyLoads(50))
+    expect(r.confidence).toBe('high')
+    expect(r.warnings).toHaveLength(0)
+  })
+
+  it('metrics array is same as buildDailyMetrics', () => {
+    const loads = makeDailyLoads(30)
+    const r = buildFatigueResult(loads)
+    const direct = buildDailyMetrics(loads)
+    expect(r.metrics).toEqual(direct)
   })
 })

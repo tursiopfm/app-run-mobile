@@ -68,3 +68,32 @@ export function buildDailyMetrics(loads: DailyLoad[]): DailyMetrics[] {
     }
   })
 }
+
+export type FatigueResult = {
+  metrics:    DailyMetrics[]
+  confidence: 'high' | 'medium' | 'low'
+  warnings:   string[]
+}
+
+/**
+ * Wraps buildDailyMetrics with a confidence rating based on history length.
+ * ATL/CTL/TSB curves are only stable after the CTL period (42 days).
+ */
+export function buildFatigueResult(loads: DailyLoad[]): FatigueResult {
+  const metrics     = buildDailyMetrics(loads)
+  const historyDays = metrics.length
+  const warnings: string[] = []
+  let confidence: 'high' | 'medium' | 'low'
+
+  if (historyDays < 14) {
+    confidence = 'low'
+    warnings.push(`Historique de ${historyDays} jours insuffisant. Les courbes ATL/CTL sont peu fiables.`)
+  } else if (historyDays < 42) {
+    confidence = 'medium'
+    warnings.push(`Historique de ${historyDays} jours. 42 jours minimum pour des courbes CTL stables.`)
+  } else {
+    confidence = 'high'
+  }
+
+  return { metrics, confidence, warnings }
+}

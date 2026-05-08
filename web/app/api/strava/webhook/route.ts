@@ -4,7 +4,7 @@ import { fetchStravaActivity } from '@/lib/providers/strava/api'
 import { stravaToNormalized } from '@/lib/providers/strava/mapper'
 import { computeCesResult } from '@/lib/analytics/effort-score'
 import type { StravaWebhookEvent } from '@/lib/providers/strava/webhook'
-import type { ActivityInput } from '@/lib/analytics/types'
+import type { ActivityInput, UserProfileForCes } from '@/lib/analytics/types'
 import type { NormalizedActivity } from '@/lib/providers/strava/mapper'
 
 export const runtime = 'edge'
@@ -134,15 +134,23 @@ async function processActivityEvent(event: StravaWebhookEvent): Promise<string |
     stravaActivity = await fetchStravaActivity(accessToken, event.object_id)
   }
 
+  const { data: profileRow } = await supabase
+    .from('profiles')
+    .select('max_hr, resting_hr, threshold_hr, aerobic_threshold_hr, ftp_watts, threshold_pace_run_sec_per_km, threshold_pace_trail_sec_per_km')
+    .eq('id', userId)
+    .single()
+  const profile: UserProfileForCes = profileRow ?? {}
+
   const normalized = stravaToNormalized(userId, stravaActivity)
-  await upsertActivity(supabase, normalized)
+  await upsertActivity(supabase, normalized, profile)
   console.log('[webhook-ok]', event.object_id)
   return userId
 }
 
 async function upsertActivity(
   supabase: ReturnType<typeof serviceClient>,
-  act: NormalizedActivity
+  act: NormalizedActivity,
+  profile: UserProfileForCes,
 ) {
   const input: ActivityInput = {
     id: act.providerActivityId,
@@ -158,7 +166,7 @@ async function upsertActivity(
     averageWatts: act.avgPower ?? undefined,
     calories: act.calories ?? undefined,
   }
-  const ces = computeCesResult(input)
+  const ces = computeCesResult(input, profile)
 
   const { data: rows, error } = await supabase
     .from('activities')

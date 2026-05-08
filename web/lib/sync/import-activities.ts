@@ -1,7 +1,7 @@
 import { createServiceClient } from '@/lib/database/supabase-server'
 import { computeCesResult } from '@/lib/analytics/effort-score'
 import type { NormalizedActivity } from '@/lib/providers/strava/mapper'
-import type { ActivityInput, CesResult } from '@/lib/analytics/types'
+import type { ActivityInput, CesResult, UserProfileForCes } from '@/lib/analytics/types'
 
 export type ImportResult = { saved: number }
 
@@ -22,13 +22,16 @@ function toActivityInput(act: NormalizedActivity): ActivityInput {
   }
 }
 
-export async function importActivities(activities: NormalizedActivity[]): Promise<ImportResult> {
+export async function importActivities(
+  activities: NormalizedActivity[],
+  profile: UserProfileForCes = {},
+): Promise<ImportResult> {
   if (activities.length === 0) return { saved: 0 }
 
   const supabase = createServiceClient()
 
   const cesMap = new Map<string, CesResult>(
-    activities.map((act) => [act.providerActivityId, computeCesResult(toActivityInput(act))])
+    activities.map((act) => [act.providerActivityId, computeCesResult(toActivityInput(act), profile)])
   )
 
   const records = activities.map((act) => ({
@@ -47,8 +50,10 @@ export async function importActivities(activities: NormalizedActivity[]): Promis
     avg_power: act.avgPower,
     calories: act.calories,
     external_training_load: act.externalTrainingLoad,
-    ces: cesMap.get(act.providerActivityId)!.ces,
-    raw_payload: act.rawPayload,
+    ces:                     cesMap.get(act.providerActivityId)!.ces,
+    effort_score_version:    cesMap.get(act.providerActivityId)!.version,
+    effort_score_updated_at: new Date().toISOString(),
+    raw_payload:             act.rawPayload,
   }))
 
   const { data: savedRows, error: actError } = await supabase
