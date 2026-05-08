@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/database/supabase-server'
 import { buildDailyMetrics, type DailyLoad, type DailyMetrics } from '@/lib/analytics/fatigue'
 import { type SportKey, SPORT_TYPE_MAP } from '@/lib/design/sports'
-import { calculateHrZones, hrZoneForAvgHr, type HrZone } from '@/lib/health/hr-zones'
+import { calculateHrZones, hrZoneForAvgHr, type HrZone, type HrZoneMethod } from '@/lib/health/hr-zones'
 
 export type ActivityRow = {
   id: string
@@ -13,6 +13,7 @@ export type ActivityRow = {
   distance_m: number | null
   elevation_gain_m: number | null
   moving_time_sec: number | null
+  manual_intensity: string | null
 }
 
 export type DaySession = {
@@ -103,11 +104,44 @@ function intensityFromZone(zone: number): string {
   return 'VMA'
 }
 
-function getIntensityLabel(ces: number, avgHr?: number | null, zones?: HrZone[]): string {
-  if (avgHr != null && zones && zones.length > 0) {
+const MANUAL_TO_LABEL: Record<string, string> = {
+  footing:       'Footing',
+  sortie_longue: 'Sortie longue',
+  cotes:         'Footing',
+  vma:           'VMA',
+  seuil:         'Seuil',
+  runtaf:        'Runtaf',
+  course:        'Seuil',
+}
+
+function getIntensityLabel(
+  name: string,
+  ces: number | null,
+  avgHr: number | null,
+  zones: HrZone[],
+  manualIntensity?: string | null,
+): string | null {
+  if (manualIntensity) return MANUAL_TO_LABEL[manualIntensity] ?? null
+
+  const n = name.toLowerCase()
+  if (n.includes('footing') || n.includes(' ef ') || n.includes('endurance facile') || n.includes('récup'))
+    return 'Footing'
+  if (n.includes('sortie longue') || n.includes('sl ') || n.includes('long run') || n.includes('lsl'))
+    return 'Sortie longue'
+  if (n.includes('400') || n.includes('200') || n.includes('vma') || n.includes('interval')
+      || n.includes('fractionné') || n.includes('répétition'))
+    return 'VMA'
+  if (n.includes('seuil') || n.includes('tempo') || n.includes('threshold'))
+    return 'Seuil'
+  if (n.includes('runtaf') || n.includes('run taf'))
+    return 'Runtaf'
+
+  if (avgHr != null && zones.length > 0) {
     const zone = hrZoneForAvgHr(avgHr, zones)
     if (zone !== null) return intensityFromZone(zone)
   }
+
+  if (ces == null) return null
   if (ces <= 30)  return 'Footing'
   if (ces <= 60)  return 'Sortie longue'
   if (ces <= 100) return 'Seuil'
@@ -242,8 +276,9 @@ function buildSportOverview(
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
   const intensityMap = new Map<string, number>()
   for (const a of acts.filter((r) => new Date(r.start_time) >= thirtyDaysAgo)) {
-    if (!a.ces || !a.distance_m) continue
-    const label = getIntensityLabel(a.ces, a.avg_hr, hrZones)
+    if (!a.distance_m) continue
+    const label = getIntensityLabel(a.name, a.ces, a.avg_hr, hrZones, a.manual_intensity)
+    if (!label) continue
     intensityMap.set(label, (intensityMap.get(label) ?? 0) + a.distance_m / 1000)
   }
   const intensityBreakdown: IntensityShare[] = INTENSITY_ORDER
@@ -281,7 +316,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   const [{ data: rows }, { data: profile }] = await Promise.all([
     supabase
       .from('activities')
-      .select('id, sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec')
+      .select('id, sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_intensity')
       .eq('user_id', userId)
       .gte('start_time', yearAgo.toISOString())
       .is('deleted_at', null)
@@ -297,13 +332,19 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
 
   const hrZones: HrZone[] = (() => {
     if (!profile) return []
+    const p = profile as Record<string, number | null>
+    let method: HrZoneMethod = 'auto'
+    if (p.max_hr && p.aerobic_threshold_hr && p.threshold_hr) method = 'seuils'
+    else if (p.max_hr && p.threshold_hr) method = 'test30'
+    else if (p.max_hr && p.resting_hr) method = 'karvonen'
+    else if (p.max_hr) method = 'pct_max'
     return calculateHrZones({
-      method: 'karvonen',
-      maxHr:              (profile as Record<string, number | null>).max_hr,
-      restingHr:          (profile as Record<string, number | null>).resting_hr,
-      aerobicThresholdHr: (profile as Record<string, number | null>).aerobic_threshold_hr,
-      thresholdHr:        (profile as Record<string, number | null>).threshold_hr,
-      birthYear:          (profile as Record<string, number | null>).birth_year,
+      method,
+      maxHr:              p.max_hr,
+      restingHr:          p.resting_hr,
+      aerobicThresholdHr: p.aerobic_threshold_hr,
+      thresholdHr:        p.threshold_hr,
+      birthYear:          p.birth_year,
     }).zones
   })()
 
