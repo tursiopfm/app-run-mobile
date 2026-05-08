@@ -1,11 +1,64 @@
 'use client'
 
 import { useMemo, useEffect } from 'react'
-import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Polyline, CircleMarker, Tooltip, useMap } from 'react-leaflet'
 import polylineLib from '@mapbox/polyline'
 import 'leaflet/dist/leaflet.css'
 
 type LatLng = [number, number]
+
+function haversineDistance(a: LatLng, b: LatLng): number {
+  const R = 6371000
+  const dLat = (b[0] - a[0]) * Math.PI / 180
+  const dLon = (b[1] - a[1]) * Math.PI / 180
+  const lat1 = a[0] * Math.PI / 180
+  const lat2 = b[0] * Math.PI / 180
+  const x = Math.sin(dLat / 2) ** 2 + Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2)
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x))
+}
+
+function computeKmMarkers(positions: LatLng[]): Array<{ km: number; pos: LatLng }> {
+  const markers: Array<{ km: number; pos: LatLng }> = []
+  let dist = 0
+  let nextKm = 1
+  for (let i = 1; i < positions.length; i++) {
+    const segDist = haversineDistance(positions[i - 1], positions[i])
+    const prevDist = dist
+    dist += segDist
+    while (dist >= nextKm * 1000) {
+      const t = (nextKm * 1000 - prevDist) / segDist
+      markers.push({
+        km: nextKm,
+        pos: [
+          positions[i - 1][0] + t * (positions[i][0] - positions[i - 1][0]),
+          positions[i - 1][1] + t * (positions[i][1] - positions[i - 1][1]),
+        ],
+      })
+      nextKm++
+    }
+  }
+  return markers
+}
+
+function KmMarkers({ positions }: { positions: LatLng[] }) {
+  const markers = useMemo(() => computeKmMarkers(positions), [positions])
+  return (
+    <>
+      {markers.map(({ km, pos }) => (
+        <CircleMarker
+          key={km}
+          center={pos}
+          radius={6}
+          pathOptions={{ color: '#fff', weight: 2, fillColor: '#e8651a', fillOpacity: 1 }}
+        >
+          <Tooltip permanent direction="top" offset={[0, -9]} className="km-tooltip">
+            {km}
+          </Tooltip>
+        </CircleMarker>
+      ))}
+    </>
+  )
+}
 
 function FitBounds({ positions }: { positions: LatLng[] }) {
   const map = useMap()
@@ -58,6 +111,7 @@ export function ActivityMap({ encodedPolyline, expanded = false }: { encodedPoly
       {end && (
         <CircleMarker center={end} radius={7} pathOptions={{ color: '#fff', weight: 2, fillColor: '#e8651a', fillOpacity: 1 }} />
       )}
+      {expanded && <KmMarkers positions={positions} />}
       <FitBounds positions={positions} />
       <MapResizer expanded={expanded} />
     </MapContainer>

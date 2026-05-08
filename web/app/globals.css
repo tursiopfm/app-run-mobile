@@ -64,3 +64,16 @@ html, body {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--trail-surface); }
 ::-webkit-scrollbar-thumb { background: var(--trail-border); border-radius: 2px; }
+
+.km-tooltip {
+  background: rgba(20, 20, 20, 0.88) !important;
+  border: none !important;
+  border-radius: 4px !important;
+  color: #fff !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 2px 5px !important;
+  white-space: nowrap !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.45) !important;
+}
+.km-tooltip::before { display: none !important; }
