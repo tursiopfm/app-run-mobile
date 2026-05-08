@@ -1,11 +1,20 @@
 'use client'
 
-import { useMemo, useEffect } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { MapContainer, TileLayer, Polyline, CircleMarker, Tooltip, useMap } from 'react-leaflet'
 import polylineLib from '@mapbox/polyline'
 import 'leaflet/dist/leaflet.css'
 
 type LatLng = [number, number]
+type LayerType = 'osm' | 'satellite' | 'relief'
+
+const LAYERS: Record<LayerType, { url: string; label: string }> = {
+  osm:       { url: 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', label: 'Plan' },
+  satellite: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', label: 'Sat' },
+  relief:    { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', label: 'Relief' },
+}
+
+const LAYER_ORDER: LayerType[] = ['osm', 'satellite', 'relief']
 
 function haversineDistance(a: LatLng, b: LatLng): number {
   const R = 6371000
@@ -80,6 +89,8 @@ function MapResizer({ expanded }: { expanded: boolean }) {
 }
 
 export function ActivityMap({ encodedPolyline, expanded = false }: { encodedPolyline: string; expanded?: boolean }) {
+  const [layer, setLayer] = useState<LayerType>('osm')
+
   const positions = useMemo<LatLng[]>(
     () => (encodedPolyline ? polylineLib.decode(encodedPolyline) as LatLng[] : []),
     [encodedPolyline]
@@ -91,30 +102,61 @@ export function ActivityMap({ encodedPolyline, expanded = false }: { encodedPoly
   const end = positions.length > 1 ? positions[positions.length - 1] : undefined
 
   return (
-    <MapContainer
-      center={start}
-      zoom={13}
-      style={{ width: '100%', height: '100%' }}
-      zoomControl={false}
-      attributionControl={false}
-    >
-      <TileLayer url="https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png" />
-      {/* Outer diffuse glow */}
-      <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 28, opacity: 0.08 }} />
-      {/* Middle glow */}
-      <Polyline positions={positions} pathOptions={{ color: '#ff8c42', weight: 14, opacity: 0.22 }} />
-      {/* Inner glow */}
-      <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 6, opacity: 0.55 }} />
-      {/* Core route */}
-      <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 3, opacity: 1 }} />
-      <CircleMarker center={start} radius={7} pathOptions={{ color: '#fff', weight: 2, fillColor: '#4caf50', fillOpacity: 1 }} />
-      {end && (
-        <CircleMarker center={end} radius={7} pathOptions={{ color: '#fff', weight: 2, fillColor: '#e8651a', fillOpacity: 1 }} />
-      )}
-      {expanded && <KmMarkers positions={positions} />}
-      <FitBounds positions={positions} />
-      <MapResizer expanded={expanded} />
-    </MapContainer>
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <MapContainer
+        center={start}
+        zoom={13}
+        style={{ width: '100%', height: '100%' }}
+        zoomControl={false}
+        attributionControl={false}
+      >
+        <TileLayer key={layer} url={LAYERS[layer].url} />
+        <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 28, opacity: 0.08 }} />
+        <Polyline positions={positions} pathOptions={{ color: '#ff8c42', weight: 14, opacity: 0.22 }} />
+        <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 6, opacity: 0.55 }} />
+        <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 3, opacity: 1 }} />
+        <CircleMarker center={start} radius={7} pathOptions={{ color: '#fff', weight: 2, fillColor: '#4caf50', fillOpacity: 1 }} />
+        {end && (
+          <CircleMarker center={end} radius={7} pathOptions={{ color: '#fff', weight: 2, fillColor: '#e8651a', fillOpacity: 1 }} />
+        )}
+        {expanded && <KmMarkers positions={positions} />}
+        <FitBounds positions={positions} />
+        <MapResizer expanded={expanded} />
+      </MapContainer>
+
+      <div style={{
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        zIndex: 1000,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 3,
+        pointerEvents: 'all',
+      }}>
+        {LAYER_ORDER.map(l => (
+          <button
+            key={l}
+            onClick={() => setLayer(l)}
+            style={{
+              background: layer === l ? '#e8651a' : 'rgba(15,15,15,0.78)',
+              color: '#fff',
+              border: layer === l ? '1.5px solid #ff8c42' : '1.5px solid rgba(255,255,255,0.15)',
+              borderRadius: 5,
+              padding: '5px 9px',
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: 'pointer',
+              letterSpacing: '0.03em',
+              backdropFilter: 'blur(4px)',
+              lineHeight: 1,
+            }}
+          >
+            {LAYERS[l].label}
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 
