@@ -355,12 +355,13 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 }
 
 // ── Filter Panel ───────────────────────────────────────────────────────────────
-function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
-  state:      FilterState
-  setState:   (s: FilterState) => void
-  sportTypes: string[]
-  onClose:    () => void
-  onReset:    () => void
+function FilterPanel({ state, setState, sportTypes, filteredCount, onClose, onReset }: {
+  state:         FilterState
+  setState:      (s: FilterState) => void
+  sportTypes:    string[]
+  filteredCount: number
+  onClose:       () => void
+  onReset:       () => void
 }) {
   const si = inputStyle()
 
@@ -485,7 +486,8 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
           />
         </div>
 
-        {/* Boutons directement sous le bloc, dans le flux scrollable */}
+        {/* Résultat count + boutons */}
+        <p className="text-[13px] text-trail-muted px-1">{filteredCount} résultat{filteredCount !== 1 ? 's' : ''}</p>
         <div className="flex gap-3 pb-4">
           <button
             onClick={onReset}
@@ -638,11 +640,13 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
           state={filter}
           setState={setFilter}
           sportTypes={sportTypes}
+          filteredCount={filtered.length}
           onClose={() => setPanel('none')}
           onReset={() => {
             sessionStorage.removeItem('tc_activities_search')
             sessionStorage.removeItem('tc_activities_filter')
             setFilter(DEFAULT_FILTER)
+            setPanel('none')
           }}
         />
       )}
