@@ -5,16 +5,28 @@ jest.mock('@/lib/database/supabase-server', () => ({ createClient: jest.fn() }))
 const mockCreateClient = createClient as jest.Mock
 
 function makeSelectMock(rows: unknown[]) {
-  return {
-    from: jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          gte: jest.fn().mockReturnValue({
+  const activitiesChain = {
+    select: jest.fn().mockReturnValue({
+      eq: jest.fn().mockReturnValue({
+        gte: jest.fn().mockReturnValue({
+          is: jest.fn().mockReturnValue({
             order: jest.fn().mockResolvedValue({ data: rows, error: null }),
           }),
         }),
       }),
     }),
+  }
+  const profileChain = {
+    select: jest.fn().mockReturnValue({
+      eq: jest.fn().mockReturnValue({
+        single: jest.fn().mockResolvedValue({ data: null, error: null }),
+      }),
+    }),
+  }
+  return {
+    from: jest.fn().mockImplementation((table: string) =>
+      table === 'profiles' ? profileChain : activitiesChain
+    ),
   }
 }
 

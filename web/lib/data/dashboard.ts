@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/database/supabase-server'
 import { buildDailyMetrics, type DailyLoad, type DailyMetrics } from '@/lib/analytics/fatigue'
 import { type SportKey, SPORT_TYPE_MAP } from '@/lib/design/sports'
+import { calculateHrZones, hrZoneForAvgHr, type HrZone } from '@/lib/health/hr-zones'
 
 export type ActivityRow = {
   id: string
@@ -8,6 +9,7 @@ export type ActivityRow = {
   name: string
   start_time: string
   ces: number | null
+  avg_hr: number | null
   distance_m: number | null
   elevation_gain_m: number | null
   moving_time_sec: number | null
@@ -94,7 +96,18 @@ function mondayOfCurrentWeek(): Date {
   return mon
 }
 
-function getIntensityLabel(ces: number): string {
+function intensityFromZone(zone: number): string {
+  if (zone <= 2) return 'Footing'
+  if (zone === 3) return 'Sortie longue'
+  if (zone === 4) return 'Seuil'
+  return 'VMA'
+}
+
+function getIntensityLabel(ces: number, avgHr?: number | null, zones?: HrZone[]): string {
+  if (avgHr != null && zones && zones.length > 0) {
+    const zone = hrZoneForAvgHr(avgHr, zones)
+    if (zone !== null) return intensityFromZone(zone)
+  }
   if (ces <= 30)  return 'Footing'
   if (ces <= 60)  return 'Sortie longue'
   if (ces <= 100) return 'Seuil'
@@ -131,6 +144,7 @@ function buildSportOverview(
   nextMonday: Date,
   janFirst: Date,
   now: Date,
+  hrZones: HrZone[],
 ): SportOverview {
   const acts = filterSport(all365, types)
 
@@ -229,7 +243,7 @@ function buildSportOverview(
   const intensityMap = new Map<string, number>()
   for (const a of acts.filter((r) => new Date(r.start_time) >= thirtyDaysAgo)) {
     if (!a.ces || !a.distance_m) continue
-    const label = getIntensityLabel(a.ces)
+    const label = getIntensityLabel(a.ces, a.avg_hr, hrZones)
     intensityMap.set(label, (intensityMap.get(label) ?? 0) + a.distance_m / 1000)
   }
   const intensityBreakdown: IntensityShare[] = INTENSITY_ORDER
@@ -264,15 +278,34 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   const yearAgo = new Date()
   yearAgo.setDate(yearAgo.getDate() - 365)
 
-  const { data: rows } = await supabase
-    .from('activities')
-    .select('id, sport_type, name, start_time, ces, distance_m, elevation_gain_m, moving_time_sec')
-    .eq('user_id', userId)
-    .gte('start_time', yearAgo.toISOString())
-    .is('deleted_at', null)
-    .order('start_time', { ascending: true })
+  const [{ data: rows }, { data: profile }] = await Promise.all([
+    supabase
+      .from('activities')
+      .select('id, sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec')
+      .eq('user_id', userId)
+      .gte('start_time', yearAgo.toISOString())
+      .is('deleted_at', null)
+      .order('start_time', { ascending: true }),
+    supabase
+      .from('profiles')
+      .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year')
+      .eq('id', userId)
+      .single(),
+  ])
 
   const activities = (rows ?? []) as ActivityRow[]
+
+  const hrZones: HrZone[] = (() => {
+    if (!profile) return []
+    return calculateHrZones({
+      method: 'karvonen',
+      maxHr:              (profile as Record<string, number | null>).max_hr,
+      restingHr:          (profile as Record<string, number | null>).resting_hr,
+      aerobicThresholdHr: (profile as Record<string, number | null>).aerobic_threshold_hr,
+      thresholdHr:        (profile as Record<string, number | null>).threshold_hr,
+      birthYear:          (profile as Record<string, number | null>).birth_year,
+    }).zones
+  })()
 
   const globalLoads = buildWindowedLoads(activities, 60)
   const dailyMetrics = buildDailyMetrics(globalLoads)
@@ -290,10 +323,10 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   const janFirst = new Date(now.getFullYear(), 0, 1)
 
   const sportOverviews: Record<SportKey, SportOverview> = {
-    run:  buildSportOverview(activities, SPORT_TYPE_MAP.run,  monday, nextMonday, janFirst, now),
-    ride: buildSportOverview(activities, SPORT_TYPE_MAP.ride, monday, nextMonday, janFirst, now),
-    swim: buildSportOverview(activities, SPORT_TYPE_MAP.swim, monday, nextMonday, janFirst, now),
-    all:  buildSportOverview(activities, SPORT_TYPE_MAP.all,  monday, nextMonday, janFirst, now),
+    run:  buildSportOverview(activities, SPORT_TYPE_MAP.run,  monday, nextMonday, janFirst, now, hrZones),
+    ride: buildSportOverview(activities, SPORT_TYPE_MAP.ride, monday, nextMonday, janFirst, now, hrZones),
+    swim: buildSportOverview(activities, SPORT_TYPE_MAP.swim, monday, nextMonday, janFirst, now, hrZones),
+    all:  buildSportOverview(activities, SPORT_TYPE_MAP.all,  monday, nextMonday, janFirst, now, hrZones),
   }
 
   const weekActivities = activities.filter((r) => {

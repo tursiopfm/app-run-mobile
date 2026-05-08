@@ -7,6 +7,7 @@ import { EditActivityModal } from '@/components/ui/EditActivityModal'
 import { colors } from '@/lib/design/colors'
 import { sportLabel } from '@/lib/design/labels'
 import { INTENSITY_OPTIONS, guessIntensity } from '@/lib/activities/intensity'
+import { calculateHrZones, type HrZone, type HrZoneMethod } from '@/lib/health/hr-zones'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type SearchField = 'Titre' | 'Distance' | 'Durée' | 'D+'
@@ -355,13 +356,12 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 }
 
 // ── Filter Panel ───────────────────────────────────────────────────────────────
-function FilterPanel({ state, setState, sportTypes, filteredCount, onClose, onReset }: {
-  state:         FilterState
-  setState:      (s: FilterState) => void
-  sportTypes:    string[]
-  filteredCount: number
-  onClose:       () => void
-  onReset:       () => void
+function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
+  state:      FilterState
+  setState:   (s: FilterState) => void
+  sportTypes: string[]
+  onClose:    () => void
+  onReset:    () => void
 }) {
   const si = inputStyle()
 
@@ -486,8 +486,6 @@ function FilterPanel({ state, setState, sportTypes, filteredCount, onClose, onRe
           />
         </div>
 
-        {/* Résultat count + boutons */}
-        <p className="text-[13px] text-trail-muted px-1">{filteredCount} résultat{filteredCount !== 1 ? 's' : ''}</p>
         <div className="flex gap-3 pb-4">
           <button
             onClick={onReset}
@@ -516,7 +514,16 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
   const [search,          setSearch]          = useState<SearchState>(DEFAULT_SEARCH)
   const [filter,          setFilter]          = useState<FilterState>(DEFAULT_FILTER)
   const [editingActivity, setEditingActivity] = useState<ActivityRow | null>(null)
+  const [hrZones, setHrZones] = useState<HrZone[]>([])
   const router = useRouter()
+
+  useEffect(() => {
+    try {
+      const method = (localStorage.getItem('tc_hr_zone_method') ?? 'pct_max') as HrZoneMethod
+      const raw = localStorage.getItem('tc_athlete_hr')
+      if (raw) setHrZones(calculateHrZones({ method, ...JSON.parse(raw) }).zones)
+    } catch {}
+  }, [])
 
   useEffect(() => {
     const savedSearch = sessionStorage.getItem('tc_activities_search')
@@ -564,7 +571,7 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
     }
     if (filter.intensity !== 'Toutes') {
       list = list.filter(a => {
-        const key = (a.manual_intensity ?? guessIntensity(a.name, a.ces, a.manual_sport_type ?? a.sport_type))
+        const key = (a.manual_intensity ?? guessIntensity(a.name, a.ces, a.manual_sport_type ?? a.sport_type, a.avg_hr, hrZones))
         return key === filter.intensity
       })
     }
@@ -640,7 +647,6 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
           state={filter}
           setState={setFilter}
           sportTypes={sportTypes}
-          filteredCount={filtered.length}
           onClose={() => setPanel('none')}
           onReset={() => {
             sessionStorage.removeItem('tc_activities_search')
@@ -689,6 +695,13 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
           </button>
         </div>
 
+        {/* Result count */}
+        {(hasActiveSearch || hasActiveFilter) && (
+          <p className="text-[13px] text-trail-muted px-1 mb-[6px]">
+            {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
+          </p>
+        )}
+
         {/* Activity list */}
         {filtered.length === 0 ? (
           <div
@@ -704,7 +717,7 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
         ) : (
           <div className="space-y-[10px]">
             {filtered.map(a => (
-              <ActivityCard key={a.id} activity={a} onEdit={setEditingActivity} onClick={() => navigateToActivity(a.id)} />
+              <ActivityCard key={a.id} activity={a} hrZones={hrZones} onEdit={setEditingActivity} onClick={() => navigateToActivity(a.id)} />
             ))}
           </div>
         )}

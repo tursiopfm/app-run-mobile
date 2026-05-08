@@ -36,6 +36,14 @@ function pctRanges(base: number, pcts: [number, number | null][], maxHr: number)
   ])
 }
 
+export function hrZoneForAvgHr(avgHr: number, zones: HrZone[]): number | null {
+  if (zones.length === 0) return null
+  for (const z of zones) {
+    if (avgHr <= z.max) return z.zone
+  }
+  return zones[zones.length - 1].zone
+}
+
 export function calculateHrZones(params: {
   method:              HrZoneMethod
   maxHr?:              number | null

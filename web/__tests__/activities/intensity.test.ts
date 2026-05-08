@@ -5,6 +5,7 @@ import {
   INTENSITY_OPTIONS,
   SPORT_OPTIONS,
 } from '@/lib/activities/intensity'
+import { calculateHrZones } from '@/lib/health/hr-zones'
 
 describe('secondsToHMS', () => {
   it('converts seconds to h:mm:ss', () => {
@@ -70,6 +71,42 @@ describe('guessIntensity', () => {
   })
   it('returns autre when no keyword and no CES', () => {
     expect(guessIntensity('Sortie', null, 'Run')).toBe('autre')
+  })
+})
+
+describe('guessIntensity with HR zones', () => {
+  const zones = calculateHrZones({ method: 'karvonen', maxHr: 195, restingHr: 57 }).zones
+  // Z1: null–140, Z2: 141–154, Z3: 155–167, Z4: 168–181, Z5: 182–195
+
+  it('returns footing for avg_hr in Z1', () => {
+    expect(guessIntensity('Sortie', null, 'Run', 120, zones)).toBe('footing')
+    expect(guessIntensity('Sortie', null, 'Run', 140, zones)).toBe('footing')
+  })
+  it('returns footing for avg_hr in Z2', () => {
+    expect(guessIntensity('Sortie', null, 'Run', 148, zones)).toBe('footing')
+    expect(guessIntensity('Sortie', null, 'Run', 154, zones)).toBe('footing')
+  })
+  it('returns sortie_longue for avg_hr in Z3', () => {
+    expect(guessIntensity('Sortie', null, 'Run', 160, zones)).toBe('sortie_longue')
+    expect(guessIntensity('Sortie', null, 'Run', 167, zones)).toBe('sortie_longue')
+  })
+  it('returns seuil for avg_hr in Z4', () => {
+    expect(guessIntensity('Sortie', null, 'Run', 174, zones)).toBe('seuil')
+    expect(guessIntensity('Sortie', null, 'Run', 181, zones)).toBe('seuil')
+  })
+  it('returns vma for avg_hr in Z5', () => {
+    expect(guessIntensity('Sortie', null, 'Run', 188, zones)).toBe('vma')
+  })
+  it('keywords take priority over HR zones', () => {
+    expect(guessIntensity('Footing matinal', null, 'Run', 188, zones)).toBe('footing')
+    expect(guessIntensity('VMA 400m', null, 'Run', 120, zones)).toBe('vma')
+  })
+  it('falls back to CES when avgHr is null', () => {
+    expect(guessIntensity('Sortie', 130, 'Run', null, zones)).toBe('seuil')
+    expect(guessIntensity('Sortie', 50, 'Run', null, zones)).toBe('footing')
+  })
+  it('falls back to autre when avgHr null, no zones, no CES', () => {
+    expect(guessIntensity('Sortie', null, 'Run', null, [])).toBe('autre')
   })
 })
 

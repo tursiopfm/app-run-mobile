@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { colors } from '@/lib/design/colors'
 import { sportLabel } from '@/lib/design/labels'
 import { guessIntensity } from '@/lib/activities/intensity'
+import type { HrZone } from '@/lib/health/hr-zones'
 import { EffortPopup, IntensityPopup } from '@/components/ui/ActivityPopups'
 
 const INTENSITY_EMOJI: Record<string, string> = {
@@ -119,6 +120,7 @@ export type ActivityRow = {
   name:                    string
   start_time:              string
   ces:                     number | null
+  avg_hr:                  number | null
   distance_m:              number | null
   elevation_gain_m:        number | null
   moving_time_sec:         number | null
@@ -133,10 +135,12 @@ export function ActivityCard({
   activity: a,
   onEdit,
   onClick,
+  hrZones = [],
 }: {
   activity: ActivityRow
   onEdit?: (a: ActivityRow) => void
   onClick?: () => void
+  hrZones?: HrZone[]
 }) {
   const [popup, setPopup] = useState<null | 'effort' | 'intensity'>(null)
 
@@ -151,7 +155,7 @@ export function ActivityCard({
   const ces   = a.ces != null ? Math.round(a.ces).toString() : '—'
   const fourth = fourthMetric(effectiveSport, effectiveDistance, effectiveDuration, a.ces)
 
-  const intensityKey   = (a.manual_intensity as string | null) ?? guessIntensity(a.name, a.ces, effectiveSport)
+  const intensityKey   = (a.manual_intensity as string | null) ?? guessIntensity(a.name, a.ces, effectiveSport, a.avg_hr, hrZones)
   const intensityEmoji = INTENSITY_EMOJI[intensityKey] ?? '❓'
 
   return (

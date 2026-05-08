@@ -43,7 +43,23 @@ export function hmsToSeconds(hms: string): number | null {
   return parseInt(match[1]) * 3600 + parseInt(match[2]) * 60 + parseInt(match[3])
 }
 
-export function guessIntensity(name: string, ces: number | null, sport: string): IntensityKey {
+import type { HrZone } from '@/lib/health/hr-zones'
+import { hrZoneForAvgHr } from '@/lib/health/hr-zones'
+
+function zoneToIntensity(zone: number): IntensityKey {
+  if (zone <= 2) return 'footing'
+  if (zone === 3) return 'sortie_longue'
+  if (zone === 4) return 'seuil'
+  return 'vma'
+}
+
+export function guessIntensity(
+  name: string,
+  ces: number | null,
+  sport: string,
+  avgHr?: number | null,
+  hrZones?: HrZone[],
+): IntensityKey {
   const n = name.toLowerCase()
 
   if (n.includes('footing') || n.includes(' ef ') || n.includes('endurance facile') || n.includes('récup'))
@@ -66,6 +82,12 @@ export function guessIntensity(name: string, ces: number | null, sport: string):
   if (n.includes('course') || n.includes('compet') || n.includes('race')
       || n.includes('10k') || n.includes('semi') || n.includes('marathon'))
     return 'course'
+
+  // HR zone fallback (prioritized over CES)
+  if (avgHr != null && hrZones && hrZones.length > 0) {
+    const zone = hrZoneForAvgHr(avgHr, hrZones)
+    if (zone !== null) return zoneToIntensity(zone)
+  }
 
   // CES fallback
   if (ces !== null && ces > 120) return 'seuil'

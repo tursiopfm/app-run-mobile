@@ -13,6 +13,7 @@ import { fmtPaceSec, fmtDurationSec } from '@/lib/activities/detail'
 import type { StravaSplit } from '@/lib/activities/detail'
 import { sportLabel } from '@/lib/design/labels'
 import { guessIntensity } from '@/lib/activities/intensity'
+import { calculateHrZones, type HrZoneMethod } from '@/lib/health/hr-zones'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -268,7 +269,24 @@ export function ActivityDetailClient({
 
   const [activeTab, setActiveTab] = useState<Tab>(showSplits ? 'splits' : showZones ? 'zones' : 'stats')
 
-  const intensityKey = a.manual_intensity ?? guessIntensity(a.name, a.ces, effectiveSport)
+  const hrZones = (() => {
+    if (!athleteProfile) return []
+    try {
+      const method = (typeof window !== 'undefined'
+        ? (localStorage.getItem('tc_hr_zone_method') ?? 'pct_max')
+        : 'pct_max') as HrZoneMethod
+      return calculateHrZones({
+        method,
+        maxHr:              athleteProfile.max_hr,
+        restingHr:          athleteProfile.resting_hr,
+        aerobicThresholdHr: athleteProfile.aerobic_threshold_hr,
+        thresholdHr:        athleteProfile.threshold_hr,
+        birthYear:          athleteProfile.birth_year,
+      }).zones
+    } catch { return [] }
+  })()
+
+  const intensityKey = a.manual_intensity ?? guessIntensity(a.name, a.ces, effectiveSport, a.avg_hr, hrZones)
 
   // Pace / speed tile
   let paceLabel: string

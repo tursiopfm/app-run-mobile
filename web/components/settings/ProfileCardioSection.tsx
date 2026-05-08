@@ -66,8 +66,21 @@ export function ProfileCardioSection({ initial }: { initial: ProfileCardioData }
           birth_year:           birthYear  ? parseInt(birthYear)  : null,
         }),
       })
-      setStatus(res.ok ? 'saved' : 'error')
-      if (res.ok) setTimeout(() => setStatus('idle'), 2500)
+      if (res.ok) {
+        try {
+          localStorage.setItem('tc_athlete_hr', JSON.stringify({
+            maxHr:              maxHr     ? parseInt(maxHr)      : null,
+            restingHr:          restingHr ? parseInt(restingHr)  : null,
+            aerobicThresholdHr: aet       ? parseInt(aet)        : null,
+            thresholdHr:        lthr      ? parseInt(lthr)       : null,
+            birthYear:          birthYear ? parseInt(birthYear)  : null,
+          }))
+        } catch {}
+        setStatus('saved')
+        setTimeout(() => setStatus('idle'), 2500)
+      } else {
+        setStatus('error')
+      }
     } catch {
       setStatus('error')
     }
