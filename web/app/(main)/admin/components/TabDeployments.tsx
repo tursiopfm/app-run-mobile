@@ -1,5 +1,5 @@
 import { fetchVercelDeployments } from '@/lib/admin/vercel'
-import { formatRelativeTime } from '@/lib/admin/format'
+import { formatDateTime } from '@/lib/admin/format'
 
 const STATE_CONFIG: Record<string, { color: string; dot: string; label: string }> = {
   READY:    { color: 'text-trail-success', dot: 'bg-trail-success', label: 'Ready' },
@@ -37,7 +37,7 @@ export async function TabDeployments() {
             <p className="text-xs text-trail-muted truncate">{d.commitMessage}</p>
             <div className="flex items-center justify-between">
               <span className="text-xs text-trail-muted font-mono">{d.commitHash}</span>
-              <span className="text-xs text-trail-muted">{formatRelativeTime(new Date(d.createdAt).toISOString())}</span>
+              <span className="text-xs text-trail-muted">{formatDateTime(new Date(d.createdAt).toISOString())}</span>
             </div>
             {d.url && (
               <a href={d.url} target="_blank" rel="noreferrer"
