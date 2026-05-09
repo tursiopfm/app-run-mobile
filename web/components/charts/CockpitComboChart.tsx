@@ -43,7 +43,7 @@ export function CockpitComboChart({
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart
           data={data}
-          margin={{ top: chart.topPadCombo, right: 0, left: 0, bottom: 0 }}
+          margin={{ top: chart.topPadCombo + 18, right: 0, left: 0, bottom: 0 }}
           barCategoryGap={gap}
         >
           <CartesianGrid strokeDasharray="3 3" stroke={colors.border} vertical={false} />
@@ -70,7 +70,8 @@ export function CockpitComboChart({
               value: 'D+',
               position: 'insideTopLeft',
               offset: 0,
-              dy: -12,
+              dy: -28,
+              dx: 4,
               style: { fontSize: 11, fill: barColor, fontWeight: 700 },
             }}
           />
@@ -87,7 +88,8 @@ export function CockpitComboChart({
               value: 'KM',
               position: 'insideTopRight',
               offset: 0,
-              dy: -12,
+              dy: -28,
+              dx: -4,
               style: { fontSize: 11, fill: lineColor, fontWeight: 700 },
             }}
           />
