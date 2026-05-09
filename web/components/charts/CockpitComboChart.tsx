@@ -66,6 +66,13 @@ export function CockpitComboChart({
             axisLine={false}
             tickCount={chart.comboYTickCount}
             width={38}
+            label={{
+              value: 'D+',
+              position: 'insideTopLeft',
+              offset: 0,
+              dy: -12,
+              style: { fontSize: 11, fill: barColor, fontWeight: 700 },
+            }}
           />
           <YAxis
             yAxisId="line"
@@ -76,6 +83,13 @@ export function CockpitComboChart({
             axisLine={false}
             tickCount={chart.comboYTickCount}
             width={38}
+            label={{
+              value: 'KM',
+              position: 'insideTopRight',
+              offset: 0,
+              dy: -12,
+              style: { fontSize: 11, fill: lineColor, fontWeight: 700 },
+            }}
           />
           <Tooltip
             contentStyle={{
