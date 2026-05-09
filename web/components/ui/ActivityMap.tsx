@@ -105,12 +105,15 @@ function FitBounds({ positions }: { positions: LatLng[] }) {
   return null
 }
 
-function MapResizer({ expanded }: { expanded: boolean }) {
+function MapResizer({ expanded, positions }: { expanded: boolean; positions: LatLng[] }) {
   const map = useMap()
   useEffect(() => {
-    const timer = setTimeout(() => map.invalidateSize(), 310)
+    const timer = setTimeout(() => {
+      map.invalidateSize()
+      if (positions.length > 1) map.fitBounds(positions, { padding: [20, 20] })
+    }, 310)
     return () => clearTimeout(timer)
-  }, [map, expanded])
+  }, [map, expanded, positions])
   return null
 }
 
@@ -157,7 +160,7 @@ export function ActivityMap({ encodedPolyline, expanded = false }: { encodedPoly
         )}
         {expanded && <KmMarkers positions={positions} />}
         <FitBounds positions={positions} />
-        <MapResizer expanded={expanded} />
+        <MapResizer expanded={expanded} positions={positions} />
       </MapContainer>
 
       {/* Bouton de changement de vue — bas droite */}
