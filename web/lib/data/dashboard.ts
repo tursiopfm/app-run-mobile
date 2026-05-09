@@ -41,7 +41,14 @@ export type SportOverview = {
   last7Tsb: number[]
   weeklyPoints: WeeklyPoint[]
   cumulMonths: MonthSeries[]
+  cumulYears: MonthSeries[]
   intensityBreakdown: IntensityShare[]
+}
+
+type SlimActivity = {
+  sport_type: string
+  start_time: string
+  distance_m: number | null
 }
 
 export type IntensityShare = {
@@ -70,7 +77,7 @@ export type DashboardData = {
 }
 
 const DAY_ABBR = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
-const MONTH_CUMUL_COLORS = ['#4ADE80', '#FF6B35', '#F87171', '#38BDF8']
+const MONTH_CUMUL_COLORS = ['#4ADE80', '#FF6B35', '#FACC15', '#38BDF8']
 const MONTH_SHORT_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
 const INTENSITY_ORDER = ['Footing', 'Sortie longue', 'Seuil', 'VMA']
 
@@ -164,8 +171,76 @@ function filterSport(activities: ActivityRow[], types: readonly string[] | null)
   return activities.filter((a) => types.includes(a.sport_type))
 }
 
+function dayOfYearIdx(d: Date): number {
+  const y = d.getFullYear()
+  return Math.floor(
+    (Date.UTC(y, d.getMonth(), d.getDate()) - Date.UTC(y, 0, 1)) / 86_400_000,
+  )
+}
+
+function isLeapYear(y: number): boolean {
+  return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0
+}
+
+function buildCumulYears(
+  yearActivities: SlimActivity[],
+  types: readonly string[] | null,
+  now: Date,
+): MonthSeries[] {
+  const filtered = types
+    ? yearActivities.filter((a) => types.includes(a.sport_type))
+    : yearActivities
+
+  const byYear = new Map<number, SlimActivity[]>()
+  for (const a of filtered) {
+    const y = new Date(a.start_time).getFullYear()
+    const arr = byYear.get(y)
+    if (arr) arr.push(a)
+    else byYear.set(y, [a])
+  }
+
+  const series: MonthSeries[] = []
+  let colorIdx = 0
+  const startYear = now.getFullYear() - 3
+  const endYear = now.getFullYear()
+
+  for (let y = startYear; y <= endYear; y++) {
+    const yacts = byYear.get(y)
+    if (!yacts || yacts.length === 0) continue
+
+    const isCurrentYear = y === now.getFullYear()
+    const totalDays = isCurrentYear
+      ? dayOfYearIdx(now) + 1
+      : isLeapYear(y) ? 366 : 365
+
+    const dayKm = Array(totalDays).fill(0) as number[]
+    for (const a of yacts) {
+      const ad = new Date(a.start_time)
+      const idx = dayOfYearIdx(ad)
+      if (idx >= 0 && idx < totalDays) dayKm[idx] += (a.distance_m ?? 0) / 1000
+    }
+
+    const dailyCumul: number[] = []
+    let cumul = 0
+    for (let d = 0; d < totalDays; d++) {
+      cumul += dayKm[d]
+      dailyCumul.push(Math.round(cumul * 10) / 10)
+    }
+
+    series.push({
+      label: String(y),
+      color: MONTH_CUMUL_COLORS[colorIdx % MONTH_CUMUL_COLORS.length],
+      dailyCumul,
+    })
+    colorIdx++
+  }
+
+  return series
+}
+
 function buildSportOverview(
   all365: ActivityRow[],
+  yearActivities: SlimActivity[],
   types: readonly string[] | null,
   monday: Date,
   nextMonday: Date,
@@ -278,6 +353,8 @@ function buildSportOverview(
     .filter((l) => intensityMap.has(l))
     .map((l) => ({ label: l, km: Math.round((intensityMap.get(l) ?? 0) * 10) / 10 }))
 
+  const cumulYears = buildCumulYears(yearActivities, types, now)
+
   return {
     weekKm: Math.round(weekKm * 10) / 10,
     weekDPlus: Math.round(weekDPlus),
@@ -296,6 +373,7 @@ function buildSportOverview(
     last7Tsb,
     weeklyPoints,
     cumulMonths,
+    cumulYears,
     intensityBreakdown,
   }
 }
@@ -306,12 +384,21 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   const yearAgo = new Date()
   yearAgo.setDate(yearAgo.getDate() - 365)
 
-  const [{ data: rows }, { data: profile }] = await Promise.all([
+  const fourYearsAgo = new Date(new Date().getFullYear() - 3, 0, 1)
+
+  const [{ data: rows }, { data: yearRows }, { data: profile }] = await Promise.all([
     supabase
       .from('activities')
       .select('id, sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_intensity')
       .eq('user_id', userId)
       .gte('start_time', yearAgo.toISOString())
+      .is('deleted_at', null)
+      .order('start_time', { ascending: true }),
+    supabase
+      .from('activities')
+      .select('sport_type, start_time, distance_m')
+      .eq('user_id', userId)
+      .gte('start_time', fourYearsAgo.toISOString())
       .is('deleted_at', null)
       .order('start_time', { ascending: true }),
     supabase
@@ -322,6 +409,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   ])
 
   const activities = (rows ?? []) as ActivityRow[]
+  const yearActivities = (yearRows ?? []) as SlimActivity[]
 
   const hrZones: HrZone[] = (() => {
     if (!profile) return []
@@ -357,10 +445,10 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   const janFirst = new Date(now.getFullYear(), 0, 1)
 
   const sportOverviews: Record<SportKey, SportOverview> = {
-    run:  buildSportOverview(activities, SPORT_TYPE_MAP.run,  monday, nextMonday, janFirst, now, hrZones),
-    ride: buildSportOverview(activities, SPORT_TYPE_MAP.ride, monday, nextMonday, janFirst, now, hrZones),
-    swim: buildSportOverview(activities, SPORT_TYPE_MAP.swim, monday, nextMonday, janFirst, now, hrZones),
-    all:  buildSportOverview(activities, SPORT_TYPE_MAP.all,  monday, nextMonday, janFirst, now, hrZones),
+    run:  buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.run,  monday, nextMonday, janFirst, now, hrZones),
+    ride: buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.ride, monday, nextMonday, janFirst, now, hrZones),
+    swim: buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.swim, monday, nextMonday, janFirst, now, hrZones),
+    all:  buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.all,  monday, nextMonday, janFirst, now, hrZones),
   }
 
   const weekActivities = activities.filter((r) => {

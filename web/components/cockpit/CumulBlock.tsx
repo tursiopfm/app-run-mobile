@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { SportOverview } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
+import { colors } from '@/lib/design/colors'
 import { CockpitCumulChart } from '@/components/charts/CockpitCumulChart'
 import { SportSettingsModal } from './SportSettingsModal'
 
@@ -11,12 +12,15 @@ type Settings = { visible: SportKey[]; default: SportKey }
 const DEFAULT_SETTINGS: Settings = { visible: ['run', 'ride', 'swim', 'all'], default: 'run' }
 const STORAGE_KEY = 'cockpit_cumul_settings'
 
+type Period = 'month' | 'year'
+
 type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
 export function CumulBlock({ sportOverviews, onHide }: Props) {
   const [settings,   setSettings]   = useState<Settings>(DEFAULT_SETTINGS)
   const [currentIdx, setCurrentIdx] = useState(0)
   const [showModal,  setShowModal]  = useState(false)
+  const [period,     setPeriod]     = useState<Period>('month')
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -72,17 +76,38 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-[6px]">
         <div className="flex items-center gap-1">
-          <span className="text-[16px] font-semibold text-trail-muted">Cumul km/mois —</span>
+          <span className="text-[16px] font-semibold text-trail-muted">
+            Cumul km/{period === 'month' ? 'mois' : 'année'} —
+          </span>
           <span className="text-[16px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
           <span className="text-[16px] ml-0.5">{cfg.emoji}</span>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
-          aria-label="Paramètres cumul km"
-        >
-          ⋮
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Period tabs */}
+          <div className="flex gap-1">
+            {(['month', 'year'] as Period[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className="text-[11px] font-semibold px-2 py-0.5 rounded-full transition-colors"
+                style={{
+                  backgroundColor: period === p ? cfg.color : 'transparent',
+                  color:           period === p ? '#fff' : colors.subtleText,
+                  border:          `1px solid ${period === p ? cfg.color : colors.border}`,
+                }}
+              >
+                {p === 'month' ? 'Mois' : 'Année'}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setShowModal(true)}
+            className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
+            aria-label="Paramètres cumul km"
+          >
+            ⋮
+          </button>
+        </div>
       </div>
 
       {/* Carousel */}
@@ -94,15 +119,16 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
       >
         {visibleSports.map((sportKey) => {
           const sov = sportOverviews[sportKey]
+          const series = period === 'month' ? sov.cumulMonths : sov.cumulYears
 
           return (
             <div
               key={sportKey}
               style={{ flexShrink: 0, width: '100%', scrollSnapAlign: 'start' }}
             >
-              <CockpitCumulChart months={sov.cumulMonths} height={220} />
+              <CockpitCumulChart months={series} height={220} mode={period} />
               <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
-                {sov.cumulMonths.map((m) => (
+                {series.map((m) => (
                   <span key={m.label} className="flex items-center gap-1 text-[11px] text-trail-muted">
                     <span className="inline-block w-3 h-[3px] rounded-full" style={{ backgroundColor: m.color }} />
                     {m.label}

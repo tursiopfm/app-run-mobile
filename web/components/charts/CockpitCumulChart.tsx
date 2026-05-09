@@ -25,7 +25,12 @@ export type MonthSeries = {
 type Props = {
   months:  MonthSeries[]
   height?: number
+  mode?:   'month' | 'year'
 }
+
+// Day-of-year of each month start (non-leap calendar — close enough for tick positions).
+const MONTH_TICK_DAYS = [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335]
+const MONTH_TICK_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
 
 type DotProps = {
   cx?: number; cy?: number; index?: number;
@@ -54,7 +59,7 @@ function EndDot({ cx, cy, index, payload, dataKey, color, lastIndex }: DotProps)
   )
 }
 
-export function CockpitCumulChart({ months, height = 220 }: Props) {
+export function CockpitCumulChart({ months, height = 220, mode = 'month' }: Props) {
   const maxDays = Math.max(...months.map((m) => m.dailyCumul.length), 0)
 
   if (maxDays === 0) {
@@ -84,7 +89,15 @@ export function CockpitCumulChart({ months, height = 220 }: Props) {
           <XAxis
             dataKey="day"
             tick={{ fontSize: 12, fill: colors.subtleText }}
-            interval={4}
+            {...(mode === 'year'
+              ? {
+                  ticks: MONTH_TICK_DAYS.filter((d) => d <= maxDays),
+                  tickFormatter: (v: number) => {
+                    const idx = MONTH_TICK_DAYS.indexOf(v)
+                    return idx >= 0 ? MONTH_TICK_LABELS[idx] : ''
+                  },
+                }
+              : { interval: 4 })}
             stroke={colors.border}
             tickLine={false}
             height={20}
@@ -105,7 +118,7 @@ export function CockpitCumulChart({ months, height = 220 }: Props) {
               fontSize:     12,
             }}
             labelStyle={{ color: colors.subtleText }}
-            labelFormatter={(v) => `Jour ${v}`}
+            labelFormatter={(v) => (mode === 'year' ? `Jour ${v} de l'année` : `Jour ${v}`)}
             itemStyle={{ color: colors.text }}
           />
           {months.map((m) => {
