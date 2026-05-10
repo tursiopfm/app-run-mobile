@@ -5,23 +5,37 @@ const PER_PAGE = 200
 
 export type FetchActivitiesOptions = {
   after?: number
+  before?: number
   maxActivities?: number
 }
 
-async function fetchPage(
+export type FetchPageOptions = {
+  after?: number
+  before?: number
+  perPage?: number
+}
+
+export async function fetchStravaActivitiesPage(
   accessToken: string,
   page: number,
-  after?: number
+  options: FetchPageOptions = {}
 ): Promise<StravaActivity[]> {
   const params = new URLSearchParams({
-    per_page: String(PER_PAGE),
+    per_page: String(options.perPage ?? PER_PAGE),
     page: String(page),
-    ...(after !== undefined ? { after: String(after) } : {}),
+    ...(options.after !== undefined ? { after: String(options.after) } : {}),
+    ...(options.before !== undefined ? { before: String(options.before) } : {}),
   })
 
   const res = await fetch(`${STRAVA_BASE}/athlete/activities?${params}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   })
+
+  if (res.status === 429) {
+    const err = new Error('Strava rate limit (429)') as Error & { rateLimited: true }
+    err.rateLimited = true
+    throw err
+  }
 
   if (!res.ok) throw new Error(`Strava API error: ${res.status}`)
 
@@ -48,7 +62,10 @@ export async function fetchStravaActivities(
   let page = 1
 
   while (all.length < max) {
-    const batch = await fetchPage(accessToken, page, options.after)
+    const batch = await fetchStravaActivitiesPage(accessToken, page, {
+      after: options.after,
+      before: options.before,
+    })
     all.push(...batch)
     if (batch.length < PER_PAGE) break
     page++
