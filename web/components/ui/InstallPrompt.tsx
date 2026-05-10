@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Download, Share, Plus, X, Mountain } from 'lucide-react'
+import { Download, Share, Plus, X } from 'lucide-react'
 
 const DISMISS_KEY = 'trail.installPrompt.dismissedAt'
 const DISMISS_DAYS = 7
@@ -94,9 +94,7 @@ export function InstallPrompt() {
         className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm px-4 pb-safe">
         <div className="w-full max-w-md bg-trail-card border border-trail-border rounded-2xl p-5 shadow-2xl">
           <div className="flex items-start gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-trail-primary/20 border border-trail-primary/30 flex items-center justify-center shrink-0">
-              <Mountain className="text-trail-primary" size={20} />
-            </div>
+            <img src="/icons/icon-192.png" alt="" aria-hidden="true" className="w-10 h-10 rounded-xl shrink-0" />
             <div className="flex-1">
               <h2 className="text-trail-text font-semibold text-base">Installer Trail Cockpit</h2>
               <p className="text-trail-muted text-13 mt-0.5">Ajoute l&apos;app à ton écran d&apos;accueil</p>
@@ -136,9 +134,7 @@ export function InstallPrompt() {
     <div role="dialog" aria-label="Installer Trail Cockpit"
       className="fixed left-3 right-3 bottom-3 sm:left-auto sm:right-4 sm:bottom-4 sm:max-w-sm z-[60] pb-safe">
       <div className="bg-trail-card border border-trail-border rounded-2xl p-4 shadow-2xl flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-trail-primary/20 border border-trail-primary/30 flex items-center justify-center shrink-0">
-          <Mountain className="text-trail-primary" size={20} />
-        </div>
+        <img src="/icons/icon-192.png" alt="" aria-hidden="true" className="w-10 h-10 rounded-xl shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-trail-text font-semibold text-sm leading-tight">Installer Trail Cockpit</p>
           <p className="text-trail-muted text-xs mt-0.5 leading-snug">Accès rapide depuis ton écran d&apos;accueil</p>

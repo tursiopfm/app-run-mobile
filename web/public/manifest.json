@@ -1,6 +1,6 @@
 {
   "name": "Trail Cockpit",
-  "short_name": "Trail",
+  "short_name": "Trail Cockpit",
   "description": "Dashboard trail running & endurance",
   "start_url": "/dashboard",
   "scope": "/",
