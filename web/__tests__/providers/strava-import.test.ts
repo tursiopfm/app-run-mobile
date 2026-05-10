@@ -51,19 +51,19 @@ describe('processOneImportTick', () => {
     mockImport.mockResolvedValue({ saved: 0 })
   })
 
-  it('first tick: fetches without before, updates oldest_at and total', async () => {
-    const activities = [
-      makeStravaActivity({ id: 1, start_date: '2026-05-01T07:00:00Z' }),
-      makeStravaActivity({ id: 2, start_date: '2026-04-15T07:00:00Z' }),
-    ]
+  it('first tick: fetches without before, returns done=false when page is full', async () => {
+    // Simule une page Strava pleine (200 activités) → import non terminé
+    const activities = Array.from({ length: 200 }, (_, i) =>
+      makeStravaActivity({ id: i + 1, start_date: `2026-05-${String((i % 28) + 1).padStart(2, '0')}T07:00:00Z` })
+    )
     mockFetchPage.mockResolvedValue(activities)
-    mockImport.mockResolvedValue({ saved: 2 })
+    mockImport.mockResolvedValue({ saved: 200 })
     mockCreateClient.mockReturnValue(makeMockSupabase({ import_oldest_at: null }))
 
     const result = await processOneImportTick('user-1')
 
     expect(mockFetchPage).toHaveBeenCalledWith('fake-token', 1, expect.objectContaining({ before: undefined }))
-    expect(result).toEqual({ done: false, savedThisTick: 2, rateLimited: false })
+    expect(result).toEqual({ done: false, savedThisTick: 200, rateLimited: false })
   })
 
   it('next tick: fetches with before=oldest_at (in seconds)', async () => {
