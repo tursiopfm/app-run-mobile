@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
   try {
     const tokens = await exchangeStravaCode(code)
 
+    const now = new Date().toISOString()
     await supabase.from('provider_connections').upsert({
       user_id:         user.id,
       provider:        'strava',
@@ -42,7 +43,14 @@ export async function GET(request: NextRequest) {
       token_expires_at:new Date(tokens.expires_at * 1000).toISOString(),
       scope:           'activity:read_all,profile:read_all',
       athlete_data:    tokens.athlete,
-      updated_at:      new Date().toISOString(),
+      updated_at:      now,
+      import_status:   'pending',
+      import_started_at: now,
+      import_completed_at: null,
+      import_oldest_at: null,
+      import_total:    0,
+      import_last_error: null,
+      import_updated_at: null,
     }, { onConflict: 'user_id,provider' })
 
     return NextResponse.redirect(`${APP_URL}/settings?strava=connected`)
