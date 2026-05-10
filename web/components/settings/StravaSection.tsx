@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ExternalLink } from 'lucide-react'
+import { Activity, RefreshCw, Unplug } from 'lucide-react'
 
 type Props = {
   isConnected: boolean
@@ -45,45 +45,66 @@ export function StravaSection({ isConnected, athleteName }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-3 p-4">
-      <div className="w-9 h-9 rounded-xl bg-[#FC4C02]/15 flex items-center justify-center flex-shrink-0">
-        <ExternalLink size={16} className="text-[#FC4C02]" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-trail-text">Strava</p>
-        {isConnected ? (
-          <p className="text-xs text-green-500">
-            Connecté{athleteName ? ` — ${athleteName}` : ''}
+    <div className="rounded-[10px] bg-trail-surface px-3 py-[10px] space-y-[10px]">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-[10px] bg-[#FC4C02]/15 border border-[#FC4C02]/30 flex items-center justify-center flex-shrink-0">
+          <Activity size={14} className="text-[#FC4C02]" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-trail-muted">Strava</p>
+          <p className="text-[13px] text-trail-text truncate">
+            {isConnected ? (athleteName ?? 'Compte connecté') : 'Aucun compte lié'}
           </p>
-        ) : (
-          <p className="text-xs text-trail-muted">Non connecté</p>
-        )}
-        {syncMsg && <p className="text-xs text-trail-muted mt-0.5">{syncMsg}</p>}
+        </div>
+        <span
+          className={
+            'flex items-center gap-[5px] px-[10px] py-[4px] rounded-full text-[10px] font-bold uppercase tracking-wider flex-shrink-0 ' +
+            (isConnected
+              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+              : 'bg-amber-500/15 text-amber-400 border border-amber-500/30')
+          }
+        >
+          <span
+            className={
+              'w-[6px] h-[6px] rounded-full ' +
+              (isConnected ? 'bg-emerald-400' : 'bg-amber-400')
+            }
+          />
+          {isConnected ? 'Connecté' : 'Hors ligne'}
+        </span>
       </div>
+
       {isConnected ? (
-        <div className="flex gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2">
           <button
             onClick={handleSync}
             disabled={syncing}
-            className="px-3 py-1.5 rounded-lg border border-trail-border text-trail-text text-xs font-semibold disabled:opacity-50"
+            className="flex items-center justify-center gap-[6px] flex-1 px-3 py-[7px] rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] font-semibold hover:bg-trail-border/40 transition-colors disabled:opacity-50"
           >
-            {syncing ? '…' : 'Sync'}
+            <RefreshCw size={12} className={syncing ? 'animate-spin' : ''} />
+            {syncing ? 'Synchro…' : 'Synchroniser'}
           </button>
           <button
             onClick={handleDisconnect}
             disabled={disconnecting}
-            className="px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 text-xs font-semibold disabled:opacity-50"
+            className="flex items-center justify-center gap-[6px] px-3 py-[7px] rounded-[8px] border border-red-500/25 text-red-400 text-[12px] font-semibold hover:bg-red-500/10 transition-colors disabled:opacity-50"
           >
-            {disconnecting ? '…' : 'Déconnecter'}
+            <Unplug size={12} />
+            {disconnecting ? '…' : 'Délier'}
           </button>
         </div>
       ) : (
         <a
           href="/api/strava/connect"
-          className="px-3 py-1.5 rounded-lg bg-[#FC4C02] text-white text-xs font-semibold flex-shrink-0"
+          className="flex items-center justify-center gap-2 w-full px-3 py-[8px] rounded-[8px] bg-[#FC4C02] hover:bg-[#FC4C02]/90 text-white text-[12px] font-bold uppercase tracking-wider transition-colors"
         >
-          Connecter
+          <Activity size={13} />
+          Connecter mon compte Strava
         </a>
+      )}
+
+      {syncMsg && (
+        <p className="text-[11px] text-trail-muted text-center pt-[2px]">{syncMsg}</p>
       )}
     </div>
   )

@@ -1,52 +1,66 @@
-import Link from 'next/link'
+import { Plug2, Palette, Sparkles, LifeBuoy } from 'lucide-react'
 import { StravaSection } from '@/components/settings/StravaSection'
 import { AccountSection } from '@/components/settings/AccountSection'
 import { AppearanceSection } from '@/components/settings/AppearanceSection'
+import { HelpAboutSection } from '@/components/settings/HelpAboutSection'
 import { createClient } from '@/lib/database/supabase-server'
 import { getServerUser } from '@/lib/database/get-user'
-import { colors } from '@/lib/design/colors'
 import { settings as settingsLabels } from '@/lib/design/labels'
 
-// SettingsRow — mirror of SettingsRow composable (line 6183 of DashboardScreen.kt)
-// Surface bg, 12dp radius, px-12 py-10, title SubtleText + value accented right
-function SettingsRow({ title, value, accent }: { title: string; value: string; accent: string }) {
+// ── Section header with icon + title + subtitle (mirrors a true settings UI rhythm)
+function SectionHeader({
+  icon: Icon, title, subtitle,
+}: {
+  icon: typeof Plug2; title: string; subtitle: string
+}) {
   return (
-    <div
-      className="flex items-center justify-between rounded-[12px] bg-trail-surface"
-      style={{ padding: '10px 12px' }}
-    >
-      <span className="text-[14px] text-trail-muted">{title}</span>
-      <span className="text-[14px] font-semibold" style={{ color: accent }}>{value}</span>
+    <div className="flex items-center gap-[10px] px-1 mb-[10px]">
+      <div className="w-7 h-7 rounded-[8px] bg-trail-surface border border-trail-border flex items-center justify-center flex-shrink-0">
+        <Icon size={14} className="text-trail-primary" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[14px] font-bold text-trail-text leading-tight">{title}</p>
+        <p className="text-[11px] text-trail-muted leading-tight mt-[1px]">{subtitle}</p>
+      </div>
     </div>
   )
 }
 
-// SectionTitle — 15sp Bold text (mirrors SectionTitle composable)
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <p className="text-[15px] font-bold text-trail-text">{children}</p>
-}
-
-// BulletLine — mirrors BulletLine composable (6dp ChargeOrange circle + text)
-function BulletLine({ text }: { text: string }) {
-  return (
-    <div className="flex items-start gap-[4px]">
-      <div
-        className="flex-shrink-0 rounded-full mt-[6px]"
-        style={{ width: 6, height: 6, backgroundColor: colors.chargeOrange }}
-      />
-      <p className="text-[13px] text-trail-muted leading-[18px]">{text}</p>
-    </div>
-  )
-}
-
-// SectionCard — 12dp radius, CardBg, 10dp padding
+// ── Card container — keeps existing trail-card styling
 function SectionCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px] space-y-2">
+    <div className="rounded-[14px] bg-trail-card border border-trail-border p-[10px] space-y-[10px]">
       {children}
     </div>
   )
 }
+
+// ── Roadmap items grouped by theme — derived from project memory + TODO docs
+const ROADMAP: { group: string; items: string[] }[] = [
+  {
+    group: 'Intelligence',
+    items: [
+      'Coach IA personnalisé (résumé hebdo, conseil du jour)',
+      'Zones cardiaques configurables (manuel · déduit · mixte)',
+    ],
+  },
+  {
+    group: 'Personnalisation',
+    items: [
+      'Cockpit modulable — masquer / réorganiser les blocs',
+      'Vue annuelle avec D+ par mois',
+      'Semaine en cours redessinée — 7 cartes horizontales',
+    ],
+  },
+  {
+    group: 'Plateforme',
+    items: [
+      'Domaine personnalisé trailcockpit.app',
+      'Splash screen PWA optimisé Android & iOS',
+      'Espace admin branché sur les vraies données',
+    ],
+  },
+]
 
 export default async function SettingsPage() {
   const user = await getServerUser()
@@ -73,64 +87,93 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="px-3 py-3 space-y-3 max-w-lg mx-auto">
+    <div className="px-3 py-3 pb-10 space-y-4 max-w-lg mx-auto">
 
-        {/* ── Compte / Strava ── */}
+      {/* ── Page hero ── */}
+      <div className="px-1 pt-[2px]">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-trail-primary">
+          {settingsLabels.title}
+        </p>
+        <p className="text-[22px] font-black text-trail-text leading-tight mt-[2px]">
+          Compte, connexions & préférences
+        </p>
+        <p className="text-[12px] text-trail-muted leading-[16px] mt-[6px] max-w-[360px]">
+          Gère ton identité, tes intégrations sportives et l’apparence de ton cockpit.
+        </p>
+      </div>
+
+      {/* ── Compte & sync ── */}
+      <section>
+        <SectionHeader
+          icon={Plug2}
+          title={settingsLabels.sectionAccount}
+          subtitle="Identité Trail Cockpit et intégrations tierces"
+        />
         <SectionCard>
-          <SectionTitle>{settingsLabels.sectionAccount}</SectionTitle>
-          <div className="h-[10px]" />
-          <SettingsRow
-            title="Strava"
-            value={stravaConnected ? 'Connecté' : 'Non connecté'}
-            accent={stravaConnected ? colors.greenOk : colors.chargeOrange}
-          />
-          <SettingsRow
-            title="Athlète Strava"
-            value={stravaAthleteName ?? '—'}
-            accent={colors.seriesBlue}
-          />
-          <SettingsRow
-            title="OAuth Strava"
-            value={stravaConnected ? 'Prêt' : 'Non configuré'}
-            accent={colors.seriesYellow}
-          />
-          <div className="h-[2px]" />
-          {/* Strava action chips (client component) */}
+          <AccountSection />
           <StravaSection isConnected={stravaConnected} athleteName={stravaAthleteName} />
         </SectionCard>
+      </section>
 
-        {/* ── Apparence — chips interactifs (ActionChip fidèle Android) ── */}
+      {/* ── Apparence ── */}
+      <section>
+        <SectionHeader
+          icon={Palette}
+          title={settingsLabels.sectionAppearance}
+          subtitle="Thème et langue de l’interface"
+        />
         <SectionCard>
-          <SectionTitle>{settingsLabels.sectionAppearance}</SectionTitle>
-          <div className="h-[10px]" />
           <AppearanceSection />
         </SectionCard>
+      </section>
 
-        {/* Lien vers le profil */}
-        <Link href="/profile">
-          <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity">
-            <div>
-              <p className="text-[15px] font-bold text-trail-text">Profil sportif</p>
-              <p className="text-[13px] text-trail-muted mt-[2px]">Zones FC, données physiologiques</p>
-            </div>
-            <span className="text-[20px] text-trail-muted">›</span>
-          </div>
-        </Link>
-
-        {/* ── À venir ── */}
+      {/* ── Bientôt — feuille de route ── */}
+      <section>
+        <SectionHeader
+          icon={Sparkles}
+          title={settingsLabels.comingSoon}
+          subtitle="Prochaines étapes du produit"
+        />
         <SectionCard>
-          <SectionTitle>{settingsLabels.comingSoon}</SectionTitle>
-          <div className="h-[10px]" />
-          <BulletLine text="Notifications Strava" />
-          <BulletLine text="Métriques favorites" />
-          <BulletLine text="Thèmes personnalisés" />
-          <BulletLine text="Gestion du compte" />
+          <div className="space-y-[14px]">
+            {ROADMAP.map(({ group, items }) => (
+              <div key={group} className="space-y-[6px]">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-trail-muted px-1">
+                  {group}
+                </p>
+                <div className="space-y-[6px]">
+                  {items.map(text => (
+                    <div
+                      key={text}
+                      className="flex items-start gap-[10px] px-3 py-[8px] rounded-[10px] bg-trail-surface"
+                    >
+                      <div className="flex-shrink-0 mt-[6px] w-[6px] h-[6px] rounded-full bg-trail-primary" />
+                      <p className="text-[13px] text-trail-text leading-[18px]">{text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </SectionCard>
+      </section>
 
-        {/* Déconnexion */}
-        <div className="pt-1">
-          <AccountSection />
-        </div>
+      {/* ── Aide & À propos ── */}
+      <section>
+        <SectionHeader
+          icon={LifeBuoy}
+          title="Aide & À propos"
+          subtitle="Mentions, support et version de l’application"
+        />
+        <SectionCard>
+          <HelpAboutSection />
+        </SectionCard>
+      </section>
+
+      {/* ── Footer signature ── */}
+      <p className="text-center text-[10px] text-trail-muted/70 tracking-wider uppercase pt-2">
+        Trail Cockpit · Conçu pour les coureurs de trail
+      </p>
 
     </div>
   )

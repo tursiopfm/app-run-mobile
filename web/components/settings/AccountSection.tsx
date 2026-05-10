@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Mail, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/database/supabase-client'
 
 export function AccountSection() {
   const router = useRouter()
   const [email, setEmail] = useState<string | null>(null)
+  const [loggingOut, setLoggingOut] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -16,6 +18,7 @@ export function AccountSection() {
   }, [])
 
   async function handleLogout() {
+    setLoggingOut(true)
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/')
@@ -25,22 +28,24 @@ export function AccountSection() {
   if (!email) return null
 
   return (
-    <section>
-      <p className="text-xs font-semibold text-trail-muted uppercase tracking-wide mb-2 px-1">Compte</p>
-      <div className="bg-trail-card border border-trail-border rounded-2xl divide-y divide-trail-border">
-        <div className="flex items-center justify-between p-4">
-          <p className="text-sm text-trail-muted">Email</p>
-          <p className="text-sm text-trail-text truncate max-w-[200px]">{email}</p>
+    <div className="space-y-2">
+      <div className="flex items-center gap-3 px-3 py-[10px] rounded-[10px] bg-trail-surface">
+        <div className="w-8 h-8 rounded-[10px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
+          <Mail size={14} className="text-trail-muted" />
         </div>
-        <div className="p-4">
-          <button
-            onClick={handleLogout}
-            className="w-full text-sm text-red-500 font-medium py-1"
-          >
-            Se déconnecter
-          </button>
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-trail-muted">Email</p>
+          <p className="text-[13px] text-trail-text truncate">{email}</p>
         </div>
+        <button
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="flex items-center gap-[6px] px-3 py-[6px] rounded-full border border-red-500/25 text-red-400 text-[11px] font-semibold tracking-wide hover:bg-red-500/10 transition-colors disabled:opacity-50 flex-shrink-0"
+        >
+          <LogOut size={12} />
+          {loggingOut ? '…' : 'Déconnexion'}
+        </button>
       </div>
-    </section>
+    </div>
   )
 }
