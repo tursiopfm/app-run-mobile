@@ -45,7 +45,8 @@ export function ImportProgressBanner() {
       const next = await fetchStatus()
       if (cancelled) return
       setData(next)
-      if (next && (next.status === 'completed' || next.status === 'error')) {
+      // Stop polling on terminal states OR idle (no Strava connection / never started)
+      if (next && (next.status === 'idle' || next.status === 'completed' || next.status === 'error')) {
         if (intervalRef.current) clearInterval(intervalRef.current)
       }
     }

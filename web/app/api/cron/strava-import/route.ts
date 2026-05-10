@@ -6,9 +6,10 @@ const MAX_USERS_PER_TICK = 5
 const STALE_THRESHOLD_SEC = 50
 
 export async function GET(request: Request) {
-  // Auth: header injecté par Vercel pour les crons
+  // Auth: header injecté par Vercel pour les crons. Fail closed if secret missing.
+  const secret = process.env.CRON_SECRET
   const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!secret || authHeader !== `Bearer ${secret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
