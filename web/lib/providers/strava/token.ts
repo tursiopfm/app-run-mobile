@@ -1,11 +1,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { createClient } from '@/lib/database/supabase-server'
+import { createServiceClient } from '@/lib/database/supabase-server'
 
 const STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token'
 const BUFFER_MS = 300 * 1000 // refresh 5 minutes before expiry
 
+// Use service-role client: callers always pass an explicit userId, and the cron
+// runs without a user session. RLS would block the user-scoped client.
 export async function getValidStravaToken(userId: string): Promise<string> {
-  const supabase = await createClient()
+  const supabase = createServiceClient()
 
   const { data, error } = await supabase
     .from('provider_connections')
