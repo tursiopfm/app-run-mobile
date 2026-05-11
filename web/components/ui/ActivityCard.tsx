@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { colors } from '@/lib/design/colors'
 import { sportLabel } from '@/lib/design/labels'
-import { guessIntensity } from '@/lib/activities/intensity'
+import { guessIntensity, type IntensityKey } from '@/lib/activities/intensity'
 import type { HrZone } from '@/lib/health/hr-zones'
 import { EffortPopup, IntensityPopup } from '@/components/ui/ActivityPopups'
 import { Dumbbell } from 'lucide-react'
@@ -12,11 +12,8 @@ const INTENSITY_EMOJI: Record<string, string> = {
   recuperation:     '😴',
   footing:          '🦶',
   endurance_active: '🔄',
-  sortie_longue:    '🐢',
-  cotes:            '⛰️',
-  vma:              '🔥',
   seuil:            '🎯',
-  autre:            '❓',
+  vma:              '🔥',
 }
 
 const SPORT_COLORS: Record<string, string> = {
@@ -126,6 +123,7 @@ export type ActivityRow = {
   moving_time_sec:         number | null
   manual_sport_type:       string | null
   manual_intensity:        string | null
+  manual_workout_type:     string | null
   manual_distance_m:       number | null
   manual_moving_time_sec:  number | null
   manual_elevation_gain_m: number | null
@@ -155,8 +153,7 @@ export function ActivityCard({
   const ces   = a.ces != null ? Math.round(a.ces).toString() : '—'
   const fourth = fourthMetric(effectiveSport, effectiveDistance, effectiveDuration, a.ces)
 
-  const intensityKey   = (a.manual_intensity as string | null) ?? guessIntensity(a.name, effectiveSport, a.avg_hr, hrZones)
-  const intensityEmoji = INTENSITY_EMOJI[intensityKey] ?? '❓'
+  const intensityKey = (a.manual_intensity as IntensityKey | null) ?? guessIntensity(a.avg_hr, hrZones)
   const cesVal = a.ces ?? 0
   const effortColor =
     cesVal <= 40  ? '#38bdf8' :
@@ -169,7 +166,7 @@ export function ActivityCard({
       {popup === 'effort' && (
         <EffortPopup ces={a.ces} onClose={() => setPopup(null)} />
       )}
-      {popup === 'intensity' && (
+      {popup === 'intensity' && intensityKey && (
         <IntensityPopup intensityKey={intensityKey} onClose={() => setPopup(null)} />
       )}
       <div
@@ -222,13 +219,15 @@ export function ActivityCard({
                 <Dumbbell size={14} strokeWidth={2.2} />
                 {ces}
               </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setPopup('intensity') }}
-                className="flex items-center justify-center text-[18px] leading-none"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-              >
-                {intensityEmoji}
-              </button>
+              {intensityKey && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setPopup('intensity') }}
+                  className="flex items-center justify-center text-[18px] leading-none"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                >
+                  {INTENSITY_EMOJI[intensityKey] ?? '❓'}
+                </button>
+              )}
             </div>
           </div>
         </div>

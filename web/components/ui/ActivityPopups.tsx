@@ -8,22 +8,16 @@ const INTENSITY_EMOJI: Record<string, string> = {
   recuperation:     '😴',
   footing:          '🦶',
   endurance_active: '🔄',
-  sortie_longue:    '🐢',
-  cotes:            '⛰️',
-  vma:              '🔥',
   seuil:            '🎯',
-  autre:            '❓',
+  vma:              '🔥',
 }
 
 const INTENSITY_DESC: Record<string, string> = {
-  recuperation:     'Récupération active, très basse intensité',
-  footing:          'Endurance fondamentale, allure confortable',
-  endurance_active: 'Allure aérobie soutenue (Z3)',
-  sortie_longue:    'Longue durée, rythme lent et régulier',
-  cotes:            'Montées répétées, développe la force',
-  vma:              'Effort maximal court, fractionné',
-  seuil:            'Allure soutenue proche du seuil anaérobie',
-  autre:            'Autre type de séance',
+  recuperation:     'très facile, récupération active',
+  footing:          'endurance fondamentale',
+  endurance_active: 'tempo, effort soutenu mais aérobie',
+  seuil:            'proche du seuil anaérobie',
+  vma:              'VO₂max, effort maximal',
 }
 
 export const CES_RANGES = [
