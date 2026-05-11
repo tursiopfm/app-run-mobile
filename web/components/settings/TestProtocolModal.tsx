@@ -48,6 +48,7 @@ export function TestProtocolModal({ open, onClose }: { open: boolean; onClose: (
             <li>Démarre à un rythme que tu sais tenir 30 min — pas un sprint</li>
             <li>Démarre le lap <strong>après 10 min</strong> de test (clé du protocole)</li>
             <li>Garde un effort très régulier sur les 20 dernières minutes</li>
+            <li>Ta <strong>FC moyenne des minutes 10 à 30 = ta FC seuil course à pied</strong></li>
           </ul>
         </section>
 
