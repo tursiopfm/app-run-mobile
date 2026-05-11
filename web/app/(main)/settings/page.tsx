@@ -48,17 +48,21 @@ const ROADMAP: { group: string; items: string[] }[] = [
   {
     group: 'Personnalisation',
     items: [
-      'Cockpit modulable — masquer / réorganiser les blocs',
-      'Vue annuelle avec D+ par mois',
-      'Semaine en cours redessinée — 7 cartes horizontales',
+      'Plan d’entraînement personnalisable manuellement',
+      'Data cockpit entièrement personnalisables',
     ],
   },
   {
-    group: 'Plateforme',
+    group: 'Gestion de course',
     items: [
-      'Domaine personnalisé trailcockpit.app',
-      'Splash screen PWA optimisé Android & iOS',
-      'Espace admin branché sur les vraies données',
+      'Définir son calendrier de course',
+      'Tableau de plan de course (ravito, BH, temps de passage)',
+    ],
+  },
+  {
+    group: 'Indicateurs physiologiques',
+    items: [
+      'Amélioration des indicateurs d’effort et de fatigue',
     ],
   },
 ]
