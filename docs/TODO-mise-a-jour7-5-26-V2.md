@@ -14,20 +14,20 @@
 
 ## 👤 Page Profil (via ⋮ dans l'entête)
 
-- [ ] Changer le lien ⋮ de /settings → /profile
-- [ ] Restructurer la page Profil :
-  - Section "Méthode de calcul des zones" (existant)
-  - Section "Source des valeurs" (nouveau — localStorage)
-  - Section "Données cardio" (FC max, AeT*, LTHR)
-  - Section "Infos athlète" (poids, année naissance*)
-  - Section "Zones FC utilisées" (calcul live TypeScript, Z1→Z5)
-- [ ] Migration Supabase : ajouter `aerobic_threshold_hr` + `birth_year` sur `profiles`
-- [ ] Mettre à jour l'API `/api/profile` pour autoriser les nouveaux champs
+- [x] Changer le lien ⋮ de /settings → /profile
+- [x] Restructurer la page Profil :
+  - [x] Section "Méthode de calcul des zones" (existant)
+  - [x] Section "Source des valeurs" (nouveau — localStorage)
+  - [x] Section "Données cardio" (FC max, AeT, LTHR)
+  - [x] Section "Infos athlète" (poids, année naissance)
+  - [x] Section "Zones FC utilisées" (calcul live TypeScript, Z1→Z5)
+- [x] Migration Supabase : `aerobic_threshold_hr` + `birth_year` sur `profiles` (migration 004)
+- [x] Mettre à jour l'API `/api/profile` pour autoriser les nouveaux champs
 
 ## 🎯 Onglet Cockpit — Bloc Objectif
 
-- [ ] Renommer "Distance hebdo" → "Km semaine"
-- [ ] Renommer "Distance annuelle" → "Km année"
+- [x] Renommer "Distance hebdo" → "Km semaine"
+- [x] Renommer "Distance annuelle" → "Km année"
 
 ## 📊 Onglet Cockpit — Historique
 
@@ -44,3 +44,4 @@
 ---
 
 *Généré le 7 mai 2026 — Trail Cockpit PWA — suite à la session de corrections V2*
+*Mis à jour le 9 mai 2026 — items profil/page profil/Goals livrés*
