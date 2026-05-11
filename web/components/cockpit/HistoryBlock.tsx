@@ -20,7 +20,32 @@ const MONTH_NAMES_FR = [
 ]
 
 type Pill = { label: string; km: number; dPlus: number }
-type PeriodView = { pills: Pill[]; periodLabel: string; hasPrev: boolean }
+type PeriodView = {
+  pills: Pill[]
+  periodLabel: string
+  hasPrev: boolean
+  totalKm: number
+  totalDPlus: number
+}
+
+function fmtDuration(totalKm: number, totalDPlus: number): string {
+  // Same heuristic as WeekBlock: ~6 min/km + ~1 min per 100 m D+
+  const estSec = Math.round(totalKm * 360 + totalDPlus * 0.6)
+  if (estSec === 0) return '—'
+  const h = Math.floor(estSec / 3600)
+  const m = Math.floor((estSec % 3600) / 60)
+  return h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m}min`
+}
+
+function sumPills(pills: Pill[]): { totalKm: number; totalDPlus: number } {
+  let km = 0
+  let dPlus = 0
+  for (const p of pills) {
+    km    += p.km
+    dPlus += p.dPlus
+  }
+  return { totalKm: Math.round(km * 10) / 10, totalDPlus: Math.round(dPlus) }
+}
 
 type Props = {
   sportOverviews: Record<SportKey, SportOverview>
@@ -74,6 +99,7 @@ function buildWeekView(
     pills,
     periodLabel: `Sem. ${ddmm(monday)} → ${ddmm(sunday)}`,
     hasPrev:     !!oldestDate && oldestDate < localDateKey(monday),
+    ...sumPills(pills),
   }
 }
 
@@ -117,6 +143,7 @@ function buildMonthView(
     pills,
     periodLabel: `${MONTH_NAMES_FR[monthStart.getMonth()]} ${monthStart.getFullYear()}`,
     hasPrev:     !!oldestDate && oldestDate < localDateKey(monthStart),
+    ...sumPills(pills),
   }
 }
 
@@ -146,6 +173,7 @@ function buildYearView(
     pills,
     periodLabel: yearStr,
     hasPrev:     !!oldestDate && oldestDate < `${year}-01-01`,
+    ...sumPills(pills),
   }
 }
 
@@ -356,6 +384,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
         {visibleSports.map((sportKey) => {
           const scfg = SPORT_CONFIG[sportKey]
           const view = sportViews[sportKey]
+          const durLabel = fmtDuration(view.totalKm, view.totalDPlus)
           return (
             <div
               key={sportKey}
@@ -381,6 +410,37 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
                     Aucune donnée
                   </div>
                 )}
+              </div>
+
+              {/* Summary row — Total / D+ / Durée */}
+              <div
+                className="flex justify-around items-center mt-[8px] pt-[8px]"
+                style={{ borderTop: `1px solid ${colors.border}` }}
+              >
+                <div className="flex flex-col items-center gap-[1px]">
+                  <span style={{ fontSize: 13, fontWeight: 800, color: scfg.color }}>
+                    {view.totalKm > 0
+                      ? (view.totalKm < 10 ? view.totalKm.toFixed(1) : Math.round(view.totalKm))
+                      : '—'}
+                    {view.totalKm > 0 && (
+                      <span style={{ fontSize: 9, fontWeight: 400, color: colors.subtleText }}> km</span>
+                    )}
+                  </span>
+                  <span style={{ fontSize: 9, color: colors.subtleText }}>Total</span>
+                </div>
+                <div className="flex flex-col items-center gap-[1px]">
+                  <span style={{ fontSize: 13, fontWeight: 800, color: '#4db6f0' }}>
+                    {view.totalDPlus > 0 ? `${view.totalDPlus}` : '—'}
+                    {view.totalDPlus > 0 && (
+                      <span style={{ fontSize: 9, fontWeight: 400, color: colors.subtleText }}> m</span>
+                    )}
+                  </span>
+                  <span style={{ fontSize: 9, color: colors.subtleText }}>D+</span>
+                </div>
+                <div className="flex flex-col items-center gap-[1px]">
+                  <span style={{ fontSize: 13, fontWeight: 800, color: '#4caf50' }}>{durLabel}</span>
+                  <span style={{ fontSize: 9, color: colors.subtleText }}>Durée</span>
+                </div>
               </div>
             </div>
           )
