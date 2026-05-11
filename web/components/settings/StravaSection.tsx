@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Activity, RefreshCw, Unplug } from 'lucide-react'
+import { Activity, RefreshCw, LogOut } from 'lucide-react'
 
 type Props = {
   isConnected: boolean
@@ -87,10 +87,10 @@ export function StravaSection({ isConnected, athleteName }: Props) {
           <button
             onClick={handleDisconnect}
             disabled={disconnecting}
-            className="flex items-center justify-center gap-[6px] px-3 py-[7px] rounded-[8px] border border-red-500/25 text-red-400 text-[12px] font-semibold hover:bg-red-500/10 transition-colors disabled:opacity-50"
+            className="flex items-center gap-[6px] px-3 py-[6px] rounded-full border border-red-500/25 text-red-400 text-[11px] font-semibold tracking-wide hover:bg-red-500/10 transition-colors disabled:opacity-50 flex-shrink-0"
           >
-            <Unplug size={12} />
-            {disconnecting ? '…' : 'Délier'}
+            <LogOut size={12} />
+            {disconnecting ? '…' : 'Déconnexion'}
           </button>
         </div>
       ) : (
