@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/database/supabase-server'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
 
-const SELECT_COLS = 'id, name, sport_type, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_sport_type, manual_intensity, manual_distance_m, manual_moving_time_sec, manual_elevation_gain_m'
+const SELECT_COLS = 'id, name, sport_type, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_sport_type, manual_intensity, manual_workout_type, manual_distance_m, manual_moving_time_sec, manual_elevation_gain_m'
 const PAGE_SIZE = 1000
 
 export async function GET(req: NextRequest) {
