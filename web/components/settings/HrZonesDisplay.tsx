@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { calculateHrZones, type HrZoneMethod } from '@/lib/health/hr-zones'
+import { calculateHrZones, type HrZoneMethod, type CustomZoneInput } from '@/lib/health/hr-zones'
 import { colors } from '@/lib/design/colors'
 
 type Props = {
@@ -11,6 +11,7 @@ type Props = {
   aerobicThresholdHr?: number | null
   thresholdHr?:        number | null
   birthYear?:          number | null
+  customZones?:        CustomZoneInput[] | null
 }
 
 const METHOD_LABELS: Record<HrZoneMethod, string> = {
@@ -23,7 +24,7 @@ const METHOD_LABELS: Record<HrZoneMethod, string> = {
   custom:   'Personnalisé',
 }
 
-export function HrZonesDisplay({ method: methodProp, maxHr, restingHr, aerobicThresholdHr, thresholdHr, birthYear: birthYearProp }: Props) {
+export function HrZonesDisplay({ method: methodProp, maxHr, restingHr, aerobicThresholdHr, thresholdHr, birthYear: birthYearProp, customZones }: Props) {
   const [methodLocal,    setMethodLocal]    = useState<HrZoneMethod>('seuils')
   const [birthYearLocal, setBirthYearLocal] = useState<number | null>(null)
 
@@ -36,7 +37,7 @@ export function HrZonesDisplay({ method: methodProp, maxHr, restingHr, aerobicTh
 
   const method    = methodProp    ?? methodLocal
   const birthYear = birthYearProp ?? birthYearLocal
-  const result = calculateHrZones({ method, maxHr, restingHr, aerobicThresholdHr, thresholdHr, birthYear })
+  const result = calculateHrZones({ method, maxHr, restingHr, aerobicThresholdHr, thresholdHr, birthYear, customZones })
 
   if (result.zones.length === 0) {
     return (

@@ -45,6 +45,8 @@ export function hrZoneForAvgHr(avgHr: number, zones: HrZone[]): number | null {
   return zones[zones.length - 1].zone
 }
 
+export type CustomZoneInput = { zone: number; min: number | null; max: number | null }
+
 export function calculateHrZones(params: {
   method:              HrZoneMethod
   maxHr?:              number | null
@@ -52,8 +54,9 @@ export function calculateHrZones(params: {
   aerobicThresholdHr?: number | null
   thresholdHr?:        number | null
   birthYear?:          number | null
+  customZones?:        CustomZoneInput[] | null
 }): HrZoneResult {
-  const { method, maxHr, restingHr, aerobicThresholdHr, thresholdHr, birthYear } = params
+  const { method, maxHr, restingHr, aerobicThresholdHr, thresholdHr, birthYear, customZones } = params
   const missing: string[] = []
 
   function need(val: number | null | undefined, key: string): number | null {
@@ -115,8 +118,25 @@ export function calculateHrZones(params: {
       const maxes = [0.60, 0.70, 0.80, 0.90].map(p => Math.round(rest + p * reserve)).concat([max])
       return { zones: makeZones(pctRanges(maxes)), method, confidence: 'Adaptative', maxHrUsed: max, missing }
     }
-    default:
-      return { zones: [], method, confidence: 'Personnalisée', maxHrUsed: null, missing }
+    case 'custom': {
+      if (!customZones || customZones.length !== 5) {
+        missing.push('5 zones Z1–Z5')
+        return { zones: [], method, confidence: 'Personnalisée', maxHrUsed: null, missing }
+      }
+      const incomplete = customZones.some(z => z.max == null || (z.zone !== 1 && z.min == null))
+      if (incomplete) {
+        missing.push('valeurs Z1–Z5')
+        return { zones: [], method, confidence: 'Personnalisée', maxHrUsed: null, missing }
+      }
+      const zones: HrZone[] = customZones.map((z, i) => ({
+        zone:  z.zone,
+        name:  ZONE_NAMES[i],
+        min:   z.min,
+        max:   z.max as number,
+        color: ZONE_COLORS[i],
+      }))
+      return { zones, method, confidence: 'Personnalisée', maxHrUsed: zones[4].max, missing }
+    }
   }
 }
 

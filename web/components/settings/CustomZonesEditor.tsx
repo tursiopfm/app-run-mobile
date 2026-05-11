@@ -48,7 +48,11 @@ export function CustomZonesEditor({
 
   function update(idx: number, field: 'min' | 'max', value: string) {
     const v = value === '' ? null : parseInt(value, 10)
-    const next = zones.map((z, i) => i === idx ? { ...z, [field]: Number.isFinite(v) ? v : null } : z)
+    const cleaned = Number.isFinite(v) ? v : null
+    const next = zones.map((z, i) => i === idx ? { ...z, [field]: cleaned } : z)
+    if (field === 'max' && cleaned != null && idx < 4) {
+      next[idx + 1] = { ...next[idx + 1], min: cleaned + 1 }
+    }
     setZones(next)
     onChange(next, validateCustomZones(next))
   }

@@ -160,6 +160,7 @@ export function HrCalibrationCard({
           aerobicThresholdHr={state.aerobic_threshold_hr}
           thresholdHr={method === 'deduced' ? (deduced.lthrEstimated ?? state.threshold_hr) : state.threshold_hr}
           birthYear={state.birth_year}
+          customZones={state.hr_zones_custom}
         />
       </div>
     </div>
