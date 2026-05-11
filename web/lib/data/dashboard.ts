@@ -23,6 +23,8 @@ export type DaySession = {
   dPlus: number
 }
 
+export type DailyHistoryEntry = { date: string; km: number; dPlus: number }
+
 export type SportOverview = {
   weekKm: number
   weekDPlus: number
@@ -43,12 +45,14 @@ export type SportOverview = {
   cumulMonths: MonthSeries[]
   cumulYears: MonthSeries[]
   intensityBreakdown: IntensityShare[]
+  dailyHistory: DailyHistoryEntry[]
 }
 
 type SlimActivity = {
   sport_type: string
   start_time: string
   distance_m: number | null
+  elevation_gain_m: number | null
 }
 
 export type IntensityShare = {
@@ -90,6 +94,13 @@ const INTENSITY_ORDER = ['Footing', 'Sortie longue', 'Seuil', 'VMA']
 // ISO week day to 0-based Mon index: Sun=6, Mon=0, Tue=1 … Sat=5
 function toMonIndex(jsDay: number): number {
   return jsDay === 0 ? 6 : jsDay - 1
+}
+
+function localDateKey(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 function getWeekStart(date: Date): Date {
@@ -357,6 +368,27 @@ function buildSportOverview(
 
   const cumulYears = buildCumulYears(yearActivities, types, now)
 
+  // Daily history across the user's entire activity range (per sport, slim).
+  // Used by HistoryBlock to navigate back through past weeks/months/years.
+  const fullHistory = types
+    ? yearActivities.filter((a) => types.includes(a.sport_type))
+    : yearActivities
+  const historyMap = new Map<string, { km: number; dPlus: number }>()
+  for (const a of fullHistory) {
+    const key = localDateKey(new Date(a.start_time))
+    const entry = historyMap.get(key) ?? { km: 0, dPlus: 0 }
+    entry.km    += (a.distance_m       ?? 0) / 1000
+    entry.dPlus += (a.elevation_gain_m  ?? 0)
+    historyMap.set(key, entry)
+  }
+  const dailyHistory: DailyHistoryEntry[] = Array.from(historyMap.entries())
+    .map(([date, v]) => ({
+      date,
+      km:    Math.round(v.km * 10) / 10,
+      dPlus: Math.round(v.dPlus),
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+
   return {
     weekKm: Math.round(weekKm * 10) / 10,
     weekDPlus: Math.round(weekDPlus),
@@ -377,6 +409,7 @@ function buildSportOverview(
     cumulMonths,
     cumulYears,
     intensityBreakdown,
+    dailyHistory,
   }
 }
 
@@ -390,7 +423,7 @@ async function fetchAllHistorySlim(
   for (let from = 0; ; from += HISTORY_PAGE_SIZE) {
     const { data, error } = await supabase
       .from('activities')
-      .select('sport_type, start_time, distance_m')
+      .select('sport_type, start_time, distance_m, elevation_gain_m')
       .eq('user_id', userId)
       .is('deleted_at', null)
       .order('start_time', { ascending: true })

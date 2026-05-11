@@ -223,10 +223,6 @@ export function DashboardGrid({ sportOverviews, weekSessions }: Props) {
     })
   }
 
-  const weeklyPoints = sportOverviews.all.weeklyPoints.map((w) => ({
-    label: w.weekLabel, km: w.km, dPlus: w.dPlus,
-  }))
-
   const visibleOrder = order.filter((id) => !hidden.includes(id))
 
   function renderBlock(id: BlockId) {
@@ -235,7 +231,7 @@ export function DashboardGrid({ sportOverviews, weekSessions }: Props) {
       case 'goals':      return <GoalsBlock        sportOverviews={sportOverviews} onHide={() => hideBlock(id)} />
       case 'weekly':     return <WeeklyStatsBlock  sportOverviews={sportOverviews} onHide={() => hideBlock(id)} />
       case 'charge':     return <ChargeBlock        sportOverviews={sportOverviews} onHide={() => hideBlock(id)} />
-      case 'history':    return <HistoryBlock       sportOverviews={sportOverviews} weeklyPoints={weeklyPoints} onHide={() => hideBlock(id)} />
+      case 'history':    return <HistoryBlock       sportOverviews={sportOverviews} onHide={() => hideBlock(id)} />
       case 'cumul':      return <CumulBlock         sportOverviews={sportOverviews} onHide={() => hideBlock(id)} />
       case 'intensity':  return <IntensityBlock     sportOverviews={sportOverviews} onHide={() => hideBlock(id)} />
       case 'week':       return <WeekBlock          sportOverviews={sportOverviews} allSessions={weekSessions} />

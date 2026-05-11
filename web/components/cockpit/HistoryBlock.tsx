@@ -1,8 +1,8 @@
 // web/components/cockpit/HistoryBlock.tsx
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import type { SportOverview } from '@/lib/data/dashboard'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import type { SportOverview, DailyHistoryEntry } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import { SportSettingsModal } from './SportSettingsModal'
 import { colors } from '@/lib/design/colors'
@@ -14,12 +14,158 @@ const STORAGE_KEY = 'cockpit_history_settings'
 type Period = 'week' | 'month' | 'year'
 const MONTH_LETTERS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D']
 const DAY_ABBR = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+const MONTH_NAMES_FR = [
+  'Janvier', 'Février', 'Mars',    'Avril', 'Mai',      'Juin',
+  'Juillet', 'Août',    'Septembre','Octobre','Novembre','Décembre',
+]
+
+type Pill = { label: string; km: number; dPlus: number }
+type PeriodView = { pills: Pill[]; periodLabel: string; hasPrev: boolean }
 
 type Props = {
   sportOverviews: Record<SportKey, SportOverview>
-  weeklyPoints: { label: string; km: number; dPlus: number }[]
   onHide?: () => void
 }
+
+// ── Date helpers ──────────────────────────────────────────────────────────
+
+function localDateKey(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function ddmm(d: Date): string {
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+function mondayOf(d: Date): Date {
+  const out = new Date(d)
+  const jsDay = out.getDay()
+  const diff = jsDay === 0 ? -6 : 1 - jsDay
+  out.setDate(out.getDate() + diff)
+  out.setHours(0, 0, 0, 0)
+  return out
+}
+
+function addDays(d: Date, n: number): Date {
+  const out = new Date(d)
+  out.setDate(out.getDate() + n)
+  return out
+}
+
+// ── Period views ──────────────────────────────────────────────────────────
+
+function buildWeekView(
+  daily: Map<string, { km: number; dPlus: number }>,
+  offset: number,
+  now: Date,
+  oldestDate: string | null,
+): PeriodView {
+  const monday = mondayOf(now)
+  monday.setDate(monday.getDate() + offset * 7)
+  const sunday = addDays(monday, 6)
+  const pills: Pill[] = DAY_ABBR.map((day, i) => {
+    const e = daily.get(localDateKey(addDays(monday, i)))
+    return { label: day, km: e?.km ?? 0, dPlus: e?.dPlus ?? 0 }
+  })
+  return {
+    pills,
+    periodLabel: `Sem. ${ddmm(monday)} → ${ddmm(sunday)}`,
+    hasPrev:     !!oldestDate && oldestDate < localDateKey(monday),
+  }
+}
+
+function buildMonthView(
+  daily: Map<string, { km: number; dPlus: number }>,
+  offset: number,
+  now: Date,
+  oldestDate: string | null,
+): PeriodView {
+  const monthStart = new Date(now.getFullYear(), now.getMonth() + offset, 1)
+  monthStart.setHours(0, 0, 0, 0)
+
+  // First Monday whose week intersects this month: Monday of the week
+  // containing the 1st — clipped to within the month if it falls before.
+  let weekStart = mondayOf(monthStart)
+  if (weekStart < monthStart) weekStart = addDays(weekStart, 7)
+
+  const pills: Pill[] = []
+  while (
+    weekStart.getFullYear() === monthStart.getFullYear() &&
+    weekStart.getMonth()    === monthStart.getMonth()
+  ) {
+    let km = 0
+    let dPlus = 0
+    for (let i = 0; i < 7; i++) {
+      const e = daily.get(localDateKey(addDays(weekStart, i)))
+      if (e) {
+        km    += e.km
+        dPlus += e.dPlus
+      }
+    }
+    pills.push({
+      label: ddmm(weekStart),
+      km:    Math.round(km * 10) / 10,
+      dPlus: Math.round(dPlus),
+    })
+    weekStart = addDays(weekStart, 7)
+  }
+
+  return {
+    pills,
+    periodLabel: `${MONTH_NAMES_FR[monthStart.getMonth()]} ${monthStart.getFullYear()}`,
+    hasPrev:     !!oldestDate && oldestDate < localDateKey(monthStart),
+  }
+}
+
+function buildYearView(
+  daily: Map<string, { km: number; dPlus: number }>,
+  offset: number,
+  now: Date,
+  oldestDate: string | null,
+): PeriodView {
+  const year = now.getFullYear() + offset
+  const yearStr = String(year)
+  const monthKm    = Array<number>(12).fill(0)
+  const monthDPlus = Array<number>(12).fill(0)
+  daily.forEach((v, date) => {
+    if (date.slice(0, 4) === yearStr) {
+      const m = parseInt(date.slice(5, 7), 10) - 1
+      monthKm[m]    += v.km
+      monthDPlus[m] += v.dPlus
+    }
+  })
+  const pills: Pill[] = MONTH_LETTERS.map((letter, i) => ({
+    label: letter,
+    km:    Math.round(monthKm[i] * 10) / 10,
+    dPlus: Math.round(monthDPlus[i]),
+  }))
+  return {
+    pills,
+    periodLabel: yearStr,
+    hasPrev:     !!oldestDate && oldestDate < `${year}-01-01`,
+  }
+}
+
+function computeView(
+  period: Period,
+  offset: number,
+  dailyHistory: DailyHistoryEntry[],
+): PeriodView {
+  const map = new Map<string, { km: number; dPlus: number }>()
+  for (const e of dailyHistory) map.set(e.date, { km: e.km, dPlus: e.dPlus })
+  const oldest = dailyHistory[0]?.date ?? null
+  const now = new Date()
+  switch (period) {
+    case 'week':  return buildWeekView (map, offset, now, oldest)
+    case 'month': return buildMonthView(map, offset, now, oldest)
+    case 'year':  return buildYearView (map, offset, now, oldest)
+  }
+}
+
+// ── HistoryPill ───────────────────────────────────────────────────────────
 
 function HistoryPill({
   label,
@@ -62,11 +208,14 @@ function HistoryPill({
   )
 }
 
-export function HistoryBlock({ sportOverviews, weeklyPoints, onHide }: Props) {
+// ── HistoryBlock ──────────────────────────────────────────────────────────
+
+export function HistoryBlock({ sportOverviews, onHide }: Props) {
   const [settings,   setSettings]   = useState<Settings>(DEFAULT_SETTINGS)
   const [currentIdx, setCurrentIdx] = useState(0)
   const [showModal,  setShowModal]  = useState(false)
   const [period,     setPeriod]     = useState<Period>('week')
+  const [offset,     setOffset]     = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -87,10 +236,25 @@ export function HistoryBlock({ sportOverviews, weeklyPoints, onHide }: Props) {
   }, [])
 
   const visibleSports = settings.visible.filter((k) => k in sportOverviews)
+  const safeIdx = Math.min(currentIdx, Math.max(0, visibleSports.length - 1))
+
+  // Reset to current period when the period type or active sport changes
+  useEffect(() => { setOffset(0) }, [period, safeIdx])
+
+  // Per-sport derived view (pills, label, hasPrev) for the current offset
+  const sportViews = useMemo<Record<string, PeriodView>>(() => {
+    const out: Record<string, PeriodView> = {}
+    for (const k of visibleSports) {
+      out[k] = computeView(period, offset, sportOverviews[k].dailyHistory ?? [])
+    }
+    return out
+    // visibleSports membership is captured via its join key
+  }, [visibleSports.join(','), period, offset, sportOverviews])
+
   if (visibleSports.length === 0) return null
-  const safeIdx = Math.min(currentIdx, visibleSports.length - 1)
   const activeSport = visibleSports[safeIdx]
   const cfg = SPORT_CONFIG[activeSport]
+  const activeView = sportViews[activeSport]
 
   function handleScroll() {
     const el = scrollRef.current
@@ -155,7 +319,34 @@ export function HistoryBlock({ sportOverviews, weeklyPoints, onHide }: Props) {
         </div>
       </div>
 
-      {/* Carousel */}
+      {/* Period navigation */}
+      <div className="flex items-center justify-between mb-[8px] px-0.5">
+        <button
+          onClick={() => activeView.hasPrev && setOffset((o) => o - 1)}
+          disabled={!activeView.hasPrev}
+          aria-label="Période précédente"
+          className="w-8 h-8 flex items-center justify-center rounded-full text-trail-text disabled:opacity-25 disabled:cursor-not-allowed hover:bg-trail-surface transition-colors"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        <span className="text-[12px] font-semibold text-trail-muted tabular-nums">
+          {activeView.periodLabel}
+        </span>
+        <button
+          onClick={() => offset < 0 && setOffset((o) => o + 1)}
+          disabled={offset >= 0}
+          aria-label="Période suivante"
+          className="w-8 h-8 flex items-center justify-center rounded-full text-trail-text disabled:opacity-25 disabled:cursor-not-allowed hover:bg-trail-surface transition-colors"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Carousel — one panel per sport, computed via sportViews */}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
@@ -164,31 +355,7 @@ export function HistoryBlock({ sportOverviews, weeklyPoints, onHide }: Props) {
       >
         {visibleSports.map((sportKey) => {
           const scfg = SPORT_CONFIG[sportKey]
-          const sov  = sportOverviews[sportKey]
-
-          const pills: { label: string; km: number; dPlus: number }[] = (() => {
-            switch (period) {
-              case 'week':
-                return DAY_ABBR.map((day, i) => ({
-                  label: day,
-                  km:    sov.dailyKm[i]    ?? 0,
-                  dPlus: sov.dailyDPlus[i] ?? 0,
-                }))
-              case 'month':
-                return weeklyPoints.slice(-5).map((w) => ({
-                  label: w.label,
-                  km:    w.km,
-                  dPlus: w.dPlus,
-                }))
-              case 'year':
-                return MONTH_LETTERS.map((letter, i) => ({
-                  label: letter,
-                  km:    sov.monthlyKm[i]   ?? 0,
-                  dPlus: sov.monthlyDPlus[i] ?? 0,
-                }))
-            }
-          })()
-
+          const view = sportViews[sportKey]
           return (
             <div
               key={sportKey}
@@ -198,16 +365,22 @@ export function HistoryBlock({ sportOverviews, weeklyPoints, onHide }: Props) {
                 className="flex gap-[5px]"
                 style={{ overflowX: period === 'year' ? 'auto' : 'visible' }}
               >
-                {pills.map((pill, i) => (
-                  <HistoryPill
-                    key={i}
-                    label={pill.label}
-                    km={pill.km}
-                    dPlus={pill.dPlus}
-                    flex={period !== 'year'}
-                    color={scfg.color}
-                  />
-                ))}
+                {view.pills.length > 0 ? (
+                  view.pills.map((pill, i) => (
+                    <HistoryPill
+                      key={i}
+                      label={pill.label}
+                      km={pill.km}
+                      dPlus={pill.dPlus}
+                      flex={period !== 'year'}
+                      color={scfg.color}
+                    />
+                  ))
+                ) : (
+                  <div className="flex-1 text-center text-[12px] text-trail-muted py-3">
+                    Aucune donnée
+                  </div>
+                )}
               </div>
             </div>
           )
