@@ -301,7 +301,7 @@ export function ActivityDetailClient({
     } catch { return [] }
   })()
 
-  const intensityKey = a.manual_intensity ?? guessIntensity(a.name, effectiveSport, a.avg_hr, hrZones)
+  const intensityKey = a.manual_intensity ?? guessIntensity(a.avg_hr, hrZones)
 
   // Pace / speed tile
   let paceLabel: string
@@ -514,6 +514,7 @@ export function ActivityDetailClient({
       {showEdit && (
         <EditActivityModal
           activity={activityAsActivityRow}
+          hrZones={hrZones}
           onSaved={() => { router.refresh(); setShowEdit(false) }}
           onDeleted={() => { router.push('/activities'); setShowEdit(false) }}
           onClose={() => setShowEdit(false)}
