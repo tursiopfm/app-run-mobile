@@ -11,7 +11,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('first_name,last_name,max_hr,aerobic_threshold_hr,threshold_hr,resting_hr,ftp_watts,weight_kg,year_goal_km,birth_year,hr_zone_method,hr_zones_custom,hr_method_updated_at')
+    .select('first_name,last_name,avatar_url,max_hr,aerobic_threshold_hr,threshold_hr,resting_hr,ftp_watts,weight_kg,year_goal_km,birth_year,hr_zone_method,hr_zones_custom,hr_method_updated_at')
     .eq('id', user!.id)
     .single()
 
@@ -28,7 +28,10 @@ export default async function ProfilePage() {
 
   const firstName = profile?.first_name ?? athlete?.firstname ?? null
   const lastName  = profile?.last_name  ?? athlete?.lastname  ?? null
-  const avatarUrl = athlete?.profile && athlete.profile !== 'avatar/athlete/large.png' ? athlete.profile : null
+  const stravaAvatarUrl = athlete?.profile && athlete.profile !== 'avatar/athlete/large.png'
+    ? athlete.profile
+    : null
+  const avatarUrl = profile?.avatar_url ?? stravaAvatarUrl ?? null
   const displayName = firstName ? `${firstName} ${lastName ?? ''}`.trim() : user!.email?.split('@')[0] ?? 'Athlète'
 
   const initialMethod: HrZoneMethod = (profile?.hr_zone_method as HrZoneMethod) ?? 'seuils'
@@ -56,6 +59,7 @@ export default async function ProfilePage() {
         lastName={lastName}
         email={user!.email ?? null}
         avatarUrl={avatarUrl}
+        hasCustomAvatar={!!profile?.avatar_url}
         accountCreatedAt={user!.created_at ?? null}
       />
 
