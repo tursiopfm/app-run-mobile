@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { ActivityMapPlaceholder } from '@/components/ui/ActivityMap'
 import { ActivitySplits } from '@/components/ui/ActivitySplits'
+import { ActivityFractionneSplits } from '@/components/ui/ActivityFractionneSplits'
 import { ActivityHeartRateZones } from '@/components/ui/ActivityHeartRateZones'
 import { EditActivityModal } from '@/components/ui/EditActivityModal'
 import { EffortPopup, IntensityPopup } from '@/components/ui/ActivityPopups'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
 import { fmtPaceSec, fmtDurationSec } from '@/lib/activities/detail'
-import type { StravaSplit } from '@/lib/activities/detail'
+import type { StravaSplit, StravaLap } from '@/lib/activities/detail'
 import { vapPaceSec } from '@/lib/activities/vap'
 import { sportLabel } from '@/lib/design/labels'
 import { guessIntensity } from '@/lib/activities/intensity'
@@ -243,7 +244,7 @@ function fmtDetailDate(iso: string): string {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-type Tab = 'splits' | 'zones' | 'stats'
+type Tab = 'splits' | 'fractionne' | 'zones' | 'stats'
 
 type AthleteHrProfile = {
   max_hr?:               number | null
@@ -256,10 +257,12 @@ type AthleteHrProfile = {
 export function ActivityDetailClient({
   activity,
   splits,
+  laps,
   athleteProfile,
 }: {
   activity:       ActivityDetail
   splits:         StravaSplit[] | null
+  laps:           StravaLap[] | null
   athleteProfile: AthleteHrProfile
 }) {
   const router = useRouter()
@@ -281,8 +284,11 @@ export function ActivityDetailClient({
 
   const showSplits = splits !== null && splits.length > 0
   const showZones  = a.avg_hr !== null && a.max_hr !== null
+  const showFractionne = laps !== null && laps.length >= 2
 
-  const [activeTab, setActiveTab] = useState<Tab>(showSplits ? 'splits' : showZones ? 'zones' : 'stats')
+  const [activeTab, setActiveTab] = useState<Tab>(
+    showSplits ? 'splits' : showFractionne ? 'fractionne' : showZones ? 'zones' : 'stats'
+  )
 
   const hrZones = (() => {
     if (!athleteProfile) return []
@@ -459,6 +465,22 @@ export function ActivityDetailClient({
                 Splits
               </button>
             )}
+            {showFractionne && (
+              <button
+                onClick={() => setActiveTab('fractionne')}
+                style={{
+                  flex: 1, padding: '9px 0',
+                  fontSize: 14, fontWeight: 700, textAlign: 'center',
+                  textTransform: 'uppercase', letterSpacing: '0.9px',
+                  color: activeTab === 'fractionne' ? '#e8651a' : 'var(--trail-muted)',
+                  background: 'none', border: 'none',
+                  borderBottom: activeTab === 'fractionne' ? '2px solid #e8651a' : '2px solid transparent',
+                  cursor: 'pointer',
+                }}
+              >
+                Fractionné
+              </button>
+            )}
             {showZones && (
               <button
                 onClick={() => setActiveTab('zones')}
@@ -494,6 +516,9 @@ export function ActivityDetailClient({
           <div style={{ paddingTop: 12, paddingBottom: 20 }}>
             {activeTab === 'splits' && showSplits && (
               <ActivitySplits splits={splits!} avgPaceSec={avgPaceSec} />
+            )}
+            {activeTab === 'fractionne' && showFractionne && (
+              <ActivityFractionneSplits laps={laps!} />
             )}
             {activeTab === 'zones' && showZones && (
               <ActivityHeartRateZones
