@@ -3,7 +3,7 @@ import { createClient } from '@/lib/database/supabase-server'
 import { getValidStravaToken } from '@/lib/providers/strava/token'
 import { fetchStravaActivity } from '@/lib/providers/strava/api'
 import { ActivityDetailClient, type ActivityDetail } from './ActivityDetailClient'
-import type { StravaSplit } from '@/lib/activities/detail'
+import type { StravaSplit, StravaLap } from '@/lib/activities/detail'
 
 export default async function ActivityDetailPage({
   params,
@@ -28,17 +28,26 @@ export default async function ActivityDetailPage({
 
   const activity = row as ActivityDetail & { provider: string; provider_activity_id: string | null }
 
-  // Fetch splits if needed
+  // Fetch splits and laps if needed
   let splits: StravaSplit[] | null = null
+  let laps: StravaLap[] | null = null
 
-  const existingSplits = (activity.raw_payload as Record<string, unknown> | null)?.splits_metric
-  if (Array.isArray(existingSplits)) {
-    splits = existingSplits as StravaSplit[]
-  } else if (activity.provider === 'strava' && activity.provider_activity_id) {
+  const rawPayload = activity.raw_payload as Record<string, unknown> | null
+  const existingSplits = rawPayload?.splits_metric
+  const existingLaps = rawPayload?.laps
+
+  if (Array.isArray(existingSplits)) splits = existingSplits as StravaSplit[]
+  if (Array.isArray(existingLaps)) laps = existingLaps as StravaLap[]
+
+  if ((!splits || !laps) && activity.provider === 'strava' && activity.provider_activity_id) {
     try {
       const token = await getValidStravaToken(user.id)
       const detail = await fetchStravaActivity(token, Number(activity.provider_activity_id))
-      const stravaDetail = detail as unknown as { splits_metric?: unknown[]; calories?: number }
+      const stravaDetail = detail as unknown as {
+        splits_metric?: unknown[]
+        laps?: unknown[]
+        calories?: number
+      }
 
       if (activity.calories == null && stravaDetail.calories != null) {
         await supabase
@@ -49,22 +58,29 @@ export default async function ActivityDetailPage({
         activity.calories = stravaDetail.calories
       }
 
-      if (Array.isArray(stravaDetail.splits_metric)) {
+      const payloadPatch: Record<string, unknown> = {}
+
+      if (!splits && Array.isArray(stravaDetail.splits_metric)) {
         splits = stravaDetail.splits_metric as unknown as StravaSplit[]
-        // Cache splits in raw_payload for future requests
+        payloadPatch.splits_metric = stravaDetail.splits_metric
+      }
+
+      if (!laps && Array.isArray(stravaDetail.laps)) {
+        laps = stravaDetail.laps as unknown as StravaLap[]
+        payloadPatch.laps = stravaDetail.laps
+      }
+
+      if (Object.keys(payloadPatch).length > 0) {
         await supabase
           .from('activities')
           .update({
-            raw_payload: {
-              ...(activity.raw_payload as object ?? {}),
-              splits_metric: stravaDetail.splits_metric,
-            },
+            raw_payload: { ...(rawPayload as object ?? {}), ...payloadPatch },
           })
           .eq('id', id)
           .eq('user_id', user.id)
       }
     } catch {
-      // Token expired or rate limited — show page without splits
+      // Token expired or rate limited — show page without splits/laps
     }
   }
 
@@ -74,5 +90,5 @@ export default async function ActivityDetailPage({
     .eq('id', user.id)
     .single()
 
-  return <ActivityDetailClient activity={activity} splits={splits} athleteProfile={profile} />
+  return <ActivityDetailClient activity={activity} splits={splits} laps={laps} athleteProfile={profile} />
 }
