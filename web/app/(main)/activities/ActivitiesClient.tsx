@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { ActivityCard, ActivityRow } from '@/components/ui/ActivityCard'
 import { EditActivityModal } from '@/components/ui/EditActivityModal'
@@ -508,14 +508,39 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-export default function ActivitiesClient({ activities: initialActivities }: { activities: ActivityRow[] }) {
-  const [localActivities, setLocalActivities] = useState<ActivityRow[]>(initialActivities)
+const RENDER_BATCH = 50
+
+export default function ActivitiesClient({ initial, hasMore }: { initial: ActivityRow[]; hasMore: boolean }) {
+  const [localActivities, setLocalActivities] = useState<ActivityRow[]>(initial)
+  const [loadingMore,     setLoadingMore]     = useState<boolean>(hasMore)
   const [panel,           setPanel]           = useState<'none' | 'search' | 'filter'>('none')
   const [search,          setSearch]          = useState<SearchState>(DEFAULT_SEARCH)
   const [filter,          setFilter]          = useState<FilterState>(DEFAULT_FILTER)
   const [editingActivity, setEditingActivity] = useState<ActivityRow | null>(null)
-  const [hrZones, setHrZones] = useState<HrZone[]>([])
+  const [hrZones,         setHrZones]         = useState<HrZone[]>([])
+  const [visibleCount,    setVisibleCount]    = useState<number>(RENDER_BATCH)
+  const sentinelRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+
+  // Fetch in background the activities older than the last one received via SSR.
+  // This keeps the initial paint fast while still loading the full history.
+  useEffect(() => {
+    if (!hasMore) return
+    const oldest = initial[initial.length - 1]?.start_time
+    if (!oldest) { setLoadingMore(false); return }
+
+    let cancelled = false
+    fetch(`/api/activities?olderThan=${encodeURIComponent(oldest)}`)
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then((body: { activities: ActivityRow[] }) => {
+        if (cancelled) return
+        setLocalActivities(curr => [...curr, ...body.activities])
+      })
+      .catch(() => { /* swallow — UX gracefully degrades to initial 300 */ })
+      .finally(() => { if (!cancelled) setLoadingMore(false) })
+
+    return () => { cancelled = true }
+  }, [hasMore, initial])
 
   useEffect(() => {
     try {
@@ -612,6 +637,26 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
     return list
   }, [localActivities, search, filter])
 
+  // Reset the progressive render window whenever the filtered set changes,
+  // so the user always starts at the top of the new result list.
+  useEffect(() => { setVisibleCount(RENDER_BATCH) }, [search, filter])
+
+  // Reveal more cards as the sentinel approaches the viewport.
+  useEffect(() => {
+    if (visibleCount >= filtered.length) return
+    const el = sentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setVisibleCount(c => Math.min(c + RENDER_BATCH, filtered.length))
+      }
+    }, { rootMargin: '600px' })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [visibleCount, filtered.length])
+
+  const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount])
+
   const hasActiveSearch = search.title.trim() !== ''
     || search.distFrom !== '' || search.distTo !== ''
     || search.durFrom  !== '' || search.durTo  !== ''
@@ -695,10 +740,16 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
           </button>
         </div>
 
-        {/* Result count */}
+        {/* Result count + background-load hint */}
         {(hasActiveSearch || hasActiveFilter) && (
           <p className="text-[13px] text-trail-muted px-1 mb-[6px]">
             {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
+            {loadingMore ? ' (historique en cours de chargement…)' : ''}
+          </p>
+        )}
+        {loadingMore && !(hasActiveSearch || hasActiveFilter) && (
+          <p className="text-[12px] text-trail-muted px-1 mb-[6px]">
+            Chargement de l&apos;historique complet…
           </p>
         )}
 
@@ -716,9 +767,14 @@ export default function ActivitiesClient({ activities: initialActivities }: { ac
           </div>
         ) : (
           <div className="space-y-[10px]">
-            {filtered.map(a => (
+            {visible.map(a => (
               <ActivityCard key={a.id} activity={a} hrZones={hrZones} onEdit={setEditingActivity} onClick={() => navigateToActivity(a.id)} />
             ))}
+            {visibleCount < filtered.length && (
+              <div ref={sentinelRef} className="h-8 flex items-center justify-center">
+                <span className="text-[12px]" style={{ color: colors.subtleText }}>…</span>
+              </div>
+            )}
           </div>
         )}
       </div>
