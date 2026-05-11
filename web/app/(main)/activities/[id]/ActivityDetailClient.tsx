@@ -208,7 +208,7 @@ function ActivityStats({ activity: a }: { activity: ActivityDetail }) {
         { label: 'FC moyenne', value: a.avg_hr != null ? String(a.avg_hr) : '—', unit: 'bpm' },
         { label: 'FC max',     value: a.max_hr != null ? String(a.max_hr) : '—', unit: 'bpm' },
         { label: 'Calories',   value: a.calories != null ? String(a.calories) : '—', unit: 'kcal' },
-        { label: 'Souffrance', value: suffer != null ? Math.round(suffer).toString() : '—', unit: '' },
+        { label: 'Efforts Relatifs (Strava)', value: suffer != null ? Math.round(suffer).toString() : '—', unit: '' },
       ]} />
       <StatsSection title="Performance" tiles={perfTiles} />
       <StatsSection title="Temps" tiles={[
