@@ -54,11 +54,8 @@ export function HelpAboutSection() {
             <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
               <Mail size={13} className="text-trail-muted" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-trail-muted">Contact</p>
-              <p className="text-[13px] text-trail-text truncate">{CONTACT_EMAIL}</p>
-            </div>
-            <span className="text-[10px] text-trail-muted/70 flex-shrink-0">Écrire ›</span>
+            <p className="flex-1 text-[13px] text-trail-text">Contact</p>
+            <span className="text-[10px] text-trail-muted/70 flex-shrink-0">›</span>
           </a>
 
           <div className="flex items-center gap-3 px-3 py-[10px]">
