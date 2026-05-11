@@ -68,15 +68,24 @@ export async function GET(request: Request) {
     'done' in r && r.done === false && r.rateLimited === false
   )
   if (hasMore && cascadeDepth < MAX_CASCADE_DEPTH) {
-    // waitUntil: garde la fonction en vie jusqu'à ce que le fetch ait été émis.
-    // Sans ça, Vercel tue la fonction dès le `return` → la cascade ne part jamais.
+    // Cascade : fire-and-forget pur via keepalive.
+    // waitUntil(fetch(...)) attendrait la réponse (la chaîne devient synchrone
+    // et tape le timeout Vercel 10s après 2-3 hops). keepalive:true garantit que
+    // la requête est dispatched même si la fonction meurt immédiatement après.
+    // Le waitUntil très court (50ms) donne juste le temps de starter le socket.
+    const cascadePromise = fetch(`${APP_URL}/api/cron/strava-import`, {
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        'X-Cascade-Depth': String(cascadeDepth + 1),
+      },
+      keepalive: true,
+    }).catch((err) => console.error('[cron] cascade trigger failed:', err))
+
     waitUntil(
-      fetch(`${APP_URL}/api/cron/strava-import`, {
-        headers: {
-          Authorization: `Bearer ${secret}`,
-          'X-Cascade-Depth': String(cascadeDepth + 1),
-        },
-      }).catch((err) => console.error('[cron] cascade trigger failed:', err))
+      Promise.race([
+        cascadePromise,
+        new Promise((resolve) => setTimeout(resolve, 50)),
+      ])
     )
   }
 
