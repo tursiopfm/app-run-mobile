@@ -67,7 +67,7 @@ export function splitColor(splitPace: number, avgPace: number): string {
 export function lapPaceSec(
   lap: Pick<StravaLap, 'average_speed'>
 ): number | null {
-  if (!lap.average_speed) return null
+  if (lap.average_speed <= 0) return null
   return Math.round(1000 / lap.average_speed)
 }
 

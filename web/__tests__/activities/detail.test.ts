@@ -1,8 +1,12 @@
+import type { StravaLap } from '@/lib/activities/detail'
 import {
   splitColor,
   fmtPaceSec,
   fmtDurationSec,
   splitPaceSec,
+  lapPaceSec,
+  detectFastLaps,
+  fmtLapDist,
 } from '@/lib/activities/detail'
 
 // ── fmtPaceSec ────────────────────────────────────────────────────────────────
@@ -78,9 +82,6 @@ describe('splitColor', () => {
 })
 
 // ── New tests for StravaLap utilities ──────────────────────────────────────────
-
-import type { StravaLap } from '@/lib/activities/detail'
-import { lapPaceSec, detectFastLaps, fmtLapDist } from '@/lib/activities/detail'
 
 // Fixture helper
 function makeLap(overrides: Partial<StravaLap> & { split: number }): StravaLap {
