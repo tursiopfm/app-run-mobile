@@ -1,20 +1,8 @@
 import Link from 'next/link'
-import { FileText, ShieldCheck, Scale, Mail, Tag, LifeBuoy, ChevronRight } from 'lucide-react'
+import { Mail, Tag, LifeBuoy, ChevronRight } from 'lucide-react'
 
 const APP_VERSION = '0.1.0'
 const CONTACT_EMAIL = 'franck.meri@gmail.com'
-
-type LegalItem = {
-  icon: typeof FileText
-  label: string
-  href: string
-}
-
-const LEGAL_ITEMS: LegalItem[] = [
-  { icon: FileText,    label: 'Mentions légales',             href: '/legal/mentions-legales' },
-  { icon: ShieldCheck, label: 'Politique de confidentialité', href: '/legal/confidentialite' },
-  { icon: Scale,       label: 'Conditions d’utilisation',     href: '/legal/conditions-utilisation' },
-]
 
 export function HelpAboutSection() {
   return (
@@ -38,28 +26,6 @@ export function HelpAboutSection() {
             </div>
             <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
           </Link>
-        </div>
-      </div>
-
-      {/* Réglementaire */}
-      <div className="space-y-[6px]">
-        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-trail-muted px-1">
-          Réglementaire
-        </p>
-        <div className="rounded-[10px] bg-trail-surface divide-y divide-trail-border">
-          {LEGAL_ITEMS.map(({ icon: Icon, label, href }) => (
-            <Link
-              key={label}
-              href={href}
-              className="flex items-center gap-3 px-3 py-[10px] hover:bg-trail-border/30 transition-colors"
-            >
-              <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
-                <Icon size={13} className="text-trail-primary" />
-              </div>
-              <p className="flex-1 text-[13px] text-trail-text">{label}</p>
-              <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
-            </Link>
-          ))}
         </div>
       </div>
 

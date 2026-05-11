@@ -5,11 +5,12 @@ import {
   BarChart3,
   Bike,
   ChevronRight,
+  FileText,
   Footprints,
   Info,
   LineChart,
   LifeBuoy,
-  Lock,
+  Scale,
   ShieldCheck,
 } from 'lucide-react'
 import { ContactCard } from '@/components/support/ContactCard'
@@ -184,32 +185,45 @@ export default function SupportPage() {
           </SectionCard>
         </section>
 
-        {/* ── Confidentialité ── */}
+        {/* ── Réglementaire ── */}
         <section>
           <SectionHeader
-            icon={ShieldCheck}
-            title="Confidentialité"
-            subtitle="Données personnelles et stockage"
+            icon={Scale}
+            title="Réglementaire"
+            subtitle="Mentions légales, confidentialité et conditions"
           />
           <SectionCard>
             <div className="rounded-[10px] bg-trail-surface divide-y divide-trail-border">
-              <a
-                href="mailto:franck.meri@gmail.com?subject=Trail%20Cockpit%20%E2%80%94%20Politique%20de%20confidentialit%C3%A9"
+              <Link
+                href="/legal/mentions-legales"
                 className="flex items-center gap-3 px-3 py-[10px] hover:bg-trail-border/30 transition-colors"
               >
                 <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
-                  <Lock size={13} className="text-trail-muted" />
+                  <FileText size={13} className="text-trail-primary" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] text-trail-text">Politique de confidentialité</p>
-                  <p className="text-[11px] text-trail-muted">
-                    Document détaillé disponible sur demande
-                  </p>
+                <p className="flex-1 text-[13px] text-trail-text">Mentions légales</p>
+                <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
+              </Link>
+              <Link
+                href="/legal/confidentialite"
+                className="flex items-center gap-3 px-3 py-[10px] hover:bg-trail-border/30 transition-colors"
+              >
+                <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
+                  <ShieldCheck size={13} className="text-trail-primary" />
                 </div>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-trail-muted/70 px-2 py-[2px] rounded-full border border-trail-border flex-shrink-0">
-                  En préparation
-                </span>
-              </a>
+                <p className="flex-1 text-[13px] text-trail-text">Politique de confidentialité</p>
+                <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
+              </Link>
+              <Link
+                href="/legal/conditions-utilisation"
+                className="flex items-center gap-3 px-3 py-[10px] hover:bg-trail-border/30 transition-colors"
+              >
+                <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
+                  <Scale size={13} className="text-trail-primary" />
+                </div>
+                <p className="flex-1 text-[13px] text-trail-text">Conditions d’utilisation</p>
+                <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
+              </Link>
             </div>
             <p className="text-[11px] text-trail-muted leading-[16px] px-1">
               Trail Cockpit stocke uniquement les données nécessaires à
