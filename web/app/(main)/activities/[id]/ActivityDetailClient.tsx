@@ -11,6 +11,7 @@ import { EffortPopup, IntensityPopup } from '@/components/ui/ActivityPopups'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
 import { fmtPaceSec, fmtDurationSec } from '@/lib/activities/detail'
 import type { StravaSplit } from '@/lib/activities/detail'
+import { vapPaceSec } from '@/lib/activities/vap'
 import { sportLabel } from '@/lib/design/labels'
 import { guessIntensity } from '@/lib/activities/intensity'
 import { calculateHrZones, type HrZoneMethod } from '@/lib/health/hr-zones'
@@ -167,6 +168,7 @@ function ActivityStats({ activity: a }: { activity: ActivityDetail }) {
   const effectiveSport = a.manual_sport_type ?? a.sport_type
   const dist = a.manual_distance_m ?? a.distance_m
   const movingTime = a.manual_moving_time_sec ?? a.moving_time_sec
+  const elev = a.manual_elevation_gain_m ?? a.elevation_gain_m
 
   const isRun  = ['Run', 'TrailRun'].includes(effectiveSport)
   const isRide = ['Ride', 'GravelRide', 'VirtualRide', 'EBikeRide', 'MountainBikeRide'].includes(effectiveSport)
@@ -175,6 +177,7 @@ function ActivityStats({ activity: a }: { activity: ActivityDetail }) {
   const maxSpeedKph = maxSpeedRaw != null ? maxSpeedRaw * 3.6 : null
   const avgPaceSec  = dist && movingTime && dist > 0 ? Math.round(movingTime / (dist / 1000)) : null
   const maxSpeedPace = maxSpeedRaw && maxSpeedRaw > 0 ? Math.round(1000 / maxSpeedRaw) : null
+  const vapSec = isRun ? vapPaceSec(avgPaceSec, dist, elev) : null
 
   const avgCadence = rawNum('average_cadence')
   const suffer     = rawNum('suffer_score')
@@ -192,6 +195,7 @@ function ActivityStats({ activity: a }: { activity: ActivityDetail }) {
     isRun
       ? { label: 'Allure max', value: maxSpeedPace ? fmtPaceSec(maxSpeedPace) : '—', unit: '/km' }
       : { label: 'Vitesse max', value: maxSpeedKph ? maxSpeedKph.toFixed(1) : '—', unit: 'km/h' },
+    ...(isRun && vapSec != null ? [{ label: 'VAP', value: fmtPaceSec(vapSec), unit: '/km' }] : []),
     { label: 'Cadence moy.', value: avgCadence != null ? Math.round(avgCadence * (isRun ? 2 : 1)).toString() : '—', unit: isRun ? 'pas/min' : 'rpm' },
     ...(isRide && avgWatts != null ? [{ label: 'Puissance moy.', value: Math.round(avgWatts).toString(), unit: 'W' }] : []),
     ...(isRide && maxWatts != null ? [{ label: 'Puissance max', value: Math.round(maxWatts).toString(), unit: 'W' }] : []),
