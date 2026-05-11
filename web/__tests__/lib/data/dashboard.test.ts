@@ -5,14 +5,24 @@ jest.mock('@/lib/database/supabase-server', () => ({ createClient: jest.fn() }))
 const mockCreateClient = createClient as jest.Mock
 
 function makeSelectMock(rows: unknown[]) {
+  const orderRange = (data: unknown[]) => ({
+    order: jest.fn().mockReturnValue({
+      range: jest.fn().mockImplementation((from: number) =>
+        Promise.resolve({ data: from === 0 ? data : [], error: null }),
+      ),
+    }),
+  })
   const activitiesChain = {
     select: jest.fn().mockReturnValue({
       eq: jest.fn().mockReturnValue({
+        // Single-shot query: rows (last 365d) — chain ends at .order(...)
         gte: jest.fn().mockReturnValue({
           is: jest.fn().mockReturnValue({
             order: jest.fn().mockResolvedValue({ data: rows, error: null }),
           }),
         }),
+        // Paginated query: full history — chain is .is().order().range(...)
+        is: jest.fn().mockReturnValue(orderRange(rows as unknown[])),
       }),
     }),
   }
