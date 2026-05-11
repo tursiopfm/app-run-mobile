@@ -1,15 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { StravaLap } from '@/lib/activities/detail'
 import { lapPaceSec, detectFastLaps, fmtPaceSec, fmtLapDist } from '@/lib/activities/detail'
 
+const GRID_COLS = '28px 1fr 52px 68px 36px'
+
 export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
-  const [copied, setCopied] = useState(false)
-  const [copyError, setCopyError] = useState(false)
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const fastSplits = detectFastLaps(laps)
   const hasFastLaps = fastSplits.size > 0
+
+  useEffect(() => {
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [])
 
   async function handleCopy() {
     const text = laps
@@ -19,11 +25,13 @@ export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
 
     try {
       await navigator.clipboard.writeText(text)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      if (timerRef.current) clearTimeout(timerRef.current)
+      setCopyState('copied')
+      timerRef.current = setTimeout(() => setCopyState('idle'), 2000)
     } catch {
-      setCopyError(true)
-      setTimeout(() => setCopyError(false), 2000)
+      if (timerRef.current) clearTimeout(timerRef.current)
+      setCopyState('error')
+      timerRef.current = setTimeout(() => setCopyState('idle'), 2000)
     }
   }
 
@@ -42,7 +50,7 @@ export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
       {/* Header row */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '28px 1fr 52px 68px 36px',
+        gridTemplateColumns: GRID_COLS,
         padding: '4px 0 8px',
         borderBottom: '1px solid var(--trail-border)',
         marginBottom: 2,
@@ -70,7 +78,7 @@ export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
             key={lap.id ?? lap.split}
             style={{
               display: 'grid',
-              gridTemplateColumns: '28px 1fr 52px 68px 36px',
+              gridTemplateColumns: GRID_COLS,
               alignItems: 'center',
               padding: '8px 0',
               paddingLeft: isFast ? 6 : 0,
@@ -151,9 +159,9 @@ export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
             cursor: hasFastLaps ? 'pointer' : 'default',
           }}
         >
-          {copyError
+          {copyState === 'error'
             ? 'Impossible de copier'
-            : copied
+            : copyState === 'copied'
             ? 'Copié !'
             : hasFastLaps
             ? `Copier les temps rapides (${fastSplits.size})`

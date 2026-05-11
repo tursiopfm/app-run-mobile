@@ -103,4 +103,16 @@ describe('ActivityFractionneSplits', () => {
       expect(screen.getByRole('button')).toHaveTextContent('Copié !')
     })
   })
+
+  it('shows "Impossible de copier" on clipboard failure', async () => {
+    const writeText = jest.fn().mockRejectedValue(new Error('Permission denied'))
+    Object.assign(navigator, { clipboard: { writeText } })
+
+    render(<ActivityFractionneSplits laps={workoutLaps} />)
+    fireEvent.click(screen.getByRole('button'))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button')).toHaveTextContent('Impossible de copier')
+    })
+  })
 })
