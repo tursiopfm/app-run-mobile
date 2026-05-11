@@ -12,7 +12,8 @@ export async function GET() {
     .from('activities')
     .select('max_hr, moving_time_sec')
     .eq('user_id', user.id)
-    .gte('start_date', oneYearAgo)
+    .is('deleted_at', null)
+    .gte('start_time', oneYearAgo)
     .not('max_hr', 'is', null)
     .limit(2000)
 
