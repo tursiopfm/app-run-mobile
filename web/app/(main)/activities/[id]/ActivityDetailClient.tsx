@@ -131,10 +131,10 @@ function StatTile({ label, value, unit, valueStyle }: {
   valueStyle?: React.CSSProperties
 }) {
   return (
-    <div style={{ background: '#181c29', border: '1px solid #232738', borderRadius: 10, padding: '9px 10px 8px' }}>
-      <div style={{ fontSize: 11, color: '#8892a4', marginBottom: 3 }}>{label}</div>
-      <div style={{ fontSize: 17, fontWeight: 800, lineHeight: 1, color: '#e8eaf0', ...valueStyle }}>{value}</div>
-      {unit && <div style={{ fontSize: 11, color: '#8892a4' }}>{unit}</div>}
+    <div style={{ background: 'var(--trail-card)', border: '1px solid var(--trail-border)', borderRadius: 10, padding: '9px 10px 8px' }}>
+      <div style={{ fontSize: 11, color: 'var(--trail-muted)', marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: 17, fontWeight: 800, lineHeight: 1, color: 'var(--trail-text)', ...valueStyle }}>{value}</div>
+      {unit && <div style={{ fontSize: 11, color: 'var(--trail-muted)' }}>{unit}</div>}
     </div>
   )
 }
@@ -145,7 +145,7 @@ function StatsSection({ title, tiles }: { title: string; tiles: { label: string;
   if (tiles.length === 0) return null
   return (
     <div>
-      <p style={{ fontSize: 12, fontWeight: 700, color: '#6b7a96', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 8 }}>
+      <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--trail-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 8 }}>
         {title}
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
@@ -326,7 +326,7 @@ export function ActivityDetailClient({
   const activityAsActivityRow = activity as unknown as ActivityRow
 
   return (
-    <div style={{ background: '#0f1219', minHeight: '100vh', color: '#e8eaf0', fontFamily: "-apple-system, 'Inter', sans-serif" }}>
+    <div style={{ background: 'var(--trail-bg)', minHeight: '100vh', color: 'var(--trail-text)', fontFamily: "-apple-system, 'Inter', sans-serif" }}>
 
       {/* Map section */}
       <div style={{
@@ -401,13 +401,13 @@ export function ActivityDetailClient({
         {/* Fade into content */}
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, height: 50,
-          background: 'linear-gradient(to bottom, transparent 0%, #0f1219 100%)',
+          background: 'linear-gradient(to bottom, transparent 0%, var(--trail-bg) 100%)',
           pointerEvents: 'none', zIndex: 1,
         }} />
       </div>
 
       {/* Content body */}
-      <div style={{ padding: '0 16px', marginTop: 0, position: 'relative', zIndex: 20, background: '#0f1219' }}>
+      <div style={{ padding: '0 16px', marginTop: 0, position: 'relative', zIndex: 20, background: 'var(--trail-bg)' }}>
 
         {/* Activity header */}
         <div style={{ paddingTop: 14, paddingBottom: 12 }}>
@@ -418,10 +418,10 @@ export function ActivityDetailClient({
             </div>
             <EffortBadge ces={a.ces} onClick={() => setPopup('effort')} />
           </div>
-          <div style={{ fontSize: 17, fontWeight: 800, color: '#f0f2f8', lineHeight: 1.15, marginBottom: 3 }}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--trail-text)', lineHeight: 1.15, marginBottom: 3 }}>
             {a.name}
           </div>
-          <div style={{ fontSize: 11, color: '#8892a4' }}>{fmtDetailDate(a.start_time)}</div>
+          <div style={{ fontSize: 11, color: 'var(--trail-muted)' }}>{fmtDetailDate(a.start_time)}</div>
         </div>
 
         {/* Stats grid 3×2 */}
@@ -429,7 +429,7 @@ export function ActivityDetailClient({
           <StatTile label="Distance"   value={fmtDist(dist)}                                 unit="km"   valueStyle={{ color: '#e8651a', fontSize: 20 }} />
           <StatTile label="D+"         value={fmtElev(elev)}                                 unit="m"    valueStyle={{ color: '#4db6f0', fontSize: 20 }} />
           <StatTile label="Durée"      value={fmtDurationSec(movingTime)}                    unit=""     valueStyle={{ color: '#4caf50', fontSize: 17 }} />
-          <StatTile label={paceLabel}  value={paceValue}                                     unit={paceUnit} valueStyle={{ color: '#e8eaf0', fontSize: 17 }} />
+          <StatTile label={paceLabel}  value={paceValue}                                     unit={paceUnit} valueStyle={{ color: 'var(--trail-text)', fontSize: 17 }} />
           <StatTile label="Calories"   value={a.calories != null ? String(a.calories) : '—'} unit="kcal" valueStyle={{ color: '#ff7043', fontSize: 18 }} />
           <StatTile label="Tps écoulé" value={fmtDurationSec(a.duration_sec)}                unit=""     valueStyle={{ color: '#4caf50', fontSize: 16 }} />
         </div>
@@ -438,9 +438,9 @@ export function ActivityDetailClient({
         <>
           <div style={{
             display: 'flex',
-            borderBottom: '1px solid #1e2230',
+            borderBottom: '1px solid var(--trail-border)',
             margin: '0 -16px',
-            background: '#0f1219',
+            background: 'var(--trail-bg)',
             position: 'sticky', top: 0, zIndex: 30,
           }}>
             {showSplits && (
@@ -450,7 +450,7 @@ export function ActivityDetailClient({
                   flex: 1, padding: '9px 0',
                   fontSize: 14, fontWeight: 700, textAlign: 'center',
                   textTransform: 'uppercase', letterSpacing: '0.9px',
-                  color: activeTab === 'splits' ? '#e8651a' : '#6b7a96',
+                  color: activeTab === 'splits' ? '#e8651a' : 'var(--trail-muted)',
                   background: 'none', border: 'none',
                   borderBottom: activeTab === 'splits' ? '2px solid #e8651a' : '2px solid transparent',
                   cursor: 'pointer',
@@ -466,7 +466,7 @@ export function ActivityDetailClient({
                   flex: 1, padding: '9px 0',
                   fontSize: 14, fontWeight: 700, textAlign: 'center',
                   textTransform: 'uppercase', letterSpacing: '0.9px',
-                  color: activeTab === 'zones' ? '#e8651a' : '#6b7a96',
+                  color: activeTab === 'zones' ? '#e8651a' : 'var(--trail-muted)',
                   background: 'none', border: 'none',
                   borderBottom: activeTab === 'zones' ? '2px solid #e8651a' : '2px solid transparent',
                   cursor: 'pointer',
@@ -481,7 +481,7 @@ export function ActivityDetailClient({
                 flex: 1, padding: '9px 0',
                 fontSize: 14, fontWeight: 700, textAlign: 'center',
                 textTransform: 'uppercase', letterSpacing: '0.9px',
-                color: activeTab === 'stats' ? '#e8651a' : '#6b7a96',
+                color: activeTab === 'stats' ? '#e8651a' : 'var(--trail-muted)',
                 background: 'none', border: 'none',
                 borderBottom: activeTab === 'stats' ? '2px solid #e8651a' : '2px solid transparent',
                 cursor: 'pointer',

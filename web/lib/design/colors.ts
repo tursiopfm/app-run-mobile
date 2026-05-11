@@ -67,7 +67,20 @@ export const light = {
   progressDPlusFg:  '#1D8FC6',
 } as const
 
-// Default export = dark palette (used in chart configs and Canvas-based components)
-export const colors = dark
+// Default export — theme-aware tokens. Background-like fields resolve to CSS
+// variables so they follow .light / .dark on <html>, while accent/series
+// colors stay as fixed hex (used for chart series, opacity math like
+// `${color}26`, and other places that can't consume CSS vars).
+export const colors = {
+  ...dark,
+  background: 'var(--trail-bg)',
+  surface:    'var(--trail-surface)',
+  cardBg:     'var(--trail-card)',
+  border:     'var(--trail-border)',
+  headerBg:   'var(--trail-header)',
+  subtleText: 'var(--trail-muted)',
+  text:       'var(--trail-text)',
+  paleGreen:  'var(--trail-pale-green)',
+} as const
 
 export type TrailPalette = typeof dark

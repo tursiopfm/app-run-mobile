@@ -66,14 +66,14 @@ html, body {
 ::-webkit-scrollbar-thumb { background: var(--trail-border); border-radius: 2px; }
 
 .km-tooltip {
-  background: rgba(20, 20, 20, 0.88) !important;
-  border: none !important;
+  background: var(--trail-card) !important;
+  border: 1px solid var(--trail-border) !important;
   border-radius: 4px !important;
-  color: #fff !important;
+  color: var(--trail-text) !important;
   font-size: 11px !important;
   font-weight: 700 !important;
   padding: 2px 5px !important;
   white-space: nowrap !important;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.45) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25) !important;
 }
 .km-tooltip::before { display: none !important; }

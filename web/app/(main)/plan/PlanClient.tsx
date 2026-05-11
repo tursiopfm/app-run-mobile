@@ -115,9 +115,10 @@ function PlanNavButton({ label, enabled, onClick }: { label: string; enabled: bo
       style={{
         width: 40, height: 40, flexShrink: 0,
         borderRadius: 10,
-        backgroundColor: enabled ? colors.surface : `${colors.border}59`,
-        border: `1px solid ${enabled ? colors.border : colors.border + '4D'}`,
-        color: enabled ? colors.text : colors.subtleText + '73',
+        backgroundColor: enabled ? colors.surface : 'rgba(127,127,127,0.18)',
+        border: `1px solid ${colors.border}`,
+        color: colors.text,
+        opacity: enabled ? 1 : 0.45,
         fontSize: 18, fontWeight: 900,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         cursor: enabled ? 'pointer' : 'not-allowed',
