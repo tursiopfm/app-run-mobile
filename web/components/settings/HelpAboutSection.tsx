@@ -7,13 +7,13 @@ const CONTACT_EMAIL = 'franck.meri@gmail.com'
 type LegalItem = {
   icon: typeof FileText
   label: string
-  hint: string
+  href: string
 }
 
 const LEGAL_ITEMS: LegalItem[] = [
-  { icon: FileText,    label: 'Mentions légales',           hint: 'En préparation' },
-  { icon: ShieldCheck, label: 'Politique de confidentialité', hint: 'En préparation' },
-  { icon: Scale,       label: 'Conditions d’utilisation', hint: 'En préparation' },
+  { icon: FileText,    label: 'Mentions légales',             href: '/legal/mentions-legales' },
+  { icon: ShieldCheck, label: 'Politique de confidentialité', href: '/legal/confidentialite' },
+  { icon: Scale,       label: 'Conditions d’utilisation',     href: '/legal/conditions-utilisation' },
 ]
 
 export function HelpAboutSection() {
@@ -47,19 +47,18 @@ export function HelpAboutSection() {
           Réglementaire
         </p>
         <div className="rounded-[10px] bg-trail-surface divide-y divide-trail-border">
-          {LEGAL_ITEMS.map(({ icon: Icon, label, hint }) => (
-            <div
+          {LEGAL_ITEMS.map(({ icon: Icon, label, href }) => (
+            <Link
               key={label}
-              className="flex items-center gap-3 px-3 py-[10px]"
+              href={href}
+              className="flex items-center gap-3 px-3 py-[10px] hover:bg-trail-border/30 transition-colors"
             >
               <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
-                <Icon size={13} className="text-trail-muted" />
+                <Icon size={13} className="text-trail-primary" />
               </div>
               <p className="flex-1 text-[13px] text-trail-text">{label}</p>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-trail-muted/70 px-2 py-[2px] rounded-full border border-trail-border">
-                {hint}
-              </span>
-            </div>
+              <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
+            </Link>
           ))}
         </div>
       </div>
