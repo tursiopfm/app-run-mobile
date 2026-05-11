@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/database/supabase-server'
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+const EXT_MAP: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png':  'png',
+  'image/webp': 'webp',
+  'image/gif':  'gif',
+}
+const ALLOWED_TYPES = Object.keys(EXT_MAP)
 const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
 
 export async function POST(req: NextRequest) {
@@ -22,7 +28,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'File too large (max 5 MB)' }, { status: 400 })
   }
 
-  const ext = file.type.split('/')[1].replace('jpeg', 'jpg')
+  const ext = EXT_MAP[file.type]
   const path = `${user.id}/avatar.${ext}`
   const buffer = Buffer.from(await file.arrayBuffer())
 
@@ -54,6 +60,23 @@ export async function DELETE(_req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // Get current avatar_url to extract storage path
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('avatar_url')
+    .eq('id', user.id)
+    .single()
+
+  // Remove from storage if a custom avatar exists
+  if (profile?.avatar_url) {
+    const marker = '/object/public/avatars/'
+    const idx = profile.avatar_url.indexOf(marker)
+    if (idx !== -1) {
+      const storagePath = profile.avatar_url.slice(idx + marker.length)
+      await supabase.storage.from('avatars').remove([storagePath])
+    }
+  }
 
   const { error } = await supabase
     .from('profiles')
