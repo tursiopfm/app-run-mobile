@@ -4,13 +4,16 @@ import { useState } from 'react'
 import { colors } from '@/lib/design/colors'
 import {
   guessIntensity,
+  guessWorkoutType,
   secondsToHMS,
   hmsToSeconds,
   INTENSITY_OPTIONS,
+  WORKOUT_TYPE_OPTIONS,
   SPORT_OPTIONS,
   type IntensityKey,
 } from '@/lib/activities/intensity'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
+import type { HrZone } from '@/lib/health/hr-zones'
 
 function fmtModalDate(iso: string): string {
   const d = new Date(iso)
@@ -81,41 +84,49 @@ function ChipRow({
 
 type Props = {
   activity:  ActivityRow
+  hrZones?:  HrZone[]
   onSaved:   (updated: ActivityRow) => void
   onDeleted: () => void
   onClose:   () => void
 }
 
-export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: Props) {
+export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDeleted, onClose }: Props) {
   const effectiveSport     = a.manual_sport_type     ?? a.sport_type
   const effectiveDistance  = a.manual_distance_m     ?? a.distance_m
   const effectiveDuration  = a.manual_moving_time_sec ?? a.moving_time_sec
   const effectiveElevation = a.manual_elevation_gain_m ?? a.elevation_gain_m
 
-  const [name,      setName]      = useState(a.name)
-  const [distKm,    setDistKm]    = useState(
+  const [name,        setName]        = useState(a.name)
+  const [distKm,      setDistKm]      = useState(
     effectiveDistance  != null ? (effectiveDistance / 1000).toFixed(1)  : ''
   )
-  const [duration,  setDuration]  = useState(
+  const [duration,    setDuration]    = useState(
     effectiveDuration  != null ? secondsToHMS(effectiveDuration) : '0:00:00'
   )
-  const [elevM,     setElevM]     = useState(
+  const [elevM,       setElevM]       = useState(
     effectiveElevation != null ? String(Math.round(effectiveElevation)) : ''
   )
-  const [sport,     setSport]     = useState(effectiveSport)
-  const [intensity, setIntensity] = useState<IntensityKey>(
-    (a.manual_intensity as IntensityKey | null) ?? guessIntensity(a.name, effectiveSport)
+  const [sport,       setSport]       = useState(effectiveSport)
+  const [intensity,   setIntensity]   = useState<IntensityKey | null>(
+    (a.manual_intensity as IntensityKey | null) ?? guessIntensity(a.avg_hr, hrZones) ?? null
   )
+  const [workoutType, setWorkoutType] = useState<string | null>(
+    a.manual_workout_type ?? guessWorkoutType(a.name, effectiveSport) ?? null
+  )
+  const [saving,      setSaving]      = useState(false)
+  const [error,       setError]       = useState<string | null>(null)
 
-  function availableIntensities(_s: string) {
-    return INTENSITY_OPTIONS
+  function availableWorkoutTypes(s: string) {
+    return WORKOUT_TYPE_OPTIONS.filter(o => !o.sports || o.sports.includes(s))
   }
 
   function handleSportChange(s: string) {
     setSport(s)
+    if (workoutType) {
+      const opt = WORKOUT_TYPE_OPTIONS.find(o => o.value === workoutType)
+      if (opt?.sports && !opt.sports.includes(s)) setWorkoutType(null)
+    }
   }
-  const [saving,    setSaving]    = useState(false)
-  const [error,     setError]     = useState<string | null>(null)
 
   async function handleSave() {
     const distM   = distKm ? parseFloat(distKm) * 1000 : null
@@ -132,6 +143,7 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
           name,
           manual_sport_type:       sport,
           manual_intensity:        intensity,
+          manual_workout_type:     workoutType,
           manual_distance_m:       distM,
           manual_moving_time_sec:  timeSec,
           manual_elevation_gain_m: elev,
@@ -143,6 +155,7 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
         name,
         manual_sport_type:       sport,
         manual_intensity:        intensity,
+        manual_workout_type:     workoutType,
         manual_distance_m:       distM,
         manual_moving_time_sec:  timeSec,
         manual_elevation_gain_m: elev,
@@ -262,9 +275,18 @@ export function EditActivityModal({ activity: a, onSaved, onDeleted, onClose }: 
         {/* Intensité */}
         <SectionCard title="Intensité">
           <ChipRow
-            options={availableIntensities(sport).map(i => ({ value: i.key, label: i.label }))}
-            selected={intensity}
+            options={INTENSITY_OPTIONS.map(i => ({ value: i.key, label: i.label }))}
+            selected={intensity ?? ''}
             onSelect={v => setIntensity(v as IntensityKey)}
+          />
+        </SectionCard>
+
+        {/* Type */}
+        <SectionCard title="Type">
+          <ChipRow
+            options={availableWorkoutTypes(sport).map(o => ({ value: o.value, label: o.label }))}
+            selected={workoutType ?? ''}
+            onSelect={v => setWorkoutType(v === workoutType ? null : v)}
           />
         </SectionCard>
 
