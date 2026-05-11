@@ -53,6 +53,16 @@ export async function GET(request: NextRequest) {
       import_updated_at: null,
     }, { onConflict: 'user_id,provider' })
 
+    // Trigger immédiat du premier tick d'import (fire-and-forget).
+    // L'user voit les premières activités dès l'arrivée sur le dashboard,
+    // sans attendre le prochain tick GitHub Actions (5 min).
+    const cronSecret = process.env.CRON_SECRET
+    if (cronSecret) {
+      fetch(`${APP_URL}/api/cron/strava-import`, {
+        headers: { Authorization: `Bearer ${cronSecret}` },
+      }).catch((err) => console.error('[callback] cron trigger failed:', err))
+    }
+
     return NextResponse.redirect(`${APP_URL}/settings?strava=connected`)
   } catch (e) {
     console.error('Strava callback error:', e)

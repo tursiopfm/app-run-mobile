@@ -4,6 +4,9 @@ import { processOneImportTick } from '@/lib/providers/strava/import'
 
 const MAX_USERS_PER_TICK = 5
 const STALE_THRESHOLD_SEC = 50
+const MAX_CASCADE_DEPTH = 50 // 50 ticks × 200 act = 10k activités max par cascade
+
+const APP_URL = process.env.APP_URL ?? 'http://localhost:3000'
 
 export async function GET(request: Request) {
   // Auth: header injecté par Vercel pour les crons. Fail closed if secret missing.
@@ -12,6 +15,8 @@ export async function GET(request: Request) {
   if (!secret || authHeader !== `Bearer ${secret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const cascadeDepth = parseInt(request.headers.get('x-cascade-depth') ?? '0', 10)
 
   const supabase = createServiceClient()
   const staleCutoff = new Date(Date.now() - STALE_THRESHOLD_SEC * 1000).toISOString()
@@ -31,7 +36,7 @@ export async function GET(request: Request) {
   }
 
   const userIds = (jobs ?? []).map((j) => (j as { user_id: string }).user_id)
-  console.log('[cron strava-import] processing', userIds.length, 'user(s)')
+  console.log('[cron strava-import] processing', userIds.length, 'user(s), cascade depth', cascadeDepth)
 
   const results = await Promise.allSettled(
     userIds.map(async (userId) => {
@@ -45,8 +50,26 @@ export async function GET(request: Request) {
     })
   )
 
+  const resultValues = results.map((r) => r.status === 'fulfilled' ? r.value : { error: String(r.reason) })
+
+  // Auto-cascade: si au moins un user a encore des pages à fetch (done=false, pas rate-limited, pas d'erreur),
+  // fire-and-forget un nouveau tick. Import complet en ~75s au lieu de 2h via GitHub Actions seul.
+  const hasMore = resultValues.some((r) =>
+    'done' in r && r.done === false && r.rateLimited === false
+  )
+  if (hasMore && cascadeDepth < MAX_CASCADE_DEPTH) {
+    fetch(`${APP_URL}/api/cron/strava-import`, {
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        'X-Cascade-Depth': String(cascadeDepth + 1),
+      },
+    }).catch((err) => console.error('[cron] cascade trigger failed:', err))
+  }
+
   return NextResponse.json({
     processed: userIds.length,
-    results: results.map((r) => r.status === 'fulfilled' ? r.value : { error: String(r.reason) }),
+    cascadeDepth,
+    cascaded: hasMore && cascadeDepth < MAX_CASCADE_DEPTH,
+    results: resultValues,
   })
 }
