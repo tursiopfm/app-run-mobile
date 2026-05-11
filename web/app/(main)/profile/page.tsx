@@ -31,7 +31,7 @@ export default async function ProfilePage() {
   const stravaAvatarUrl = athlete?.profile && athlete.profile !== 'avatar/athlete/large.png'
     ? athlete.profile
     : null
-  const avatarUrl = profile?.avatar_url ?? stravaAvatarUrl ?? null
+  const avatarUrl = profile?.avatar_url ?? stravaAvatarUrl
   const displayName = firstName ? `${firstName} ${lastName ?? ''}`.trim() : user!.email?.split('@')[0] ?? 'Athlète'
 
   const initialMethod: HrZoneMethod = (profile?.hr_zone_method as HrZoneMethod) ?? 'seuils'
