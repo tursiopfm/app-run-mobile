@@ -5,7 +5,8 @@ import { processOneImportTick } from '@/lib/providers/strava/import'
 
 const MAX_USERS_PER_TICK = 5
 const STALE_THRESHOLD_SEC = 50
-const MAX_CASCADE_DEPTH = 50 // 50 ticks × 200 act = 10k activités max par cascade
+const MAX_CASCADE_DEPTH = 50
+const PAGES_PER_TICK = 5 // 5 × 200 = 1000 activités par invocation (~6-8s sous timeout 10s Hobby)
 
 const APP_URL = process.env.APP_URL ?? 'http://localhost:3000'
 
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
   const results = await Promise.allSettled(
     userIds.map(async (userId) => {
       try {
-        const r = await processOneImportTick(userId)
+        const r = await processOneImportTick(userId, PAGES_PER_TICK)
         return { userId, ...r }
       } catch (err) {
         console.error('[cron strava-import] user', userId, 'error:', err)
