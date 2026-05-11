@@ -16,7 +16,12 @@ const defaultProps = {
   accountCreatedAt: '2024-01-15T10:00:00Z',
 }
 
-beforeEach(() => jest.clearAllMocks())
+const originalFetch = global.fetch
+
+afterEach(() => {
+  global.fetch = originalFetch
+  jest.clearAllMocks()
+})
 
 describe('IdentityCard — mode lecture', () => {
   it('affiche le nom complet', () => {
@@ -90,6 +95,7 @@ describe('IdentityCard — édition du nom', () => {
     })
 
     expect(mockRefresh).toHaveBeenCalled()
+    expect(screen.queryByPlaceholderText('Prénom')).not.toBeInTheDocument()
   })
 
   it('affiche une erreur si la sauvegarde échoue', async () => {
@@ -121,5 +127,62 @@ describe('IdentityCard — retirer avatar', () => {
     })
 
     expect(mockRefresh).toHaveBeenCalled()
+  })
+
+  it('affiche une erreur si le retrait échoue', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false }) as jest.Mock
+
+    render(<IdentityCard {...defaultProps} hasCustomAvatar={true} avatarUrl="https://example.com/a.jpg" />)
+    fireEvent.click(screen.getByText(/retirer la photo/i))
+
+    await waitFor(() => {
+      expect(screen.getByText(/erreur/i)).toBeInTheDocument()
+    })
+  })
+})
+
+describe('IdentityCard — upload avatar', () => {
+  it('upload réussi met à jour l\'avatar et affiche le bouton Retirer', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ url: 'https://example.com/new-avatar.jpg' }),
+    }) as jest.Mock
+
+    render(<IdentityCard {...defaultProps} />)
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    const file = new File(['content'], 'photo.jpg', { type: 'image/jpeg' })
+    Object.defineProperty(fileInput, 'files', { value: [file], configurable: true })
+    fireEvent.change(fileInput)
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/profile/avatar',
+        expect.objectContaining({ method: 'POST' })
+      )
+    })
+
+    await waitFor(() => {
+      const img = screen.getByRole('img', { name: /avatar/i })
+      expect(img).toHaveAttribute('src', 'https://example.com/new-avatar.jpg')
+    })
+
+    expect(screen.getByText(/retirer la photo/i)).toBeInTheDocument()
+    expect(mockRefresh).toHaveBeenCalled()
+  })
+
+  it('upload échoué affiche une erreur', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false }) as jest.Mock
+
+    render(<IdentityCard {...defaultProps} />)
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    const file = new File(['content'], 'photo.jpg', { type: 'image/jpeg' })
+    Object.defineProperty(fileInput, 'files', { value: [file], configurable: true })
+    fireEvent.change(fileInput)
+
+    await waitFor(() => {
+      expect(screen.getByText(/erreur/i)).toBeInTheDocument()
+    })
   })
 })
