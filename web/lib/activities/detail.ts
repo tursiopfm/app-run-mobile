@@ -19,7 +19,7 @@ export type StravaLap = {
   average_speed: number
   total_elevation_gain: number
   lap_index: number
-  split: number
+  split?: number
   average_heartrate?: number
   max_heartrate?: number
   pace_zone?: number
@@ -75,7 +75,7 @@ export function detectFastLaps(laps: StravaLap[]): Set<number> {
   if (laps.length < 2) return new Set()
 
   const pacePairs = laps.map(lap => ({
-    split: lap.split,
+    split: lap.split ?? (lap.lap_index + 1),
     pace: lap.average_speed > 0 ? 1000 / lap.average_speed : null,
   }))
 

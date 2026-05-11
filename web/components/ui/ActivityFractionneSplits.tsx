@@ -19,7 +19,10 @@ export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
 
   async function handleCopy() {
     const text = laps
-      .filter(lap => fastSplits.has(lap.split))
+      .filter(lap => {
+        const splitKey = lap.split ?? (lap.lap_index + 1)
+        return fastSplits.has(splitKey)
+      })
       .map(lap => fmtPaceSec(lap.moving_time))
       .join('\n')
 
@@ -70,12 +73,13 @@ export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
       {/* Lap rows */}
       {laps.map(lap => {
         const pace = lapPaceSec(lap)
-        const isFast = fastSplits.has(lap.split)
+        const splitKey = lap.split ?? (lap.lap_index + 1)
+        const isFast = fastSplits.has(splitKey)
         const elev = Math.round(lap.total_elevation_gain)
 
         return (
           <div
-            key={lap.id ?? lap.split}
+            key={lap.id ?? splitKey}
             style={{
               display: 'grid',
               gridTemplateColumns: GRID_COLS,
@@ -97,7 +101,7 @@ export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
               color: isFast ? '#e8651a' : 'var(--trail-muted)',
               flexShrink: 0,
             }}>
-              {lap.split}
+              {lap.split ?? (lap.lap_index + 1)}
             </div>
 
             {/* Distance + RAPIDE badge */}
