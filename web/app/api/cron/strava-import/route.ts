@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { waitUntil } from '@vercel/functions'
 import { createServiceClient } from '@/lib/database/supabase-server'
 import { processOneImportTick } from '@/lib/providers/strava/import'
 
@@ -58,12 +59,16 @@ export async function GET(request: Request) {
     'done' in r && r.done === false && r.rateLimited === false
   )
   if (hasMore && cascadeDepth < MAX_CASCADE_DEPTH) {
-    fetch(`${APP_URL}/api/cron/strava-import`, {
-      headers: {
-        Authorization: `Bearer ${secret}`,
-        'X-Cascade-Depth': String(cascadeDepth + 1),
-      },
-    }).catch((err) => console.error('[cron] cascade trigger failed:', err))
+    // waitUntil: garde la fonction en vie jusqu'à ce que le fetch ait été émis.
+    // Sans ça, Vercel tue la fonction dès le `return` → la cascade ne part jamais.
+    waitUntil(
+      fetch(`${APP_URL}/api/cron/strava-import`, {
+        headers: {
+          Authorization: `Bearer ${secret}`,
+          'X-Cascade-Depth': String(cascadeDepth + 1),
+        },
+      }).catch((err) => console.error('[cron] cascade trigger failed:', err))
+    )
   }
 
   return NextResponse.json({

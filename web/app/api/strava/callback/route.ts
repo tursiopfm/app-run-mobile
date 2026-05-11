@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { waitUntil } from '@vercel/functions'
 import { exchangeStravaCode } from '@/lib/providers/strava/auth'
 import { createClient } from '@/lib/database/supabase-server'
 
@@ -53,14 +54,18 @@ export async function GET(request: NextRequest) {
       import_updated_at: null,
     }, { onConflict: 'user_id,provider' })
 
-    // Trigger immédiat du premier tick d'import (fire-and-forget).
+    // Trigger immédiat du premier tick d'import (background via waitUntil).
     // L'user voit les premières activités dès l'arrivée sur le dashboard,
     // sans attendre le prochain tick GitHub Actions (5 min).
+    // waitUntil garde la fonction serverless en vie jusqu'à la fin du fetch
+    // (fire-and-forget pur ne marche pas sur Vercel — la fonction est tuée).
     const cronSecret = process.env.CRON_SECRET
     if (cronSecret) {
-      fetch(`${APP_URL}/api/cron/strava-import`, {
-        headers: { Authorization: `Bearer ${cronSecret}` },
-      }).catch((err) => console.error('[callback] cron trigger failed:', err))
+      waitUntil(
+        fetch(`${APP_URL}/api/cron/strava-import`, {
+          headers: { Authorization: `Bearer ${cronSecret}` },
+        }).catch((err) => console.error('[callback] cron trigger failed:', err))
+      )
     }
 
     return NextResponse.redirect(`${APP_URL}/settings?strava=connected`)
