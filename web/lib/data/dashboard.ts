@@ -78,6 +78,12 @@ export type DashboardData = {
 
 const DAY_ABBR = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 const MONTH_CUMUL_COLORS = ['#4ADE80', '#FF6B35', '#FACC15', '#38BDF8']
+const YEAR_COLOR_PALETTE = [
+  '#38BDF8', '#EF4444', '#EAB308', '#22C55E',
+  '#F97316', '#06B6D4', '#8B5CF6', '#FB7185',
+  '#FDE047', '#86EFAC', '#FDBA74', '#67E8F9',
+  '#C4B5FD', '#FECDD3',
+]
 const MONTH_SHORT_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
 const INTENSITY_ORDER = ['Footing', 'Sortie longue', 'Seuil', 'VMA']
 
@@ -200,15 +206,14 @@ function buildCumulYears(
   }
 
   const series: MonthSeries[] = []
-  let colorIdx = 0
-  const startYear = now.getFullYear() - 3
-  const endYear = now.getFullYear()
+  const currentYear = now.getFullYear()
+  const yearsWithData = Array.from(byYear.keys()).sort((a, b) => a - b)
 
-  for (let y = startYear; y <= endYear; y++) {
+  for (const y of yearsWithData) {
     const yacts = byYear.get(y)
     if (!yacts || yacts.length === 0) continue
 
-    const isCurrentYear = y === now.getFullYear()
+    const isCurrentYear = y === currentYear
     const totalDays = isCurrentYear
       ? dayOfYearIdx(now) + 1
       : isLeapYear(y) ? 366 : 365
@@ -227,12 +232,9 @@ function buildCumulYears(
       dailyCumul.push(Math.round(cumul * 10) / 10)
     }
 
-    series.push({
-      label: String(y),
-      color: MONTH_CUMUL_COLORS[colorIdx % MONTH_CUMUL_COLORS.length],
-      dailyCumul,
-    })
-    colorIdx++
+    const offset = Math.max(0, currentYear - y)
+    const color = YEAR_COLOR_PALETTE[Math.min(offset, YEAR_COLOR_PALETTE.length - 1)]
+    series.push({ label: String(y), color, dailyCumul })
   }
 
   return series
@@ -378,15 +380,35 @@ function buildSportOverview(
   }
 }
 
+const HISTORY_PAGE_SIZE = 1000
+
+async function fetchAllHistorySlim(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<SlimActivity[]> {
+  const all: SlimActivity[] = []
+  for (let from = 0; ; from += HISTORY_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from('activities')
+      .select('sport_type, start_time, distance_m')
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .order('start_time', { ascending: true })
+      .range(from, from + HISTORY_PAGE_SIZE - 1)
+    if (error || !data || data.length === 0) break
+    all.push(...(data as SlimActivity[]))
+    if (data.length < HISTORY_PAGE_SIZE) break
+  }
+  return all
+}
+
 export async function getDashboardData(userId: string): Promise<DashboardData> {
   const supabase = await createClient()
 
   const yearAgo = new Date()
   yearAgo.setDate(yearAgo.getDate() - 365)
 
-  const fourYearsAgo = new Date(new Date().getFullYear() - 3, 0, 1)
-
-  const [{ data: rows }, { data: yearRows }, { data: profile }] = await Promise.all([
+  const [{ data: rows }, yearActivities, { data: profile }] = await Promise.all([
     supabase
       .from('activities')
       .select('id, sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_intensity')
@@ -394,13 +416,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       .gte('start_time', yearAgo.toISOString())
       .is('deleted_at', null)
       .order('start_time', { ascending: true }),
-    supabase
-      .from('activities')
-      .select('sport_type, start_time, distance_m')
-      .eq('user_id', userId)
-      .gte('start_time', fourYearsAgo.toISOString())
-      .is('deleted_at', null)
-      .order('start_time', { ascending: true }),
+    fetchAllHistorySlim(supabase, userId),
     supabase
       .from('profiles')
       .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year')
@@ -409,7 +425,6 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   ])
 
   const activities = (rows ?? []) as ActivityRow[]
-  const yearActivities = (yearRows ?? []) as SlimActivity[]
 
   const hrZones: HrZone[] = (() => {
     if (!profile) return []
