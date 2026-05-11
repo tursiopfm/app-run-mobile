@@ -1,4 +1,5 @@
-import { FileText, ShieldCheck, Scale, Mail, Tag } from 'lucide-react'
+import Link from 'next/link'
+import { FileText, ShieldCheck, Scale, Mail, Tag, LifeBuoy, ChevronRight } from 'lucide-react'
 
 const APP_VERSION = '0.1.0'
 const CONTACT_EMAIL = 'franck.meri@gmail.com'
@@ -18,6 +19,28 @@ const LEGAL_ITEMS: LegalItem[] = [
 export function HelpAboutSection() {
   return (
     <div className="space-y-[10px]">
+      {/* Support — page dédiée (Strava Support URL) */}
+      <div className="space-y-[6px]">
+        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-trail-muted px-1">
+          Support
+        </p>
+        <div className="rounded-[10px] bg-trail-surface divide-y divide-trail-border">
+          <Link
+            href="/support"
+            className="flex items-center gap-3 px-3 py-[10px] hover:bg-trail-border/30 transition-colors"
+          >
+            <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
+              <LifeBuoy size={13} className="text-trail-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] text-trail-text">Aide & Support</p>
+              <p className="text-[11px] text-trail-muted">Contact, confidentialité, à propos</p>
+            </div>
+            <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
+          </Link>
+        </div>
+      </div>
+
       {/* Réglementaire */}
       <div className="space-y-[6px]">
         <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-trail-muted px-1">
