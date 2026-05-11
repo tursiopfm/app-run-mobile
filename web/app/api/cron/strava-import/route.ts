@@ -20,16 +20,25 @@ export async function GET(request: Request) {
   const cascadeDepth = parseInt(request.headers.get('x-cascade-depth') ?? '0', 10)
 
   const supabase = createServiceClient()
-  const staleCutoff = new Date(Date.now() - STALE_THRESHOLD_SEC * 1000).toISOString()
 
-  // Sélection: jobs actifs et non-en-cours
-  const { data: jobs, error } = await supabase
+  // Sur une cascade (depth > 0), on saute le filtre de staleness car le tick
+  // précédent est terminé (garanti par waitUntil). Sinon, on filtre les jobs
+  // dont le dernier update remonte à > 50s (anti-chevauchement pour les ticks
+  // GitHub Actions ou triggers externes qui pourraient se superposer).
+  const isCascade = cascadeDepth > 0
+  let query = supabase
     .from('provider_connections')
     .select('user_id')
     .eq('provider', 'strava')
     .in('import_status', ['pending', 'in_progress'])
-    .or(`import_updated_at.is.null,import_updated_at.lt.${staleCutoff}`)
     .limit(MAX_USERS_PER_TICK)
+
+  if (!isCascade) {
+    const staleCutoff = new Date(Date.now() - STALE_THRESHOLD_SEC * 1000).toISOString()
+    query = query.or(`import_updated_at.is.null,import_updated_at.lt.${staleCutoff}`)
+  }
+
+  const { data: jobs, error } = await query
 
   if (error) {
     console.error('[cron strava-import] select error:', error)
