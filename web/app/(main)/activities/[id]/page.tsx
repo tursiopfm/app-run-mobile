@@ -68,13 +68,16 @@ export default async function ActivityDetailPage({
       if (!laps && Array.isArray(stravaDetail.laps)) {
         laps = stravaDetail.laps as unknown as StravaLap[]
         payloadPatch.laps = stravaDetail.laps
+      } else if (!laps) {
+        laps = []
+        payloadPatch.laps = []
       }
 
       if (Object.keys(payloadPatch).length > 0) {
         await supabase
           .from('activities')
           .update({
-            raw_payload: { ...(rawPayload as object ?? {}), ...payloadPatch },
+            raw_payload: { ...(rawPayload ?? {}), ...payloadPatch },
           })
           .eq('id', id)
           .eq('user_id', user.id)
