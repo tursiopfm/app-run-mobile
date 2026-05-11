@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Trail Cockpit — Icon Proposals</title>
+<style>
+  :root {
+    --trail-bg:           #0A0F0E;
+    --trail-card:         #162420;
+    --trail-border:       #1E3530;
+    --trail-muted:        #8BA8A3;
+    --trail-text:         #E2ECE9;
+    --trail-primary:      #FF6B35;
+    --trail-primary-dim:  #CC5528;
+    --trail-accent:       #38BDF8;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--trail-bg);
+    color: var(--trail-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    padding: 24px 20px 8px;
+    border-bottom: 1px solid var(--trail-border);
+  }
+  header h1 {
+    margin: 0 0 4px;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 0;
+    color: var(--trail-muted);
+    font-size: 13px;
+  }
+  main { padding: 16px 20px 80px; max-width: 1100px; margin: 0 auto; }
+
+  section { margin-top: 28px; }
+  section h2 {
+    margin: 0 0 4px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--trail-muted);
+  }
+  section .desc {
+    margin: 0 0 14px;
+    font-size: 13px;
+    color: var(--trail-muted);
+  }
+
+  /* ---- BottomNav reference (clone of the real nav) ---- */
+  .nav-ref {
+    display: flex;
+    background: var(--trail-card);
+    border: 1px solid var(--trail-border);
+    border-radius: 14px;
+    padding: 6px 0;
+    margin-top: 12px;
+  }
+  .nav-ref .item {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 2px;
+    padding: 10px 0;
+    color: var(--trail-muted);
+    font-size: 10px;
+  }
+  .nav-ref .item.active { color: var(--trail-primary); }
+
+  /* ---- Icon cards grid ---- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .card {
+    background: var(--trail-card);
+    border: 1px solid var(--trail-border);
+    border-radius: 14px;
+    padding: 16px 14px 12px;
+    display: flex; flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .row {
+    display: flex; align-items: end; gap: 18px;
+    color: var(--trail-muted);
+  }
+  .row .slot {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    font-size: 9px;
+    color: var(--trail-muted);
+  }
+  .row .slot.active { color: var(--trail-primary); }
+  .row .slot .sz { opacity: 0.6; font-variant-numeric: tabular-nums; }
+  .card .label {
+    font-size: 13px;
+    color: var(--trail-text);
+    text-align: center;
+  }
+  .card .key {
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    color: var(--trail-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  /* fake "nav" look-alike preview at bottom of each card */
+  .navlike {
+    margin-top: 6px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.02);
+    color: var(--trail-muted);
+    font-size: 10px;
+  }
+  .navlike.active { color: var(--trail-primary); }
+
+  /* alternatives row */
+  .alt-row {
+    margin-top: 12px;
+    display: flex; gap: 14px; flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px dashed var(--trail-border);
+  }
+  .alt {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    color: var(--trail-muted);
+    font-size: 9px;
+    min-width: 60px;
+  }
+  .alt .tag {
+    font-size: 9px;
+    background: var(--trail-border);
+    color: var(--trail-text);
+    padding: 1px 6px; border-radius: 6px;
+  }
+  .note {
+    color: var(--trail-muted); font-size: 11px;
+    margin-top: 6px; text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Trail Cockpit — Icônes custom</h1>
+  <p>Aperçu en conditions réelles. Stroke <code>1.8</code>/<code>2.5</code>, taille <code>20px</code> (nav) — comme ta <code>BottomNav</code>.</p>
+</header>
+
+<main>
+
+  <!-- =================== NAV REFERENCE =================== -->
+  <section>
+    <h2>Référence — BottomNav actuelle</h2>
+    <p class="desc">Les icônes proposées plus bas doivent paraître appartenir à ce même set.</p>
+    <div class="nav-ref">
+      <div class="item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Cockpit
+      </div>
+      <div class="item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
+        Charge
+      </div>
+      <div class="item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+        Plan
+      </div>
+      <div class="item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></svg>
+        Activités
+      </div>
+      <div class="item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        Courses
+      </div>
+      <div class="item active">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Réglages
+      </div>
+      <div class="item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+        Admin
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== INTENSITÉ =================== -->
+  <section>
+    <h2>Bloc Intensité — 5 icônes</h2>
+    <p class="desc">Du repos au pic. Lecture en gradient : ligne plate → vague → pic.</p>
+    <div class="grid" id="grid-intensite"></div>
+  </section>
+
+  <!-- =================== TYPE =================== -->
+  <section>
+    <h2>Bloc Type — 6 icônes</h2>
+    <p class="desc">Type de séance. Chacune raconte directement son histoire.</p>
+    <div class="grid" id="grid-type"></div>
+  </section>
+
+</main>
+
+<script>
+/* ------------------------------------------------------------
+   Icons defined as SVG inner content (path/circle/etc.)
+   The wrapper SVG is built dynamically at each requested size.
+------------------------------------------------------------- */
+
+const ICONS = {
+  // ------- INTENSITÉ -------
+  recuperation: {
+    key: 'IconRecuperation',
+    label: 'Récupération',
+    desc: 'ECG quasi plat, un seul battement doux',
+    body: `<path d="M2 13 H7 L9 10 L11 14 L13 13 H22"/><circle cx="2" cy="13" r="0.6" fill="currentColor"/>`,
+    alts: [
+      { tag: 'Z', body: `<path d="M6 7 L14 7 L6 17 L14 17"/><path d="M16 5 L19 5 L16 9 L19 9"/>` },
+      { tag: 'leaf', body: `<path d="M5 19 Q 5 8 16 5 Q 17 14 11 19 Q 8 21 5 19 Z"/><path d="M5 19 L13 11"/>` },
+    ],
+  },
+  footing: {
+    key: 'IconFooting',
+    label: 'Footing',
+    desc: 'Profil de running shoe (vue latérale)',
+    body: `<path d="M3 16 Q3 13 6 13 L13 13 Q15 10 18 11 L20 12 Q22 13 22 15 L22 17 H3 Z"/><path d="M7 17 V19 M11 17 V19 M16 17 V19"/>`,
+    alts: [
+      { tag: 'foulée', body: `<path d="M4 7 q3 -3 6 0 q -1 4 -4 4 q -3 0 -2 -4 z"/><path d="M14 13 q3 -3 6 0 q -1 4 -4 4 q -3 0 -2 -4 z"/>` },
+    ],
+  },
+  endurance_active: {
+    key: 'IconEnduranceActive',
+    label: 'Endurance active',
+    desc: 'Vague régulière + flèche, effort métronomique',
+    body: `<path d="M2 12 Q 5 6 8 12 T 14 12 T 20 12"/><path d="M20 12 L18 10 M20 12 L18 14"/>`,
+    alts: [
+      { tag: '∞', body: `<path d="M6 8 q-4 0 -4 4 q0 4 4 4 q3 0 6 -4 q3 -4 6 -4 q4 0 4 4 q0 4 -4 4 q-3 0 -6 -4 q-3 -4 -6 -4 z"/>` },
+    ],
+  },
+  seuil: {
+    key: 'IconSeuil',
+    label: 'Seuil',
+    desc: 'Jauge avec aiguille au point critique',
+    body: `<path d="M3 19 A 9 9 0 0 1 21 19"/><line x1="12" y1="19" x2="17" y2="10"/><circle cx="12" cy="19" r="1.4" fill="currentColor"/><line x1="3" y1="19" x2="4.5" y2="19"/><line x1="21" y1="19" x2="19.5" y2="19"/>`,
+    alts: [
+      { tag: 'limite', body: `<line x1="3" y1="16" x2="21" y2="16"/><path d="M6 20 L12 6 L18 20"/>` },
+    ],
+  },
+  vma: {
+    key: 'IconVma',
+    label: 'VMA',
+    desc: 'Pic explosif + flèche verticale',
+    body: `<path d="M3 20 L8 15 L12 18 L18 5"/><path d="M18 5 L12 5 M18 5 L18 11"/>`,
+    alts: [
+      { tag: 'éclair', body: `<path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"/>` },
+    ],
+  },
+
+  // ------- TYPE -------
+  sortie_longue: {
+    key: 'IconSortieLongue',
+    label: 'Sortie longue',
+    desc: 'Tracé sinueux long avec start/finish',
+    body: `<path d="M4 6 Q 9 6 9 12 Q 9 18 14 18 Q 20 18 20 12"/><circle cx="4" cy="6" r="1.6" fill="currentColor"/><circle cx="20" cy="12" r="1.6"/>`,
+    alts: [
+      { tag: 'sablier', body: `<path d="M6 3 H18 L14 11 L18 21 H6 L10 11 Z"/><line x1="9" y1="6" x2="15" y2="6"/>` },
+    ],
+  },
+  fractionne: {
+    key: 'IconFractionne',
+    label: 'Fractionné',
+    desc: 'Barres alternées sprint / récup',
+    body: `<line x1="4" y1="14" x2="4" y2="20"/><line x1="9" y1="6" x2="9" y2="20"/><line x1="14" y1="14" x2="14" y2="20"/><line x1="19" y1="6" x2="19" y2="20"/><line x1="2" y1="20" x2="22" y2="20"/>`,
+    alts: [
+      { tag: 'chrono', body: `<circle cx="12" cy="14" r="7"/><line x1="12" y1="14" x2="12" y2="10"/><line x1="12" y1="14" x2="15" y2="14"/><line x1="10" y1="3" x2="14" y2="3"/><line x1="12" y1="3" x2="12" y2="7"/>` },
+    ],
+  },
+  cotes: {
+    key: 'IconCotes',
+    label: 'Côtes',
+    desc: 'Triangle de pente + flèche ascendante',
+    body: `<path d="M2 20 L22 20 L22 5 Z"/><path d="M7 17 L13 11"/><path d="M13 11 L10 11 M13 11 L13 14"/>`,
+    alts: [
+      { tag: 'D+', body: `<path d="M3 20 L9 8 L13 14 L21 4"/><path d="M21 4 L15 4 M21 4 L21 10"/>` },
+    ],
+  },
+  course: {
+    key: 'IconCourse',
+    label: 'Course',
+    desc: 'Drapeau à damier (finish)',
+    body: `<line x1="5" y1="3" x2="5" y2="22"/><rect x="5" y="4" width="14" height="10"/><line x1="12" y1="4" x2="12" y2="14"/><line x1="5" y1="9" x2="19" y2="9"/><path d="M5 4 H12 V9 H5 Z" fill="currentColor" fill-opacity="0.85" stroke="none"/><path d="M12 9 H19 V14 H12 Z" fill="currentColor" fill-opacity="0.85" stroke="none"/>`,
+    alts: [
+      { tag: 'dossard', body: `<rect x="4" y="6" width="16" height="14" rx="1"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><circle cx="6" cy="5" r="1"/><circle cx="18" cy="5" r="1"/>` },
+    ],
+  },
+  runtaf: {
+    key: 'IconRuntaf',
+    label: 'Runtaf',
+    desc: 'Laptop au-dessus + chaussure en bas',
+    body: `<rect x="9" y="3" width="12" height="7" rx="0.5"/><line x1="7" y1="11" x2="23" y2="11"/><path d="M2 18 Q 2 16 4 16 L9 16 Q 10 14 12 14.5 L14 15 Q 16 15 16 17 V18 H2 Z"/><path d="M5 18 V20 M9 18 V20 M13 18 V20"/>`,
+    alts: [
+      { tag: 'sac', body: `<path d="M8 7 V5 a2 2 0 0 1 2 -2 h4 a2 2 0 0 1 2 2 V7"/><path d="M5 7 h14 v13 a2 2 0 0 1 -2 2 H7 a2 2 0 0 1 -2 -2 z"/><line x1="9" y1="12" x2="15" y2="12"/>` },
+    ],
+  },
+  velotaf: {
+    key: 'IconVelotaf',
+    label: 'Velotaf',
+    desc: 'Vélo + sacoche/laptop sur porte-bagages',
+    body: `<circle cx="6" cy="17" r="3.5"/><circle cx="18" cy="17" r="3.5"/><path d="M6 17 L11 10 L18 17"/><line x1="11" y1="10" x2="15" y2="10"/><rect x="2" y="6" width="6" height="4.5" rx="0.5"/><line x1="3.5" y1="6" x2="3.5" y2="5"/><line x1="6.5" y1="6" x2="6.5" y2="5"/>`,
+    alts: [
+      { tag: 'vélo seul', body: `<circle cx="6" cy="17" r="3.5"/><circle cx="18" cy="17" r="3.5"/><path d="M6 17 L11 7 L18 17 L13 7 L9 7"/><line x1="11" y1="7" x2="13" y2="7"/>` },
+    ],
+  },
+};
+
+/* ----- Render helpers ----- */
+function svg(body, size, strokeWidth) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+}
+
+function card(def) {
+  const altsHtml = (def.alts || []).map(a => `
+    <div class="alt">
+      ${svg(a.body, 24, 1.8)}
+      <div class="tag">${a.tag}</div>
+    </div>`).join('');
+
+  return `
+  <div class="card">
+    <div class="row">
+      <div class="slot">         ${svg(def.body, 16, 1.8)} <span class="sz">16</span> </div>
+      <div class="slot">         ${svg(def.body, 20, 1.8)} <span class="sz">20 · nav</span> </div>
+      <div class="slot active">  ${svg(def.body, 20, 2.5)} <span class="sz">20 · active</span> </div>
+      <div class="slot">         ${svg(def.body, 32, 1.8)} <span class="sz">32</span> </div>
+    </div>
+    <div class="label">${def.label}</div>
+    <div class="key">${def.key}</div>
+    <div class="navlike">${svg(def.body, 20, 1.8)} ${def.label}</div>
+    <div class="note">${def.desc}</div>
+    ${altsHtml ? `<div class="alt-row">${altsHtml}</div>` : ''}
+  </div>`;
+}
+
+const intensite = ['recuperation','footing','endurance_active','seuil','vma'];
+const types     = ['sortie_longue','fractionne','cotes','course','runtaf','velotaf'];
+
+document.getElementById('grid-intensite').innerHTML = intensite.map(k => card(ICONS[k])).join('');
+document.getElementById('grid-type').innerHTML      = types.map(k => card(ICONS[k])).join('');
+</script>
+</body>
+</html>
