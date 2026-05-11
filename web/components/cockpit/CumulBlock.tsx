@@ -7,9 +7,14 @@ import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports
 import { colors } from '@/lib/design/colors'
 import { CockpitCumulChart } from '@/components/charts/CockpitCumulChart'
 import { SportSettingsModal } from './SportSettingsModal'
+import { YearRangeSelector } from './YearRangeSelector'
 
-type Settings = { visible: SportKey[]; default: SportKey }
-const DEFAULT_SETTINGS: Settings = { visible: ['run', 'ride', 'swim', 'all'], default: 'run' }
+type Settings = { visible: SportKey[]; default: SportKey; yearWindow: number }
+const DEFAULT_SETTINGS: Settings = {
+  visible:    ['run', 'ride', 'swim', 'all'],
+  default:    'run',
+  yearWindow: 5,
+}
 const STORAGE_KEY = 'cockpit_cumul_settings'
 
 type Period = 'month' | 'year'
@@ -58,10 +63,13 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
     setCurrentIdx(idx)
   }
 
-  function handleSave(visible: SportKey[], defaultKey: SportKey) {
-    const next: Settings = { visible, default: defaultKey }
+  function persist(next: Settings) {
     setSettings(next)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+  }
+
+  function handleSave(visible: SportKey[], defaultKey: SportKey) {
+    persist({ ...settings, visible, default: defaultKey })
     setShowModal(false)
     const newIdx = Math.max(0, visible.indexOf(defaultKey))
     setCurrentIdx(newIdx)
@@ -69,6 +77,10 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
       const el = scrollRef.current
       if (el) el.scrollLeft = newIdx * el.clientWidth
     })
+  }
+
+  function handleYearWindow(n: number) {
+    persist({ ...settings, yearWindow: n })
   }
 
   return (
@@ -119,7 +131,11 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
       >
         {visibleSports.map((sportKey) => {
           const sov = sportOverviews[sportKey]
-          const series = period === 'month' ? sov.cumulMonths : sov.cumulYears
+          const fullSeries = period === 'month' ? sov.cumulMonths : sov.cumulYears
+          const series =
+            period === 'year'
+              ? fullSeries.slice(-Math.max(1, settings.yearWindow))
+              : fullSeries
 
           return (
             <div
@@ -139,6 +155,15 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
           )
         })}
       </div>
+
+      {/* Year-range selector (active sport only, year mode only) */}
+      {period === 'year' && sportOverviews[activeSport].cumulYears.length > 1 && (
+        <YearRangeSelector
+          value={settings.yearWindow}
+          max={sportOverviews[activeSport].cumulYears.length}
+          onChange={handleYearWindow}
+        />
+      )}
 
       {/* Dots */}
       {visibleSports.length > 1 && (
