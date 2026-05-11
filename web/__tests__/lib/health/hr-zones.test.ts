@@ -119,3 +119,23 @@ describe('getRecommendedHeartRateZoneMode', () => {
     expect(r.mode).not.toBe('pct_max')
   })
 })
+
+describe('méthode deduced', () => {
+  it('utilise les valeurs déduites pour calculer les zones (Karvonen-like)', () => {
+    const result = calculateHrZones({
+      method: 'deduced',
+      maxHr: 192,
+      restingHr: 54,
+      thresholdHr: 176,
+    })
+    expect(result.zones.length).toBe(5)
+    expect(result.confidence).toBe('Adaptative')
+    expect(result.maxHrUsed).toBe(192)
+  })
+
+  it('signale les valeurs manquantes', () => {
+    const result = calculateHrZones({ method: 'deduced' })
+    expect(result.zones.length).toBe(0)
+    expect(result.missing).toContain('FC max observée')
+  })
+})

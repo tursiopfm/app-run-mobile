@@ -17,6 +17,7 @@ const METHOD_LABELS: Record<HrZoneMethod, string> = {
   karvonen: 'Karvonen',
   pct_max:  '% FC max',
   auto:     'Estimation',
+  deduced:  'Déduites',
   custom:   'Personnalisé',
 }
 

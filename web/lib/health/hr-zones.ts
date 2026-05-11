@@ -1,4 +1,4 @@
-export type HrZoneMethod = 'seuils' | 'test30' | 'karvonen' | 'pct_max' | 'auto' | 'custom'
+export type HrZoneMethod = 'seuils' | 'test30' | 'karvonen' | 'pct_max' | 'auto' | 'deduced' | 'custom'
 
 export type HrZone = {
   zone:  number
@@ -11,7 +11,7 @@ export type HrZone = {
 export type HrZoneResult = {
   zones:      HrZone[]
   method:     HrZoneMethod
-  confidence: 'Excellente' | 'Très bien' | 'Bien' | 'Correcte' | 'Approximative' | 'Personnalisée' | null
+  confidence: 'Excellente' | 'Très bien' | 'Bien' | 'Correcte' | 'Approximative' | 'Adaptative' | 'Personnalisée' | null
   maxHrUsed:  number | null
   missing:    string[]
 }
@@ -106,6 +106,14 @@ export function calculateHrZones(params: {
       const estMax = Math.round(208 - 0.7 * age)
       const maxes = [0.72, 0.78, 0.85, 0.92].map(p => Math.round(estMax * p)).concat([estMax])
       return { zones: makeZones(pctRanges(maxes)), method, confidence: 'Approximative', maxHrUsed: estMax, missing }
+    }
+    case 'deduced': {
+      const max  = need(maxHr, 'FC max observée')
+      const rest = need(restingHr, 'FC repos estimée')
+      if (!max || !rest) return { zones: [], method, confidence: 'Adaptative', maxHrUsed: max ?? null, missing }
+      const reserve = max - rest
+      const maxes = [0.60, 0.70, 0.80, 0.90].map(p => Math.round(rest + p * reserve)).concat([max])
+      return { zones: makeZones(pctRanges(maxes)), method, confidence: 'Adaptative', maxHrUsed: max, missing }
     }
     default:
       return { zones: [], method, confidence: 'Personnalisée', maxHrUsed: null, missing }
