@@ -31,75 +31,39 @@ describe('hmsToSeconds', () => {
   })
 })
 
-// guessIntensity new signature: (name, sport, avgHr?, hrZones?) — no ces param
-
-describe('guessIntensity — keyword priority (highest intensity wins)', () => {
-  it('"footing 10x400" → vma (fractionné beats footing)', () => {
-    expect(guessIntensity('Footing 10x400', 'Run')).toBe('vma')
-  })
-  it('"Sortie longue EF" → footing (EF keyword = footing intensity)', () => {
-    expect(guessIntensity('Sortie longue EF', 'Run')).toBe('footing')
-  })
-  it('vma/fractionné keywords → vma', () => {
-    expect(guessIntensity('VMA 400m x8', 'Run')).toBe('vma')
-    expect(guessIntensity('Séance fractionné', 'Run')).toBe('vma')
-    expect(guessIntensity('Intervals 1000m', 'Run')).toBe('vma')
-    expect(guessIntensity('Répétitions 200m', 'Run')).toBe('vma')
-    expect(guessIntensity('Repetition 800m', 'Run')).toBe('vma')
-  })
-  it('seuil/tempo keywords → seuil', () => {
-    expect(guessIntensity('Seuil 20min', 'Run')).toBe('seuil')
-    expect(guessIntensity('Tempo run', 'Run')).toBe('seuil')
-    expect(guessIntensity('Threshold workout', 'Run')).toBe('seuil')
-  })
-  it('récup keywords → recuperation', () => {
-    expect(guessIntensity('Récup légère', 'Run')).toBe('recuperation')
-    expect(guessIntensity('Recovery jog', 'Run')).toBe('recuperation')
-  })
-  it('footing/EF keywords → footing', () => {
-    expect(guessIntensity('Footing matinal', 'Run')).toBe('footing')
-    expect(guessIntensity('Endurance facile', 'Run')).toBe('footing')
-  })
-})
-
-describe('guessIntensity — no CES fallback', () => {
-  it('no keywords + no zones → autre (not seuil)', () => {
-    expect(guessIntensity('Sortie', 'Run')).toBe('autre')
-  })
-  it('returns autre when no keywords and no zones', () => {
-    expect(guessIntensity('Sortie du matin', 'Run')).toBe('autre')
-  })
-})
+// guessIntensity pure HR signature: (avgHr?, hrZones?) — no keywords, no name/sport
 
 describe('guessIntensity — HR zone fallback', () => {
   const zones = calculateHrZones({ method: 'karvonen', maxHr: 195, restingHr: 57 }).zones
   // Z1: null–140  Z2: 141–154  Z3: 155–167  Z4: 168–181  Z5: 182–195
 
   it('Z1 → recuperation', () => {
-    expect(guessIntensity('Sortie', 'Run', 120, zones)).toBe('recuperation')
-    expect(guessIntensity('Sortie', 'Run', 140, zones)).toBe('recuperation')
+    expect(guessIntensity(120, zones)).toBe('recuperation')
+    expect(guessIntensity(140, zones)).toBe('recuperation')
   })
   it('Z2 → footing', () => {
-    expect(guessIntensity('Sortie', 'Run', 148, zones)).toBe('footing')
-    expect(guessIntensity('Sortie', 'Run', 154, zones)).toBe('footing')
+    expect(guessIntensity(148, zones)).toBe('footing')
+    expect(guessIntensity(154, zones)).toBe('footing')
   })
-  it('Z3 → endurance_active (not sortie_longue)', () => {
-    expect(guessIntensity('Sortie', 'Run', 160, zones)).toBe('endurance_active')
-    expect(guessIntensity('Sortie', 'Run', 167, zones)).toBe('endurance_active')
+  it('Z3 → endurance_active', () => {
+    expect(guessIntensity(160, zones)).toBe('endurance_active')
+    expect(guessIntensity(167, zones)).toBe('endurance_active')
   })
   it('Z4 → seuil', () => {
-    expect(guessIntensity('Sortie', 'Run', 174, zones)).toBe('seuil')
-    expect(guessIntensity('Sortie', 'Run', 181, zones)).toBe('seuil')
+    expect(guessIntensity(174, zones)).toBe('seuil')
+    expect(guessIntensity(181, zones)).toBe('seuil')
   })
   it('Z5 → vma', () => {
-    expect(guessIntensity('Sortie', 'Run', 188, zones)).toBe('vma')
+    expect(guessIntensity(188, zones)).toBe('vma')
   })
-  it('keywords take priority over HR zones', () => {
-    expect(guessIntensity('Footing matinal', 'Run', 188, zones)).toBe('footing')
-    expect(guessIntensity('VMA 400m', 'Run', 120, zones)).toBe('vma')
+  it('returns null when avgHr is null', () => {
+    expect(guessIntensity(null, zones)).toBeNull()
   })
-  it('falls back to autre when avgHr null and no zones', () => {
-    expect(guessIntensity('Sortie', 'Run', null, [])).toBe('autre')
+  it('returns null when hrZones is empty', () => {
+    expect(guessIntensity(148, [])).toBeNull()
+  })
+  it('returns null when no arguments', () => {
+    expect(guessIntensity()).toBeNull()
   })
 })
 
@@ -145,15 +109,15 @@ describe('guessWorkoutType', () => {
     expect(guessWorkoutType('Taf en vélo', 'Ride')).toBe('velotaf')
     expect(guessWorkoutType('Home 🚴🏻', 'Ride')).toBe('velotaf')
   })
-  it('default → autre', () => {
-    expect(guessWorkoutType('Sortie du matin', 'Run')).toBe('autre')
-    expect(guessWorkoutType('Footing matinal', 'Run')).toBe('autre')
+  it('default → null (no matching type)', () => {
+    expect(guessWorkoutType('Sortie du matin', 'Run')).toBeNull()
+    expect(guessWorkoutType('Footing matinal', 'Run')).toBeNull()
   })
 })
 
 describe('INTENSITY_OPTIONS', () => {
-  it('has 8 entries (workout types runtaf/velotaf/course removed — kept in WorkoutType only)', () => {
-    expect(INTENSITY_OPTIONS).toHaveLength(8)
+  it('has 5 entries (pure physiological zones only)', () => {
+    expect(INTENSITY_OPTIONS).toHaveLength(5)
   })
 })
 

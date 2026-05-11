@@ -88,7 +88,7 @@ export function EffortPopup({ ces, onClose }: { ces: number | null; onClose: () 
   )
 }
 
-export function IntensityPopup({ intensityKey, onClose }: { intensityKey: string; onClose: () => void }) {
+export function IntensityPopup({ intensityKey, onClose }: { intensityKey: string | null; onClose: () => void }) {
   return (
     <div
       className="fixed inset-0 z-[100] flex items-end justify-center"

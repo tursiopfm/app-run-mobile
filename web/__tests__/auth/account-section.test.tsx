@@ -39,7 +39,7 @@ describe('AccountSection', () => {
     mockSignOut.mockResolvedValue({})
     render(<AccountSection />)
     await waitFor(() => screen.getByText('runner@example.com'))
-    fireEvent.click(screen.getByRole('button', { name: /se déconnecter/i }))
+    fireEvent.click(screen.getByRole('button', { name: /déconnexion/i }))
     await waitFor(() => {
       expect(mockSignOut).toHaveBeenCalled()
       expect(mockPush).toHaveBeenCalledWith('/')
