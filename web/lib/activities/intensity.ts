@@ -1,5 +1,5 @@
 import type { HrZone } from '@/lib/health/hr-zones'
-import { hrZoneForAvgHr } from '@/lib/health/hr-zones'
+import { hrZoneForAvgHr, distributeTimeInZones } from '@/lib/health/hr-zones'
 
 export type IntensityKey =
   | 'recuperation' | 'footing' | 'endurance_active' | 'seuil' | 'vma'
@@ -62,11 +62,52 @@ function zoneToIntensity(zone: number): IntensityKey {
   return 'vma'
 }
 
+const UPPER_RATIO_THRESHOLD = 0.40
+
+export function classifyIntensityFromZoneTimes(zoneTimesSec: number[]): IntensityKey | null {
+  if (zoneTimesSec.length !== 5) return null
+
+  const clamped = zoneTimesSec.map(v => Math.max(0, v))
+  const total   = clamped.reduce((s, v) => s + v, 0)
+  if (total <= 0) return null
+
+  const [z1, z2, z3, z4, z5] = clamped
+  const upperRatio = (z3 + z4 + z5) / total
+
+  if (upperRatio >= UPPER_RATIO_THRESHOLD) {
+    if (z5 >= z3 && z5 >= z4) return 'vma'
+    if (z4 >= z3)             return 'seuil'
+    return 'endurance_active'
+  }
+
+  if (z2 >= z1) return 'footing'
+  return 'recuperation'
+}
+
+export type GuessIntensityOptions = {
+  activityMaxHr?: number | null
+  movingTimeSec?: number | null
+  restingHr?:     number | null
+}
+
 export function guessIntensity(
   avgHr?:   number | null,
   hrZones?: HrZone[],
+  opts?:    GuessIntensityOptions,
 ): IntensityKey | null {
   if (avgHr == null || !hrZones || hrZones.length === 0) return null
+
+  const activityMaxHr = opts?.activityMaxHr
+  const movingTimeSec = opts?.movingTimeSec
+  if (activityMaxHr != null && activityMaxHr > avgHr
+      && movingTimeSec != null && movingTimeSec > 0) {
+    const restingHr = opts?.restingHr
+      ?? Math.max(avgHr - 3 * Math.max((activityMaxHr - avgHr) / 2, 3), 40)
+    const zoneTimes = distributeTimeInZones(hrZones, avgHr, activityMaxHr, movingTimeSec, restingHr)
+    const fromDistribution = classifyIntensityFromZoneTimes(zoneTimes)
+    if (fromDistribution !== null) return fromDistribution
+  }
+
   const zone = hrZoneForAvgHr(avgHr, hrZones)
   if (zone === null) return null
   return zoneToIntensity(zone)

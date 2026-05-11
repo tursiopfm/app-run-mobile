@@ -147,6 +147,48 @@ export type HrZoneRecommendation = {
   missingFields: string[]
 }
 
+// ── Distribution du temps par zone (loi normale tronquée) ───────────────────
+
+function erf(x: number): number {
+  const a1 =  0.254829592, a2 = -0.284496736, a3 =  1.421413741
+  const a4 = -1.453152027, a5 =  1.061405429, p  =  0.3275911
+  const t = 1 / (1 + p * Math.abs(x))
+  const y = 1 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x)
+  return x >= 0 ? y : -y
+}
+
+function normCdf(x: number, mu: number, sigma: number): number {
+  return 0.5 * (1 + erf((x - mu) / (sigma * Math.SQRT2)))
+}
+
+export function distributeTimeInZones(
+  zones:         HrZone[],
+  avgHr:         number,
+  activityMaxHr: number,
+  movingTimeSec: number,
+  restingHr:     number,
+): number[] {
+  const sigma = Math.max((activityMaxHr - avgHr) / 2, 3)
+
+  const weights = zones.map(z => {
+    const zMin = z.min ?? restingHr
+    if (zMin >= activityMaxHr) return 0
+    const zMax = Math.min(z.max, activityMaxHr)
+    return normCdf(zMax, avgHr, sigma) - normCdf(zMin, avgHr, sigma)
+  })
+
+  const total = weights.reduce((s, w) => s + w, 0)
+  if (total === 0) return zones.map(() => 0)
+
+  let remaining = movingTimeSec
+  return weights.map((w, i) => {
+    if (i === weights.length - 1) return remaining
+    const d = Math.round((w / total) * movingTimeSec)
+    remaining -= d
+    return d
+  })
+}
+
 export function getRecommendedHeartRateZoneMode(profile: {
   max_hr?:               number | null
   aerobic_threshold_hr?: number | null

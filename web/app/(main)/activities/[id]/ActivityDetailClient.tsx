@@ -307,7 +307,11 @@ export function ActivityDetailClient({
     } catch { return [] }
   })()
 
-  const intensityKey = a.manual_intensity ?? guessIntensity(a.avg_hr, hrZones)
+  const intensityKey = a.manual_intensity ?? guessIntensity(a.avg_hr, hrZones, {
+    activityMaxHr: a.max_hr,
+    movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
+    restingHr:     athleteProfile?.resting_hr ?? null,
+  })
 
   // Pace / speed tile
   let paceLabel: string

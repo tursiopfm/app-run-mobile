@@ -118,6 +118,7 @@ export type ActivityRow = {
   start_time:              string
   ces:                     number | null
   avg_hr:                  number | null
+  max_hr:                  number | null
   distance_m:              number | null
   elevation_gain_m:        number | null
   moving_time_sec:         number | null
@@ -153,7 +154,10 @@ export function ActivityCard({
   const ces   = a.ces != null ? Math.round(a.ces).toString() : '—'
   const fourth = fourthMetric(effectiveSport, effectiveDistance, effectiveDuration, a.ces)
 
-  const intensityKey = (a.manual_intensity as IntensityKey | null) ?? guessIntensity(a.avg_hr, hrZones)
+  const intensityKey = (a.manual_intensity as IntensityKey | null) ?? guessIntensity(a.avg_hr, hrZones, {
+    activityMaxHr: a.max_hr,
+    movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
+  })
   const cesVal = a.ces ?? 0
   const effortColor =
     cesVal <= 40  ? '#38bdf8' :

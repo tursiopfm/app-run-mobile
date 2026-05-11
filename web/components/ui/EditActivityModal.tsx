@@ -108,7 +108,10 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
   )
   const [sport,       setSport]       = useState(effectiveSport)
   const [intensity,   setIntensity]   = useState<IntensityKey | null>(
-    (a.manual_intensity as IntensityKey | null) ?? guessIntensity(a.avg_hr, hrZones) ?? null
+    (a.manual_intensity as IntensityKey | null) ?? guessIntensity(a.avg_hr, hrZones, {
+      activityMaxHr: a.max_hr,
+      movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
+    }) ?? null
   )
   const [workoutType, setWorkoutType] = useState<string | null>(
     a.manual_workout_type ?? guessWorkoutType(a.name, effectiveSport) ?? null

@@ -596,7 +596,10 @@ export default function ActivitiesClient({ initial, hasMore }: { initial: Activi
     }
     if (filter.intensity !== 'Toutes') {
       list = list.filter(a => {
-        const key = (a.manual_intensity ?? guessIntensity(a.avg_hr, hrZones))
+        const key = (a.manual_intensity ?? guessIntensity(a.avg_hr, hrZones, {
+          activityMaxHr: a.max_hr,
+          movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
+        }))
         return key === filter.intensity
       })
     }
