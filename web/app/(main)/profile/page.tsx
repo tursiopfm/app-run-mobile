@@ -2,8 +2,6 @@ import { createClient } from '@/lib/database/supabase-server'
 import { getServerUser } from '@/lib/database/get-user'
 import { IdentityCard } from '@/components/settings/IdentityCard'
 import { HrCalibrationCard } from '@/components/settings/HrCalibrationCard'
-import { HrSourcesPanel } from '@/components/settings/HrSourcesPanel'
-import { HrZonesDisplay } from '@/components/settings/HrZonesDisplay'
 import type { HrZoneMethod } from '@/lib/health/hr-zones'
 import type { CardioState } from '@/components/settings/HrCardioFields'
 
@@ -65,30 +63,8 @@ export default async function ProfilePage() {
         initial={initialState}
         initialMethod={initialMethod}
         athleteData={athlete ? { resting_heart_rate: athlete.resting_heart_rate ?? null } : null}
-      />
-
-      <HrSourcesPanel
-        method={initialMethod}
-        profile={{
-          max_hr:               initialState.max_hr,
-          resting_hr:           initialState.resting_hr,
-          threshold_hr:         initialState.threshold_hr,
-          aerobic_threshold_hr: initialState.aerobic_threshold_hr,
-          birth_year:           initialState.birth_year,
-        }}
-        deduced={{ maxHrObserved: null, restingHrEstimated: null, lthrEstimated: null, computedAt: null }}
         methodUpdatedAt={profile?.hr_method_updated_at ?? null}
       />
-
-      <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[10px]">
-        <p className="text-[14px] font-bold text-trail-text">Zones FC utilisées</p>
-        <HrZonesDisplay
-          maxHr={initialState.max_hr}
-          restingHr={initialState.resting_hr}
-          aerobicThresholdHr={initialState.aerobic_threshold_hr}
-          thresholdHr={initialState.threshold_hr}
-        />
-      </div>
     </div>
   )
 }

@@ -5,10 +5,12 @@ import { calculateHrZones, type HrZoneMethod } from '@/lib/health/hr-zones'
 import { colors } from '@/lib/design/colors'
 
 type Props = {
+  method?:             HrZoneMethod
   maxHr?:              number | null
   restingHr?:          number | null
   aerobicThresholdHr?: number | null
   thresholdHr?:        number | null
+  birthYear?:          number | null
 }
 
 const METHOD_LABELS: Record<HrZoneMethod, string> = {
@@ -21,17 +23,19 @@ const METHOD_LABELS: Record<HrZoneMethod, string> = {
   custom:   'Personnalisé',
 }
 
-export function HrZonesDisplay({ maxHr, restingHr, aerobicThresholdHr, thresholdHr }: Props) {
-  const [method,    setMethod]    = useState<HrZoneMethod>('seuils')
-  const [birthYear, setBirthYear] = useState<number | null>(null)
+export function HrZonesDisplay({ method: methodProp, maxHr, restingHr, aerobicThresholdHr, thresholdHr, birthYear: birthYearProp }: Props) {
+  const [methodLocal,    setMethodLocal]    = useState<HrZoneMethod>('seuils')
+  const [birthYearLocal, setBirthYearLocal] = useState<number | null>(null)
 
   useEffect(() => {
     const m = localStorage.getItem('tc_hr_zone_method')
-    if (m) setMethod(m as HrZoneMethod)
+    if (m) setMethodLocal(m as HrZoneMethod)
     const by = localStorage.getItem('tc_birth_year')
-    if (by) setBirthYear(parseInt(by))
+    if (by) setBirthYearLocal(parseInt(by))
   }, [])
 
+  const method    = methodProp    ?? methodLocal
+  const birthYear = birthYearProp ?? birthYearLocal
   const result = calculateHrZones({ method, maxHr, restingHr, aerobicThresholdHr, thresholdHr, birthYear })
 
   if (result.zones.length === 0) {

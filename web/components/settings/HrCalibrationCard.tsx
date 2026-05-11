@@ -6,6 +6,8 @@ import type { HrZoneMethod as Method } from '@/lib/health/hr-zones'
 import { requiredFieldsFor } from '@/lib/health/hr-method-meta'
 import { HrZoneMethod } from './HrZoneMethod'
 import { HrCardioFields, type CardioState, type DeducedValues } from './HrCardioFields'
+import { HrSourcesPanel } from './HrSourcesPanel'
+import { HrZonesDisplay } from './HrZonesDisplay'
 import { deduceFromActivities, type ActivityForDeduce, type StravaAthleteData } from '@/lib/health/hr-deduce'
 
 type Status = 'idle' | 'saving' | 'saved' | 'error'
@@ -13,11 +15,12 @@ type Status = 'idle' | 'saving' | 'saved' | 'error'
 const DEDUCED_KEY = 'tc_hr_deduced'
 
 export function HrCalibrationCard({
-  initial, initialMethod, athleteData,
+  initial, initialMethod, athleteData, methodUpdatedAt,
 }: {
-  initial:       CardioState
-  initialMethod: Method
-  athleteData:   StravaAthleteData
+  initial:         CardioState
+  initialMethod:   Method
+  athleteData:     StravaAthleteData
+  methodUpdatedAt: string | null
 }) {
   const [method, setMethod] = useState<Method>(initialMethod)
   const [state,  setState]  = useState<CardioState>(initial)
@@ -134,6 +137,31 @@ export function HrCalibrationCard({
           : status === 'error' ? 'Erreur — champs requis manquants ou échec'
           : 'Enregistrer le profil'}
       </button>
+
+      <HrSourcesPanel
+        method={method}
+        profile={{
+          max_hr:               state.max_hr,
+          resting_hr:           state.resting_hr,
+          threshold_hr:         state.threshold_hr,
+          aerobic_threshold_hr: state.aerobic_threshold_hr,
+          birth_year:           state.birth_year,
+        }}
+        deduced={deduced}
+        methodUpdatedAt={methodUpdatedAt}
+      />
+
+      <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[10px]">
+        <p className="text-[14px] font-bold text-trail-text">Zones FC utilisées</p>
+        <HrZonesDisplay
+          method={method}
+          maxHr={method === 'deduced' ? (deduced.maxHrObserved ?? state.max_hr) : state.max_hr}
+          restingHr={method === 'deduced' ? (deduced.restingHrEstimated ?? state.resting_hr) : state.resting_hr}
+          aerobicThresholdHr={state.aerobic_threshold_hr}
+          thresholdHr={method === 'deduced' ? (deduced.lthrEstimated ?? state.threshold_hr) : state.threshold_hr}
+          birthYear={state.birth_year}
+        />
+      </div>
     </div>
   )
 }
