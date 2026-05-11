@@ -4,6 +4,7 @@ import { HrZoneMethod } from '@/components/settings/HrZoneMethod'
 import { ProfileSourceSection } from '@/components/settings/ProfileSourceSection'
 import { ProfileCardioSection, type ProfileCardioData } from '@/components/settings/ProfileCardioSection'
 import { HrZonesDisplay } from '@/components/settings/HrZonesDisplay'
+import { IdentityCard } from '@/components/settings/IdentityCard'
 
 export default async function ProfilePage() {
   const user     = await getServerUser()
@@ -23,8 +24,25 @@ export default async function ProfilePage() {
     .single()
   if (profile) data = profile as ProfileCardioData
 
-  const displayName = data.first_name
-    ? `${data.first_name} ${data.last_name ?? ''}`.trim()
+  const { data: connection } = await supabase
+    .from('provider_connections')
+    .select('athlete_data')
+    .eq('user_id', user!.id)
+    .eq('provider', 'strava')
+    .maybeSingle()
+
+  const athlete = (connection?.athlete_data ?? null) as
+    | { firstname?: string; lastname?: string; profile?: string }
+    | null
+
+  const firstName = data.first_name ?? athlete?.firstname ?? null
+  const lastName  = data.last_name  ?? athlete?.lastname  ?? null
+  const avatarUrl = athlete?.profile && athlete.profile !== 'avatar/athlete/large.png'
+    ? athlete.profile
+    : null
+
+  const displayName = firstName
+    ? `${firstName} ${lastName ?? ''}`.trim()
     : user!.email?.split('@')[0] ?? 'Athlète'
 
   return (
@@ -37,6 +55,15 @@ export default async function ProfilePage() {
           Ce profil calibre tes zones de fréquence cardiaque et améliore l&apos;interprétation de l&apos;effort.
         </p>
       </div>
+
+      {/* Identité */}
+      <IdentityCard
+        firstName={firstName}
+        lastName={lastName}
+        email={user!.email ?? null}
+        avatarUrl={avatarUrl}
+        accountCreatedAt={user!.created_at ?? null}
+      />
 
       {/* Méthode de calcul des zones */}
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[10px]">

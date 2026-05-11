@@ -1,4 +1,5 @@
-import { Plug2, Palette, Sparkles, LifeBuoy } from 'lucide-react'
+import Link from 'next/link'
+import { Plug2, Palette, Sparkles, LifeBuoy, User, ChevronRight } from 'lucide-react'
 import { StravaSection } from '@/components/settings/StravaSection'
 import { AccountSection } from '@/components/settings/AccountSection'
 import { AppearanceSection } from '@/components/settings/AppearanceSection'
@@ -111,6 +112,19 @@ export default async function SettingsPage() {
         />
         <SectionCard>
           <AccountSection />
+          <Link
+            href="/profile"
+            className="flex items-center gap-3 px-3 py-[10px] rounded-[10px] bg-trail-surface hover:bg-trail-border/30 transition-colors"
+          >
+            <div className="w-8 h-8 rounded-[10px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
+              <User size={14} className="text-trail-muted" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-trail-muted">Profil</p>
+              <p className="text-[13px] text-trail-text truncate">Mon profil</p>
+            </div>
+            <ChevronRight size={16} className="text-trail-muted flex-shrink-0" />
+          </Link>
           <StravaSection isConnected={stravaConnected} athleteName={stravaAthleteName} />
         </SectionCard>
       </section>
