@@ -29,6 +29,7 @@ export function IdentityCard({
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl)
   const [currentHasCustom, setCurrentHasCustom] = useState(hasCustomAvatar)
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarError, setAvatarError] = useState(false)
 
   const [isEditing, setIsEditing] = useState(false)
   const [editFirst, setEditFirst] = useState(firstName ?? '')
@@ -78,6 +79,7 @@ export function IdentityCard({
     const file = e.target.files?.[0]
     if (!file) return
     setAvatarUploading(true)
+    setAvatarError(false)
     try {
       const fd = new FormData()
       fd.append('file', file)
@@ -87,7 +89,11 @@ export function IdentityCard({
         setCurrentAvatarUrl(url)
         setCurrentHasCustom(true)
         router.refresh()
+      } else {
+        setAvatarError(true)
       }
+    } catch {
+      setAvatarError(true)
     } finally {
       setAvatarUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -96,13 +102,18 @@ export function IdentityCard({
 
   async function handleRemoveAvatar() {
     setAvatarUploading(true)
+    setAvatarError(false)
     try {
       const res = await fetch('/api/profile/avatar', { method: 'DELETE' })
       if (res.ok) {
         setCurrentAvatarUrl(null)
         setCurrentHasCustom(false)
         router.refresh()
+      } else {
+        setAvatarError(true)
       }
+    } catch {
+      setAvatarError(true)
     } finally {
       setAvatarUploading(false)
     }
@@ -161,6 +172,7 @@ export function IdentityCard({
               </div>
               <div className="flex gap-[6px]">
                 <button
+                  type="button"
                   onClick={handleSaveName}
                   disabled={nameStatus === 'saving'}
                   className="flex items-center gap-1 rounded-[8px] bg-trail-primary px-3 py-[4px] text-[12px] font-semibold text-white disabled:opacity-50"
@@ -169,6 +181,7 @@ export function IdentityCard({
                   {nameStatus === 'saving' ? 'Enregistrement…' : 'Enregistrer'}
                 </button>
                 <button
+                  type="button"
                   onClick={handleCancel}
                   className="flex items-center gap-1 rounded-[8px] bg-trail-surface border border-trail-border px-3 py-[4px] text-[12px] text-trail-muted"
                 >
@@ -198,6 +211,11 @@ export function IdentityCard({
           )}
         </div>
       </div>
+
+      {/* Avatar error */}
+      {avatarError && (
+        <p className="text-[11px] text-red-500">Erreur — réessayer</p>
+      )}
 
       {/* Retirer avatar custom */}
       {currentHasCustom && !avatarUploading && (
