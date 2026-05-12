@@ -11,6 +11,7 @@ import { LoadStatusCard } from '@/components/charge/blocks/LoadStatusCard'
 import { AcuteChronicCard } from '@/components/charge/blocks/AcuteChronicCard'
 import { FreshnessCard } from '@/components/charge/blocks/FreshnessCard'
 import { WeeklyLoadChart } from '@/components/charge/blocks/WeeklyLoadChart'
+import { FitnessFatigueChart } from '@/components/charge/blocks/FitnessFatigueChart'
 
 const SPORT_STORAGE = 'charge_sport_filter'
 
@@ -76,6 +77,12 @@ export function ChargePageClient({ data }: Props) {
       label:  blockLabel(id),
       emoji:  '📊',
       render: () => <WeeklyLoadChart payload={payload} />,
+    }
+    if (id === 'fitness-fatigue') return {
+      id,
+      label:  blockLabel(id),
+      emoji:  '📈',
+      render: () => <FitnessFatigueChart payload={payload} />,
     }
     return {
       id,
