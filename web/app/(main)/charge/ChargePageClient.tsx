@@ -15,6 +15,10 @@ import { FitnessFatigueChart } from '@/components/charge/blocks/FitnessFatigueCh
 import { SportDistributionChart } from '@/components/charge/blocks/SportDistributionChart'
 import { IntensityDistributionChart } from '@/components/charge/blocks/IntensityDistributionChart'
 import { MonotonyStrainCard } from '@/components/charge/blocks/MonotonyStrainCard'
+import { TopLoadActivitiesCard } from '@/components/charge/blocks/TopLoadActivitiesCard'
+import { LoadHeatmap28d } from '@/components/charge/blocks/LoadHeatmap28d'
+import { RampRateCard } from '@/components/charge/blocks/RampRateCard'
+import { LoadInsightsCard } from '@/components/charge/blocks/LoadInsightsCard'
 
 const SPORT_STORAGE = 'charge_sport_filter'
 
@@ -105,15 +109,36 @@ export function ChargePageClient({ data }: Props) {
       emoji:  '🌡️',
       render: () => <MonotonyStrainCard payload={payload} />,
     }
+    if (id === 'top-activities') return {
+      id,
+      label:  blockLabel(id),
+      emoji:  '🏅',
+      render: () => <TopLoadActivitiesCard payload={payload} />,
+    }
+    if (id === 'heatmap-28d') return {
+      id,
+      label:  blockLabel(id),
+      emoji:  '🗓️',
+      render: () => <LoadHeatmap28d payload={payload} />,
+    }
+    if (id === 'ramp-rate') return {
+      id,
+      label:  blockLabel(id),
+      emoji:  '↗️',
+      render: () => <RampRateCard payload={payload} />,
+    }
+    if (id === 'insights') return {
+      id,
+      label:  blockLabel(id),
+      emoji:  '💡',
+      render: () => <LoadInsightsCard payload={payload} />,
+    }
+    // Fallback — should never be reached with 12 known IDs
     return {
       id,
       label:  blockLabel(id),
       emoji:  '⚡',
-      render: () => (
-        <div className="rounded-[12px] bg-trail-card border border-trail-border p-3 text-[12px] text-trail-muted">
-          [{id}] placeholder
-        </div>
-      ),
+      render: () => <div className="text-[12px] text-trail-muted p-3">{id}</div>,
     }
   })
 
