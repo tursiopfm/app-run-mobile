@@ -256,3 +256,54 @@ describe('computeSportDistribution', () => {
     expect(d.total).toBe(140)
   })
 })
+
+import { computeIntensityDistribution } from '@/lib/analytics/charge-insights'
+import type { HrZone } from '@/lib/health/hr-zones'
+
+describe('computeIntensityDistribution', () => {
+  const zones: HrZone[] = [
+    { zone: 1, min: null, max: 120, name: 'Z1', color: '#4caf50' },
+    { zone: 2, min: 121, max: 140, name: 'Z2', color: '#38bdf8' },
+    { zone: 3, min: 141, max: 160, name: 'Z3', color: '#f59e0b' },
+    { zone: 4, min: 161, max: 175, name: 'Z4', color: '#e8651a' },
+    { zone: 5, min: 176, max: 200, name: 'Z5', color: '#ef4444' },
+  ]
+
+  it('handles empty activities', () => {
+    const d = computeIntensityDistribution([], 7, zones, new Date('2026-05-12T12:00:00Z'))
+    expect(d).toEqual([])
+  })
+
+  it('uses manualIntensity first (recuperation → Récupération)', () => {
+    const acts = [act({ startDate: '2026-05-12T08:00:00Z', ces: 50, manualIntensity: 'recuperation' })]
+    const d = computeIntensityDistribution(acts, 7, zones, new Date('2026-05-13T12:00:00Z'))
+    expect(d.find(x => x.label === 'Récupération')?.ces).toBe(50)
+  })
+
+  it('falls back to name keywords', () => {
+    const acts = [
+      act({ startDate: '2026-05-12T08:00:00Z', ces: 60, name: 'Sortie longue dimanche', id: '1' }),
+      act({ startDate: '2026-05-11T08:00:00Z', ces: 40, name: 'VMA 400m × 8',           id: '2' }),
+    ]
+    const d = computeIntensityDistribution(acts, 7, zones, new Date('2026-05-13T12:00:00Z'))
+    expect(d.find(x => x.label === 'Endurance active')?.ces).toBe(60)
+    expect(d.find(x => x.label === 'VMA')?.ces).toBe(40)
+  })
+
+  it('falls back to HR zone when no name/manual hint', () => {
+    const acts = [
+      act({ startDate: '2026-05-12T08:00:00Z', ces: 30, avgHr: 100, name: '' }),
+      act({ startDate: '2026-05-11T08:00:00Z', ces: 30, avgHr: 130, name: '', id: '2' }),
+      act({ startDate: '2026-05-10T08:00:00Z', ces: 30, avgHr: 150, name: '', id: '3' }),
+    ]
+    const d = computeIntensityDistribution(acts, 7, zones, new Date('2026-05-13T12:00:00Z'))
+    expect(d.find(x => x.label === 'Récupération')?.ces).toBe(30)
+    expect(d.find(x => x.label === 'Endurance active')?.ces).toBe(30)
+  })
+
+  it('marks as Non déterminée when no signal', () => {
+    const acts = [act({ startDate: '2026-05-12T08:00:00Z', ces: 25, name: '', avgHr: null })]
+    const d = computeIntensityDistribution(acts, 7, [], new Date('2026-05-13T12:00:00Z'))
+    expect(d.find(x => x.label === 'Non déterminée')?.ces).toBe(25)
+  })
+})

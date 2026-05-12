@@ -1,7 +1,9 @@
 // web/lib/analytics/charge-insights.ts
 import type { DailyLoad, DailyMetrics } from './fatigue'
-import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone, LoadBalanceResult, SportDistribution } from './charge-insights.types'
+import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone, LoadBalanceResult, SportDistribution, IntensityLabel, IntensityShareCes } from './charge-insights.types'
 import { FRESHNESS, MONOTONY } from './charge-thresholds'
+import type { HrZone } from '@/lib/health/hr-zones'
+import { hrZoneForAvgHr } from '@/lib/health/hr-zones'
 
 function dateKey(d: Date): string {
   return d.toISOString().slice(0, 10)
@@ -217,4 +219,73 @@ export function computeLoadBalanceRatio(
   const sumRatio7vs28 = avg7Week > 0 ? Math.round((sum7 / avg7Week) * 100) / 100 : 0
 
   return { ewmaRatio, sumRatio7vs28 }
+}
+
+// ── Intensity distribution ───────────────────────────────────────────────────
+
+const INTENSITY_ORDER: IntensityLabel[] = [
+  'Récupération', 'Footing', 'Endurance active', 'Seuil', 'VMA', 'Non déterminée',
+]
+
+const MANUAL_TO_LABEL: Record<string, IntensityLabel> = {
+  recuperation:     'Récupération',
+  footing:          'Footing',
+  endurance_active: 'Endurance active',
+  sortie_longue:    'Endurance active',
+  cotes:            'Footing',
+  vma:              'VMA',
+  seuil:            'Seuil',
+  seuil_tempo:      'Seuil',
+}
+
+function labelFromName(name: string): IntensityLabel | null {
+  const n = name.toLowerCase()
+  if (n.includes('récup') || n.includes('recup')) return 'Récupération'
+  if (n.includes('footing') || n.includes(' ef ') || n.includes('endurance facile')) return 'Footing'
+  if (n.includes('sortie longue') || n.includes(' sl ') || n.includes('long run') || n.includes('endurance')) return 'Endurance active'
+  if (n.includes('vma') || n.includes('400') || n.includes('200') || n.includes('fractionné') || n.includes('interval') || n.includes('répétition')) return 'VMA'
+  if (n.includes('seuil') || n.includes('tempo') || n.includes('threshold')) return 'Seuil'
+  return null
+}
+
+function labelFromZone(zone: number): IntensityLabel {
+  if (zone <= 1) return 'Récupération'
+  if (zone === 2) return 'Endurance active'
+  if (zone === 3) return 'Footing'
+  if (zone === 4) return 'Seuil'
+  return 'VMA'
+}
+
+function classifyIntensity(a: CesActivity, zones: HrZone[]): IntensityLabel {
+  if (a.manualIntensity && MANUAL_TO_LABEL[a.manualIntensity]) return MANUAL_TO_LABEL[a.manualIntensity]
+  const fromName = labelFromName(a.name)
+  if (fromName) return fromName
+  if (a.avgHr != null && zones.length > 0) {
+    const z = hrZoneForAvgHr(a.avgHr, zones)
+    if (z !== null) return labelFromZone(z)
+  }
+  return 'Non déterminée'
+}
+
+export function computeIntensityDistribution(
+  activities: CesActivity[],
+  windowDays: number,
+  zones: HrZone[],
+  now: Date = new Date(),
+): IntensityShareCes[] {
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+  const start = new Date(end)
+  start.setUTCDate(start.getUTCDate() - (windowDays - 1))
+
+  const byLabel = new Map<IntensityLabel, number>()
+  for (const a of activities) {
+    if (!Number.isFinite(a.ces) || a.ces == null) continue
+    const d = a.startDate.slice(0, 10)
+    if (d < dateKey(start) || d > dateKey(end)) continue
+    const label = classifyIntensity(a, zones)
+    byLabel.set(label, (byLabel.get(label) ?? 0) + a.ces)
+  }
+  return INTENSITY_ORDER
+    .filter(l => byLabel.has(l))
+    .map(l => ({ label: l, ces: Math.round(byLabel.get(l)!) }))
 }
