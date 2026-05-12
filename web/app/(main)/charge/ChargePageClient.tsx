@@ -7,6 +7,7 @@ import { SportSegmentedTabs } from '@/components/charge/SportSegmentedTabs'
 import type { SportKey } from '@/lib/design/sports'
 import type { ChargePageData, ChargeSportFilterKey } from '@/lib/data/charge'
 import { charge as chargeLabels } from '@/lib/design/labels'
+import { LoadStatusCard } from '@/components/charge/blocks/LoadStatusCard'
 
 const SPORT_STORAGE = 'charge_sport_filter'
 
@@ -48,16 +49,24 @@ export function ChargePageClient({ data }: Props) {
   const payload = data.perSport[sport as ChargeSportFilterKey]
 
   // Placeholder blocks — implementations come in Phase 5/6/7
-  const blocks: BlockDef[] = DEFAULT_ORDER.map((id) => ({
-    id,
-    label:  blockLabel(id),
-    emoji:  '⚡',
-    render: () => (
-      <div className="rounded-[12px] bg-trail-card border border-trail-border p-3 text-[12px] text-trail-muted">
-        [{id}] placeholder
-      </div>
-    ),
-  }))
+  const blocks: BlockDef[] = DEFAULT_ORDER.map((id) => {
+    if (id === 'status') return {
+      id,
+      label:  blockLabel(id),
+      emoji:  '⚡',
+      render: () => <LoadStatusCard payload={payload} />,
+    }
+    return {
+      id,
+      label:  blockLabel(id),
+      emoji:  '⚡',
+      render: () => (
+        <div className="rounded-[12px] bg-trail-card border border-trail-border p-3 text-[12px] text-trail-muted">
+          [{id}] placeholder
+        </div>
+      ),
+    }
+  })
 
   if (payload.historyDays === 0) {
     return (
