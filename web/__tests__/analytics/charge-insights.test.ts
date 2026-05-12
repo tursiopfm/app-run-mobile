@@ -146,6 +146,7 @@ describe('freshness / acute / chronic', () => {
 })
 
 import { computeLoadBalanceRatio, computeMonotony7d, computeStrain7d, computeActiveDays7d, computePeakDay7d } from '@/lib/analytics/charge-insights'
+import { computeSportDistribution } from '@/lib/analytics/charge-insights'
 
 describe('monotony / strain / activeDays / peakDay', () => {
   it('monotony = MONOTONY.repetitiveMin when std is 0 (constant non-zero load)', () => {
@@ -230,5 +231,28 @@ describe('computeLoadBalanceRatio', () => {
     const m = buildDailyMetrics(days)
     const r = computeLoadBalanceRatio(m, days)
     expect(r.sumRatio7vs28).toBeCloseTo(700 / (1750 / 4), 2)
+  })
+})
+
+describe('computeSportDistribution', () => {
+  it('returns zero distribution for no activities', () => {
+    const d = computeSportDistribution([], 7, new Date('2026-05-12T12:00:00Z'))
+    expect(d).toEqual({ run: 0, ride: 0, swim: 0, other: 0, total: 0 })
+  })
+
+  it('sums CES per category inside window', () => {
+    const acts = [
+      act({ startDate: '2026-05-12T08:00:00Z', ces: 50, rawSportType: 'Run',     id: '1' }),
+      act({ startDate: '2026-05-11T08:00:00Z', ces: 40, rawSportType: 'Ride',    id: '2' }),
+      act({ startDate: '2026-05-10T08:00:00Z', ces: 30, rawSportType: 'Swim',    id: '3' }),
+      act({ startDate: '2026-05-09T08:00:00Z', ces: 20, rawSportType: 'Walk',    id: '4' }),
+      act({ startDate: '2026-04-01T08:00:00Z', ces: 999, rawSportType: 'Run',    id: 'old' }),
+    ]
+    const d = computeSportDistribution(acts, 7, new Date('2026-05-13T12:00:00Z'))
+    expect(d.run).toBe(50)
+    expect(d.ride).toBe(40)
+    expect(d.swim).toBe(30)
+    expect(d.other).toBe(20)
+    expect(d.total).toBe(140)
   })
 })

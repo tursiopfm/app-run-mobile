@@ -1,6 +1,6 @@
 // web/lib/analytics/charge-insights.ts
 import type { DailyLoad, DailyMetrics } from './fatigue'
-import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone, LoadBalanceResult } from './charge-insights.types'
+import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone, LoadBalanceResult, SportDistribution } from './charge-insights.types'
 import { FRESHNESS, MONOTONY } from './charge-thresholds'
 
 function dateKey(d: Date): string {
@@ -172,6 +172,32 @@ export function computePeakDay7d(loads: DailyLoad[]): { date: string; ces: numbe
     return acc
   }, null)
   return best
+}
+
+export function computeSportDistribution(
+  activities: CesActivity[],
+  windowDays: number,
+  now: Date = new Date(),
+): SportDistribution {
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+  const start = new Date(end)
+  start.setUTCDate(start.getUTCDate() - (windowDays - 1))
+
+  const acc: SportDistribution = { run: 0, ride: 0, swim: 0, other: 0, total: 0 }
+  for (const a of activities) {
+    if (!Number.isFinite(a.ces) || a.ces == null) continue
+    const d = a.startDate.slice(0, 10)
+    if (d < dateKey(start) || d > dateKey(end)) continue
+    const cat = classifySportCategory(a.rawSportType)
+    acc[cat] += a.ces
+    acc.total += a.ces
+  }
+  acc.run   = Math.round(acc.run)
+  acc.ride  = Math.round(acc.ride)
+  acc.swim  = Math.round(acc.swim)
+  acc.other = Math.round(acc.other)
+  acc.total = Math.round(acc.total)
+  return acc
 }
 
 export function computeLoadBalanceRatio(
