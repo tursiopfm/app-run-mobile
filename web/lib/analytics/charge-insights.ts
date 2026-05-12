@@ -1,7 +1,7 @@
 // web/lib/analytics/charge-insights.ts
 import type { DailyLoad, DailyMetrics } from './fatigue'
 import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone, LoadBalanceResult } from './charge-insights.types'
-import { FRESHNESS } from './charge-thresholds'
+import { FRESHNESS, MONOTONY } from './charge-thresholds'
 
 function dateKey(d: Date): string {
   return d.toISOString().slice(0, 10)
@@ -132,6 +132,46 @@ export function computeFreshness(metrics: DailyMetrics[]): FreshnessResult {
   const sevenAgo = metrics[metrics.length - 8] ?? metrics[0]
   const delta = Math.round((last.tsb - sevenAgo.tsb) * 10) / 10
   return { tsb: last.tsb, deltaVsWeekAgo: delta, zone: freshnessZoneFor(last.tsb) }
+}
+
+// ── Monotony / Strain / Active days / Peak day ───────────────────────────────
+
+function tail7(loads: DailyLoad[]): DailyLoad[] {
+  return loads.slice(-7)
+}
+
+function meanStd(values: number[]): { mean: number; std: number } {
+  if (values.length === 0) return { mean: 0, std: 0 }
+  const mean = values.reduce((s, v) => s + v, 0) / values.length
+  const variance = values.reduce((s, v) => s + (v - mean) ** 2, 0) / values.length
+  return { mean, std: Math.sqrt(variance) }
+}
+
+export function computeMonotony7d(loads: DailyLoad[]): number {
+  const window = tail7(loads).map(d => d.ces)
+  if (window.length === 0) return 0
+  const { mean, std } = meanStd(window)
+  if (std === 0) return mean === 0 ? 0 : MONOTONY.repetitiveMin
+  return Math.round((mean / std) * 100) / 100
+}
+
+export function computeStrain7d(loads: DailyLoad[]): number {
+  const sum = tail7(loads).reduce((s, d) => s + d.ces, 0)
+  return Math.round(sum * computeMonotony7d(loads))
+}
+
+export function computeActiveDays7d(loads: DailyLoad[]): number {
+  return tail7(loads).filter(d => d.ces > 0).length
+}
+
+export function computePeakDay7d(loads: DailyLoad[]): { date: string; ces: number } | null {
+  const w = tail7(loads)
+  const best = w.reduce<{ date: string; ces: number } | null>((acc, d) => {
+    if (d.ces <= 0) return acc
+    if (!acc || d.ces > acc.ces) return { date: d.date, ces: d.ces }
+    return acc
+  }, null)
+  return best
 }
 
 export function computeLoadBalanceRatio(

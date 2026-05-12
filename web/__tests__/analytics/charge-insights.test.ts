@@ -145,7 +145,61 @@ describe('freshness / acute / chronic', () => {
   })
 })
 
-import { computeLoadBalanceRatio } from '@/lib/analytics/charge-insights'
+import { computeLoadBalanceRatio, computeMonotony7d, computeStrain7d, computeActiveDays7d, computePeakDay7d } from '@/lib/analytics/charge-insights'
+
+describe('monotony / strain / activeDays / peakDay', () => {
+  it('monotony = MONOTONY.repetitiveMin when std is 0 (constant non-zero load)', () => {
+    const loads = Array.from({ length: 7 }, (_, i) => ({
+      date: new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
+      ces: 50,
+    }))
+    expect(computeMonotony7d(loads)).toBeGreaterThanOrEqual(2.0)
+  })
+
+  it('monotony lower when load varies', () => {
+    const loads = [10, 100, 20, 80, 30, 90, 0].map((c, i) => ({
+      date: new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
+      ces: c,
+    }))
+    const mono = computeMonotony7d(loads)
+    expect(mono).toBeLessThan(1.5)
+  })
+
+  it('strain = sum7d × monotony', () => {
+    const loads = [10, 100, 20, 80, 30, 90, 0].map((c, i) => ({
+      date: new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
+      ces: c,
+    }))
+    const sum = 10 + 100 + 20 + 80 + 30 + 90 + 0
+    const expected = sum * computeMonotony7d(loads)
+    expect(computeStrain7d(loads)).toBeCloseTo(expected, 0)
+  })
+
+  it('activeDays7d counts days with ces > 0', () => {
+    const loads = [50, 0, 30, 0, 0, 20, 0].map((c, i) => ({
+      date: new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
+      ces: c,
+    }))
+    expect(computeActiveDays7d(loads)).toBe(3)
+  })
+
+  it('peakDay7d returns the highest CES day in last 7', () => {
+    const loads = [50, 10, 80, 20, 30, 40, 0].map((c, i) => ({
+      date: new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
+      ces: c,
+    }))
+    const p = computePeakDay7d(loads)
+    expect(p).toEqual({ date: '2026-01-03', ces: 80 })
+  })
+
+  it('peakDay7d returns null if all zero', () => {
+    const loads = Array.from({ length: 7 }, (_, i) => ({
+      date: new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
+      ces: 0,
+    }))
+    expect(computePeakDay7d(loads)).toBeNull()
+  })
+})
 
 describe('computeLoadBalanceRatio', () => {
   function loadsConst(days: number, ces: number) {
