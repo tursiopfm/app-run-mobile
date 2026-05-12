@@ -1,7 +1,7 @@
 // web/lib/analytics/charge-insights.ts
 import type { DailyLoad, DailyMetrics } from './fatigue'
-import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone, LoadBalanceResult, SportDistribution, IntensityLabel, IntensityShareCes, TopActivity, RampRateResult, RampRateLabel } from './charge-insights.types'
-import { FRESHNESS, MONOTONY, RAMP_RATE } from './charge-thresholds'
+import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone, LoadBalanceResult, SportDistribution, IntensityLabel, IntensityShareCes, TopActivity, RampRateResult, RampRateLabel, InsightsResult, StatusId, ChargeSportPayload } from './charge-insights.types'
+import { FRESHNESS, MONOTONY, RAMP_RATE, LOAD_BALANCE, STRAIN } from './charge-thresholds'
 import type { HrZone } from '@/lib/health/hr-zones'
 import { hrZoneForAvgHr } from '@/lib/health/hr-zones'
 
@@ -349,4 +349,79 @@ export function computeIntensityDistribution(
   return INTENSITY_ORDER
     .filter(l => byLabel.has(l))
     .map(l => ({ label: l, ces: Math.round(byLabel.get(l)!) }))
+}
+
+// ── Load Insights Engine ─────────────────────────────────────────────────────
+
+const HEADLINES: Record<StatusId, string> = {
+  insufficient:    "Pas assez de données pour estimer ta forme. Reviens après quelques séances.",
+  overloaded:      "Charge élevée à surveiller. Récupération conseillée.",
+  peak:            "Pic de charge cette semaine. Reste attentif à la récupération.",
+  loaded:          "Fatigue normale d'entraînement. C'est cohérent en phase de charge.",
+  'under-trained': "Tu es très frais mais ta base de forme est basse. Tu peux remonter le volume.",
+  'very-fresh':    "Tu es bien reposé. Bonne fenêtre pour une séance intense.",
+  light:           "Charge récente plus faible que d'habitude. Utile si tu récupères.",
+  progressing:     "Progression élevée. Tu charges plus que ta moyenne.",
+  balanced:        "Charge équilibrée. Tu peux suivre ton plan normalement.",
+}
+
+function pickStatus(p: ChargeSportPayload): StatusId {
+  if (p.historyDays < 14) return 'insufficient'
+  const last = p.dailyMetrics[p.dailyMetrics.length - 1]
+  const tsb = last?.tsb ?? 0
+  const ctl = last?.ctl ?? 0
+  const ratio = computeLoadBalanceRatio(p.dailyMetrics, p.dailyLoads).sumRatio7vs28
+
+  if (tsb <= FRESHNESS.highFatigue)                                   return 'overloaded'
+  if (ratio > LOAD_BALANCE.high)                                      return 'peak'
+  if (tsb <= FRESHNESS.normalFatigue)                                 return 'loaded'
+  if (tsb >= FRESHNESS.veryFresh && ctl < 30)                         return 'under-trained'
+  if (tsb >= FRESHNESS.veryFresh)                                     return 'very-fresh'
+  if (ratio > 0 && ratio < LOAD_BALANCE.low)                          return 'light'
+  if (ratio >= LOAD_BALANCE.balanced && ratio <= LOAD_BALANCE.high)   return 'progressing'
+  return 'balanced'
+}
+
+function buildNotes(p: ChargeSportPayload): string[] {
+  const notes: string[] = []
+  const sd7  = p.sportDistribution['7']
+  const sd28 = p.sportDistribution['28']
+
+  if (sd7.total > 0 && sd7.run / sd7.total > 0.7)
+    notes.push("Tu as beaucoup chargé en course à pied.")
+  if (sd7.total > 0 && sd28.total > 0 && sd7.ride / sd7.total > 0.5 && sd28.ride / sd28.total < 0.3)
+    notes.push("La charge vélo compense une baisse de charge running.")
+
+  const sum7 = p.dailyLoads.slice(-7).reduce((s, d) => s + d.ces, 0)
+  if (p.activeDays7d <= 2 && sum7 > 0)
+    notes.push("Beaucoup de charge concentrée sur peu de jours.")
+
+  if (p.monotony7d >= 2.0)
+    notes.push("Semaine peu variée. Pense à alterner intensités et durées.")
+  if (p.strain7d > STRAIN.high)
+    notes.push("Semaine très exigeante, prends le temps de récupérer.")
+
+  const intense = p.intensityDistribution['7'].reduce((s, x) => s + (x.label === 'Seuil' || x.label === 'VMA' ? x.ces : 0), 0)
+  const total7  = p.intensityDistribution['7'].reduce((s, x) => s + x.ces, 0)
+  if (total7 > 0 && intense / total7 > 0.4)
+    notes.push("Beaucoup d'intensité haute cette semaine.")
+
+  const sportsCount = [sd7.run, sd7.ride, sd7.swim, sd7.other].filter(v => v > 0).length
+  const anyDominant = sd7.total > 0 && [sd7.run, sd7.ride, sd7.swim, sd7.other].some(v => v / sd7.total > 0.4)
+  if (sportsCount >= 2 && !anyDominant)
+    notes.push("Bonne variété entre sports.")
+
+  if (p.noCesActivities28d > 0)
+    notes.push(`${p.noCesActivities28d} activité(s) récente(s) n'ont pas de charge exploitable.`)
+
+  const ctl = p.dailyMetrics[p.dailyMetrics.length - 1]?.ctl ?? 0
+  if (ctl < 20 && p.historyDays >= 14)
+    notes.push("Ta base de forme est encore basse, progresse graduellement.")
+
+  return notes
+}
+
+export function computeLoadInsights(p: ChargeSportPayload): InsightsResult {
+  const status = pickStatus(p)
+  return { status, headline: HEADLINES[status], notes: buildNotes(p) }
 }
