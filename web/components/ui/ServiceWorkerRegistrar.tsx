@@ -8,7 +8,7 @@ export function ServiceWorkerRegistrar() {
     if (!('serviceWorker' in navigator)) return
     if (process.env.NODE_ENV !== 'production') return
     const register = () => {
-      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {})
+      navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' }).catch(() => {})
     }
     if (document.readyState === 'complete') {
       register()

@@ -1,5 +1,5 @@
 // Trail Cockpit - Service Worker
-const VERSION = 'v1'
+const VERSION = 'v2'
 const STATIC_CACHE = `trail-static-${VERSION}`
 const RUNTIME_CACHE = `trail-runtime-${VERSION}`
 
@@ -50,11 +50,11 @@ self.addEventListener('fetch', (event) => {
   if (isStaticAsset(url)) {
     event.respondWith(
       caches.match(req).then((cached) => {
-        if (cached) return cached
-        return fetch(req).then((res) => {
+        const networkFetch = fetch(req).then((res) => {
           caches.open(STATIC_CACHE).then((c) => c.put(req, res.clone())).catch(() => {})
           return res
-        })
+        }).catch(() => cached)
+        return cached || networkFetch
       })
     )
     return
