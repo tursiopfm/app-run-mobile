@@ -187,7 +187,7 @@ export function ActivityCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-[6px]">
               <TypeBadge type={effectiveSport} />
-              <span className="text-[14px] text-trail-muted">{fmtDate(a.start_time)}</span>
+              <span suppressHydrationWarning className="text-[14px] text-trail-muted">{fmtDate(a.start_time)}</span>
             </div>
             <p className="text-[18px] font-medium truncate mt-[6px] text-trail-text">
               {a.name}
