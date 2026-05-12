@@ -88,6 +88,7 @@ export const cockpit = {
 
 // --- Charge tab ---
 export const charge = {
+  // ─── Legacy keys (used by existing /charge page until Task 4.3 rewrites it) ───
   weeklyTitle:        'Charge hebdomadaire',
   fatigueFitnessTitle:'Fatigue vs Fitness — 16 semaines',
   freshnessTitle:     'Fraîcheur',
@@ -95,14 +96,13 @@ export const charge = {
   fatigue7d:          'Fatigue 7j',
   fitness28d:         'Fitness 28j',
   tsbLabel:           'TSB Forme / Fatigue',
-  trainingCapacity:   'Capacité d\'entraînement',
-  trainingLoad:       'Charge d\'entraînement',
+  trainingCapacity:   "Capacité d'entraînement",
+  trainingLoad:       "Charge d'entraînement",
   recovery:           'Récupération',
   formState:          'État de forme',
   veryFresh:          'Très frais',
   fresh:              'Frais',
   balanced:           'Équilibré',
-  recentFatigue:      'Fatigue récente',
   veryLow:            'Très faible',
   fit:                'En forme',
   excellent:          'Excellent',
@@ -113,14 +113,100 @@ export const charge = {
   insufficientData:   'Données insuffisantes. Suis le plan attentivement.',
   moderate:           'Charge modérée',
   balancedMsg:        'Charge équilibrée. Suis le plan normalement.',
-  risingFatigue:      'Fatigue croissante. Réduis le volume ou fais de l\'endurance facile.',
+  risingFatigue:      "Fatigue croissante. Réduis le volume ou fais de l'endurance facile.",
   wellRested:         'Bien reposé. Idéal pour une séance intense.',
   goodBalance:        'Bonne balance. Le test terrain 30min peut améliorer la précision.',
   overloadedMsg:      'Repos recommandé ou séance très facile.',
   tired:              'Fatigué',
-  interpretTips:      'Conseils d\'interprétation',
+  interpretTips:      "Conseils d'interprétation",
   formLabel:          'Forme',
   weeklyShort:        'Charge hebdo',
+
+  // ─── New section (used by redesigned /charge tab) ───
+  pageTitle:           'Charge',
+  sportFilterAll:      'Tout',
+  sportFilterRun:      'Course',
+  sportFilterRide:     'Vélo',
+  sportFilterSwim:     'Natation',
+  addBlock:            'Ajouter un bloc',
+
+  // Vocabulary (NEW)
+  recentFatigue:       'Fatigue récente',
+  baseFitness:         'Base de forme',
+  freshness:           'Fraîcheur',
+  acuteLoad:           'Charge 7j',
+  chronicLoad:         'Charge 28j',
+  loadBalance:         "Équilibre de charge",
+  rampRate:            'Progression',
+
+  // Block titles
+  blocks: {
+    status:                'État du jour',
+    acuteChronic:          'Charge 7j vs base habituelle',
+    freshness:             'Fraîcheur',
+    weeklyLoad:            'Charge hebdomadaire (10 semaines)',
+    fitnessFatigue:        'Fatigue vs Base de forme',
+    sportDistribution:     'Répartition par sport',
+    intensityDistribution: 'Répartition par intensité',
+    monotonyStrain:        'Variété & contrainte',
+    topActivities:         'Activités les plus chargées',
+    heatmap:               'Charge des 28 derniers jours',
+    rampRateBlock:         'Progression de charge',
+    insights:              'Lecture rapide',
+  },
+
+  // Status headlines (matches StatusId)
+  status: {
+    insufficient:    "Pas assez de données pour estimer ta forme. Reviens après quelques séances.",
+    overloaded:      "Charge élevée à surveiller. Récupération conseillée.",
+    peak:            "Pic de charge cette semaine. Reste attentif à la récupération.",
+    loaded:          "Fatigue normale d'entraînement. C'est cohérent en phase de charge.",
+    'under-trained': "Tu es très frais mais ta base de forme est basse. Tu peux remonter le volume.",
+    'very-fresh':    "Tu es bien reposé. Bonne fenêtre pour une séance intense.",
+    light:           "Charge récente plus faible que d'habitude. Utile si tu récupères.",
+    progressing:     "Progression élevée. Tu charges plus que ta moyenne.",
+    balanced:        "Charge équilibrée. Tu peux suivre ton plan normalement.",
+  },
+
+  // Freshness zone short labels (used by gauge)
+  freshnessZone: {
+    'very-fresh':     'Très frais',
+    fresh:            'Frais',
+    balanced:         'Équilibré',
+    'normal-fatigue': 'Fatigue normale',
+    'high-fatigue':   'Fatigue élevée',
+  },
+
+  // Ramp rate labels (matches RampRateLabel)
+  ramp: {
+    'fast-rise':           'Hausse rapide',
+    'controlled-rise':     'Progression maîtrisée',
+    'stable':              'Charge stable',
+    'progressive-resume':  'Reprise progressive',
+    'declining':           'Charge en baisse',
+    'sharp-decline':       'Baisse de charge',
+  },
+
+  // Bottom-sheet help text (per block)
+  help: {
+    status:                "Synthèse de ta charge actuelle, basée sur le rapport entre ta fatigue récente (≈7j) et ta base de forme (≈42j). Les valeurs techniques ATL/CTL/TSB sont disponibles dans le tooltip.",
+    acuteChronic:          "Compare ta charge récente à ta charge habituelle. Un ratio > 1.5 indique un pic ; < 0.75 une période plus légère. Sert d'indicateur, pas de diagnostic.",
+    freshness:             "Différence entre ta base de forme et ta fatigue récente (TSB en jargon). Très négatif = fatigue marquée ; très positif = grande fraîcheur (mais attention à l'inactivité prolongée).",
+    weeklyLoad:            "Charge totale par semaine, séparée par sport. La ligne montre la moyenne glissante sur 4 semaines.",
+    fitnessFatigue:        "Fatigue récente (ATL — 7j) vs Base de forme (CTL — 42j) sur 70 jours.",
+    sportDistribution:     "Part de chaque sport dans ta charge totale. Change la fenêtre via les boutons 7j / 28j / 10 sem.",
+    intensityDistribution: "Répartition de la charge par zone d'intensité (basée sur les zones cardiaques, le nom de l'activité ou l'intensité manuelle).",
+    monotonyStrain:        "La monotonie mesure la variété de tes journées (charge mean / std). La contrainte combine volume et monotonie. Une semaine très chargée et peu variée est plus difficile à absorber.",
+    topActivities:         "Les activités qui pèsent le plus dans ta charge des 7 derniers jours.",
+    heatmap:               "Une case par jour sur les 28 derniers jours. Intensité de couleur = charge du jour.",
+    rampRateBlock:         "Évolution de ta charge hebdomadaire. \"Hausse rapide\" = +30% en une semaine. Indicateur d'observation, pas de diagnostic.",
+    insights:              "Notes générées automatiquement à partir de tes données. Pas de prédiction médicale, juste des observations.",
+  },
+
+  // Common short labels reused
+  notEnoughData:        'Pas encore assez de données pour calculer la charge.',
+  loadingError:         "Impossible de charger ta charge. Réessaie.",
+  noActivitiesForSport: (sport: string) => `Pas encore assez de données ${sport} pour calculer la charge.`,
 } as const
 
 // --- Activities tab ---
