@@ -14,6 +14,7 @@ import { WeeklyLoadChart } from '@/components/charge/blocks/WeeklyLoadChart'
 import { FitnessFatigueChart } from '@/components/charge/blocks/FitnessFatigueChart'
 import { SportDistributionChart } from '@/components/charge/blocks/SportDistributionChart'
 import { IntensityDistributionChart } from '@/components/charge/blocks/IntensityDistributionChart'
+import { MonotonyStrainCard } from '@/components/charge/blocks/MonotonyStrainCard'
 
 const SPORT_STORAGE = 'charge_sport_filter'
 
@@ -97,6 +98,12 @@ export function ChargePageClient({ data }: Props) {
       label:  blockLabel(id),
       emoji:  '🔥',
       render: () => <IntensityDistributionChart payload={payload} />,
+    }
+    if (id === 'monotony-strain') return {
+      id,
+      label:  blockLabel(id),
+      emoji:  '🌡️',
+      render: () => <MonotonyStrainCard payload={payload} />,
     }
     return {
       id,
