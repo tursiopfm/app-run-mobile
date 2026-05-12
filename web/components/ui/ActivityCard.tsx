@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { colors } from '@/lib/design/colors'
 import { sportLabel } from '@/lib/design/labels'
 import { guessIntensity, type IntensityKey } from '@/lib/activities/intensity'
@@ -141,7 +141,9 @@ export function ActivityCard({
   onClick?: () => void
   hrZones?: HrZone[]
 }) {
-  const [popup, setPopup] = useState<null | 'effort' | 'intensity'>(null)
+  const [popup, setPopup]     = useState<null | 'effort' | 'intensity'>(null)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
 
   const effectiveSport     = a.manual_sport_type     ?? a.sport_type
   const effectiveDistance  = a.manual_distance_m     ?? a.distance_m
@@ -154,10 +156,13 @@ export function ActivityCard({
   const ces   = a.ces != null ? Math.round(a.ces).toString() : '—'
   const fourth = fourthMetric(effectiveSport, effectiveDistance, effectiveDuration, a.ces)
 
-  const intensityKey = (a.manual_intensity as IntensityKey | null) ?? guessIntensity(a.avg_hr, hrZones, {
-    activityMaxHr: a.max_hr,
-    movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
-  })
+  const computedIntensity = mounted
+    ? guessIntensity(a.avg_hr, hrZones, {
+        activityMaxHr: a.max_hr,
+        movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
+      })
+    : null
+  const intensityKey = (a.manual_intensity as IntensityKey | null) ?? computedIntensity
   const cesVal = a.ces ?? 0
   const effortColor =
     cesVal <= 40  ? '#38bdf8' :
