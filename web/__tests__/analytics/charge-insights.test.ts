@@ -1,4 +1,4 @@
-import { getDailyLoadSeries } from '@/lib/analytics/charge-insights'
+import { getDailyLoadSeries, getWeeklyLoadByCategory } from '@/lib/analytics/charge-insights'
 import type { CesActivity } from '@/lib/analytics/charge-insights.types'
 
 function act(partial: Partial<CesActivity> & { startDate: string; ces: number; id?: string }): CesActivity {
@@ -48,5 +48,46 @@ describe('getDailyLoadSeries', () => {
     const acts = [act({ startDate: '2026-04-01T08:00:00Z', ces: 999 })]
     const series = getDailyLoadSeries([], 7, new Date('2026-05-10T12:00:00Z'))
     expect(series.every(d => d.ces === 0)).toBe(true)
+  })
+})
+
+describe('getWeeklyLoadByCategory', () => {
+  it('returns 10 weeks ending in the current ISO week', () => {
+    const weeks = getWeeklyLoadByCategory([], 10, new Date('2026-05-12T12:00:00Z'))
+    expect(weeks).toHaveLength(10)
+    // 2026-05-12 is a Tuesday → ISO week starts Monday 2026-05-11
+    expect(weeks[9].weekStart).toBe('2026-05-11')
+  })
+
+  it('buckets activities into run/ride/swim/other', () => {
+    const acts: CesActivity[] = [
+      act({ startDate: '2026-05-12T08:00:00Z', ces: 50, rawSportType: 'Run',        id: '1' }),
+      act({ startDate: '2026-05-13T08:00:00Z', ces: 70, rawSportType: 'TrailRun',   id: '2' }),
+      act({ startDate: '2026-05-14T08:00:00Z', ces: 40, rawSportType: 'Ride',       id: '3' }),
+      act({ startDate: '2026-05-14T16:00:00Z', ces: 30, rawSportType: 'VirtualRide',id: '4' }),
+      act({ startDate: '2026-05-15T08:00:00Z', ces: 25, rawSportType: 'Swim',       id: '5' }),
+      act({ startDate: '2026-05-16T08:00:00Z', ces: 15, rawSportType: 'Walk',       id: '6' }),
+    ]
+    const weeks = getWeeklyLoadByCategory(acts, 10, new Date('2026-05-17T12:00:00Z'))
+    const current = weeks[weeks.length - 1]
+    expect(current.run).toBe(120)
+    expect(current.ride).toBe(70)
+    expect(current.swim).toBe(25)
+    expect(current.other).toBe(15)
+    expect(current.total).toBe(230)
+  })
+
+  it('computes avg4w as mean of last 4 weeks total (or fewer if start of window)', () => {
+    const now = new Date('2026-05-31T12:00:00Z')
+    const acts: CesActivity[] = []
+    for (let i = 0; i < 4; i++) {
+      const monday = new Date(now)
+      monday.setUTCDate(monday.getUTCDate() - 7 * i)
+      acts.push(act({ startDate: monday.toISOString(), ces: 100 * (i + 1), id: `w${i}` }))
+    }
+    const weeks = getWeeklyLoadByCategory(acts, 10, now)
+    const lastFour = weeks.slice(-4).map(w => w.total)
+    expect(lastFour).toEqual([400, 300, 200, 100])
+    expect(weeks[weeks.length - 1].avg4w).toBe(250)
   })
 })
