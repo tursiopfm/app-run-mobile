@@ -108,16 +108,19 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
   )
   const [sport,       setSport]       = useState(effectiveSport)
   const [intensity,   setIntensity]   = useState<IntensityKey | null>(
-    (a.manual_intensity as IntensityKey | null) ?? guessIntensity(a.avg_hr, hrZones, {
-      activityMaxHr: a.max_hr,
-      movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
-    }) ?? null
+    a.manual_intensity as IntensityKey | null
   )
-  const [workoutType, setWorkoutType] = useState<string | null>(
-    a.manual_workout_type ?? guessWorkoutType(a.name, effectiveSport) ?? null
-  )
+  const [workoutType, setWorkoutType] = useState<string | null>(a.manual_workout_type)
   const [saving,      setSaving]      = useState(false)
   const [error,       setError]       = useState<string | null>(null)
+
+  const computedIntensity = guessIntensity(a.avg_hr, hrZones, {
+    activityMaxHr: a.max_hr,
+    movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
+  })
+  const computedWorkoutType  = guessWorkoutType(name, sport)
+  const displayedIntensity   = intensity   ?? computedIntensity
+  const displayedWorkoutType = workoutType ?? computedWorkoutType
 
   function availableWorkoutTypes(s: string) {
     return WORKOUT_TYPE_OPTIONS.filter(o => !o.sports || o.sports.includes(s))
@@ -279,8 +282,8 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
         <SectionCard title="Intensité">
           <ChipRow
             options={INTENSITY_OPTIONS.map(i => ({ value: i.key, label: i.label }))}
-            selected={intensity ?? ''}
-            onSelect={v => setIntensity(v as IntensityKey)}
+            selected={displayedIntensity ?? ''}
+            onSelect={v => setIntensity(v === displayedIntensity ? null : (v as IntensityKey))}
           />
         </SectionCard>
 
@@ -288,8 +291,8 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
         <SectionCard title="Type">
           <ChipRow
             options={availableWorkoutTypes(sport).map(o => ({ value: o.value, label: o.label }))}
-            selected={workoutType ?? ''}
-            onSelect={v => setWorkoutType(v === workoutType ? null : v)}
+            selected={displayedWorkoutType ?? ''}
+            onSelect={v => setWorkoutType(v === displayedWorkoutType ? null : v)}
           />
         </SectionCard>
 
