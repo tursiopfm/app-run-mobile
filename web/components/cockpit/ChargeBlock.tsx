@@ -7,6 +7,7 @@ import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports
 import { CompactMetricCard } from '@/components/ui/CompactMetricCard'
 import { SportSettingsModal } from './SportSettingsModal'
 import { colors } from '@/lib/design/colors'
+import { charge as L } from '@/lib/design/labels'
 
 type Settings = { visible: SportKey[]; default: SportKey }
 const DEFAULT_SETTINGS: Settings = { visible: ['all', 'run', 'ride', 'swim'], default: 'all' }
@@ -101,10 +102,10 @@ export function ChargeBlock({ sportOverviews, onHide }: Props) {
               style={{ flexShrink: 0, width: '100%', scrollSnapAlign: 'start' }}
             >
               <div className="grid grid-cols-2 gap-2 mt-1">
-                <CompactMetricCard unit="ATL"    value={sov.atl}     description="Fatigue 7j"  color={colors.chargeOrange}  />
-                <CompactMetricCard unit="CTL"    value={sov.ctl}     description="Fitness 28j" color={colors.seriesBlue}    />
-                <CompactMetricCard unit="TSB"    value={sov.tsb}     description="Forme"        color={tsbColor}             />
-                <CompactMetricCard unit="Suffer" value={sov.weekCes} description="Charge sem." color={colors.seriesYellow}  />
+                <CompactMetricCard unit="ATL"    value={sov.atl}     description={L.recentFatigue}  color={colors.chargeOrange}  />
+                <CompactMetricCard unit="CTL"    value={sov.ctl}     description={L.baseFitness}    color={colors.seriesBlue}    />
+                <CompactMetricCard unit="TSB"    value={sov.tsb}     description={L.freshness}      color={tsbColor}             />
+                <CompactMetricCard unit="Suffer" value={sov.weekCes} description="Charge sem."      color={colors.seriesYellow}  />
               </div>
             </div>
           )
