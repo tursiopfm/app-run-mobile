@@ -182,8 +182,8 @@ function SortButtons({
   )
 }
 
-const inputCls = 'rounded-[8px] border px-3 py-[7px] text-[13px] flex-1 min-w-0'
-const dateInputCls = 'rounded-[8px] border px-2 py-[7px] text-[13px] flex-1 min-w-0'
+const inputCls = 'rounded-[8px] border px-3 py-[5px] text-[13px] flex-1 min-w-0'
+const dateInputCls = 'rounded-[8px] border px-2 py-[5px] text-[13px] flex-1 min-w-0'
 
 function inputStyle() {
   return {
@@ -208,7 +208,7 @@ function FilterRow({
 }) {
   return (
     <div>
-      <p className="text-[13px] font-semibold text-trail-text mb-[6px]">{label}</p>
+      <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{label}</p>
       <div className="flex items-center gap-2">
         <span className="text-[11px] text-trail-muted w-4 flex-shrink-0">De</span>
         {left}
@@ -380,10 +380,10 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
   const ad = state.sortDir
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: colors.background }}>
+    <div className="fixed inset-0 z-[60] flex flex-col" style={{ backgroundColor: colors.background }}>
       {/* Header — no Appliquer here */}
       <div
-        className="flex items-center px-4 py-3 border-b"
+        className="flex items-center px-4 py-2 border-b"
         style={{ backgroundColor: colors.headerBg, borderColor: colors.border }}
       >
         <button onClick={onClose} className="flex items-center gap-2" style={{ cursor: 'pointer' }}>
@@ -393,21 +393,21 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
       </div>
 
       {/* Body — scrollable, boutons inclus dans le flux */}
-      <div className="flex-1 overflow-y-auto p-4 max-w-lg mx-auto w-full space-y-3">
+      <div className="flex-1 overflow-y-auto p-3 max-w-lg mx-auto w-full space-y-2">
         <div
-          className="rounded-[12px] border p-4 space-y-5"
+          className="rounded-[12px] border p-3 space-y-3"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
         >
-          <p className="text-[15px] font-bold text-trail-text">Trier et filtrer</p>
+          <p className="text-[14px] font-bold text-trail-text">Trier et filtrer</p>
 
           {/* Activité */}
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[6px]">Activité</p>
+            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">Activité</p>
             <div className="flex items-center gap-2">
               <select
                 value={state.sport}
                 onChange={e => setState({ ...state, sport: e.target.value })}
-                className="rounded-[8px] border px-3 py-[7px] text-[13px] flex-1"
+                className="rounded-[8px] border px-3 py-[5px] text-[13px] flex-1"
                 style={{ ...si, cursor: 'pointer' }}
               >
                 <option value="Toutes">Toutes</option>
@@ -421,12 +421,12 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
 
           {/* Intensité */}
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[6px]">Intensité</p>
+            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">Intensité</p>
             <div className="flex items-center gap-2">
               <select
                 value={state.intensity}
                 onChange={e => setState({ ...state, intensity: e.target.value })}
-                className="rounded-[8px] border px-3 py-[7px] text-[13px] flex-1"
+                className="rounded-[8px] border px-3 py-[5px] text-[13px] flex-1"
                 style={{ ...si, cursor: 'pointer' }}
               >
                 <option value="Toutes">Toutes</option>
@@ -439,12 +439,12 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
 
           {/* Type d'entraînement */}
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[6px]">Type d&apos;entraînement</p>
+            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">Type d&apos;entraînement</p>
             <div className="flex items-center gap-2">
               <select
                 value={state.workoutType}
                 onChange={e => setState({ ...state, workoutType: e.target.value })}
-                className="rounded-[8px] border px-3 py-[7px] text-[13px] flex-1"
+                className="rounded-[8px] border px-3 py-[5px] text-[13px] flex-1"
                 style={{ ...si, cursor: 'pointer' }}
               >
                 <option value="Toutes">Tous</option>
@@ -457,7 +457,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
 
           {/* Date — calendrier natif */}
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[6px]">Date</p>
+            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">Date</p>
             <div className="flex items-center gap-2">
               <span className="text-[11px] text-trail-muted w-4 flex-shrink-0">De</span>
               <input
