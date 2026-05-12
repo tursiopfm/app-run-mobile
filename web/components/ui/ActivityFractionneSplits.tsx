@@ -24,7 +24,7 @@ export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
         return fastSplits.has(splitKey)
       })
       .map(lap => fmtPaceSec(lap.moving_time))
-      .join('\n')
+      .join('/')
 
     try {
       await navigator.clipboard.writeText(text)

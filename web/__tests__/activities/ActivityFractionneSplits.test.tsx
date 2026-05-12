@@ -88,7 +88,7 @@ describe('ActivityFractionneSplits', () => {
     fireEvent.click(screen.getByRole('button'))
 
     await waitFor(() => {
-      expect(writeText).toHaveBeenCalledWith('15:22\n15:30')
+      expect(writeText).toHaveBeenCalledWith('15:22/15:30')
     })
   })
 
