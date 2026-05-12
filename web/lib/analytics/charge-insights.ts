@@ -1,6 +1,7 @@
 // web/lib/analytics/charge-insights.ts
-import type { DailyLoad } from './fatigue'
-import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey } from './charge-insights.types'
+import type { DailyLoad, DailyMetrics } from './fatigue'
+import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone } from './charge-insights.types'
+import { FRESHNESS } from './charge-thresholds'
 
 function dateKey(d: Date): string {
   return d.toISOString().slice(0, 10)
@@ -103,4 +104,32 @@ export function getWeeklyLoadByCategory(
     result[i].avg4w = Math.round((sum / slice.length) * 10) / 10
   }
   return result
+}
+
+// ── Freshness / Acute / Chronic ──────────────────────────────────────────────
+
+function freshnessZoneFor(tsb: number): FreshnessZone {
+  if (tsb >= FRESHNESS.veryFresh)     return 'very-fresh'
+  if (tsb >= FRESHNESS.fresh)         return 'fresh'
+  if (tsb > FRESHNESS.normalFatigue)  return 'balanced'
+  if (tsb > FRESHNESS.highFatigue)    return 'normal-fatigue'
+  return 'high-fatigue'
+}
+
+export function computeAcuteLoad7d(metrics: DailyMetrics[]): number {
+  if (metrics.length === 0) return 0
+  return metrics[metrics.length - 1].atl
+}
+
+export function computeChronicLoad(metrics: DailyMetrics[]): number {
+  if (metrics.length === 0) return 0
+  return metrics[metrics.length - 1].ctl
+}
+
+export function computeFreshness(metrics: DailyMetrics[]): FreshnessResult {
+  if (metrics.length === 0) return { tsb: 0, deltaVsWeekAgo: 0, zone: 'balanced' }
+  const last = metrics[metrics.length - 1]
+  const sevenAgo = metrics[metrics.length - 8] ?? metrics[0]
+  const delta = Math.round((last.tsb - sevenAgo.tsb) * 10) / 10
+  return { tsb: last.tsb, deltaVsWeekAgo: delta, zone: freshnessZoneFor(last.tsb) }
 }

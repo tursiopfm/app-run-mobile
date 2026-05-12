@@ -1,5 +1,6 @@
-import { getDailyLoadSeries, getWeeklyLoadByCategory } from '@/lib/analytics/charge-insights'
+import { getDailyLoadSeries, getWeeklyLoadByCategory, computeFreshness, computeAcuteLoad7d, computeChronicLoad } from '@/lib/analytics/charge-insights'
 import type { CesActivity } from '@/lib/analytics/charge-insights.types'
+import { buildDailyMetrics } from '@/lib/analytics/fatigue'
 
 function act(partial: Partial<CesActivity> & { startDate: string; ces: number; id?: string }): CesActivity {
   return {
@@ -89,5 +90,57 @@ describe('getWeeklyLoadByCategory', () => {
     const lastFour = weeks.slice(-4).map(w => w.total)
     expect(lastFour).toEqual([400, 300, 200, 100])
     expect(weeks[weeks.length - 1].avg4w).toBe(250)
+  })
+})
+
+describe('freshness / acute / chronic', () => {
+  it('returns zero result for empty metrics', () => {
+    const f = computeFreshness([])
+    expect(f.tsb).toBe(0)
+    expect(f.deltaVsWeekAgo).toBe(0)
+    expect(f.zone).toBe('balanced')
+  })
+
+  it('zones based on tsb thresholds', () => {
+    const loads = Array.from({ length: 50 }, (_, i) => ({
+      date: new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
+      ces: 50,
+    }))
+    const m = buildDailyMetrics(loads)
+    m[m.length - 1] = { ...m[m.length - 1], tsb: 20 }
+    expect(computeFreshness(m).zone).toBe('very-fresh')
+
+    m[m.length - 1] = { ...m[m.length - 1], tsb: 8 }
+    expect(computeFreshness(m).zone).toBe('fresh')
+
+    m[m.length - 1] = { ...m[m.length - 1], tsb: 0 }
+    expect(computeFreshness(m).zone).toBe('balanced')
+
+    m[m.length - 1] = { ...m[m.length - 1], tsb: -15 }
+    expect(computeFreshness(m).zone).toBe('normal-fatigue')
+
+    m[m.length - 1] = { ...m[m.length - 1], tsb: -30 }
+    expect(computeFreshness(m).zone).toBe('high-fatigue')
+  })
+
+  it('deltaVsWeekAgo = tsb - tsb 7 days ago', () => {
+    const loads = Array.from({ length: 20 }, (_, i) => ({
+      date: new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
+      ces: i < 13 ? 30 : 120,
+    }))
+    const m = buildDailyMetrics(loads)
+    const f = computeFreshness(m)
+    const seven = m[m.length - 8].tsb
+    expect(f.deltaVsWeekAgo).toBeCloseTo(m[m.length - 1].tsb - seven, 1)
+  })
+
+  it('computeAcuteLoad7d / computeChronicLoad return latest atl / ctl', () => {
+    const loads = Array.from({ length: 50 }, (_, i) => ({
+      date: new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
+      ces: 50,
+    }))
+    const m = buildDailyMetrics(loads)
+    expect(computeAcuteLoad7d(m)).toBeCloseTo(m[m.length - 1].atl, 1)
+    expect(computeChronicLoad(m)).toBeCloseTo(m[m.length - 1].ctl, 1)
   })
 })
