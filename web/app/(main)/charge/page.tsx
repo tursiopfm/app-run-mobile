@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { CockpitChartCard } from '@/components/charts/CockpitChartCard'
 import { CockpitAreaChart, type AreaPoint } from '@/components/charts/CockpitAreaChart'
 import { CockpitLineChart } from '@/components/charts/CockpitLineChart'
@@ -45,7 +46,8 @@ function toHex(color: string, opacity: number): string {
 
 export default async function ChargePage() {
   const user = await getServerUser()
-  const { dailyMetrics, sportOverviews } = await getDashboardData(user!.id)
+  if (!user) redirect('/login')
+  const { dailyMetrics, sportOverviews } = await getDashboardData(user.id)
   const { intensityBreakdown } = sportOverviews.all
 
   const latest  = dailyMetrics[dailyMetrics.length - 1] ?? { atl: 0, ctl: 0, tsb: 0, dailyLoad: 0, date: '' }

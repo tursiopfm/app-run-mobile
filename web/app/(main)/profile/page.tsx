@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/database/supabase-server'
 import { getServerUser } from '@/lib/database/get-user'
 import { IdentityCard } from '@/components/settings/IdentityCard'
@@ -6,19 +7,20 @@ import type { HrZoneMethod } from '@/lib/health/hr-zones'
 import type { CardioState } from '@/components/settings/HrCardioFields'
 
 export default async function ProfilePage() {
-  const user     = await getServerUser()
+  const user = await getServerUser()
+  if (!user) redirect('/login')
   const supabase = await createClient()
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('first_name,last_name,avatar_url,max_hr,aerobic_threshold_hr,threshold_hr,resting_hr,ftp_watts,weight_kg,year_goal_km,birth_year,hr_zone_method,hr_zones_custom,hr_method_updated_at')
-    .eq('id', user!.id)
+    .eq('id', user.id)
     .single()
 
   const { data: connection } = await supabase
     .from('provider_connections')
     .select('athlete_data')
-    .eq('user_id', user!.id)
+    .eq('user_id', user.id)
     .eq('provider', 'strava')
     .maybeSingle()
 
@@ -32,7 +34,7 @@ export default async function ProfilePage() {
     ? athlete.profile
     : null
   const avatarUrl = profile?.avatar_url ?? stravaAvatarUrl
-  const displayName = firstName ? `${firstName} ${lastName ?? ''}`.trim() : user!.email?.split('@')[0] ?? 'Athlète'
+  const displayName = firstName ? `${firstName} ${lastName ?? ''}`.trim() : user.email?.split('@')[0] ?? 'Athlète'
 
   const initialMethod: HrZoneMethod = (profile?.hr_zone_method as HrZoneMethod) ?? 'seuils'
 
@@ -57,10 +59,10 @@ export default async function ProfilePage() {
       <IdentityCard
         firstName={firstName}
         lastName={lastName}
-        email={user!.email ?? null}
+        email={user.email ?? null}
         avatarUrl={avatarUrl}
         hasCustomAvatar={!!profile?.avatar_url}
-        accountCreatedAt={user!.created_at ?? null}
+        accountCreatedAt={user.created_at ?? null}
       />
 
       <HrCalibrationCard
