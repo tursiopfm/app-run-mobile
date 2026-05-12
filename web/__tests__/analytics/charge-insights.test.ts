@@ -257,8 +257,9 @@ describe('computeSportDistribution', () => {
   })
 })
 
-import { computeIntensityDistribution, computeTopLoadActivities } from '@/lib/analytics/charge-insights'
+import { computeIntensityDistribution, computeTopLoadActivities, computeRampRate } from '@/lib/analytics/charge-insights'
 import type { HrZone } from '@/lib/health/hr-zones'
+import type { WeeklyLoadByCategory } from '@/lib/analytics/charge-insights.types'
 
 describe('computeIntensityDistribution', () => {
   const zones: HrZone[] = [
@@ -325,5 +326,44 @@ describe('computeTopLoadActivities', () => {
     expect(top[0].id).toBe('1')
     expect(top[0].ces).toBe(80)
     expect(top[0].share7dPct).toBe(Math.round((80 / 200) * 100))
+  })
+})
+
+describe('computeRampRate', () => {
+  function w(total: number): WeeklyLoadByCategory {
+    return { weekLabel: '', weekStart: '', run: 0, ride: 0, swim: 0, other: 0, total, avg4w: 0 }
+  }
+
+  it('fast-rise above +30%', () => {
+    const r = computeRampRate([w(100), w(140)])
+    expect(r.label).toBe('fast-rise')
+    expect(r.deltaWeekPct).toBeCloseTo(0.4, 2)
+  })
+
+  it('controlled-rise between +10% and +30%', () => {
+    expect(computeRampRate([w(100), w(120)]).label).toBe('controlled-rise')
+  })
+
+  it('stable between -10% and +10%', () => {
+    expect(computeRampRate([w(100), w(105)]).label).toBe('stable')
+  })
+
+  it('sharp-decline below -30%', () => {
+    expect(computeRampRate([w(100), w(50)]).label).toBe('sharp-decline')
+  })
+
+  it('progressive-resume when previous week was ~0 and current modest', () => {
+    const r = computeRampRate([w(0), w(60)])
+    expect(r.prevWeekZero).toBe(true)
+    expect(r.label).toBe('progressive-resume')
+  })
+
+  it('declining between -30% and -10%', () => {
+    expect(computeRampRate([w(100), w(80)]).label).toBe('declining')
+  })
+
+  it('returns stable when weeks < 2', () => {
+    expect(computeRampRate([]).label).toBe('stable')
+    expect(computeRampRate([w(50)]).label).toBe('stable')
   })
 })

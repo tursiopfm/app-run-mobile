@@ -1,7 +1,7 @@
 // web/lib/analytics/charge-insights.ts
 import type { DailyLoad, DailyMetrics } from './fatigue'
-import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone, LoadBalanceResult, SportDistribution, IntensityLabel, IntensityShareCes, TopActivity } from './charge-insights.types'
-import { FRESHNESS, MONOTONY } from './charge-thresholds'
+import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone, LoadBalanceResult, SportDistribution, IntensityLabel, IntensityShareCes, TopActivity, RampRateResult, RampRateLabel } from './charge-insights.types'
+import { FRESHNESS, MONOTONY, RAMP_RATE } from './charge-thresholds'
 import type { HrZone } from '@/lib/health/hr-zones'
 import { hrZoneForAvgHr } from '@/lib/health/hr-zones'
 
@@ -306,6 +306,26 @@ export function computeTopLoadActivities(
       typeLabel:      a.workoutType ?? null,
       share7dPct:     totalCes > 0 ? Math.round((a.ces / totalCes) * 100) : 0,
     }))
+}
+
+// ── Ramp Rate ────────────────────────────────────────────────────────────────
+
+export function computeRampRate(weeks: WeeklyLoadByCategory[]): RampRateResult {
+  if (weeks.length < 2) return { deltaWeekPct: 0, label: 'stable', prevWeekZero: false }
+  const cur  = weeks[weeks.length - 1].total
+  const prev = weeks[weeks.length - 2].total
+  const prevZero = prev === 0
+  const delta = prevZero ? (cur > 0 ? 1 : 0) : (cur - prev) / prev
+
+  let label: RampRateLabel
+  if (prevZero && cur > 0)                          label = 'progressive-resume'
+  else if (delta > RAMP_RATE.fastRise)              label = 'fast-rise'
+  else if (delta > RAMP_RATE.controlledRise)        label = 'controlled-rise'
+  else if (delta >= -RAMP_RATE.controlledRise)      label = 'stable'
+  else if (delta > RAMP_RATE.decline)               label = 'declining'
+  else                                              label = 'sharp-decline'
+
+  return { deltaWeekPct: Math.round(delta * 1000) / 1000, label, prevWeekZero: prevZero }
 }
 
 export function computeIntensityDistribution(
