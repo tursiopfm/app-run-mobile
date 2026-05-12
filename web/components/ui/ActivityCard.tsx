@@ -6,7 +6,16 @@ import { sportLabel } from '@/lib/design/labels'
 import { guessIntensity, guessWorkoutType, type IntensityKey, type WorkoutType } from '@/lib/activities/intensity'
 import type { HrZone } from '@/lib/health/hr-zones'
 import { EffortPopup, IntensityPopup, WorkoutTypePopup } from '@/components/ui/ActivityPopups'
-import { Dumbbell } from 'lucide-react'
+import {
+  Dumbbell,
+  Route,
+  Timer,
+  Repeat2,
+  MountainSnow,
+  Trophy,
+  BriefcaseBusiness,
+  type LucideIcon,
+} from 'lucide-react'
 
 const INTENSITY_EMOJI: Record<string, string> = {
   recuperation:     '😴',
@@ -16,14 +25,14 @@ const INTENSITY_EMOJI: Record<string, string> = {
   vma:              '🔥',
 }
 
-const WORKOUT_TYPE_EMOJI: Record<string, string> = {
-  sortie_longue: '🐢',
-  fractionne:    '⌚',
-  seuil_tempo:   '⏱️',
-  cotes:         '⛰️',
-  course:        '🏆',
-  runtaf:        '🏃',
-  velotaf:       '🚴',
+const WORKOUT_TYPE_ICON: Record<string, { Icon: LucideIcon; color: string }> = {
+  sortie_longue: { Icon: Route,             color: '#38BDF8' },
+  fractionne:    { Icon: Timer,             color: '#F87171' },
+  seuil_tempo:   { Icon: Repeat2,           color: '#FBBF24' },
+  cotes:         { Icon: MountainSnow,      color: '#8B5CF6' },
+  course:        { Icon: Trophy,            color: '#F59E0B' },
+  runtaf:        { Icon: BriefcaseBusiness, color: '#8BA8A3' },
+  velotaf:       { Icon: BriefcaseBusiness, color: '#8BA8A3' },
 }
 
 const SPORT_COLORS: Record<string, string> = {
@@ -251,16 +260,19 @@ export function ActivityCard({
                   {INTENSITY_EMOJI[intensityKey] ?? '❓'}
                 </button>
               )}
-              {workoutTypeKey && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); setPopup('workoutType') }}
-                  className="flex items-center justify-center text-[18px] leading-none"
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                  aria-label="Type de séance"
-                >
-                  {WORKOUT_TYPE_EMOJI[workoutTypeKey] ?? '❓'}
-                </button>
-              )}
+              {workoutTypeKey && WORKOUT_TYPE_ICON[workoutTypeKey] && (() => {
+                const { Icon, color } = WORKOUT_TYPE_ICON[workoutTypeKey]
+                return (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setPopup('workoutType') }}
+                    className="flex items-center justify-center leading-none"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    aria-label="Type de séance"
+                  >
+                    <Icon size={18} strokeWidth={2.2} color={color} />
+                  </button>
+                )
+              })()}
             </div>
           </div>
         </div>

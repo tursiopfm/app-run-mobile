@@ -153,7 +153,7 @@ export function IntensityPopup({ intensityKey, onClose }: { intensityKey: string
           <p className="text-[11px]" style={{ color: colors.subtleText }}>
             Sur des fractions courtes (300-400 m, ~1 min d&apos;effort), la FC n&apos;a pas le temps d&apos;atteindre Z5 stable
             malgré l&apos;allure VMA. L&apos;empreinte FC est dominée par Z3-Z4 → ces séances ressortent en <strong>seuil</strong>.
-            Le caractère « VMA » est capturé séparément par le bloc <strong>Type</strong> de séance (chip ⌚ Fractionné).
+            Le caractère « VMA » est capturé séparément par le bloc <strong>Type</strong> de séance (chip Fractionné).
           </p>
         </div>
 
