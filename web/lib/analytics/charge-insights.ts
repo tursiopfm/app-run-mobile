@@ -1,6 +1,6 @@
 // web/lib/analytics/charge-insights.ts
 import type { DailyLoad, DailyMetrics } from './fatigue'
-import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone } from './charge-insights.types'
+import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone, LoadBalanceResult } from './charge-insights.types'
 import { FRESHNESS } from './charge-thresholds'
 
 function dateKey(d: Date): string {
@@ -132,4 +132,23 @@ export function computeFreshness(metrics: DailyMetrics[]): FreshnessResult {
   const sevenAgo = metrics[metrics.length - 8] ?? metrics[0]
   const delta = Math.round((last.tsb - sevenAgo.tsb) * 10) / 10
   return { tsb: last.tsb, deltaVsWeekAgo: delta, zone: freshnessZoneFor(last.tsb) }
+}
+
+export function computeLoadBalanceRatio(
+  metrics: DailyMetrics[],
+  dailyLoads: DailyLoad[],
+): LoadBalanceResult {
+  if (metrics.length === 0 || dailyLoads.length === 0)
+    return { ewmaRatio: 0, sumRatio7vs28: 0 }
+  const last = metrics[metrics.length - 1]
+  const ewmaRatio = last.ctl > 0 ? Math.round((last.atl / last.ctl) * 100) / 100 : 0
+
+  const tail7  = dailyLoads.slice(-7)
+  const tail28 = dailyLoads.slice(-28)
+  const sum7   = tail7.reduce((s, d) => s + d.ces, 0)
+  const sum28  = tail28.reduce((s, d) => s + d.ces, 0)
+  const avg7Week = sum28 / 4
+  const sumRatio7vs28 = avg7Week > 0 ? Math.round((sum7 / avg7Week) * 100) / 100 : 0
+
+  return { ewmaRatio, sumRatio7vs28 }
 }

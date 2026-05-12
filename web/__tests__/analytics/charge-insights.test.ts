@@ -144,3 +144,37 @@ describe('freshness / acute / chronic', () => {
     expect(computeChronicLoad(m)).toBeCloseTo(m[m.length - 1].ctl, 1)
   })
 })
+
+import { computeLoadBalanceRatio } from '@/lib/analytics/charge-insights'
+
+describe('computeLoadBalanceRatio', () => {
+  function loadsConst(days: number, ces: number) {
+    return Array.from({ length: days }, (_, i) => ({
+      date: new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
+      ces,
+    }))
+  }
+
+  it('returns zero ratios for empty input', () => {
+    const r = computeLoadBalanceRatio([], [])
+    expect(r.ewmaRatio).toBe(0)
+    expect(r.sumRatio7vs28).toBe(0)
+  })
+
+  it('ewmaRatio = atl / ctl from metrics', () => {
+    const m = buildDailyMetrics(loadsConst(50, 50))
+    const dl = loadsConst(50, 50)
+    const r = computeLoadBalanceRatio(m, dl)
+    expect(r.ewmaRatio).toBeCloseTo(m[m.length - 1].atl / m[m.length - 1].ctl, 2)
+  })
+
+  it('sumRatio7vs28 = sum7d / (sum28d/4)', () => {
+    const days: { date: string; ces: number }[] = []
+    for (let i = 0; i < 28; i++) {
+      days.push({ date: new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10), ces: i < 21 ? 50 : 100 })
+    }
+    const m = buildDailyMetrics(days)
+    const r = computeLoadBalanceRatio(m, days)
+    expect(r.sumRatio7vs28).toBeCloseTo(700 / (1750 / 4), 2)
+  })
+})
