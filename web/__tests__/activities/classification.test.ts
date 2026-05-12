@@ -41,7 +41,7 @@ describe('guessIntensity — pure HR', () => {
   })
 })
 
-describe('classifyIntensityFromZoneTimes — règle de bascule 40% Z3+', () => {
+describe('classifyIntensityFromZoneTimes — cascade 15% Z5 / 20% Z4+Z5 / 40% Z3+', () => {
   it('100% Z2 → footing', () => {
     expect(classifyIntensityFromZoneTimes([0, 3600, 0, 0, 0])).toBe('footing')
   })
@@ -50,21 +50,36 @@ describe('classifyIntensityFromZoneTimes — règle de bascule 40% Z3+', () => {
     expect(classifyIntensityFromZoneTimes([3600, 0, 0, 0, 0])).toBe('recuperation')
   })
 
-  it('Z1+Z2 > Z3+ (39% en Z3+) → footing (pas de bascule)', () => {
+  it('Z1+Z2 > Z3+ (39% en Z3+, Z4+Z5 < 20%) → footing', () => {
     expect(classifyIntensityFromZoneTimes([10, 51, 30, 9, 0])).toBe('footing')
   })
 
-  it('Z3+ ≥ 40% avec Z3 dominant → endurance_active', () => {
-    // Z1=34, Z2=102, Z3=97, Z4=23, Z5=0 (activité "Trail des lavoirs", Z3+ = 47%)
+  it('Trail des lavoirs (Z3 dominant, Z4+Z5 = 9%) → endurance_active', () => {
     expect(classifyIntensityFromZoneTimes([34, 102, 97, 23, 0])).toBe('endurance_active')
   })
 
-  it('Z3+ ≥ 40% avec Z4 dominant → seuil', () => {
+  it('seuil exact à 40% Z3+ → bascule endurance_active', () => {
+    expect(classifyIntensityFromZoneTimes([30, 30, 40, 0, 0])).toBe('endurance_active')
+  })
+
+  it('Z4+Z5 = 67%, Z5 = 11% (< 15%) → seuil', () => {
     expect(classifyIntensityFromZoneTimes([5, 10, 15, 50, 10])).toBe('seuil')
   })
 
-  it('Z3+ ≥ 40% avec Z5 dominant → vma', () => {
+  it('Z5 = 50% (VMA pur) → vma', () => {
     expect(classifyIntensityFromZoneTimes([5, 10, 10, 15, 40])).toBe('vma')
+  })
+
+  it('Z5 exactement 15% → vma', () => {
+    expect(classifyIntensityFromZoneTimes([10, 20, 25, 30, 15])).toBe('vma')
+  })
+
+  it('Z5 = 14.9% (juste sous 15%), Z4+Z5 = 50% → seuil', () => {
+    expect(classifyIntensityFromZoneTimes([200, 200, 200, 250, 149])).toBe('seuil')
+  })
+
+  it('Z4+Z5 exactement 20% (sans Z5) → seuil', () => {
+    expect(classifyIntensityFromZoneTimes([30, 30, 20, 20, 0])).toBe('seuil')
   })
 
   it('toutes zones à 0 → null', () => {
@@ -75,8 +90,25 @@ describe('classifyIntensityFromZoneTimes — règle de bascule 40% Z3+', () => {
     expect(classifyIntensityFromZoneTimes([100, 200, 300])).toBeNull()
   })
 
-  it('seuil exact à 40% Z3+ → bascule', () => {
-    expect(classifyIntensityFromZoneTimes([30, 30, 40, 0, 0])).toBe('endurance_active')
+  // ── Cas réels mesurés sur l'app Trail Cockpit ─────────────────────────────
+  it('VMA 16×300m r1\' (Z5=7%, Z4+Z5=33%) → seuil (empreinte FC sub-VO₂max)', () => {
+    // Distribution mesurée : Z1=5, Z2=14, Z3=27, Z4=18, Z5=5 (min)
+    expect(classifyIntensityFromZoneTimes([5, 14, 27, 18, 5])).toBe('seuil')
+  })
+
+  it('VMA 8×400m @4\'15 R200m (Z5=3%, Z4+Z5=20%) → seuil', () => {
+    // Distribution mesurée : Z1=12, Z2=19, Z3=25, Z4=12, Z5=2 (min)
+    expect(classifyIntensityFromZoneTimes([12, 19, 25, 12, 2])).toBe('seuil')
+  })
+
+  it('VMA pyramide 4×400/300/200 (Z5=3%, Z4+Z5=20%) → seuil', () => {
+    // Distribution mesurée : Z1=13, Z2=18, Z3=24, Z4=12, Z5=2 (min)
+    expect(classifyIntensityFromZoneTimes([13, 18, 24, 12, 2])).toBe('seuil')
+  })
+
+  it('Seuil 3×2000m r2\' (Z5=0%, Z4+Z5=20%) → seuil', () => {
+    // Distribution mesurée : Z1=3, Z2=17, Z3=32, Z4=13, Z5=0 (min)
+    expect(classifyIntensityFromZoneTimes([3, 17, 32, 13, 0])).toBe('seuil')
   })
 })
 

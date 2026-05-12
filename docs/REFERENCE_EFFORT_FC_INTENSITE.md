@@ -261,23 +261,33 @@ si activityMaxHr ≤ avgHr OU movingTimeSec ≤ 0 → fallback FC moyenne
 
 Si `restingHr` est absent, il est estimé par `max(avgHr − 3σ, 40)` où `σ = max((activityMaxHr − avgHr) / 2, 3)`.
 
-**Étape 3 — Règle de bascule (40 % en Z3+) :**
+**Étape 3 — Cascade par zone supérieure (premier match gagne) :**
 
 ```
-total      = Z1 + Z2 + Z3 + Z4 + Z5
-upperRatio = (Z3 + Z4 + Z5) / total
+total = Z1 + Z2 + Z3 + Z4 + Z5
 
-si upperRatio ≥ 0.40 :
-    si Z5 ≥ Z3 et Z5 ≥ Z4 → 'vma'
-    si Z4 ≥ Z3            → 'seuil'
-    sinon                  → 'endurance_active'
-
-sinon :
-    si Z2 ≥ Z1 → 'footing'
-    sinon       → 'recuperation'
+si  Z5 / total       ≥ 15 %  →  'vma'              (effort VO₂max stable)
+si (Z4 + Z5) / total ≥ 20 %  →  'seuil'            (séance "qualité" HIT)
+si (Z3 + Z4 + Z5) / total ≥ 40 %  →  'endurance_active' (intensité moyenne soutenue)
+si  Z2 ≥ Z1                    →  'footing'         (endurance fondamentale dominante)
+sinon                            →  'recuperation'   (Z1 dominant)
 ```
 
-**Logique** : passer 40 % ou plus de l'activité au-dessus de l'endurance fondamentale (Z3+) change la **nature** de la séance, même si la FC moyenne reste basse à cause des descentes/récupérations. Cas typique : trail vallonné où les bosses font monter régulièrement en Z3/Z4 mais où la moyenne reste en Z2.
+**Justification des seuils (littérature) :**
+
+| Seuil | Source | Logique |
+|---|---|---|
+| Z5 ≥ 15 % | Daniels — "I" (Interval/VO₂max) = 3×5 min en Z5 → ~25 % d'une séance d'1 h ; 15 % capture les vraies séances VO₂max sans inclure les pics fugaces des fractionnés courts | Empreinte VO₂max stable |
+| Z4+Z5 ≥ 20 % | Seiler & Kjerland (polarized training) — TID HIT typique chez l'élite : 15-20 % du volume hebdo en zones hautes ; 20 % en intra-séance = stimulus supra-seuil clairement marqué | Séance "qualité" |
+| Z3+ ≥ 40 % | Empirique — au-delà de 40 % du temps actif au-dessus de Z2, la séance n'est plus une "endurance fondamentale" même si la FC moyenne reste en Z2 | Capture trail vallonné, sortie progressive |
+
+**Pourquoi cascade et pas "max(Z3, Z4, Z5)" ?**
+
+Une cascade par zone supérieure significative reflète la **plus haute intensité atteinte de manière mesurable**, indépendamment du temps passé en Z3. Une séance qui passe 39 % en Z3 + 25 % en Z4 + 8 % en Z5 = 72 % en Z3+, dont Z3 dominant numériquement. La règle "max" donnerait `endurance_active`, ce qui écraserait totalement le signal `seuil`. La cascade donne `seuil` car Z4+Z5 = 33 % ≥ 20 %.
+
+**Cas particulier — fractionnés courts (300-400 m) :**
+
+Sur des fractions de ~1 min, la FC met 20-30 s à monter en Z4-Z5 → la fraction est presque finie quand le pic est atteint. L'empreinte FC moyenne reste dominée par Z3-Z4. Conséquence : un "VMA 8×400" sera classé `seuil` (correct physiologiquement — c'est du travail sub-VO₂max au sens Daniels). Le caractère "fractionné" est capturé séparément par `WorkoutType` (chip Type → fractionné).
 
 #### Algorithme — mode FC moyenne (fallback)
 

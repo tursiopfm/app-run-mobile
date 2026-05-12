@@ -262,33 +262,37 @@ function guessIntensity(
 
 La fonction a **deux modes** selon les données disponibles :
 
-#### Mode 1 — Distribution (préféré, refonte 2026-05-11)
+#### Mode 1 — Distribution (préféré, refonte 2026-05-12)
 
 Si `activityMaxHr` et `movingTimeSec` sont fournis et cohérents (`activityMaxHr > avgHr`, `movingTimeSec > 0`) :
 
 1. Calculer `restingHr` (depuis le profil, ou estimé : `max(avgHr − 3σ, 40)` où `σ = max((activityMaxHr − avgHr) / 2, 3)`).
 2. Calculer la distribution temps/zones via `distributeTimeInZones(zones, avgHr, activityMaxHr, movingTimeSec, restingHr)` (section 4).
-3. Appliquer `classifyIntensityFromZoneTimes(distribution)` :
+3. Appliquer `classifyIntensityFromZoneTimes(distribution)` — cascade par zone supérieure significative (premier match gagne) :
 
 ```
-total      = Σ zoneTimesSec
-upperRatio = (Z3 + Z4 + Z5) / total
+total = Σ zoneTimesSec
 
-Si upperRatio ≥ 0,40 :
-    si Z5 ≥ Z3 et Z5 ≥ Z4  →  vma
-    si Z4 ≥ Z3              →  seuil
-    sinon                    →  endurance_active
-
-Sinon :
-    si Z2 ≥ Z1              →  footing
-    sinon                    →  recuperation
+Si  Z5 / total       ≥ 15 %  →  vma
+Si (Z4 + Z5) / total ≥ 20 %  →  seuil
+Si (Z3 + Z4 + Z5) / total ≥ 40 %  →  endurance_active
+Si  Z2 ≥ Z1                    →  footing
+Sinon                            →  recuperation
 ```
 
-**Justification du seuil 40 % :**
-Le bloc "Endurance fondamentale" (Z2) tolère mécaniquement quelques bosses ou accélérations qui font visiter Z3 brièvement. À partir de ~40 % du temps en Z3+, on n'est plus dans une séance d'endurance fondamentale même si la moyenne mathématique de la FC tombe en Z2.
+**Justification des seuils (littérature) :**
 
-**Pourquoi pas la zone modale (zone avec le plus de temps) ?**
-Sur une activité comme l'exemple ci-dessous, Z2=102 min > Z3=97 min — la zone modale donnerait `footing`. Le ressenti et la physiologie disent `endurance_active` : la fonction de bascule capture cette nuance.
+| Seuil | Référence | Logique |
+|---|---|---|
+| Z5 ≥ 15 % | Daniels (2014) — prescription VO₂max = 3×5 min en Z5 ≈ 25 % d'une séance d'1 h ; 15 % capture les vraies séances VO₂max sans inclure les pics fugaces | Empreinte VO₂max stable |
+| Z4+Z5 ≥ 20 % | Seiler & Kjerland (2006), Stöggl & Sperlich (2014) — TID HIT chez l'élite endurance : 15-20 % du volume en zones hautes par semaine ; 20 % en intra-séance = stimulus supra-seuil clairement marqué | Séance "qualité" (HIT au sens Seiler) |
+| Z3+ ≥ 40 % | Empirique — au-delà de 40 % du temps au-dessus de l'endurance fondamentale, la séance change de nature même si la FC moyenne reste basse | Capture trail vallonné, sortie progressive |
+
+**Pourquoi cascade et pas "max(Z3, Z4, Z5)" ?**
+Le maximum numérique en Z3-Z4-Z5 reflète la **zone la plus représentée**, pas la **plus haute intensité atteinte**. Une séance avec 30 % en Z3 + 25 % en Z4 + 8 % en Z5 a Z3 dominant numériquement, mais l'empreinte Z4+Z5 = 33 % signe un travail supra-seuil clair. La cascade par zone supérieure (Coggan, Foster, Lucia) reflète la nature physiologique de la séance.
+
+**Cas particulier — fractionnés courts :**
+Sur fractions courtes (300-400 m, ~1 min d'effort), la FC met 20-30 s à monter en Z4-Z5. La fraction est presque terminée quand le pic FC est atteint. L'empreinte cardio moyenne reste dominée par Z3-Z4 → ces séances sont classées `seuil` (physiologiquement correct au sens Daniels — c'est du travail "R" Repetition / sub-VO₂max). Le caractère "fractionné" est capturé séparément par `WorkoutType` (chip ⌚ Fractionné).
 
 #### Mode 2 — FC moyenne (fallback)
 

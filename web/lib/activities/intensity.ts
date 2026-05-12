@@ -62,7 +62,9 @@ function zoneToIntensity(zone: number): IntensityKey {
   return 'vma'
 }
 
-const UPPER_RATIO_THRESHOLD = 0.40
+const VMA_Z5_RATIO         = 0.15  // ≥ 15% en Z5 → effort VO₂max stable (Daniels)
+const SEUIL_Z4_Z5_RATIO    = 0.20  // ≥ 20% en Z4+Z5 → séance "qualité" (Seiler HIT)
+const ENDURANCE_ACTIVE_Z3P = 0.40  // ≥ 40% en Z3+ → intensité moyenne soutenue
 
 export function classifyIntensityFromZoneTimes(zoneTimesSec: number[]): IntensityKey | null {
   if (zoneTimesSec.length !== 5) return null
@@ -72,14 +74,9 @@ export function classifyIntensityFromZoneTimes(zoneTimesSec: number[]): Intensit
   if (total <= 0) return null
 
   const [z1, z2, z3, z4, z5] = clamped
-  const upperRatio = (z3 + z4 + z5) / total
-
-  if (upperRatio >= UPPER_RATIO_THRESHOLD) {
-    if (z5 >= z3 && z5 >= z4) return 'vma'
-    if (z4 >= z3)             return 'seuil'
-    return 'endurance_active'
-  }
-
+  if ((z5)            / total >= VMA_Z5_RATIO)         return 'vma'
+  if ((z4 + z5)       / total >= SEUIL_Z4_Z5_RATIO)    return 'seuil'
+  if ((z3 + z4 + z5)  / total >= ENDURANCE_ACTIVE_Z3P) return 'endurance_active'
   if (z2 >= z1) return 'footing'
   return 'recuperation'
 }
