@@ -257,7 +257,7 @@ describe('computeSportDistribution', () => {
   })
 })
 
-import { computeIntensityDistribution } from '@/lib/analytics/charge-insights'
+import { computeIntensityDistribution, computeTopLoadActivities } from '@/lib/analytics/charge-insights'
 import type { HrZone } from '@/lib/health/hr-zones'
 
 describe('computeIntensityDistribution', () => {
@@ -305,5 +305,25 @@ describe('computeIntensityDistribution', () => {
     const acts = [act({ startDate: '2026-05-12T08:00:00Z', ces: 25, name: '', avgHr: null })]
     const d = computeIntensityDistribution(acts, 7, [], new Date('2026-05-13T12:00:00Z'))
     expect(d.find(x => x.label === 'Non déterminée')?.ces).toBe(25)
+  })
+})
+
+describe('computeTopLoadActivities', () => {
+  it('returns empty for no activities', () => {
+    expect(computeTopLoadActivities([], 7, 5, [], new Date('2026-05-12T12:00:00Z'))).toEqual([])
+  })
+
+  it('returns top N by CES inside window, with share7dPct', () => {
+    const acts = [
+      act({ id: '1', startDate: '2026-05-12T08:00:00Z', ces: 80, name: 'A', rawSportType: 'Run',  movingTimeSec: 3600 }),
+      act({ id: '2', startDate: '2026-05-11T08:00:00Z', ces: 60, name: 'B', rawSportType: 'Ride', movingTimeSec: 5400 }),
+      act({ id: '3', startDate: '2026-05-10T08:00:00Z', ces: 40, name: 'C', rawSportType: 'Run',  movingTimeSec: 2700 }),
+      act({ id: '4', startDate: '2026-05-09T08:00:00Z', ces: 20, name: 'D', rawSportType: 'Swim', movingTimeSec: 1800 }),
+    ]
+    const top = computeTopLoadActivities(acts, 7, 3, [], new Date('2026-05-13T12:00:00Z'))
+    expect(top).toHaveLength(3)
+    expect(top[0].id).toBe('1')
+    expect(top[0].ces).toBe(80)
+    expect(top[0].share7dPct).toBe(Math.round((80 / 200) * 100))
   })
 })

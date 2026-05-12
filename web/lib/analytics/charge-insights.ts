@@ -1,6 +1,6 @@
 // web/lib/analytics/charge-insights.ts
 import type { DailyLoad, DailyMetrics } from './fatigue'
-import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone, LoadBalanceResult, SportDistribution, IntensityLabel, IntensityShareCes } from './charge-insights.types'
+import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone, LoadBalanceResult, SportDistribution, IntensityLabel, IntensityShareCes, TopActivity } from './charge-insights.types'
 import { FRESHNESS, MONOTONY } from './charge-thresholds'
 import type { HrZone } from '@/lib/health/hr-zones'
 import { hrZoneForAvgHr } from '@/lib/health/hr-zones'
@@ -265,6 +265,47 @@ function classifyIntensity(a: CesActivity, zones: HrZone[]): IntensityLabel {
     if (z !== null) return labelFromZone(z)
   }
   return 'Non déterminée'
+}
+
+// ── Top load activities ──────────────────────────────────────────────────────
+
+const SPORT_LABELS: Record<string, string> = {
+  Run: 'Course', TrailRun: 'Trail', Ride: 'Vélo', VirtualRide: 'Home trainer',
+  EBikeRide: 'E-Bike', GravelRide: 'Gravel', MountainBikeRide: 'VTT',
+  Swim: 'Natation', Walk: 'Marche', Hike: 'Rando', WeightTraining: 'Muscu',
+}
+
+export function computeTopLoadActivities(
+  activities: CesActivity[],
+  windowDays: number,
+  n: number,
+  zones: HrZone[],
+  now: Date = new Date(),
+): TopActivity[] {
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+  const start = new Date(end)
+  start.setUTCDate(start.getUTCDate() - (windowDays - 1))
+
+  const inWindow = activities.filter(a => {
+    if (!Number.isFinite(a.ces) || a.ces == null || a.ces <= 0) return false
+    const d = a.startDate.slice(0, 10)
+    return d >= dateKey(start) && d <= dateKey(end)
+  })
+  const totalCes = inWindow.reduce((s, a) => s + a.ces, 0)
+  return [...inWindow]
+    .sort((a, b) => b.ces - a.ces)
+    .slice(0, n)
+    .map(a => ({
+      id:             a.id,
+      date:           a.startDate,
+      sport:          SPORT_LABELS[a.rawSportType] ?? a.rawSportType,
+      name:           a.name,
+      ces:            Math.round(a.ces),
+      durationSec:    a.movingTimeSec ?? 0,
+      intensityLabel: classifyIntensity(a, zones),
+      typeLabel:      a.workoutType ?? null,
+      share7dPct:     totalCes > 0 ? Math.round((a.ces / totalCes) * 100) : 0,
+    }))
 }
 
 export function computeIntensityDistribution(
