@@ -12,6 +12,7 @@ import { AcuteChronicCard } from '@/components/charge/blocks/AcuteChronicCard'
 import { FreshnessCard } from '@/components/charge/blocks/FreshnessCard'
 import { WeeklyLoadChart } from '@/components/charge/blocks/WeeklyLoadChart'
 import { FitnessFatigueChart } from '@/components/charge/blocks/FitnessFatigueChart'
+import { SportDistributionChart } from '@/components/charge/blocks/SportDistributionChart'
 
 const SPORT_STORAGE = 'charge_sport_filter'
 
@@ -83,6 +84,12 @@ export function ChargePageClient({ data }: Props) {
       label:  blockLabel(id),
       emoji:  '📈',
       render: () => <FitnessFatigueChart payload={payload} />,
+    }
+    if (id === 'sport-distribution') return {
+      id,
+      label:  blockLabel(id),
+      emoji:  '🥧',
+      render: () => <SportDistributionChart payload={payload} />,
     }
     return {
       id,
