@@ -9,6 +9,7 @@ import type { ChargePageData, ChargeSportFilterKey } from '@/lib/data/charge'
 import { charge as chargeLabels } from '@/lib/design/labels'
 import { LoadStatusCard } from '@/components/charge/blocks/LoadStatusCard'
 import { AcuteChronicCard } from '@/components/charge/blocks/AcuteChronicCard'
+import { FreshnessCard } from '@/components/charge/blocks/FreshnessCard'
 
 const SPORT_STORAGE = 'charge_sport_filter'
 
@@ -62,6 +63,12 @@ export function ChargePageClient({ data }: Props) {
       label:  blockLabel(id),
       emoji:  '⚖️',
       render: () => <AcuteChronicCard payload={payload} />,
+    }
+    if (id === 'freshness') return {
+      id,
+      label:  blockLabel(id),
+      emoji:  '🌬️',
+      render: () => <FreshnessCard payload={payload} />,
     }
     return {
       id,
