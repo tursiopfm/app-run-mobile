@@ -6,7 +6,13 @@ import { ActivityCard, ActivityRow } from '@/components/ui/ActivityCard'
 import { EditActivityModal } from '@/components/ui/EditActivityModal'
 import { colors } from '@/lib/design/colors'
 import { sportLabel } from '@/lib/design/labels'
-import { INTENSITY_OPTIONS, guessIntensity } from '@/lib/activities/intensity'
+import {
+  INTENSITY_OPTIONS,
+  WORKOUT_TYPE_OPTIONS,
+  guessIntensity,
+  guessWorkoutType,
+  type WorkoutType,
+} from '@/lib/activities/intensity'
 import { calculateHrZones, type HrZone, type HrZoneMethod } from '@/lib/health/hr-zones'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -26,9 +32,10 @@ interface SearchState {
 }
 
 interface FilterState {
-  sport:     string
-  intensity: string
-  dateFrom:  string  // YYYY-MM-DD (from <input type="date">)
+  sport:       string
+  intensity:   string
+  workoutType: string
+  dateFrom:    string  // YYYY-MM-DD (from <input type="date">)
   dateTo:    string
   distFrom:  string
   distTo:    string
@@ -52,6 +59,7 @@ const DEFAULT_SEARCH: SearchState = {
 const DEFAULT_FILTER: FilterState = {
   sport: 'Toutes',
   intensity: 'Toutes',
+  workoutType: 'Toutes',
   dateFrom: '', dateTo: '',
   distFrom: '', distTo: '',
   paceFrom: '', paceTo: '',
@@ -429,6 +437,24 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
             </div>
           </div>
 
+          {/* Type d'entraînement */}
+          <div>
+            <p className="text-[13px] font-semibold text-trail-text mb-[6px]">Type d&apos;entraînement</p>
+            <div className="flex items-center gap-2">
+              <select
+                value={state.workoutType}
+                onChange={e => setState({ ...state, workoutType: e.target.value })}
+                className="rounded-[8px] border px-3 py-[7px] text-[13px] flex-1"
+                style={{ ...si, cursor: 'pointer' }}
+              >
+                <option value="Toutes">Tous</option>
+                {WORKOUT_TYPE_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* Date — calendrier natif */}
           <div>
             <p className="text-[13px] font-semibold text-trail-text mb-[6px]">Date</p>
@@ -603,6 +629,13 @@ export default function ActivitiesClient({ initial, hasMore }: { initial: Activi
         return key === filter.intensity
       })
     }
+    if (filter.workoutType !== 'Toutes') {
+      list = list.filter(a => {
+        const sport = a.manual_sport_type ?? a.sport_type
+        const key = (a.manual_workout_type as WorkoutType | null) ?? guessWorkoutType(a.name, sport)
+        return key === filter.workoutType
+      })
+    }
     const dateFrom = parseDate(filter.dateFrom)
     const dateTo   = parseDate(filter.dateTo)
     if (dateFrom) list = list.filter(a => new Date(a.start_time) >= dateFrom)
@@ -667,6 +700,7 @@ export default function ActivitiesClient({ initial, hasMore }: { initial: Activi
 
   const hasActiveFilter = filter.sport !== 'Toutes'
     || filter.intensity !== 'Toutes'
+    || filter.workoutType !== 'Toutes'
     || filter.dateFrom !== '' || filter.dateTo !== ''
     || filter.distFrom !== '' || filter.distTo !== ''
     || filter.paceFrom !== '' || filter.paceTo !== ''
