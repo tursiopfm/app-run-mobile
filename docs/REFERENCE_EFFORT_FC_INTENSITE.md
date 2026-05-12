@@ -330,12 +330,13 @@ Zones calculées : Z1 ≤ 140, Z2 ≤ 154, Z3 ≤ 167, Z4 ≤ 181, Z5 ≤ 195
 
 ### 3.3 Type de séance — `WorkoutType`
 
-Six valeurs, avec restrictions par sport pour runtaf et velotaf :
+Sept valeurs, avec restrictions par sport pour runtaf et velotaf :
 
 | Clé | Emoji | Libellé | Sports autorisés |
 |---|---|---|---|
 | `sortie_longue` | 🐢 | Sortie longue | tous |
 | `fractionne` | ⌚ | Fractionné | tous |
+| `seuil_tempo` | ⏱️ | Seuil / Tempo | tous |
 | `cotes` | ⛰️ | Côtes | tous |
 | `course` | 🏆 | Course | tous |
 | `runtaf` | 🏃‍♂️💻 | Runtaf | `Run`, `TrailRun` uniquement |
@@ -362,20 +363,32 @@ Ordre de priorité (premier match gagne) :
 - titre contient `vélotaf`, `velotaf`, `vélo taf`, ou `taf`
 - ou nom exact `Home 🚴🏻` / `🚴🏻 Home`
 
-**3. Côtes** :
+**3. Côtes** (priorité sur fractionné et seuil) :
 - titre contient `côtes`, `cotes`, `côte`, `cote`, `montée`, `montee`, `hill`
 
-**4. Fractionné** :
-- titre contient une distance isolée (200, 300, 400, 500, 800, 1000 — non collée à d'autres chiffres)
-- ou contient `vma`, `interval`, `fractionné`, `fractionnée`, `répétition`, `repetition`
+**4. Mots-clés Fractionné explicites** (priorité sur seuil même si une distance "longue" apparaît) :
+- `vma`, `interval`, `fractionné`, `fractionnée`, `répétition`, `repetition`
 
-**5. Course** (excluant `course à pied`) :
+**5. Mots-clés Seuil / Tempo explicites** :
+- `seuil`, `tempo`, `threshold`
+
+**6. Distances courtes isolées** (200, 300, 400, 500, 800 m — non collées à d'autres chiffres) :
+- → `fractionne`
+
+**7. Distances longues isolées** (1000, 2000, 3000, 5000 m — non collées à d'autres chiffres) :
+- → `seuil_tempo`
+
+**8. Course** (excluant `course à pied`) :
 - titre contient `race`, `compét`, `compet`, `dossard`, `chrono`, ` pb `, ` pr `, `10k`, `semi`, `marathon`
 
-**6. Sortie longue** :
+**9. Sortie longue** :
 - titre contient `sortie longue`, mot exact `sl`, `long run`, `lsl`
 
-**7. `null`** — aucun match.
+**10. `null`** — aucun match.
+
+**Logique de la cascade fractionné / seuil :**
+
+Les fractions courtes (200-800 m) sont typiques du travail VMA / intervals à allure rapide → `fractionne`. Les distances longues (1000-5000 m) sont typiques du travail au seuil ou en tempo run → `seuil_tempo`. Mais un titre **explicite** (`seuil` ou `vma`) doit toujours gagner sur la distance : "Seuil 8×400m" est une séance seuil même avec des fractions de 400 m ; "VMA 5×1000m" est une séance VMA même avec des fractions de 1000 m. C'est pourquoi les mots-clés explicites (étapes 4 et 5) sont évalués avant les distances (étapes 6 et 7).
 
 Dans l'UI, les options affichées sont filtrées par sport (runtaf masqué si sport = Ride, velotaf masqué si sport = Run, etc.). Si le sport change et que le type sélectionné est incompatible avec le nouveau sport, le type est réinitialisé à `null`.
 

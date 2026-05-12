@@ -204,4 +204,38 @@ describe('guessWorkoutType — détection par titre', () => {
   it('"taf" + WeightTraining → null', () => {
     expect(guessWorkoutType('taf', 'WeightTraining')).toBeNull()
   })
+
+  // ── seuil_tempo (nouveau type) ─────────────────────────────────────────────
+  it('"Seuil 3x2000m r2\'" → seuil_tempo (mot-clé explicite)', () => {
+    expect(guessWorkoutType('Seuil 3x2000m r2\'', 'Run')).toBe('seuil_tempo')
+  })
+
+  it('"Tempo run 40min" → seuil_tempo', () => {
+    expect(guessWorkoutType('Tempo run 40min', 'Run')).toBe('seuil_tempo')
+  })
+
+  it('"Threshold 4x10min" → seuil_tempo', () => {
+    expect(guessWorkoutType('Threshold 4x10min', 'Run')).toBe('seuil_tempo')
+  })
+
+  it('"5x1000m allure semi" → seuil_tempo (1000 m sans mot-clé explicite)', () => {
+    expect(guessWorkoutType('5x1000m allure semi', 'Run')).toBe('seuil_tempo')
+  })
+
+  it('"3x5000m" → seuil_tempo (5000 m)', () => {
+    expect(guessWorkoutType('3x5000m', 'Run')).toBe('seuil_tempo')
+  })
+
+  it('"Seuil 8x400m" → seuil_tempo (priorité mot-clé seuil sur 400 m)', () => {
+    expect(guessWorkoutType('Seuil 8x400m', 'Run')).toBe('seuil_tempo')
+  })
+
+  it('"VMA 5x1000m" → fractionne (priorité VMA sur 1000 m)', () => {
+    expect(guessWorkoutType('VMA 5x1000m', 'Run')).toBe('fractionne')
+  })
+
+  it('"Fractionné 6x1000" → fractionne (mot-clé explicite, pas 1000)', () => {
+    // Test existant — vérifie que la priorité fractionne explicite > 1000
+    expect(guessWorkoutType('Fractionné 6x1000', 'Run')).toBe('fractionne')
+  })
 })

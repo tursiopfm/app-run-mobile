@@ -1,7 +1,7 @@
 'use client'
 
 import { colors } from '@/lib/design/colors'
-import { INTENSITY_OPTIONS } from '@/lib/activities/intensity'
+import { INTENSITY_OPTIONS, WORKOUT_TYPE_OPTIONS } from '@/lib/activities/intensity'
 import { Dumbbell } from 'lucide-react'
 
 const INTENSITY_EMOJI: Record<string, string> = {
@@ -161,6 +161,92 @@ export function IntensityPopup({ intensityKey, onClose }: { intensityKey: string
           Références : Daniels (intervals VO₂max ≥ 3-5 min), Seiler & Kjerland (TID polarized, HIT 15-20 %),
           Coggan / Foster (classification par zone supérieure significative).
         </p>
+
+        <button
+          onClick={onClose}
+          className="mt-5 w-full py-3 rounded-[12px] text-[14px] font-bold"
+          style={{ backgroundColor: colors.chargeOrange, color: '#fff', cursor: 'pointer' }}
+        >
+          Fermer
+        </button>
+      </div>
+    </div>
+  )
+}
+
+const WORKOUT_TYPE_DESC: Record<string, string> = {
+  sortie_longue: 'séance longue à allure facile à modérée (volume)',
+  fractionne:    'intervals courts à allure VMA (200–800 m)',
+  seuil_tempo:   'intervals longs au seuil ou tempo run continu (1000–5000 m)',
+  cotes:         'travail spécifique en côtes / dénivelé positif',
+  course:        'compétition ou objectif chrono (10K, semi, marathon, race)',
+  runtaf:        'trajet maison ↔ bureau à pied (Run / TrailRun)',
+  velotaf:       'trajet maison ↔ bureau en vélo (Ride / EBike)',
+}
+
+const WORKOUT_TYPE_RULE: Record<string, string> = {
+  sortie_longue: 'titre contient "sortie longue", "sl", "long run", "lsl"',
+  fractionne:    'titre contient "vma", "fractionné", "interval", "répétition", ou une distance 200–800 m isolée',
+  seuil_tempo:   'titre contient "seuil", "tempo", "threshold", ou une distance 1000–5000 m isolée',
+  cotes:         'titre contient "côtes", "montée", "hill" (priorité sur fractionné/seuil)',
+  course:        'titre contient "race", "compét", "dossard", "chrono", "10k", "semi", "marathon"',
+  runtaf:        'titre contient "runtaf", "taf", "Home 🏃‍♂️" — uniquement si sport = Run/TrailRun',
+  velotaf:       'titre contient "vélotaf", "taf", "Home 🚴🏻" — uniquement si sport = Ride/EBike/VirtualRide',
+}
+
+export function WorkoutTypePopup({
+  workoutTypeKey,
+  onClose,
+}: {
+  workoutTypeKey: string | null
+  onClose: () => void
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-end justify-center"
+      style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+      onClick={onClose}
+    >
+      <div
+        className="rounded-t-[20px] w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto"
+        style={{ backgroundColor: colors.cardBg }}
+        onClick={e => e.stopPropagation()}
+      >
+        <p className="text-[18px] font-bold text-white mb-2">Type de séance</p>
+        <p className="text-[12px] mb-4" style={{ color: colors.subtleText }}>
+          Notion contextuelle indépendante de l&apos;intensité physiologique. Déterminée par mots-clés du
+          titre de l&apos;activité (et compatibilité du sport pour runtaf / velotaf). Une &laquo;&nbsp;Sortie longue&nbsp;&raquo; peut
+          être en footing ou endurance active — les deux dimensions sont orthogonales.
+        </p>
+
+        <div className="space-y-[6px]">
+          {WORKOUT_TYPE_OPTIONS.map(opt => {
+            const active = opt.value === workoutTypeKey
+            return (
+              <div
+                key={opt.value}
+                className="rounded-[10px] px-3 py-[8px]"
+                style={{
+                  backgroundColor: active ? `${colors.chargeOrange}26` : 'transparent',
+                  border: active ? `1px solid ${colors.chargeOrange}60` : '1px solid transparent',
+                }}
+              >
+                <p
+                  className="text-[13px] font-semibold"
+                  style={{ color: active ? colors.chargeOrange : colors.text }}
+                >
+                  {opt.label}
+                </p>
+                <p className="text-[12px] mt-[2px]" style={{ color: colors.subtleText }}>
+                  {WORKOUT_TYPE_DESC[opt.value] ?? ''}
+                </p>
+                <p className="text-[11px] mt-[3px] font-mono" style={{ color: colors.subtleText, opacity: 0.85 }}>
+                  Règle : {WORKOUT_TYPE_RULE[opt.value] ?? ''}
+                </p>
+              </div>
+            )
+          })}
+        </div>
 
         <button
           onClick={onClose}

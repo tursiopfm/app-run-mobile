@@ -5,7 +5,7 @@ export type IntensityKey =
   | 'recuperation' | 'footing' | 'endurance_active' | 'seuil' | 'vma'
 
 export type WorkoutType =
-  | 'sortie_longue' | 'fractionne' | 'cotes' | 'course' | 'runtaf' | 'velotaf'
+  | 'sortie_longue' | 'fractionne' | 'seuil_tempo' | 'cotes' | 'course' | 'runtaf' | 'velotaf'
 
 export type IntensityOption   = { key: IntensityKey; label: string }
 export type SportOption       = { value: string; label: string }
@@ -22,6 +22,7 @@ export const INTENSITY_OPTIONS: IntensityOption[] = [
 export const WORKOUT_TYPE_OPTIONS: WorkoutTypeOption[] = [
   { value: 'sortie_longue', label: '🐢 Sortie longue' },
   { value: 'fractionne',    label: '⌚ Fractionné'    },
+  { value: 'seuil_tempo',   label: '⏱️ Seuil / Tempo' },
   { value: 'cotes',         label: '⛰️ Côtes'          },
   { value: 'course',        label: '🏆 Course'         },
   { value: 'runtaf',        label: '🏃‍♂️💻 Runtaf',  sports: ['Run', 'TrailRun'] },
@@ -132,18 +133,29 @@ export function guessWorkoutType(name: string, sport: string): WorkoutType | nul
       return 'velotaf'
   }
 
-  // 3. Côtes / montées (priorité sur fractionné)
+  // 3. Côtes / montées (priorité sur fractionné et seuil)
   if (n.includes('côtes') || n.includes('cotes') || n.includes('côte') || n.includes('cote')
       || n.includes('montée') || n.includes('montee') || n.includes('hill'))
     return 'cotes'
 
-  // 4. Fractionné / intervalles
-  if (/(?<!\d)(200|300|400|500|800|1000)(?!\d)/.test(n)
-      || n.includes('vma') || n.includes('interval') || n.includes('fractionné')
+  // 4. Mots-clés fractionné explicites (gagne sur seuil même si '2000' apparaît)
+  if (n.includes('vma') || n.includes('interval') || n.includes('fractionné')
       || n.includes('fractionnée') || n.includes('répétition') || n.includes('repetition'))
     return 'fractionne'
 
-  // 5. Compétition — exclure "course à pied"
+  // 5. Mots-clés seuil/tempo explicites
+  if (n.includes('seuil') || n.includes('tempo') || n.includes('threshold'))
+    return 'seuil_tempo'
+
+  // 6. Distances courtes isolées (200-800 m) → fractionné
+  if (/(?<!\d)(200|300|400|500|800)(?!\d)/.test(n))
+    return 'fractionne'
+
+  // 7. Distances longues isolées (1000-5000 m) → seuil/tempo
+  if (/(?<!\d)(1000|2000|3000|5000)(?!\d)/.test(n))
+    return 'seuil_tempo'
+
+  // 8. Compétition — exclure "course à pied"
   const isCourseAPied = n.includes('course à pied') || n.includes('course a pied')
   if (!isCourseAPied) {
     if (n.includes('race') || n.includes('compét') || n.includes('compet')
@@ -153,7 +165,7 @@ export function guessWorkoutType(name: string, sport: string): WorkoutType | nul
       return 'course'
   }
 
-  // 6. Sortie longue
+  // 9. Sortie longue
   if (n.includes('sortie longue') || /\bsl\b/.test(n) || n.includes('long run') || n.includes('lsl'))
     return 'sortie_longue'
 

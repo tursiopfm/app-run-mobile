@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { colors } from '@/lib/design/colors'
 import { sportLabel } from '@/lib/design/labels'
-import { guessIntensity, type IntensityKey } from '@/lib/activities/intensity'
+import { guessIntensity, guessWorkoutType, type IntensityKey, type WorkoutType } from '@/lib/activities/intensity'
 import type { HrZone } from '@/lib/health/hr-zones'
-import { EffortPopup, IntensityPopup } from '@/components/ui/ActivityPopups'
+import { EffortPopup, IntensityPopup, WorkoutTypePopup } from '@/components/ui/ActivityPopups'
 import { Dumbbell } from 'lucide-react'
 
 const INTENSITY_EMOJI: Record<string, string> = {
@@ -14,6 +14,16 @@ const INTENSITY_EMOJI: Record<string, string> = {
   endurance_active: '🔄',
   seuil:            '🎯',
   vma:              '🔥',
+}
+
+const WORKOUT_TYPE_EMOJI: Record<string, string> = {
+  sortie_longue: '🐢',
+  fractionne:    '⌚',
+  seuil_tempo:   '⏱️',
+  cotes:         '⛰️',
+  course:        '🏆',
+  runtaf:        '🏃',
+  velotaf:       '🚴',
 }
 
 const SPORT_COLORS: Record<string, string> = {
@@ -141,7 +151,7 @@ export function ActivityCard({
   onClick?: () => void
   hrZones?: HrZone[]
 }) {
-  const [popup, setPopup]     = useState<null | 'effort' | 'intensity'>(null)
+  const [popup, setPopup]     = useState<null | 'effort' | 'intensity' | 'workoutType'>(null)
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
@@ -163,6 +173,7 @@ export function ActivityCard({
       })
     : null
   const intensityKey = (a.manual_intensity as IntensityKey | null) ?? computedIntensity
+  const workoutTypeKey = (a.manual_workout_type as WorkoutType | null) ?? guessWorkoutType(a.name, effectiveSport)
   const cesVal = a.ces ?? 0
   const effortColor =
     cesVal <= 40  ? '#38bdf8' :
@@ -177,6 +188,9 @@ export function ActivityCard({
       )}
       {popup === 'intensity' && intensityKey && (
         <IntensityPopup intensityKey={intensityKey} onClose={() => setPopup(null)} />
+      )}
+      {popup === 'workoutType' && workoutTypeKey && (
+        <WorkoutTypePopup workoutTypeKey={workoutTypeKey} onClose={() => setPopup(null)} />
       )}
       <div
         className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]"
@@ -235,6 +249,16 @@ export function ActivityCard({
                   style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                 >
                   {INTENSITY_EMOJI[intensityKey] ?? '❓'}
+                </button>
+              )}
+              {workoutTypeKey && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setPopup('workoutType') }}
+                  className="flex items-center justify-center text-[18px] leading-none"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                  aria-label="Type de séance"
+                >
+                  {WORKOUT_TYPE_EMOJI[workoutTypeKey] ?? '❓'}
                 </button>
               )}
             </div>

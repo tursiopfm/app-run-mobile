@@ -339,14 +339,15 @@ Zone 5  →  vma              🔥  (VO₂max, effort maximal)
 ```ts
 type WorkoutType =
   | 'sortie_longue'  // 🐢
-  | 'fractionne'     // ⌚
+  | 'fractionne'     // ⌚  intervals courts (200-800 m, VMA)
+  | 'seuil_tempo'    // ⏱️  intervals longs (1000-5000 m) ou tempo run
   | 'cotes'          // ⛰️
   | 'course'         // 🏆
   | 'runtaf'         // 🏃‍♂️💻  (sport ∈ {Run, TrailRun} uniquement)
   | 'velotaf'        // 🚴🏻💻  (sport ∈ {Ride, EBikeRide, VirtualRide} uniquement)
 ```
 
-Six valeurs. Pas de `'autre'` — l'absence de type = `null`.
+Sept valeurs. Pas de `'autre'` — l'absence de type = `null`.
 
 Override manuel : colonne `manual_workout_type` en base de données.
 
@@ -354,7 +355,7 @@ Override manuel : colonne `manual_workout_type` en base de données.
 
 | `WorkoutType` | Sports autorisés |
 |---|---|
-| `sortie_longue`, `fractionne`, `cotes`, `course` | tous |
+| `sortie_longue`, `fractionne`, `seuil_tempo`, `cotes`, `course` | tous |
 | `runtaf` | `Run`, `TrailRun` |
 | `velotaf` | `Ride`, `EBikeRide`, `VirtualRide` |
 
@@ -365,6 +366,8 @@ Dans l'UI, les options affichées sont filtrées par sport ; si le sport change 
 
 Une "Sortie longue" peut être en `footing` (Z2) **ou** `endurance_active` (Z3) — les deux dimensions sont indépendantes.
 
+**Fractionné vs Seuil/Tempo** : les fractions courtes (200-800 m, ~30-90 s à allure VMA) sont des intervals **VMA / Repetition** au sens Daniels → `fractionne`. Les fractions longues (1000-5000 m, ~3-15 min) sont typiquement au **seuil ou tempo** → `seuil_tempo`. Un mot-clé explicite dans le titre (`seuil`, `vma`) force le type indépendamment de la distance.
+
 ### 5.5 bis Détection `guessWorkoutType(name, sport)`
 
 Ordre de priorité (premier match gagne) :
@@ -374,10 +377,13 @@ Ordre de priorité (premier match gagne) :
 | 1 | sport ∈ {Run, TrailRun} ET nom contient `runtaf`, `run taf`, `taf`, ou nom exact `Home 🏃‍♂️` / `🏃‍♂️ Home` | `runtaf` |
 | 2 | sport ∈ {Ride, EBikeRide, VirtualRide} ET nom contient `vélotaf`, `velotaf`, `vélo taf`, `taf`, ou nom exact `Home 🚴🏻` / `🚴🏻 Home` | `velotaf` |
 | 3 | nom contient `côtes`, `cotes`, `côte`, `cote`, `montée`, `montee`, `hill` | `cotes` |
-| 4 | nom contient une distance isolée (200/300/400/500/800/1000), ou `vma`, `interval`, `fractionné`, `fractionnée`, `répétition`, `repetition` | `fractionne` |
-| 5 | nom contient `race`, `compét`, `compet`, `dossard`, `chrono`, ` pb `, ` pr `, `10k`, `semi`, `marathon` (et pas `course à pied`) | `course` |
-| 6 | nom contient `sortie longue`, mot exact `sl`, `long run`, `lsl` | `sortie_longue` |
-| 7 | aucun match | `null` |
+| 4 | nom contient `vma`, `interval`, `fractionné`, `fractionnée`, `répétition`, `repetition` (mots-clés explicites — prioritaires sur la distance) | `fractionne` |
+| 5 | nom contient `seuil`, `tempo`, `threshold` (mots-clés explicites) | `seuil_tempo` |
+| 6 | nom contient une distance isolée 200/300/400/500/800 m (non collée à d'autres chiffres) | `fractionne` |
+| 7 | nom contient une distance isolée 1000/2000/3000/5000 m (non collée à d'autres chiffres) | `seuil_tempo` |
+| 8 | nom contient `race`, `compét`, `compet`, `dossard`, `chrono`, ` pb `, ` pr `, `10k`, `semi`, `marathon` (et pas `course à pied`) | `course` |
+| 9 | nom contient `sortie longue`, mot exact `sl`, `long run`, `lsl` | `sortie_longue` |
+| 10 | aucun match | `null` |
 
 ### 5.6 Fallback CES & mots-clés intensité — SUPPRIMÉS
 
