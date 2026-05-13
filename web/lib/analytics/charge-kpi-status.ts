@@ -32,6 +32,6 @@ export function kpiStatusFreshness(tsb: number): KpiStatus<FreshnessStatusId> {
   if (tsb >= FRESHNESS.veryFresh)     return { id: 'very-fresh',     color: palette.seriesBlue }
   if (tsb >= FRESHNESS.fresh)         return { id: 'fresh',          color: palette.seriesBlue }
   if (tsb >  FRESHNESS.normalFatigue) return { id: 'balanced',       color: palette.seriesGreen }
-  if (tsb >  FRESHNESS.highFatigue)   return { id: 'normal-fatigue', color: palette.seriesOrange }
+  if (tsb >  FRESHNESS.highFatigue)   return { id: 'normal-fatigue', color: palette.seriesYellow }
   return                                     { id: 'high-fatigue',   color: palette.seriesRed }
 }
