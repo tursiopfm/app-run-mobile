@@ -87,14 +87,14 @@ export function IntensityBlock({ sportOverviews, onHide }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-[6px]">
         <div className="flex items-center gap-1">
-          <span className="text-[16px] font-semibold text-trail-muted">Intensité 30j —</span>
+          <span className="text-[16px] font-semibold text-trail-muted">Type de séance 30j —</span>
           <span className="text-[16px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
           <span className="text-[16px] ml-0.5">{cfg.emoji}</span>
         </div>
         <button
           onClick={() => setShowModal(true)}
           className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
-          aria-label="Paramètres intensité"
+          aria-label="Paramètres type de séance"
         >
           ⋮
         </button>
@@ -145,7 +145,7 @@ export function IntensityBlock({ sportOverviews, onHide }: Props) {
 
       {showModal && (
         <SportSettingsModal
-          title="Répartition d'intensité"
+          title="Type de séance"
           allKeys={ALL_SPORT_KEYS}
           visible={settings.visible}
           defaultKey={settings.default}
