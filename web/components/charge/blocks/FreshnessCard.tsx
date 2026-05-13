@@ -1,5 +1,6 @@
 'use client'
 
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { BlockCard } from '../BlockCard'
 import { Gauge } from '../Gauge'
 import { computeFreshness } from '@/lib/analytics/charge-insights'
@@ -27,11 +28,16 @@ export function FreshnessCard({ payload }: { payload: ChargeSportPayload }) {
     { from: FRESHNESS.normalFatigue,   to: FRESHNESS.fresh,          color: colors.greenOk },
     { from: FRESHNESS.fresh,           to: max,                      color: colors.seriesBlue },
   ]
-  const delta = Math.round(f.deltaVsWeekAgo)
-  const arrow = delta > 1 ? '↗' : delta < -1 ? '↘' : '→'
-  const qualifier = delta > 1  ? "plus frais qu'il y a 7 jours"
-                  : delta < -1 ? "plus fatigué qu'il y a 7 jours"
-                  :              'stable depuis 7 jours'
+
+  const delta       = Math.round(f.deltaVsWeekAgo)
+  const isUp        = delta > 1
+  const isDown      = delta < -1
+  const TrendIcon   = isUp ? TrendingUp : isDown ? TrendingDown : Minus
+  const trendColor  = isUp ? colors.greenOk : isDown ? colors.runRed : colors.subtleText
+  const qualifier   = isUp   ? "plus frais qu'il y a 7 jours"
+                    : isDown ? "plus fatigué qu'il y a 7 jours"
+                    :          'stable depuis 7 jours'
+  const previousTsb = f.tsb - f.deltaVsWeekAgo
 
   return (
     <BlockCard title={L.blocks.freshness} helpTitle={L.blocks.freshness} helpBody={L.help.freshness}>
@@ -40,11 +46,23 @@ export function FreshnessCard({ payload }: { payload: ChargeSportPayload }) {
           <p className="text-[22px] font-black text-trail-text">{Math.round(f.tsb)}</p>
           <p className="text-[12px] font-semibold text-trail-text">{zoneLabel}</p>
         </div>
-        <span className="text-[12px] text-trail-muted text-right leading-snug">
-          {arrow} {delta > 0 ? '+' : ''}{delta} · {qualifier}
+        <span className="inline-flex items-center gap-1.5 text-[12px] text-trail-muted text-right leading-snug">
+          <TrendIcon size={14} strokeWidth={2.5} color={trendColor} aria-hidden />
+          <span>
+            <strong style={{ color: trendColor }}>{delta > 0 ? '+' : ''}{delta}</strong>
+            <span className="mx-1 opacity-60">·</span>
+            {qualifier}
+          </span>
         </span>
       </div>
-      <Gauge value={f.tsb} min={min} max={max} zones={zones} />
+      <Gauge
+        value={f.tsb}
+        previousValue={previousTsb}
+        previousLabel={`Il y a 7 jours : ${Math.round(previousTsb)}`}
+        min={min}
+        max={max}
+        zones={zones}
+      />
       <p className="mt-3 text-[11px] text-trail-muted leading-[16px]">{ZONE_INTERPRET[f.zone]}</p>
     </BlockCard>
   )
