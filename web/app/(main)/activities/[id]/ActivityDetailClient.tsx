@@ -19,8 +19,8 @@ import { vapPaceSec } from '@/lib/activities/vap'
 import { sportLabel } from '@/lib/design/labels'
 import {
   asIntensityKey,
+  effectiveWorkoutType,
   guessIntensity,
-  guessWorkoutType,
   type IntensityKey,
   type WorkoutType,
 } from '@/lib/activities/intensity'
@@ -280,7 +280,7 @@ export function ActivityDetailClient({
     })
 
   const workoutTypeKey: WorkoutType | null =
-    (a.manual_workout_type as WorkoutType | null) ?? guessWorkoutType(a.name, effectiveSport)
+    effectiveWorkoutType(a.manual_workout_type, a.name, effectiveSport)
 
   // Pace / speed tile
   let paceLabel: string

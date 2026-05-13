@@ -119,9 +119,12 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
     activityMaxHr: a.max_hr,
     movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
   })
-  const computedWorkoutType  = guessWorkoutType(name, sport)
-  const displayedIntensity   = intensity   ?? computedIntensity
-  const displayedWorkoutType = workoutType ?? computedWorkoutType
+  const computedWorkoutType = guessWorkoutType(name, sport)
+  const displayedIntensity  = intensity ?? computedIntensity
+  // 'none' is the explicit "no type" override that disables auto-detection.
+  const displayedWorkoutType = workoutType === 'none'
+    ? null
+    : (workoutType ?? computedWorkoutType)
 
   function availableWorkoutTypes(s: string) {
     return WORKOUT_TYPE_OPTIONS.filter(o => !o.sports || o.sports.includes(s))
@@ -295,10 +298,14 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
               ...availableWorkoutTypes(sport).map(o => ({ value: o.value, label: o.label })),
               { value: '__none__', label: '? Non défini' },
             ]}
-            selected={displayedWorkoutType ?? '__none__'}
+            selected={workoutType === 'none' ? '__none__' : (displayedWorkoutType ?? '__none__')}
             onSelect={v => {
-              if (v === '__none__') setWorkoutType(null)
-              else setWorkoutType(v === displayedWorkoutType ? null : v)
+              if (v === '__none__') {
+                // Toggle: if already explicitly 'none', go back to auto-detect.
+                setWorkoutType(workoutType === 'none' ? null : 'none')
+              } else {
+                setWorkoutType(v === displayedWorkoutType ? null : v)
+              }
             }}
           />
         </SectionCard>

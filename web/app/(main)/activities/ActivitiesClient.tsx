@@ -9,8 +9,8 @@ import { sportLabel } from '@/lib/design/labels'
 import {
   INTENSITY_OPTIONS,
   WORKOUT_TYPE_OPTIONS,
+  effectiveWorkoutType,
   guessIntensity,
-  guessWorkoutType,
   type IntensityKey,
   type WorkoutType,
 } from '@/lib/activities/intensity'
@@ -693,7 +693,7 @@ export default function ActivitiesClient({ initial, hasMore }: { initial: Activi
     if (filter.workoutType !== 'Toutes') {
       list = list.filter(a => {
         const sport = a.manual_sport_type ?? a.sport_type
-        const key = (a.manual_workout_type as WorkoutType | null) ?? guessWorkoutType(a.name, sport)
+        const key = effectiveWorkoutType(a.manual_workout_type, a.name, sport)
         if (filter.workoutType === '__none__') return key === null
         return key === filter.workoutType
       })

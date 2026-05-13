@@ -11,10 +11,36 @@ const INTENSITY_KEYS: ReadonlySet<string> = new Set([
   'recuperation', 'footing', 'endurance_active', 'seuil', 'vma',
 ])
 
+const WORKOUT_TYPE_KEYS: ReadonlySet<string> = new Set([
+  'sortie_longue', 'fractionne', 'seuil_tempo', 'cotes', 'course', 'runtaf', 'velotaf',
+])
+
 // Some legacy rows have invalid manual_intensity values (e.g. "runtaf" stored
 // in the wrong column). Use this to coerce safely instead of casting blindly.
 export function asIntensityKey(value: string | null | undefined): IntensityKey | null {
   return value && INTENSITY_KEYS.has(value) ? (value as IntensityKey) : null
+}
+
+// Coerce manual_workout_type to a WorkoutType, treating 'none' as the explicit
+// "no type" override (disables auto-detection downstream).
+export function asWorkoutType(value: string | null | undefined): WorkoutType | null {
+  return value && WORKOUT_TYPE_KEYS.has(value) ? (value as WorkoutType) : null
+}
+
+// True when manual_workout_type explicitly opts out of auto-detection.
+export function isExplicitNoType(value: string | null | undefined): boolean {
+  return value === 'none'
+}
+
+// Effective workout type for display: explicit DB override → that type,
+// 'none' sentinel → null, otherwise auto-detect from the title + sport.
+export function effectiveWorkoutType(
+  manual: string | null | undefined,
+  name: string,
+  sport: string,
+): WorkoutType | null {
+  if (isExplicitNoType(manual)) return null
+  return asWorkoutType(manual) ?? guessWorkoutType(name, sport)
 }
 
 export type IntensityOption   = { key: IntensityKey; label: string }
