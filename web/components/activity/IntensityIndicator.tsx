@@ -37,15 +37,15 @@ export default function IntensityIndicator({
 
   const containerStyle: React.CSSProperties = {
     width: '100%',
-    height: 28,
-    padding: '3px 6px',
+    height: 26,
+    padding: '3px 5px',
     borderRadius: 8,
     border: '1px solid var(--ind-border)',
     background: 'var(--ind-bg)',
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
     boxShadow: 'var(--ind-shadow)',
     cursor: interactive ? 'pointer' : 'default',
     opacity: isEmpty ? 0.55 : 1,
@@ -55,8 +55,8 @@ export default function IntensityIndicator({
   const gauge = showGauge ? (
     <svg
       viewBox="0 0 100 70"
-      width="18"
-      height="13"
+      width="16"
+      height="12"
       aria-hidden="true"
       style={{ flexShrink: 0, opacity: isEmpty ? 0.5 : 1 }}
     >

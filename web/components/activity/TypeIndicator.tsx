@@ -169,15 +169,15 @@ export default function TypeIndicator({ type, onClick, className }: TypeIndicato
 
   const containerStyle: React.CSSProperties = {
     width: '100%',
-    height: '28px',
-    padding: '3px 6px',
+    height: '26px',
+    padding: '3px 5px',
     borderRadius: '8px',
     border: '1px solid var(--ind-border)',
     background: 'var(--ind-bg)',
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: '6px',
+    gap: '5px',
     boxShadow: 'var(--ind-shadow)',
     position: 'relative',
     overflow: 'hidden',
@@ -187,8 +187,8 @@ export default function TypeIndicator({ type, onClick, className }: TypeIndicato
   }
 
   const iconWrapStyle: React.CSSProperties = {
-    width: '18px',
-    height: '18px',
+    width: '16px',
+    height: '16px',
     flexShrink: 0,
     filter: isEmpty ? undefined : `drop-shadow(0 0 2px ${color}88)`,
   }
@@ -202,7 +202,7 @@ export default function TypeIndicator({ type, onClick, className }: TypeIndicato
 
   const valueStyle: React.CSSProperties = {
     fontFamily: "'Bebas Neue', sans-serif",
-    fontSize: '12px',
+    fontSize: '11px',
     lineHeight: 1,
     letterSpacing: '0.3px',
     color,

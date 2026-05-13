@@ -51,11 +51,11 @@ function MetricTile({ label, value, unit, color }: {
   label: string; value: string; unit: string; color: string
 }) {
   return (
-    <div className="rounded-[10px] bg-trail-surface px-[10px] py-[8px] flex-shrink-0">
-      <p className="text-[11px] text-trail-muted">{label}</p>
-      <div className="flex items-baseline gap-[3px] mt-[2px]">
-        <span className="text-[17px] font-bold" style={{ color }}>{value}</span>
-        {unit && <span className="text-[11px] text-trail-muted">{unit}</span>}
+    <div className="rounded-[8px] bg-trail-surface px-[7px] py-[6px] flex-shrink-0">
+      <p className="text-[10px] text-trail-muted">{label}</p>
+      <div className="flex items-baseline gap-[2px] mt-[1px]">
+        <span className="text-[14px] font-bold" style={{ color }}>{value}</span>
+        {unit && <span className="text-[10px] text-trail-muted">{unit}</span>}
       </div>
     </div>
   )
@@ -185,7 +185,7 @@ export function ActivityCard({
             <p className="text-[15px] font-medium mt-[6px] text-trail-text break-words leading-tight">
               {a.name}
             </p>
-            <div className="flex gap-[6px] mt-[4px] overflow-x-auto pb-0.5">
+            <div className="flex gap-[4px] mt-[4px] overflow-x-auto pb-0.5">
               <MetricTile label="Distance"    value={km}           unit="km"         color={colors.chargeOrange} />
               <MetricTile label="Durée"       value={dur}          unit=""           color={colors.seriesGreen}  />
               <MetricTile label="D+"          value={dPlus}        unit="m"          color={colors.seriesBlue}   />
@@ -193,7 +193,7 @@ export function ActivityCard({
             </div>
           </div>
 
-          <div className="flex flex-col flex-shrink-0 relative" style={{ width: 140, justifyContent: 'flex-end' }}>
+          <div className="flex flex-col flex-shrink-0 relative" style={{ width: 110, justifyContent: 'flex-end' }}>
             {onEdit && (
               <button
                 onClick={(e) => { e.stopPropagation(); if (onEdit) onEdit(a) }}

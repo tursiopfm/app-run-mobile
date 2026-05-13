@@ -34,15 +34,15 @@ export default function ChargeIndicator({
 
   const containerStyle: React.CSSProperties = {
     width: '100%',
-    height: 28,
-    padding: '3px 6px',
+    height: 26,
+    padding: '3px 5px',
     borderRadius: 8,
     border: '1px solid var(--ind-border)',
     background: 'var(--ind-bg)',
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
     boxShadow: 'var(--ind-shadow)',
     cursor: onClick ? 'pointer' : 'default',
     boxSizing: 'border-box',
@@ -50,8 +50,8 @@ export default function ChargeIndicator({
 
   const iconWrapperStyle: React.CSSProperties = {
     flexShrink: 0,
-    width: 18,
-    height: 18,
+    width: 16,
+    height: 16,
     color,
     filter: `drop-shadow(0 0 2px ${color}88)`,
     display: 'flex',
@@ -85,7 +85,7 @@ export default function ChargeIndicator({
 
   const valueStyle: React.CSSProperties = {
     fontFamily: "'Bebas Neue', sans-serif",
-    fontSize: 12,
+    fontSize: 11,
     lineHeight: 1,
     color,
     textShadow: `0 0 4px ${color}66`,
