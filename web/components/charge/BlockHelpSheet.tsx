@@ -14,7 +14,7 @@ export function BlockHelpSheet({ title, body, onClose }: Props) {
       >
         <div className="w-10 h-1 rounded-full bg-trail-border mx-auto mb-4" />
         <h2 className="text-[16px] font-semibold text-trail-text mb-3">{title}</h2>
-        <p className="text-[13px] text-trail-muted leading-[19px]">{body}</p>
+        <p className="text-[13px] text-trail-muted leading-[19px] whitespace-pre-line">{body}</p>
         <button
           onClick={onClose}
           className="mt-5 w-full py-2.5 rounded-[10px] bg-trail-surface border border-trail-border text-[14px] font-semibold text-trail-text"

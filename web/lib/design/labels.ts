@@ -155,17 +155,39 @@ export const charge = {
     insights:              'Lecture rapide',
   },
 
-  // Status headlines (matches StatusId)
-  status: {
-    insufficient:    "Pas assez de données pour estimer ta forme. Reviens après quelques séances.",
-    overloaded:      "Charge élevée à surveiller. Récupération conseillée.",
-    peak:            "Pic de charge cette semaine. Reste attentif à la récupération.",
-    loaded:          "Fatigue normale d'entraînement. C'est cohérent en phase de charge.",
-    'under-trained': "Tu es très frais mais ta base de forme est basse. Tu peux remonter le volume.",
-    'very-fresh':    "Tu es bien reposé. Bonne fenêtre pour une séance intense.",
-    light:           "Charge récente plus faible que d'habitude. Utile si tu récupères.",
-    progressing:     "Progression élevée. Tu charges plus que ta moyenne.",
-    balanced:        "Charge équilibrée. Tu peux suivre ton plan normalement.",
+  // Coach verdict (matches StatusId). action = verbe d'action en gras ; reason = phrase courte.
+  verdict: {
+    insufficient:    { action: "Pas encore assez de données.",        reason: "Reviens après quelques séances pour avoir un verdict fiable." },
+    overloaded:      { action: "Lève le pied 1-2 jours.",             reason: "Ta fatigue est marquée, la récupération devient prioritaire." },
+    peak:            { action: "Pic de charge cette semaine.",        reason: "Soigne ta récupération avant de remettre une grosse séance." },
+    loaded:          { action: "Tu peux maintenir le rythme.",        reason: "Fatigue normale pour ta phase de charge — ça passe." },
+    'under-trained': { action: "Tu peux remonter le volume.",         reason: "Tu es très frais mais ta base reste à construire." },
+    'very-fresh':    { action: "Bonne fenêtre pour intensifier.",     reason: "Tu es bien reposé, c'est le moment d'une séance qualité." },
+    light:           { action: "Charge légère cette semaine.",        reason: "Utile si tu récupères — sinon tu peux relancer." },
+    progressing:     { action: "Continue à charger prudemment.",      reason: "Tu progresses au-dessus de ta moyenne, surveille les signaux." },
+    balanced:        { action: "Suis ton plan normalement.",          reason: "Charge et fraîcheur sont équilibrées." },
+  },
+
+  // Mots-statut sous les 3 KPIs (mappés depuis charge-kpi-status.ts)
+  kpiStatus: {
+    fatigue: {
+      high:  'Élevée',
+      usual: 'Habituelle',
+      low:   'Modérée',
+    },
+    fitness: {
+      building:     'À construire',
+      progressing:  'En progression',
+      solid:        'Solide',
+      'very-solid': 'Très solide',
+    },
+    freshness: {
+      'very-fresh':     'Très frais',
+      fresh:            'Frais',
+      balanced:         'Équilibrée',
+      'normal-fatigue': 'Légère fatigue',
+      'high-fatigue':   'Fatigué',
+    },
   },
 
   // Freshness zone short labels (used by gauge)
@@ -189,7 +211,7 @@ export const charge = {
 
   // Bottom-sheet help text (per block)
   help: {
-    status:                "Synthèse de ta charge actuelle, basée sur le rapport entre ta fatigue récente (≈7j) et ta base de forme (≈42j). Les valeurs techniques ATL/CTL/TSB sont disponibles dans le tooltip.",
+    status:                "L'État du jour synthétise ta forme actuelle en comparant ta fatigue récente à ta condition de fond.\n\n• Fatigue récente — ton niveau de charge sur les 7 derniers jours. Plus c'est haut, plus tu accumules.\n\n• Base de forme — ta condition construite sur ~6 semaines d'entraînement. Elle monte progressivement avec la régularité.\n\n• Fraîcheur — différence entre ta base et ta fatigue. Négatif = fatigué, positif = reposé. Un peu négatif est normal en phase de charge.\n\nLe verdict en haut combine ces 3 signaux pour te dire si tu peux pousser, maintenir, ou alléger.",
     acuteChronic:          "Compare ta charge récente à ta charge habituelle. Un ratio > 1.5 indique un pic ; < 0.75 une période plus légère. Sert d'indicateur, pas de diagnostic.",
     freshness:             "Différence entre ta base de forme et ta fatigue récente (TSB en jargon). Très négatif = fatigue marquée ; très positif = grande fraîcheur (mais attention à l'inactivité prolongée).",
     weeklyLoad:            "Charge totale par semaine, séparée par sport. La ligne montre la moyenne glissante sur 4 semaines.",
