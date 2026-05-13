@@ -141,7 +141,7 @@ export const charge = {
 
   // Block titles
   blocks: {
-    status:                'État du jour',
+    status:                'État de forme du jour',
     acuteChronic:          'Charge 7j vs base habituelle',
     freshness:             'Fraîcheur',
     weeklyLoad:            'Charge hebdomadaire (10 semaines)',
@@ -211,7 +211,7 @@ export const charge = {
 
   // Bottom-sheet help text (per block)
   help: {
-    status:                "L'État du jour synthétise ta forme actuelle en comparant ta fatigue récente à ta condition de fond.\n\n• Fatigue récente — ton niveau de charge sur les 7 derniers jours. Plus c'est haut, plus tu accumules.\n\n• Base de forme — ta condition construite sur ~6 semaines d'entraînement. Elle monte progressivement avec la régularité.\n\n• Fraîcheur — différence entre ta base et ta fatigue. Négatif = fatigué, positif = reposé. Un peu négatif est normal en phase de charge.\n\nLe verdict en haut combine ces 3 signaux pour te dire si tu peux pousser, maintenir, ou alléger.",
+    status:                "L'État de forme du jour synthétise ta forme actuelle en comparant ta fatigue récente à ta condition de fond.\n\n• Fatigue récente — ton niveau de charge sur les 7 derniers jours. Plus c'est haut, plus tu accumules.\n\n• Base de forme — ta condition construite sur ~6 semaines d'entraînement. Elle monte progressivement avec la régularité.\n\n• Fraîcheur — différence entre ta base et ta fatigue. Négatif = fatigué, positif = reposé. Un peu négatif est normal en phase de charge.\n\nLe verdict en haut combine ces 3 signaux pour te dire si tu peux pousser, maintenir, ou alléger.",
     acuteChronic:          "Compare ta charge récente à ta charge habituelle. Un ratio > 1.5 indique un pic ; < 0.75 une période plus légère. Sert d'indicateur, pas de diagnostic.",
     freshness:             "Différence entre ta base de forme et ta fatigue récente (TSB en jargon). Très négatif = fatigue marquée ; très positif = grande fraîcheur (mais attention à l'inactivité prolongée).",
     weeklyLoad:            "Charge totale par semaine, séparée par sport. La ligne montre la moyenne glissante sur 4 semaines.",
