@@ -43,12 +43,12 @@ function makeSelectMock(rows: unknown[]) {
 beforeEach(() => jest.clearAllMocks())
 
 describe('getDashboardData', () => {
-  it('returns 60 daily metrics (all zeros) when no activities', async () => {
+  it('returns 90 daily metrics (all zeros) when no activities', async () => {
     mockCreateClient.mockResolvedValue(makeSelectMock([]))
     const result = await getDashboardData('user-1')
     expect(result.hasActivities).toBe(false)
     expect(result.recentActivities).toHaveLength(0)
-    expect(result.dailyMetrics).toHaveLength(60)
+    expect(result.dailyMetrics).toHaveLength(90)
     expect(result.dailyMetrics.every((m) => m.atl === 0 && m.ctl === 0)).toBe(true)
   })
 

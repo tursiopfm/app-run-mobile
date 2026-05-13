@@ -126,19 +126,36 @@ function mondayOfCurrentWeek(): Date {
   return mon
 }
 
-function buildWindowedLoads(rows: ActivityRow[], days: number): DailyLoad[] {
+// Construit une série quotidienne (UTC) de la charge CES sur `days` jours
+// glissants. Logique strictement identique à `getDailyLoadSeries` de
+// charge-insights.ts pour garantir que ATL/CTL/TSB du Cockpit collent à
+// ceux de l'onglet Charge.
+function buildWindowedLoads(
+  rows: ActivityRow[],
+  days: number,
+  now: Date = new Date(),
+): DailyLoad[] {
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+  const start = new Date(end)
+  start.setUTCDate(start.getUTCDate() - (days - 1))
+  const startKey = start.toISOString().slice(0, 10)
+  const endKey   = end.toISOString().slice(0, 10)
+
   const loadMap = new Map<string, number>()
   for (const row of rows) {
-    const date = row.start_time.slice(0, 10)
-    loadMap.set(date, (loadMap.get(date) ?? 0) + (row.ces ?? 0))
+    const ces = row.ces
+    if (ces == null || !Number.isFinite(ces)) continue
+    const key = row.start_time.slice(0, 10)
+    if (key < startKey || key > endKey) continue
+    loadMap.set(key, (loadMap.get(key) ?? 0) + ces)
   }
+
   const result: DailyLoad[] = []
-  const today = new Date()
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(today)
-    d.setDate(d.getDate() - i)
-    const date = d.toISOString().slice(0, 10)
-    result.push({ date, ces: loadMap.get(date) ?? 0 })
+  const cursor = new Date(start)
+  while (cursor <= end) {
+    const key = cursor.toISOString().slice(0, 10)
+    result.push({ date: key, ces: loadMap.get(key) ?? 0 })
+    cursor.setUTCDate(cursor.getUTCDate() + 1)
   }
   return result
 }
@@ -258,7 +275,9 @@ function buildSportOverview(
     monthlyDPlus[i] = Math.round(monthlyDPlus[i])
   }
 
-  const loads   = buildWindowedLoads(acts, 60)
+  // 90 jours : même fenêtre que l'onglet Charge (getDailyLoadSeries) pour
+  // que la convergence EWMA du CTL (k=42) soit identique → mêmes ATL/CTL/TSB.
+  const loads   = buildWindowedLoads(acts, 90, now)
   const metrics = buildDailyMetrics(loads)
   const latest  = metrics[metrics.length - 1] ?? { atl: 0, ctl: 0, tsb: 0 }
   const last7Tsb = metrics.slice(-7).map((m) => m.tsb)
@@ -414,7 +433,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
 
   const activities = (rows ?? []) as ActivityRow[]
 
-  const globalLoads = buildWindowedLoads(activities, 60)
+  const globalLoads = buildWindowedLoads(activities, 90)
   const dailyMetrics = buildDailyMetrics(globalLoads)
 
   const sevenDaysAgo = new Date()
