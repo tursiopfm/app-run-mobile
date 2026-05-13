@@ -1,7 +1,8 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { ChevronLeft } from 'lucide-react'
 import { getServerUser } from '@/lib/database/get-user'
 import { getIsAdmin } from '@/lib/database/get-admin'
-import { AdminTabs } from './components/AdminTabs'
 import { TabDashboard } from './components/TabDashboard'
 import { TabUsers } from './components/TabUsers'
 import { TabDeployments } from './components/TabDeployments'
@@ -11,6 +12,14 @@ import { TabSync } from './components/TabSync'
 
 const VALID_TABS = ['dashboard', 'users', 'deployments', 'webhooks', 'system', 'sync'] as const
 type Tab = typeof VALID_TABS[number]
+
+const TAB_TITLES: Record<Exclude<Tab, 'dashboard'>, string> = {
+  users: 'Users',
+  deployments: 'Déploiements',
+  webhooks: 'Webhooks',
+  system: 'Système',
+  sync: 'Sync',
+}
 
 export default async function AdminPage({
   searchParams,
@@ -32,9 +41,22 @@ export default async function AdminPage({
         <p className="text-xs text-trail-warning font-medium">⚠ Zone admin — accès restreint</p>
       </div>
 
-      <AdminTabs activeTab={activeTab} />
-
       <div className="px-4 py-4">
+        {activeTab !== 'dashboard' && (
+          <div className="flex items-center justify-between mb-4">
+            <Link
+              href="/admin"
+              className="flex items-center gap-1 text-xs font-semibold text-trail-muted hover:text-trail-primary transition-colors"
+            >
+              <ChevronLeft size={14} />
+              Admin
+            </Link>
+            <p className="text-xs font-bold uppercase tracking-widest text-trail-text">
+              {TAB_TITLES[activeTab]}
+            </p>
+          </div>
+        )}
+
         {activeTab === 'dashboard'   && <TabDashboard />}
         {activeTab === 'users'       && <TabUsers />}
         {activeTab === 'deployments' && <TabDeployments />}

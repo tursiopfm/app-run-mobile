@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { createServiceClient } from '@/lib/database/supabase-server'
 import { fetchVercelDeployments } from '@/lib/admin/vercel'
-import { formatRelativeTime } from '@/lib/admin/format'
-import { Users, Plug, Activity, Webhook, AlertTriangle, Rocket } from 'lucide-react'
+import { formatDateTime } from '@/lib/admin/format'
+import { envSummary } from '@/lib/admin/system-env'
+import { Users, Plug, Activity, Webhook, Rocket, Settings } from 'lucide-react'
 
 const DAY_MS = 86400000
 
@@ -19,8 +20,8 @@ async function fetchDashboardStats() {
     { count: activity24hCount },
     { data: lastActivity },
     { count: webhookCount },
+    { data: lastWebhook },
     { count: errorCount },
-    { data: lastError },
     deployments,
   ] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
@@ -30,10 +31,9 @@ async function fetchDashboardStats() {
     supabase.from('activities').select('*', { count: 'exact', head: true }).gte('created_at', since24h),
     supabase.from('activities').select('created_at').order('created_at', { ascending: false }).limit(1).maybeSingle(),
     supabase.from('webhook_logs').select('*', { count: 'exact', head: true }),
+    supabase.from('webhook_logs').select('created_at').order('created_at', { ascending: false }).limit(1).maybeSingle(),
     supabase.from('webhook_logs').select('*', { count: 'exact', head: true })
       .gte('status_code', 500).gte('created_at', since24h),
-    supabase.from('webhook_logs').select('created_at').gte('status_code', 500)
-      .order('created_at', { ascending: false }).limit(1).maybeSingle(),
     fetchVercelDeployments(),
   ])
 
@@ -49,9 +49,10 @@ async function fetchDashboardStats() {
     activity24h: activity24hCount ?? 0,
     lastSyncAt: lastActivity?.created_at ?? null,
     webhookCount: webhookCount ?? 0,
+    lastWebhookAt: lastWebhook?.created_at ?? null,
     errorCount: errorCount ?? 0,
-    lastErrorAt: lastError?.created_at ?? null,
     lastDeploy: deployments[0] ?? null,
+    env: envSummary(),
   }
 }
 
@@ -76,6 +77,7 @@ function Card({ href, children }: { href: string; children: React.ReactNode }) {
 export async function TabDashboard() {
   const s = await fetchDashboardStats()
   const deployState = s.lastDeploy ? (STATE_LABEL[s.lastDeploy.state] ?? STATE_LABEL.CANCELED) : null
+  const envOk = s.env.missing === 0
 
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -99,7 +101,7 @@ export async function TabDashboard() {
         <p className="text-2xl font-bold text-trail-text">{s.activityCount}</p>
         <p className="text-xs text-trail-muted mt-0.5">Activités importées</p>
         <p className="text-[11px] text-trail-muted mt-1">
-          +{s.activity24h} <span className="opacity-70">24h</span> · sync {formatRelativeTime(s.lastSyncAt)}
+          +{s.activity24h} <span className="opacity-70">24h</span> · sync {formatDateTime(s.lastSyncAt)}
         </p>
       </Card>
 
@@ -107,17 +109,12 @@ export async function TabDashboard() {
         <Webhook size={18} className="text-trail-warning mb-2" />
         <p className="text-2xl font-bold text-trail-text">{s.webhookCount}</p>
         <p className="text-xs text-trail-muted mt-0.5">Webhooks reçus</p>
-      </Card>
-
-      <Card href="/admin?tab=webhooks">
-        <AlertTriangle size={18} className={`${s.errorCount > 0 ? 'text-trail-danger' : 'text-trail-success'} mb-2`} />
-        <p className="text-2xl font-bold text-trail-text">{s.errorCount}</p>
-        <p className="text-xs text-trail-muted mt-0.5">Erreurs (24h)</p>
-        {s.lastErrorAt && (
-          <p className="text-[11px] text-trail-muted mt-1">
-            dernière {formatRelativeTime(s.lastErrorAt)}
-          </p>
-        )}
+        <p className="text-[11px] text-trail-muted mt-1">
+          dernier {formatDateTime(s.lastWebhookAt)}
+        </p>
+        <p className={`text-[11px] mt-0.5 ${s.errorCount > 0 ? 'text-trail-danger' : 'text-trail-muted'}`}>
+          {s.errorCount} <span className="opacity-70">erreur{s.errorCount > 1 ? 's' : ''} 24h</span>
+        </p>
       </Card>
 
       <Card href="/admin?tab=deployments">
@@ -127,7 +124,10 @@ export async function TabDashboard() {
             <p className={`text-sm font-bold ${deployState.color}`}>{deployState.label}</p>
             <p className="text-xs text-trail-muted mt-0.5">{s.lastDeploy.environment}</p>
             <p className="text-[11px] text-trail-muted mt-1 font-mono truncate">
-              {s.lastDeploy.commitHash || '—'} · {formatRelativeTime(new Date(s.lastDeploy.createdAt).toISOString())}
+              {s.lastDeploy.commitHash || '—'}
+            </p>
+            <p className="text-[11px] text-trail-muted mt-0.5">
+              {formatDateTime(new Date(s.lastDeploy.createdAt).toISOString())}
             </p>
           </>
         ) : (
@@ -136,6 +136,17 @@ export async function TabDashboard() {
             <p className="text-xs text-trail-muted mt-0.5">Déploiement</p>
           </>
         )}
+      </Card>
+
+      <Card href="/admin?tab=system">
+        <Settings size={18} className={envOk ? 'text-trail-success mb-2' : 'text-trail-warning mb-2'} />
+        <p className={`text-2xl font-bold ${envOk ? 'text-trail-text' : 'text-trail-warning'}`}>
+          {s.env.present}/{s.env.total}
+        </p>
+        <p className="text-xs text-trail-muted mt-0.5">Système — env vars</p>
+        <p className="text-[11px] text-trail-muted mt-1">
+          {process.env.NODE_ENV ?? '—'} {envOk ? '· tout OK' : `· ${s.env.missing} manquant${s.env.missing > 1 ? 's' : ''}`}
+        </p>
       </Card>
     </div>
   )
