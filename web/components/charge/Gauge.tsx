@@ -14,7 +14,7 @@ export function Gauge({ value, min, max, zones, height = 14 }: Props) {
   const clamped = Math.max(min, Math.min(max, value))
   const pct = ((clamped - min) / (max - min)) * 100
   return (
-    <div className="w-full" style={{ height }}>
+    <div className="relative w-full" style={{ height, paddingTop: 5, paddingBottom: 5, marginTop: -5, marginBottom: -5, boxSizing: 'content-box' }}>
       <div className="relative w-full rounded-full overflow-hidden bg-trail-surface" style={{ height }}>
         {zones.map((z, i) => {
           const left  = ((z.from - min) / (max - min)) * 100
@@ -28,12 +28,17 @@ export function Gauge({ value, min, max, zones, height = 14 }: Props) {
             />
           )
         })}
-        <div
-          className="absolute top-[-3px] bottom-[-3px] w-[3px] rounded-full bg-trail-text"
-          style={{ left: `calc(${pct}% - 1.5px)` }}
-          aria-label={`Valeur ${value}`}
-        />
       </div>
+      <div
+        className="absolute w-[4px] rounded-full bg-trail-text"
+        style={{
+          left: `calc(${pct}% - 2px)`,
+          top: 0,
+          bottom: 0,
+          boxShadow: '0 0 0 1.5px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.45)',
+        }}
+        aria-label={`Valeur ${value}`}
+      />
     </div>
   )
 }
