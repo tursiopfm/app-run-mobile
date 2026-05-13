@@ -7,6 +7,16 @@ export type IntensityKey =
 export type WorkoutType =
   | 'sortie_longue' | 'fractionne' | 'seuil_tempo' | 'cotes' | 'course' | 'runtaf' | 'velotaf'
 
+const INTENSITY_KEYS: ReadonlySet<string> = new Set([
+  'recuperation', 'footing', 'endurance_active', 'seuil', 'vma',
+])
+
+// Some legacy rows have invalid manual_intensity values (e.g. "runtaf" stored
+// in the wrong column). Use this to coerce safely instead of casting blindly.
+export function asIntensityKey(value: string | null | undefined): IntensityKey | null {
+  return value && INTENSITY_KEYS.has(value) ? (value as IntensityKey) : null
+}
+
 export type IntensityOption   = { key: IntensityKey; label: string }
 export type SportOption       = { value: string; label: string }
 export type WorkoutTypeOption = { value: WorkoutType; label: string; sports?: string[] }

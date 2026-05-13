@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { colors } from '@/lib/design/colors'
 import { sportLabel } from '@/lib/design/labels'
-import { guessIntensity, guessWorkoutType, type IntensityKey, type WorkoutType } from '@/lib/activities/intensity'
+import { asIntensityKey, guessIntensity, guessWorkoutType, type WorkoutType } from '@/lib/activities/intensity'
 import { INTENSITY_KEY_TO_LEVEL } from '@/lib/activities/indicators'
 import type { HrZone } from '@/lib/health/hr-zones'
 import { EffortPopup, IntensityPopup, WorkoutTypePopup } from '@/components/ui/ActivityPopups'
@@ -157,7 +157,7 @@ export function ActivityCard({
         movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
       })
     : null
-  const intensityKey = (a.manual_intensity as IntensityKey | null) ?? computedIntensity
+  const intensityKey = asIntensityKey(a.manual_intensity) ?? computedIntensity
   const workoutTypeKey = (a.manual_workout_type as WorkoutType | null) ?? guessWorkoutType(a.name, effectiveSport)
 
   return (

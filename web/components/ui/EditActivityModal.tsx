@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { colors } from '@/lib/design/colors'
 import {
+  asIntensityKey,
   guessIntensity,
   guessWorkoutType,
   secondsToHMS,
@@ -108,7 +109,7 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
   )
   const [sport,       setSport]       = useState(effectiveSport)
   const [intensity,   setIntensity]   = useState<IntensityKey | null>(
-    a.manual_intensity as IntensityKey | null
+    asIntensityKey(a.manual_intensity)
   )
   const [workoutType, setWorkoutType] = useState<string | null>(a.manual_workout_type)
   const [saving,      setSaving]      = useState(false)
