@@ -22,7 +22,7 @@ export function Gauge({ value, min, max, zones, height = 14 }: Props) {
           return (
             <div
               key={i}
-              style={{ left: `${left}%`, width: `${width}%`, backgroundColor: z.color, opacity: 0.35 }}
+              style={{ left: `${left}%`, width: `${width}%`, backgroundColor: z.color }}
               className="absolute top-0 bottom-0"
               aria-hidden
             />
