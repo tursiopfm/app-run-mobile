@@ -190,8 +190,8 @@ const WORKOUT_TYPE_RULE: Record<string, string> = {
   seuil_tempo:   'titre contient "seuil", "tempo", "threshold", ou une distance 1000–5000 m isolée',
   cotes:         'titre contient "côtes", "montée", "hill" (priorité sur fractionné/seuil)',
   course:        'titre contient "race", "compét", "dossard", "chrono", "10k", "semi", "marathon"',
-  runtaf:        'titre contient "runtaf", "taf", "Home 🏃‍♂️" — uniquement si sport = Run/TrailRun',
-  velotaf:       'titre contient "vélotaf", "taf", "Home 🚴🏻" — uniquement si sport = Ride/EBike/VirtualRide',
+  runtaf:        'titre contient "runtaf", "taf", "Home 🏃‍♂️", ou à la fois "Home"/🏠 et "Office"/🏢 — uniquement si sport = Run/TrailRun',
+  velotaf:       'titre contient "vélotaf", "taf", "Home 🚴🏻", ou à la fois "Home"/🏠 et "Office"/🏢 — uniquement si sport = Ride/EBike/VirtualRide',
 }
 
 export function WorkoutTypePopup({

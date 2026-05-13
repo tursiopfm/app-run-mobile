@@ -22,11 +22,11 @@ export type SportOption       = { value: string; label: string }
 export type WorkoutTypeOption = { value: WorkoutType; label: string; sports?: string[] }
 
 export const INTENSITY_OPTIONS: IntensityOption[] = [
-  { key: 'recuperation',     label: '😴 Récupération'    },
-  { key: 'footing',          label: '🦶 Footing'          },
-  { key: 'endurance_active', label: '🔄 Endurance active' },
-  { key: 'seuil',            label: '🎯 Seuil'            },
-  { key: 'vma',              label: '🔥 VMA'              },
+  { key: 'recuperation',     label: '😴 Récupération' },
+  { key: 'footing',          label: '🦶 Endurance'    },
+  { key: 'endurance_active', label: '🔄 Tempo'        },
+  { key: 'seuil',            label: '🎯 Seuil'        },
+  { key: 'vma',              label: '🔥 VMA'          },
 ]
 
 export const WORKOUT_TYPE_OPTIONS: WorkoutTypeOption[] = [
@@ -124,6 +124,14 @@ export function guessIntensity(
 const RUN_SPORTS  = new Set(['Run', 'TrailRun'])
 const BIKE_SPORTS = new Set(['Ride', 'EBikeRide', 'VirtualRide'])
 
+// Home <-> Office commute pattern, regardless of emoji spacing.
+// Matches "Home" / "Office" (case-insensitive) or the 🏠 / 🏢 emojis.
+function isHomeOfficeCommute(name: string, n: string): boolean {
+  const hasHome   = /home/.test(n)   || name.includes('🏠')
+  const hasOffice = /office/.test(n) || name.includes('🏢')
+  return hasHome && hasOffice
+}
+
 export function guessWorkoutType(name: string, sport: string): WorkoutType | null {
   const n = name.toLowerCase()
 
@@ -131,7 +139,8 @@ export function guessWorkoutType(name: string, sport: string): WorkoutType | nul
   if (RUN_SPORTS.has(sport)) {
     if (n.includes('runtaf') || n.includes('run taf')
         || name.includes('Home 🏃‍♂️') || name.includes('🏃‍♂️ Home')
-        || n.includes('taf'))
+        || n.includes('taf')
+        || isHomeOfficeCommute(name, n))
       return 'runtaf'
   }
 
@@ -139,7 +148,8 @@ export function guessWorkoutType(name: string, sport: string): WorkoutType | nul
   if (BIKE_SPORTS.has(sport)) {
     if (n.includes('vélotaf') || n.includes('velotaf') || n.includes('vélo taf')
         || name.includes('Home 🚴🏻') || name.includes('🚴🏻 Home')
-        || n.includes('taf'))
+        || n.includes('taf')
+        || isHomeOfficeCommute(name, n))
       return 'velotaf'
   }
 
