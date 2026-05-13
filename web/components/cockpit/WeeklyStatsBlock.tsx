@@ -140,12 +140,14 @@ export function WeeklyStatsBlock({ sportOverviews, onHide }: Props) {
               style={{ flexShrink: 0, width: '100%', scrollSnapAlign: 'start' }}
             >
               {chartType === 'volume'
-                ? <CockpitComboChart data={comboData} height={300} />
+                ? <CockpitComboChart data={comboData} height={260} />
                 : <CockpitLineChart
                     data={ratioData}
                     series={[{ key: 'ratio', label: 'D+/km', color: colors.seriesGreen }]}
                     xInterval={0}
-                    height={300}
+                    height={260}
+                    showLabels
+                    labelFormatter={(v) => v.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}
                   />
               }
             </div>

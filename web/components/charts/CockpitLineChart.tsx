@@ -11,6 +11,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  LabelList,
 } from 'recharts'
 import { colors } from '@/lib/design/colors'
 import { chart } from '@/lib/design/layout'
@@ -31,10 +32,20 @@ type Props = {
   series:    LineSeries[]
   height?:   number
   xInterval?: number
-  showDots?: boolean   // false → no dot on each point (used in Charge tab)
+  showDots?:   boolean   // false → no dot on each point (used in Charge tab)
+  showLabels?: boolean   // true → display the numeric value above each point
+  labelFormatter?: (v: number) => string
 }
 
-export function CockpitLineChart({ data, series, height = chart.minHeight, xInterval, showDots = true }: Props) {
+export function CockpitLineChart({
+  data,
+  series,
+  height = chart.minHeight,
+  xInterval,
+  showDots = true,
+  showLabels = false,
+  labelFormatter,
+}: Props) {
   const interval = xInterval ?? Math.max(0, Math.floor(data.length / 8) - 1)
 
   return (
@@ -53,7 +64,7 @@ export function CockpitLineChart({ data, series, height = chart.minHeight, xInte
             interval={interval}
             stroke={colors.border}
             tickLine={false}
-            height={70}
+            height={48}
           />
           <YAxis
             tick={{ fontSize: 12, fill: colors.subtleText }}
@@ -84,7 +95,19 @@ export function CockpitLineChart({ data, series, height = chart.minHeight, xInte
               dot={showDots ? { r: chart.dotRadius, fill: s.color, strokeWidth: 0 } : false}
               activeDot={{ r: chart.dotRadius + 1 }}
               isAnimationActive={false}
-            />
+            >
+              {showLabels && (
+                <LabelList
+                  dataKey={s.key}
+                  position="top"
+                  offset={6}
+                  style={{ fontSize: 10, fill: s.color, fontWeight: 600 }}
+                  formatter={(v: number) =>
+                    v > 0 ? (labelFormatter ? labelFormatter(v) : String(v)) : ''
+                  }
+                />
+              )}
+            </Line>
           ))}
         </LineChart>
       </ResponsiveContainer>

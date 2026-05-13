@@ -55,7 +55,7 @@ export function CockpitComboChart({
             interval={0}
             stroke={colors.border}
             tickLine={false}
-            height={70}
+            height={48}
           />
           <YAxis
             yAxisId="bar"
