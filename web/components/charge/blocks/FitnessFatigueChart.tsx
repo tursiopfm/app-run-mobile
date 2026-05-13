@@ -31,9 +31,10 @@ export function FitnessFatigueChart({ payload }: { payload: ChargeSportPayload }
             <Tooltip
               contentStyle={{ backgroundColor: colors.cardBg, border: `1px solid ${colors.border}`, fontSize: 12 }}
               labelStyle={{ color: colors.text }}
-              itemSorter={(item) => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              itemSorter={(item: any) => {
                 const order: Record<string, number> = { atl: 0, ctl: 1, tsb: 2 }
-                return order[item.dataKey as string] ?? 99
+                return order[String(item?.dataKey)] ?? 99
               }}
               formatter={(v: number, n) =>
                 n === 'atl' ? [v, 'Fatigue récente (ATL)']
