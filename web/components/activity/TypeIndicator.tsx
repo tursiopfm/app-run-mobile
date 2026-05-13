@@ -148,78 +148,55 @@ export default function TypeIndicator({ type, onClick, className }: TypeIndicato
 
   const containerStyle: React.CSSProperties = {
     width: '100%',
-    height: '64px',
-    padding: '8px 10px',
-    borderRadius: '14px',
+    height: '28px',
+    padding: '3px 6px',
+    borderRadius: '8px',
     border: '1px solid #232826',
     background: 'linear-gradient(180deg, #1a1f1a 0%, #141816 100%)',
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: '10px',
+    gap: '6px',
     boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
     position: 'relative',
     overflow: 'hidden',
     cursor: onClick ? 'pointer' : undefined,
+    boxSizing: 'border-box',
   }
 
   const iconWrapStyle: React.CSSProperties = {
-    width: '32px',
-    height: '32px',
+    width: '18px',
+    height: '18px',
     flexShrink: 0,
-    filter: `drop-shadow(0 0 3px ${color}88)`,
+    filter: `drop-shadow(0 0 2px ${color}88)`,
   }
 
   const textWrapStyle: React.CSSProperties = {
     flex: 1,
     minWidth: 0,
-  }
-
-  const labelStyle: React.CSSProperties = {
-    fontSize: '9px',
-    letterSpacing: '0.12em',
-    color: '#D1D5DB',
-    fontWeight: 500,
-    whiteSpace: 'nowrap',
-    display: 'block',
-    marginBottom: '3px',
-    textTransform: 'uppercase',
+    display: 'flex',
+    alignItems: 'center',
   }
 
   const valueStyle: React.CSSProperties = {
     fontFamily: "'Bebas Neue', sans-serif",
-    fontSize: '18px',
+    fontSize: '12px',
     lineHeight: 1,
-    letterSpacing: '0.5px',
+    letterSpacing: '0.3px',
     color,
-    textShadow: `0 0 6px ${color}66`,
+    textShadow: `0 0 4px ${color}66`,
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     display: 'block',
   }
 
-  const diamondStyle: React.CSSProperties = {
-    position: 'absolute',
-    bottom: '4px',
-    right: '6px',
-    width: '6px',
-    height: '6px',
-    transform: 'rotate(45deg)',
-    background: color,
-    opacity: 0.5,
-    borderRadius: '1px',
-    pointerEvents: 'none',
-  }
-
   const content = (
     <>
       <div style={iconWrapStyle}>{renderTypeIcon(type)}</div>
       <div style={textWrapStyle}>
-        <span style={labelStyle}>TYPE :</span>
         <span style={valueStyle}>{label}</span>
       </div>
-      <div style={diamondStyle} aria-hidden="true" />
     </>
   )
 

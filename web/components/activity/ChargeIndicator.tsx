@@ -13,11 +13,11 @@ interface ChargeIndicatorProps {
 }
 
 const BAR_HEIGHTS: Record<1 | 2 | 3 | 4 | 5, number> = {
-  1: 4,
-  2: 6,
-  3: 8,
-  4: 10,
-  5: 12,
+  1: 2,
+  2: 2.5,
+  3: 3,
+  4: 4,
+  5: 5,
 }
 
 export default function ChargeIndicator({
@@ -34,15 +34,15 @@ export default function ChargeIndicator({
 
   const containerStyle: React.CSSProperties = {
     width: '100%',
-    height: 64,
-    padding: '8px 10px',
-    borderRadius: 14,
+    height: 28,
+    padding: '3px 6px',
+    borderRadius: 8,
     border: '1px solid #232826',
     background: 'linear-gradient(180deg, #1a1f1a 0%, #141816 100%)',
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 6,
     boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
     cursor: onClick ? 'pointer' : 'default',
     boxSizing: 'border-box',
@@ -50,10 +50,10 @@ export default function ChargeIndicator({
 
   const iconWrapperStyle: React.CSSProperties = {
     flexShrink: 0,
-    width: 32,
-    height: 24,
+    width: 18,
+    height: 18,
     color,
-    filter: `drop-shadow(0 0 4px ${color}88)`,
+    filter: `drop-shadow(0 0 2px ${color}88)`,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -64,19 +64,19 @@ export default function ChargeIndicator({
     minWidth: 0,
     display: 'flex',
     flexDirection: 'column',
-    gap: 4,
+    gap: 1,
   }
 
   const titleRowStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'baseline',
-    gap: 6,
+    gap: 4,
     minWidth: 0,
   }
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 9,
-    letterSpacing: '0.12em',
+    fontSize: 7,
+    letterSpacing: '0.08em',
     color: '#D1D5DB',
     fontWeight: 500,
     whiteSpace: 'nowrap',
@@ -85,17 +85,17 @@ export default function ChargeIndicator({
 
   const valueStyle: React.CSSProperties = {
     fontFamily: "'Bebas Neue', sans-serif",
-    fontSize: 18,
+    fontSize: 12,
     lineHeight: 1,
     color,
-    textShadow: `0 0 6px ${color}66`,
+    textShadow: `0 0 4px ${color}66`,
   }
 
   const barsRowStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'flex-end',
-    gap: 3,
-    height: 12,
+    gap: 2,
+    height: 5,
   }
 
   const dumbbell = (
@@ -122,10 +122,10 @@ export default function ChargeIndicator({
       flex: 1,
       height: BAR_HEIGHTS[i],
       background: barColor,
-      borderRadius: 2,
+      borderRadius: 1,
       clipPath: 'polygon(8% 100%, 100% 100%, 92% 0%, 0% 0%)',
       opacity: isDimmed ? 0.22 : 1,
-      filter: isActive ? `drop-shadow(0 0 3px ${color})` : undefined,
+      filter: isActive ? `drop-shadow(0 0 1.5px ${color})` : undefined,
     }
     return <div key={i} style={barStyle} />
   })

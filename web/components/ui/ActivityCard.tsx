@@ -176,13 +176,13 @@ export function ActivityCard({
         style={onClick ? { cursor: 'pointer' } : undefined}
         onClick={onClick}
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-stretch gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-[6px]">
               <TypeBadge type={effectiveSport} />
-              <span suppressHydrationWarning className="text-[14px] text-trail-muted">{fmtDate(a.start_time)}</span>
+              <span suppressHydrationWarning className="text-[13px] text-trail-muted">{fmtDate(a.start_time)}</span>
             </div>
-            <p className="text-[18px] font-medium truncate mt-[6px] text-trail-text">
+            <p className="text-[15px] font-medium mt-[6px] text-trail-text break-words leading-tight">
               {a.name}
             </p>
             <div className="flex gap-[6px] mt-[4px] overflow-x-auto pb-0.5">
@@ -193,7 +193,7 @@ export function ActivityCard({
             </div>
           </div>
 
-          <div className="flex flex-col flex-shrink-0 relative" style={{ width: 140 }}>
+          <div className="flex flex-col flex-shrink-0 relative" style={{ width: 140, justifyContent: 'flex-end' }}>
             {onEdit && (
               <button
                 onClick={(e) => { e.stopPropagation(); if (onEdit) onEdit(a) }}
@@ -204,8 +204,8 @@ export function ActivityCard({
                   cursor:     'pointer',
                   background: 'none',
                   border:     'none',
-                  padding:    '2px 4px',
-                  fontSize:   '20px',
+                  padding:    '0 2px',
+                  fontSize:   '14px',
                   lineHeight: 1,
                   zIndex:     1,
                 }}
@@ -213,17 +213,15 @@ export function ActivityCard({
                 ⋮
               </button>
             )}
-            <div className="flex flex-col gap-2" style={{ paddingTop: onEdit ? 22 : 0 }}>
+            <div className="flex flex-col gap-[4px]">
               <ChargeIndicator
                 value={a.ces ?? 0}
                 onClick={(e) => { e.stopPropagation(); setPopup('effort') }}
               />
-              {intensityKey && (
-                <IntensityIndicator
-                  level={INTENSITY_KEY_TO_LEVEL[intensityKey]}
-                  onClick={(e) => { e.stopPropagation(); setPopup('intensity') }}
-                />
-              )}
+              <IntensityIndicator
+                level={intensityKey ? INTENSITY_KEY_TO_LEVEL[intensityKey] : null}
+                onClick={intensityKey ? (e) => { e.stopPropagation(); setPopup('intensity') } : undefined}
+              />
               {workoutTypeKey && (
                 <TypeIndicator
                   type={workoutTypeKey}

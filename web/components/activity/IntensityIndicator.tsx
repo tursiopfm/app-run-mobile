@@ -6,18 +6,18 @@ import {
 } from '@/lib/activities/indicators'
 
 interface IntensityIndicatorProps {
-  level: IntensityLevel
+  level: IntensityLevel | null
   showGauge?: boolean
   onClick?: (e: React.MouseEvent) => void
   className?: string
 }
 
 const BAR_HEIGHTS: Record<IntensityLevel, number> = {
-  1: 4,
-  2: 6,
-  3: 8,
-  4: 10,
-  5: 12,
+  1: 2,
+  2: 2.5,
+  3: 3,
+  4: 4,
+  5: 5,
 }
 
 export default function IntensityIndicator({
@@ -28,121 +28,109 @@ export default function IntensityIndicator({
 }: IntensityIndicatorProps) {
   const uid = React.useId()
   const gradId = `gauge-grad-${uid}`
-  const color = INTENSITY_LEVEL_COLORS[level]
-  const label = INTENSITY_LEVEL_LABELS[level]
-  const angle = -90 + ((level - 1) / 4) * 180
-  const ariaLabel = `Intensité ${label}`
+  const isEmpty = level === null
+  const color = isEmpty ? '#6B7280' : INTENSITY_LEVEL_COLORS[level]
+  const label = isEmpty ? 'Non mesurée' : INTENSITY_LEVEL_LABELS[level]
+  const angle = isEmpty ? 0 : -90 + ((level - 1) / 4) * 180
+  const ariaLabel = isEmpty ? 'Intensité non mesurée' : `Intensité ${label}`
+  const interactive = !isEmpty && !!onClick
 
   const containerStyle: React.CSSProperties = {
     width: '100%',
-    height: 64,
-    padding: '8px 10px',
-    borderRadius: 14,
+    height: 28,
+    padding: '3px 6px',
+    borderRadius: 8,
     border: '1px solid #232826',
     background: 'linear-gradient(180deg, #1a1f1a 0%, #141816 100%)',
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 6,
     boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-    cursor: onClick ? 'pointer' : undefined,
+    cursor: interactive ? 'pointer' : 'default',
+    opacity: isEmpty ? 0.55 : 1,
+    boxSizing: 'border-box',
   }
 
   const gauge = showGauge ? (
     <svg
       viewBox="0 0 100 70"
-      width="32"
-      height="24"
+      width="18"
+      height="13"
       aria-hidden="true"
-      style={{ flexShrink: 0 }}
+      style={{ flexShrink: 0, opacity: isEmpty ? 0.5 : 1 }}
     >
-      <defs>
-        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#10B981" />
-          <stop offset="30%" stopColor="#F59E0B" />
-          <stop offset="60%" stopColor="#F97316" />
-          <stop offset="85%" stopColor="#EF4444" />
-          <stop offset="100%" stopColor="#DC2626" />
-        </linearGradient>
-      </defs>
+      {!isEmpty && (
+        <defs>
+          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10B981" />
+            <stop offset="30%" stopColor="#F59E0B" />
+            <stop offset="60%" stopColor="#F97316" />
+            <stop offset="85%" stopColor="#EF4444" />
+            <stop offset="100%" stopColor="#DC2626" />
+          </linearGradient>
+        </defs>
+      )}
       <path
         d="M 12 55 A 38 38 0 0 1 88 55"
         fill="none"
-        stroke={`url(#${gradId})`}
+        stroke={isEmpty ? '#6B7280' : `url(#${gradId})`}
         strokeWidth="10"
         strokeLinecap="round"
       />
-      <g transform={`rotate(${angle} 50 55)`}>
-        <line
-          x1="50"
-          y1="55"
-          x2="50"
-          y2="22"
-          stroke="#F3F4F6"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-        />
-        <circle cx="50" cy="55" r="3.5" fill="#F3F4F6" />
-      </g>
+      {!isEmpty && (
+        <g transform={`rotate(${angle} 50 55)`}>
+          <line
+            x1="50"
+            y1="55"
+            x2="50"
+            y2="22"
+            stroke="#F3F4F6"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
+          <circle cx="50" cy="55" r="3.5" fill="#F3F4F6" />
+        </g>
+      )}
     </svg>
   ) : null
 
   const body = (
-    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <div
+    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <span
         style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: 6,
-          minWidth: 0,
+          fontSize: 10,
+          fontWeight: 700,
+          lineHeight: 1,
+          color,
+          textShadow: isEmpty ? undefined : `0 0 4px ${color}66`,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          fontStyle: isEmpty ? 'italic' : 'normal',
         }}
       >
-        <span
-          style={{
-            fontSize: 9,
-            letterSpacing: '0.12em',
-            color: '#D1D5DB',
-            fontWeight: 500,
-            whiteSpace: 'nowrap',
-            textTransform: 'uppercase',
-          }}
-        >
-          INTENSITÉ :
-        </span>
-        <span
-          style={{
-            fontSize: 13,
-            fontWeight: 700,
-            lineHeight: 1,
-            color,
-            textShadow: `0 0 6px ${color}66`,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {label}
-        </span>
-      </div>
+        {label}
+      </span>
       <div
         style={{
           display: 'flex',
           alignItems: 'flex-end',
-          gap: 3,
-          height: 12,
+          gap: 2,
+          height: 5,
         }}
       >
         {([1, 2, 3, 4, 5] as IntensityLevel[]).map((i) => {
           const barColor = INTENSITY_LEVEL_COLORS[i]
-          const isActive = i === level
-          const isDim = i > level
+          const isActive = !isEmpty && i === level
+          const isDim = isEmpty || i > level
           const barStyle: React.CSSProperties = {
             flex: 1,
             height: BAR_HEIGHTS[i],
             background: barColor,
-            borderRadius: 2,
+            borderRadius: 1,
             opacity: isDim ? 0.25 : 1,
-            boxShadow: isActive ? `0 0 4px ${color}` : undefined,
+            boxShadow: isActive ? `0 0 2px ${color}` : undefined,
           }
           return <div key={i} style={barStyle} />
         })}
@@ -150,7 +138,7 @@ export default function IntensityIndicator({
     </div>
   )
 
-  if (onClick) {
+  if (interactive) {
     return (
       <button
         type="button"
