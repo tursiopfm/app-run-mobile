@@ -24,6 +24,11 @@
   --trail-progress-run-bg:    #243530;
   --trail-progress-volume-bg: #13211E;
   --trail-progress-dplus-bg:  #11232A;
+  /* Indicator chip (Charge / Intensity / Type) */
+  --ind-bg:     linear-gradient(180deg, #1a1f1a 0%, #141816 100%);
+  --ind-border: #232826;
+  --ind-label:  #D1D5DB;
+  --ind-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 /* ── Palette Claire ──────────────────────────────────── */
@@ -48,6 +53,11 @@
   --trail-progress-run-bg:    #FBE2D8;
   --trail-progress-volume-bg: #DFF5E8;
   --trail-progress-dplus-bg:  #DCF0F7;
+  /* Indicator chip (Charge / Intensity / Type) */
+  --ind-bg:     linear-gradient(180deg, #FFFFFF 0%, #F1F5F4 100%);
+  --ind-border: #D6E1DD;
+  --ind-label:  #4B5563;
+  --ind-shadow: 0 1px 2px rgba(15,30,28,0.08);
 }
 
 html, body {
