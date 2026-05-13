@@ -183,6 +183,12 @@ describe('guessWorkoutType — détection par titre', () => {
   it('"10x400 côte" → cotes (priorité sur fractionne)', () => {
     expect(guessWorkoutType('10x400 côte', 'Run')).toBe('cotes')
   })
+  it('"Fractionné en côte" → fractionne (mot-clé fractionné prépondérant sur côte)', () => {
+    expect(guessWorkoutType('Fractionné en côte', 'Run')).toBe('fractionne')
+  })
+  it('"VMA en côte" → fractionne (VMA prépondérant sur côte)', () => {
+    expect(guessWorkoutType('VMA en côte', 'Run')).toBe('fractionne')
+  })
   it('"Marathon Paris" → course', () => {
     expect(guessWorkoutType('Marathon Paris', 'Run')).toBe('course')
   })

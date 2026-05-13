@@ -169,6 +169,9 @@ function isCommutePattern(name: string, n: string): boolean {
 }
 
 export function guessWorkoutType(name: string, sport: string): WorkoutType | null {
+  // Natation : type "Non défini" par défaut, on n'analyse jamais le titre.
+  if (sport === 'Swim') return null
+
   const n = name.toLowerCase()
 
   // 1. Runtaf (Run / TrailRun uniquement)
@@ -189,15 +192,15 @@ export function guessWorkoutType(name: string, sport: string): WorkoutType | nul
       return 'velotaf'
   }
 
-  // 3. Côtes / montées (priorité sur fractionné et seuil)
-  if (n.includes('côtes') || n.includes('cotes') || n.includes('côte') || n.includes('cote')
-      || n.includes('montée') || n.includes('montee') || n.includes('hill'))
-    return 'cotes'
-
-  // 4. Mots-clés fractionné explicites (gagne sur seuil même si '2000' apparaît)
+  // 3. Mots-clés fractionné explicites (prioritaire sur "côtes" — "fractionné en côte" = fractionné)
   if (n.includes('vma') || n.includes('interval') || n.includes('fractionné')
       || n.includes('fractionnée') || n.includes('répétition') || n.includes('repetition'))
     return 'fractionne'
+
+  // 4. Côtes / montées (priorité sur seuil)
+  if (n.includes('côtes') || n.includes('cotes') || n.includes('côte') || n.includes('cote')
+      || n.includes('montée') || n.includes('montee') || n.includes('hill'))
+    return 'cotes'
 
   // 5. Mots-clés seuil/tempo explicites
   if (n.includes('seuil') || n.includes('tempo') || n.includes('threshold'))
