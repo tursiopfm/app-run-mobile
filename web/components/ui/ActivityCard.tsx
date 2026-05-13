@@ -4,36 +4,12 @@ import { useState, useEffect } from 'react'
 import { colors } from '@/lib/design/colors'
 import { sportLabel } from '@/lib/design/labels'
 import { guessIntensity, guessWorkoutType, type IntensityKey, type WorkoutType } from '@/lib/activities/intensity'
+import { INTENSITY_KEY_TO_LEVEL } from '@/lib/activities/indicators'
 import type { HrZone } from '@/lib/health/hr-zones'
 import { EffortPopup, IntensityPopup, WorkoutTypePopup } from '@/components/ui/ActivityPopups'
-import {
-  Dumbbell,
-  Route,
-  Timer,
-  Repeat2,
-  MountainSnow,
-  Trophy,
-  BriefcaseBusiness,
-  type LucideIcon,
-} from 'lucide-react'
-
-const INTENSITY_EMOJI: Record<string, string> = {
-  recuperation:     '😴',
-  footing:          '🦶',
-  endurance_active: '🔄',
-  seuil:            '🎯',
-  vma:              '🔥',
-}
-
-const WORKOUT_TYPE_ICON: Record<string, { Icon: LucideIcon; color: string }> = {
-  sortie_longue: { Icon: Route,             color: '#38BDF8' },
-  fractionne:    { Icon: Timer,             color: '#F87171' },
-  seuil_tempo:   { Icon: Repeat2,           color: '#FBBF24' },
-  cotes:         { Icon: MountainSnow,      color: '#8B5CF6' },
-  course:        { Icon: Trophy,            color: '#F59E0B' },
-  runtaf:        { Icon: BriefcaseBusiness, color: '#8BA8A3' },
-  velotaf:       { Icon: BriefcaseBusiness, color: '#8BA8A3' },
-}
+import ChargeIndicator from '@/components/activity/ChargeIndicator'
+import IntensityIndicator from '@/components/activity/IntensityIndicator'
+import TypeIndicator from '@/components/activity/TypeIndicator'
 
 const SPORT_COLORS: Record<string, string> = {
   Run:              colors.chargeOrange,
@@ -183,12 +159,6 @@ export function ActivityCard({
     : null
   const intensityKey = (a.manual_intensity as IntensityKey | null) ?? computedIntensity
   const workoutTypeKey = (a.manual_workout_type as WorkoutType | null) ?? guessWorkoutType(a.name, effectiveSport)
-  const cesVal = a.ces ?? 0
-  const effortColor =
-    cesVal <= 40  ? '#38bdf8' :
-    cesVal <= 80  ? '#4ade80' :
-    cesVal <= 130 ? '#fbbf24' :
-    cesVal <= 200 ? '#f97316' : '#ef4444'
 
   return (
     <>
@@ -206,7 +176,7 @@ export function ActivityCard({
         style={onClick ? { cursor: 'pointer' } : undefined}
         onClick={onClick}
       >
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-[6px]">
               <TypeBadge type={effectiveSport} />
@@ -223,7 +193,7 @@ export function ActivityCard({
             </div>
           </div>
 
-          <div className="flex flex-col items-end flex-shrink-0 self-stretch relative">
+          <div className="flex flex-col flex-shrink-0 relative" style={{ width: 140 }}>
             {onEdit && (
               <button
                 onClick={(e) => { e.stopPropagation(); if (onEdit) onEdit(a) }}
@@ -237,42 +207,29 @@ export function ActivityCard({
                   padding:    '2px 4px',
                   fontSize:   '20px',
                   lineHeight: 1,
+                  zIndex:     1,
                 }}
               >
                 ⋮
               </button>
             )}
-            <div className="flex-1 flex flex-col items-end justify-center gap-[14px]">
-              <button
+            <div className="flex flex-col gap-2" style={{ paddingTop: onEdit ? 22 : 0 }}>
+              <ChargeIndicator
+                value={a.ces ?? 0}
                 onClick={(e) => { e.stopPropagation(); setPopup('effort') }}
-                className="flex items-center justify-center text-[18px] font-bold leading-none"
-                style={{ color: effortColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}
-              >
-                <Dumbbell size={14} strokeWidth={2.2} />
-                {ces}
-              </button>
+              />
               {intensityKey && (
-                <button
+                <IntensityIndicator
+                  level={INTENSITY_KEY_TO_LEVEL[intensityKey]}
                   onClick={(e) => { e.stopPropagation(); setPopup('intensity') }}
-                  className="flex items-center justify-center text-[18px] leading-none"
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                >
-                  {INTENSITY_EMOJI[intensityKey] ?? '❓'}
-                </button>
+                />
               )}
-              {workoutTypeKey && WORKOUT_TYPE_ICON[workoutTypeKey] && (() => {
-                const { Icon, color } = WORKOUT_TYPE_ICON[workoutTypeKey]
-                return (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setPopup('workoutType') }}
-                    className="flex items-center justify-center leading-none"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                    aria-label="Type de séance"
-                  >
-                    <Icon size={18} strokeWidth={2.2} color={color} />
-                  </button>
-                )
-              })()}
+              {workoutTypeKey && (
+                <TypeIndicator
+                  type={workoutTypeKey}
+                  onClick={(e) => { e.stopPropagation(); setPopup('workoutType') }}
+                />
+              )}
             </div>
           </div>
         </div>
