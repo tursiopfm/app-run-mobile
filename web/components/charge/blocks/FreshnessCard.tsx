@@ -21,12 +21,13 @@ export function FreshnessCard({ payload }: { payload: ChargeSportPayload }) {
   const f = computeFreshness(payload.dailyMetrics)
   const zoneLabel = L.freshnessZone[f.zone]
 
-  const min = -40, max = 30
+  const min = -50, max = 30
   const zones = [
-    { from: min,                       to: FRESHNESS.highFatigue,    color: colors.runRed },
+    { from: min,                       to: FRESHNESS.highFatigue,    color: colors.runRed       },
     { from: FRESHNESS.highFatigue,     to: FRESHNESS.normalFatigue,  color: colors.seriesYellow },
-    { from: FRESHNESS.normalFatigue,   to: FRESHNESS.fresh,          color: colors.greenOk },
-    { from: FRESHNESS.fresh,           to: max,                      color: colors.seriesBlue },
+    { from: FRESHNESS.normalFatigue,   to: FRESHNESS.fresh,          color: colors.greenOk      },
+    { from: FRESHNESS.fresh,           to: FRESHNESS.veryFresh,      color: colors.seriesBlue   },
+    { from: FRESHNESS.veryFresh,       to: max,                      color: '#7DD3FC'           },
   ]
 
   const delta       = Math.round(f.deltaVsWeekAgo)
