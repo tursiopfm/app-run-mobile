@@ -100,7 +100,7 @@ export function CockpitLineChart({
                 <LabelList
                   dataKey={s.key}
                   position="top"
-                  offset={6}
+                  offset={14}
                   style={{ fontSize: 10, fill: s.color, fontWeight: 600 }}
                   formatter={(v: number) =>
                     v > 0 ? (labelFormatter ? labelFormatter(v) : String(v)) : ''
