@@ -11,8 +11,17 @@ import {
   WORKOUT_TYPE_OPTIONS,
   guessIntensity,
   guessWorkoutType,
+  type IntensityKey,
   type WorkoutType,
 } from '@/lib/activities/intensity'
+import {
+  INTENSITY_KEY_TO_LEVEL,
+  INTENSITY_LEVEL_COLORS,
+  INTENSITY_LEVEL_LABELS,
+  SESSION_TYPE_COLORS,
+  SESSION_TYPE_LABELS,
+} from '@/lib/activities/indicators'
+import { IntensityGauge, TypeIcon, UnknownTypeIcon } from '@/components/activity/indicatorIcons'
 import { calculateHrZones, type HrZone, type HrZoneMethod } from '@/lib/health/hr-zones'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -146,6 +155,40 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
       }}
     >
       {label}
+    </button>
+  )
+}
+
+// Chip that pairs an SVG icon with a label. Used in the filter panel to mirror
+// the visual identity of the activity-card mini indicators.
+function FilterChip({
+  label,
+  active,
+  onClick,
+  icon,
+  color,
+}: {
+  label:    string
+  active:   boolean
+  onClick:  () => void
+  icon?:    React.ReactNode
+  color?:   string
+}) {
+  const accent = color ?? colors.chargeOrange
+  return (
+    <button
+      onClick={onClick}
+      className="rounded-full border text-[12px] font-semibold flex items-center gap-[5px] flex-shrink-0"
+      style={{
+        backgroundColor: active ? `${accent}26` : 'transparent',
+        borderColor:     active ? accent : colors.border,
+        color:           active ? accent : colors.subtleText,
+        cursor:          'pointer',
+        padding:         '4px 10px 4px 6px',
+      }}
+    >
+      {icon && <span style={{ display: 'inline-flex', flexShrink: 0 }}>{icon}</span>}
+      <span>{label}</span>
     </button>
   )
 }
@@ -422,36 +465,54 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
           {/* Intensité */}
           <div>
             <p className="text-[13px] font-semibold text-trail-text mb-[3px]">Intensité</p>
-            <div className="flex items-center gap-2">
-              <select
-                value={state.intensity}
-                onChange={e => setState({ ...state, intensity: e.target.value })}
-                className="rounded-[8px] border px-3 py-[5px] text-[13px] flex-1"
-                style={{ ...si, cursor: 'pointer' }}
-              >
-                <option value="Toutes">Toutes</option>
-                {INTENSITY_OPTIONS.map(opt => (
-                  <option key={opt.key} value={opt.key}>{opt.label}</option>
-                ))}
-              </select>
+            <div className="flex gap-[6px] overflow-x-auto pb-1">
+              <FilterChip
+                label="Toutes"
+                active={state.intensity === 'Toutes'}
+                onClick={() => setState({ ...state, intensity: 'Toutes' })}
+              />
+              {INTENSITY_OPTIONS.map(opt => {
+                const level = INTENSITY_KEY_TO_LEVEL[opt.key]
+                return (
+                  <FilterChip
+                    key={opt.key}
+                    label={INTENSITY_LEVEL_LABELS[level]}
+                    color={INTENSITY_LEVEL_COLORS[level]}
+                    icon={<IntensityGauge level={level} size={20} idSuffix={`flt-${opt.key}`} />}
+                    active={state.intensity === opt.key}
+                    onClick={() => setState({ ...state, intensity: opt.key })}
+                  />
+                )
+              })}
             </div>
           </div>
 
           {/* Type d'entraînement */}
           <div>
             <p className="text-[13px] font-semibold text-trail-text mb-[3px]">Type d&apos;entraînement</p>
-            <div className="flex items-center gap-2">
-              <select
-                value={state.workoutType}
-                onChange={e => setState({ ...state, workoutType: e.target.value })}
-                className="rounded-[8px] border px-3 py-[5px] text-[13px] flex-1"
-                style={{ ...si, cursor: 'pointer' }}
-              >
-                <option value="Toutes">Tous</option>
-                {WORKOUT_TYPE_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+            <div className="flex gap-[6px] overflow-x-auto pb-1">
+              <FilterChip
+                label="Tous"
+                active={state.workoutType === 'Toutes'}
+                onClick={() => setState({ ...state, workoutType: 'Toutes' })}
+              />
+              {WORKOUT_TYPE_OPTIONS.map(opt => (
+                <FilterChip
+                  key={opt.value}
+                  label={SESSION_TYPE_LABELS[opt.value]}
+                  color={SESSION_TYPE_COLORS[opt.value]}
+                  icon={<TypeIcon type={opt.value} size={20} />}
+                  active={state.workoutType === opt.value}
+                  onClick={() => setState({ ...state, workoutType: opt.value })}
+                />
+              ))}
+              <FilterChip
+                label="Non défini"
+                color="#6B7280"
+                icon={<UnknownTypeIcon size={20} />}
+                active={state.workoutType === '__none__'}
+                onClick={() => setState({ ...state, workoutType: '__none__' })}
+              />
             </div>
           </div>
 
@@ -633,6 +694,7 @@ export default function ActivitiesClient({ initial, hasMore }: { initial: Activi
       list = list.filter(a => {
         const sport = a.manual_sport_type ?? a.sport_type
         const key = (a.manual_workout_type as WorkoutType | null) ?? guessWorkoutType(a.name, sport)
+        if (filter.workoutType === '__none__') return key === null
         return key === filter.workoutType
       })
     }

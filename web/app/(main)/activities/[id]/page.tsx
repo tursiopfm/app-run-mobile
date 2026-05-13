@@ -18,7 +18,7 @@ export default async function ActivityDetailPage({
   // Fetch activity from DB
   const { data: row } = await supabase
     .from('activities')
-    .select('id, sport_type, manual_sport_type, name, start_time, ces, manual_intensity, distance_m, manual_distance_m, elevation_gain_m, manual_elevation_gain_m, moving_time_sec, manual_moving_time_sec, duration_sec, avg_hr, max_hr, calories, raw_payload, provider, provider_activity_id')
+    .select('id, sport_type, manual_sport_type, name, start_time, ces, manual_intensity, manual_workout_type, distance_m, manual_distance_m, elevation_gain_m, manual_elevation_gain_m, moving_time_sec, manual_moving_time_sec, duration_sec, avg_hr, max_hr, calories, raw_payload, provider, provider_activity_id')
     .eq('id', id)
     .eq('user_id', user.id)
     .is('deleted_at', null)

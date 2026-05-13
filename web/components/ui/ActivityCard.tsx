@@ -224,7 +224,7 @@ export function ActivityCard({
               />
               <TypeIndicator
                 type={workoutTypeKey}
-                onClick={workoutTypeKey ? (e) => { e.stopPropagation(); setPopup('workoutType') } : undefined}
+                onClick={(e) => { e.stopPropagation(); setPopup('workoutType') }}
               />
             </div>
           </div>

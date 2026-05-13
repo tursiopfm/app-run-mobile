@@ -8,15 +8,24 @@ import { ActivitySplits } from '@/components/ui/ActivitySplits'
 import { ActivityFractionneSplits } from '@/components/ui/ActivityFractionneSplits'
 import { ActivityHeartRateZones } from '@/components/ui/ActivityHeartRateZones'
 import { EditActivityModal } from '@/components/ui/EditActivityModal'
-import { EffortPopup, IntensityPopup } from '@/components/ui/ActivityPopups'
+import { EffortPopup, IntensityPopup, WorkoutTypePopup } from '@/components/ui/ActivityPopups'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
+import ChargeIndicator from '@/components/activity/ChargeIndicator'
+import IntensityIndicator from '@/components/activity/IntensityIndicator'
+import TypeIndicator from '@/components/activity/TypeIndicator'
 import { fmtPaceSec, fmtDurationSec } from '@/lib/activities/detail'
 import type { StravaSplit, StravaLap } from '@/lib/activities/detail'
 import { vapPaceSec } from '@/lib/activities/vap'
 import { sportLabel } from '@/lib/design/labels'
-import { guessIntensity } from '@/lib/activities/intensity'
+import {
+  asIntensityKey,
+  guessIntensity,
+  guessWorkoutType,
+  type IntensityKey,
+  type WorkoutType,
+} from '@/lib/activities/intensity'
+import { INTENSITY_KEY_TO_LEVEL } from '@/lib/activities/indicators'
 import { calculateHrZones, type HrZoneMethod } from '@/lib/health/hr-zones'
-import { Dumbbell } from 'lucide-react'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -28,6 +37,7 @@ export type ActivityDetail = {
   start_time: string
   ces: number | null
   manual_intensity: string | null
+  manual_workout_type: string | null
   distance_m: number | null
   manual_distance_m: number | null
   elevation_gain_m: number | null
@@ -62,11 +72,6 @@ const SPORT_COLORS: Record<string, string> = {
   WeightTraining: '#8892a4',
 }
 
-const INTENSITY_EMOJI: Record<string, string> = {
-  recuperation: '😴', footing: '🦶', endurance_active: '🔄',
-  sortie_longue: '🐢', cotes: '⛰️', vma: '🔥', seuil: '🎯', autre: '❓',
-}
-
 const RIDE_TYPES = new Set(['Ride', 'GravelRide', 'VirtualRide', 'EBikeRide', 'MountainBikeRide'])
 const RUN_TYPES  = new Set(['Run', 'TrailRun'])
 
@@ -82,47 +87,6 @@ function SportBadge({ type }: { type: string }) {
       padding: '4px 12px', borderRadius: 20,
     }}>
       {label}
-    </span>
-  )
-}
-
-function IntensityEmoji({ intensity, onClick }: { intensity: string | null; onClick?: () => void }) {
-  const emoji = intensity ? (INTENSITY_EMOJI[intensity] ?? '') : ''
-  if (!emoji) return null
-  return (
-    <span
-      style={{ fontSize: 16, lineHeight: 1, cursor: onClick ? 'pointer' : undefined }}
-      onClick={onClick}
-    >
-      {emoji}
-    </span>
-  )
-}
-
-function cesColor(ces: number): { bg: string; border: string; color: string } {
-  if (ces <= 40)  return { bg: 'rgba(56,189,248,0.12)',  border: 'rgba(56,189,248,0.35)',  color: '#38bdf8' }
-  if (ces <= 80)  return { bg: 'rgba(74,222,128,0.12)',  border: 'rgba(74,222,128,0.35)',  color: '#4ade80' }
-  if (ces <= 130) return { bg: 'rgba(251,191,36,0.12)',  border: 'rgba(251,191,36,0.35)',  color: '#fbbf24' }
-  if (ces <= 200) return { bg: 'rgba(249,115,22,0.12)',  border: 'rgba(249,115,22,0.35)',  color: '#f97316' }
-  return                 { bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.35)',   color: '#ef4444' }
-}
-
-function EffortBadge({ ces, onClick }: { ces: number | null; onClick?: () => void }) {
-  if (ces === null) return null
-  const c = cesColor(Math.round(ces))
-  return (
-    <span
-      onClick={onClick}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 5,
-        background: c.bg, border: `1px solid ${c.border}`,
-        padding: '4px 12px', borderRadius: 20,
-        fontSize: 13, fontWeight: 800, color: c.color,
-        cursor: onClick ? 'pointer' : undefined,
-      }}
-    >
-      <Dumbbell size={14} strokeWidth={2.2} />
-      {Math.round(ces)}
     </span>
   )
 }
@@ -268,7 +232,7 @@ export function ActivityDetailClient({
   const router = useRouter()
   const [showEdit, setShowEdit] = useState(false)
   const [mapExpanded, setMapExpanded] = useState(false)
-  const [popup, setPopup] = useState<null | 'effort' | 'intensity'>(null)
+  const [popup, setPopup] = useState<null | 'effort' | 'intensity' | 'workoutType'>(null)
 
   const a = activity
   const effectiveSport = a.manual_sport_type ?? a.sport_type
@@ -307,11 +271,16 @@ export function ActivityDetailClient({
     } catch { return [] }
   })()
 
-  const intensityKey = a.manual_intensity ?? guessIntensity(a.avg_hr, hrZones, {
-    activityMaxHr: a.max_hr,
-    movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
-    restingHr:     athleteProfile?.resting_hr ?? null,
-  })
+  const intensityKey: IntensityKey | null =
+    asIntensityKey(a.manual_intensity) ??
+    guessIntensity(a.avg_hr, hrZones, {
+      activityMaxHr: a.max_hr,
+      movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
+      restingHr:     athleteProfile?.resting_hr ?? null,
+    })
+
+  const workoutTypeKey: WorkoutType | null =
+    (a.manual_workout_type as WorkoutType | null) ?? guessWorkoutType(a.name, effectiveSport)
 
   // Pace / speed tile
   let paceLabel: string
@@ -421,17 +390,27 @@ export function ActivityDetailClient({
 
         {/* Activity header */}
         <div style={{ paddingTop: 14, paddingBottom: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <SportBadge type={effectiveSport} />
-              <IntensityEmoji intensity={intensityKey} onClick={() => setPopup('intensity')} />
-            </div>
-            <EffortBadge ces={a.ces} onClick={() => setPopup('effort')} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <SportBadge type={effectiveSport} />
+            <span style={{ fontSize: 11, color: 'var(--trail-muted)' }}>{fmtDetailDate(a.start_time)}</span>
           </div>
-          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--trail-text)', lineHeight: 1.15, marginBottom: 3 }}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--trail-text)', lineHeight: 1.15, marginBottom: 10 }}>
             {a.name}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--trail-muted)' }}>{fmtDetailDate(a.start_time)}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+            <ChargeIndicator
+              value={a.ces ?? 0}
+              onClick={() => setPopup('effort')}
+            />
+            <IntensityIndicator
+              level={intensityKey ? INTENSITY_KEY_TO_LEVEL[intensityKey] : null}
+              onClick={intensityKey ? () => setPopup('intensity') : undefined}
+            />
+            <TypeIndicator
+              type={workoutTypeKey}
+              onClick={() => setPopup('workoutType')}
+            />
+          </div>
         </div>
 
         {/* Stats grid 3×2 */}
@@ -552,6 +531,7 @@ export function ActivityDetailClient({
 
       {popup === 'effort' && <EffortPopup ces={a.ces} onClose={() => setPopup(null)} />}
       {popup === 'intensity' && <IntensityPopup intensityKey={intensityKey} onClose={() => setPopup(null)} />}
+      {popup === 'workoutType' && <WorkoutTypePopup workoutTypeKey={workoutTypeKey} onClose={() => setPopup(null)} />}
     </div>
   )
 }

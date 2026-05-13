@@ -291,9 +291,15 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
         {/* Type */}
         <SectionCard title="Type">
           <ChipRow
-            options={availableWorkoutTypes(sport).map(o => ({ value: o.value, label: o.label }))}
-            selected={displayedWorkoutType ?? ''}
-            onSelect={v => setWorkoutType(v === displayedWorkoutType ? null : v)}
+            options={[
+              ...availableWorkoutTypes(sport).map(o => ({ value: o.value, label: o.label })),
+              { value: '__none__', label: '? Non défini' },
+            ]}
+            selected={displayedWorkoutType ?? '__none__'}
+            onSelect={v => {
+              if (v === '__none__') setWorkoutType(null)
+              else setWorkoutType(v === displayedWorkoutType ? null : v)
+            }}
           />
         </SectionCard>
 
