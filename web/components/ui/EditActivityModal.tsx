@@ -13,6 +13,14 @@ import {
   SPORT_OPTIONS,
   type IntensityKey,
 } from '@/lib/activities/intensity'
+import {
+  INTENSITY_KEY_TO_LEVEL,
+  INTENSITY_LEVEL_COLORS,
+  INTENSITY_LEVEL_LABELS,
+  SESSION_TYPE_COLORS,
+  SESSION_TYPE_LABELS,
+} from '@/lib/activities/indicators'
+import { IntensityGauge, TypeIcon, UnknownTypeIcon } from '@/components/activity/indicatorIcons'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
 import type { HrZone } from '@/lib/health/hr-zones'
 
@@ -50,32 +58,42 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
   )
 }
 
+type ChipOption = {
+  value: string
+  label: string
+  icon?: React.ReactNode
+  color?: string
+}
+
 function ChipRow({
   options,
   selected,
   onSelect,
 }: {
-  options:  { value: string; label: string }[]
+  options:  ChipOption[]
   selected: string
   onSelect: (v: string) => void
 }) {
   return (
     <div className="flex gap-2 overflow-x-auto pb-1">
-      {options.map(({ value, label }) => {
+      {options.map(({ value, label, icon, color }) => {
         const active = selected === value
+        const accent = color ?? colors.chargeOrange
         return (
           <button
             key={value}
             onClick={() => onSelect(value)}
-            className="rounded-full px-4 py-[6px] border text-[13px] font-semibold flex-shrink-0"
+            className="rounded-full border text-[13px] font-semibold flex-shrink-0 flex items-center gap-[6px]"
             style={{
-              backgroundColor: active ? `${colors.chargeOrange}26` : 'transparent',
-              borderColor:     active ? colors.chargeOrange : colors.border,
-              color:           active ? colors.chargeOrange : colors.subtleText,
+              backgroundColor: active ? `${accent}26` : 'transparent',
+              borderColor:     active ? accent : colors.border,
+              color:           active ? accent : colors.subtleText,
               cursor:          'pointer',
+              padding:         icon ? '4px 14px 4px 10px' : '6px 16px',
             }}
           >
-            {label}
+            {icon && <span style={{ display: 'inline-flex', flexShrink: 0 }}>{icon}</span>}
+            <span>{label}</span>
           </button>
         )
       })}
@@ -285,7 +303,15 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
         {/* Intensité */}
         <SectionCard title="Intensité">
           <ChipRow
-            options={INTENSITY_OPTIONS.map(i => ({ value: i.key, label: i.label }))}
+            options={INTENSITY_OPTIONS.map(i => {
+              const level = INTENSITY_KEY_TO_LEVEL[i.key]
+              return {
+                value: i.key,
+                label: INTENSITY_LEVEL_LABELS[level],
+                icon:  <IntensityGauge level={level} size={20} idSuffix={`mod-int-${i.key}`} />,
+                color: INTENSITY_LEVEL_COLORS[level],
+              }
+            })}
             selected={displayedIntensity ?? ''}
             onSelect={v => setIntensity(v === displayedIntensity ? null : (v as IntensityKey))}
           />
@@ -295,8 +321,18 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
         <SectionCard title="Type">
           <ChipRow
             options={[
-              ...availableWorkoutTypes(sport).map(o => ({ value: o.value, label: o.label })),
-              { value: '__none__', label: '? Non défini' },
+              ...availableWorkoutTypes(sport).map(o => ({
+                value: o.value,
+                label: SESSION_TYPE_LABELS[o.value],
+                icon:  <TypeIcon type={o.value} size={20} />,
+                color: SESSION_TYPE_COLORS[o.value],
+              })),
+              {
+                value: '__none__',
+                label: 'Non défini',
+                icon:  <UnknownTypeIcon size={20} />,
+                color: '#6B7280',
+              },
             ]}
             selected={workoutType === 'none' ? '__none__' : (displayedWorkoutType ?? '__none__')}
             onSelect={v => {
