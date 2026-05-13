@@ -168,7 +168,7 @@ export function ActivityCard({
       {popup === 'intensity' && intensityKey && (
         <IntensityPopup intensityKey={intensityKey} onClose={() => setPopup(null)} />
       )}
-      {popup === 'workoutType' && workoutTypeKey && (
+      {popup === 'workoutType' && (
         <WorkoutTypePopup workoutTypeKey={workoutTypeKey} onClose={() => setPopup(null)} />
       )}
       <div
