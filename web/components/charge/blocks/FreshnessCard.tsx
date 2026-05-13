@@ -27,17 +27,21 @@ export function FreshnessCard({ payload }: { payload: ChargeSportPayload }) {
     { from: FRESHNESS.normalFatigue,   to: FRESHNESS.fresh,          color: colors.greenOk },
     { from: FRESHNESS.fresh,           to: max,                      color: colors.seriesBlue },
   ]
-  const arrow = f.deltaVsWeekAgo > 1 ? '↗' : f.deltaVsWeekAgo < -1 ? '↘' : '→'
+  const delta = Math.round(f.deltaVsWeekAgo)
+  const arrow = delta > 1 ? '↗' : delta < -1 ? '↘' : '→'
+  const qualifier = delta > 1  ? "plus frais qu'il y a 7 jours"
+                  : delta < -1 ? "plus fatigué qu'il y a 7 jours"
+                  :              'stable depuis 7 jours'
 
   return (
     <BlockCard title={L.blocks.freshness} helpTitle={L.blocks.freshness} helpBody={L.help.freshness}>
-      <div className="flex items-baseline justify-between mb-2">
+      <div className="flex items-baseline justify-between gap-3 mb-2">
         <div>
           <p className="text-[22px] font-black text-trail-text">{Math.round(f.tsb)}</p>
           <p className="text-[12px] font-semibold text-trail-text">{zoneLabel}</p>
         </div>
-        <span className="text-[12px] text-trail-muted">
-          {arrow} {f.deltaVsWeekAgo > 0 ? '+' : ''}{f.deltaVsWeekAgo} vs J-7
+        <span className="text-[12px] text-trail-muted text-right leading-snug">
+          {arrow} {delta > 0 ? '+' : ''}{delta} · {qualifier}
         </span>
       </div>
       <Gauge value={f.tsb} min={min} max={max} zones={zones} />
