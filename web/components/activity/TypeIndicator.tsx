@@ -3,9 +3,28 @@ import { SESSION_TYPE_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indic
 import type { WorkoutType } from '@/lib/activities/intensity'
 
 interface TypeIndicatorProps {
-  type: WorkoutType
+  type: WorkoutType | null
   onClick?: (e: React.MouseEvent) => void
   className?: string
+}
+
+function renderEmptyIcon(): JSX.Element {
+  return (
+    <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">
+      <circle cx="50" cy="50" r="32" fill="none" stroke="#6B7280" strokeWidth="6" />
+      <text
+        x="50"
+        y="65"
+        textAnchor="middle"
+        fontSize="44"
+        fontWeight="700"
+        fill="#6B7280"
+        fontFamily="sans-serif"
+      >
+        ?
+      </text>
+    </svg>
+  )
 }
 
 function renderTypeIcon(type: WorkoutType): JSX.Element {
@@ -142,9 +161,11 @@ function renderTypeIcon(type: WorkoutType): JSX.Element {
 }
 
 export default function TypeIndicator({ type, onClick, className }: TypeIndicatorProps) {
-  const color = SESSION_TYPE_COLORS[type]
-  const label = SESSION_TYPE_LABELS[type]
-  const ariaLabel = `Type de séance : ${label}`
+  const isEmpty = type === null
+  const color = isEmpty ? '#6B7280' : SESSION_TYPE_COLORS[type]
+  const label = isEmpty ? 'Non défini' : SESSION_TYPE_LABELS[type]
+  const ariaLabel = isEmpty ? 'Type de séance non défini' : `Type de séance : ${label}`
+  const interactive = !isEmpty && !!onClick
 
   const containerStyle: React.CSSProperties = {
     width: '100%',
@@ -160,7 +181,8 @@ export default function TypeIndicator({ type, onClick, className }: TypeIndicato
     boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
     position: 'relative',
     overflow: 'hidden',
-    cursor: onClick ? 'pointer' : undefined,
+    cursor: interactive ? 'pointer' : 'default',
+    opacity: isEmpty ? 0.55 : 1,
     boxSizing: 'border-box',
   }
 
@@ -168,7 +190,7 @@ export default function TypeIndicator({ type, onClick, className }: TypeIndicato
     width: '18px',
     height: '18px',
     flexShrink: 0,
-    filter: `drop-shadow(0 0 2px ${color}88)`,
+    filter: isEmpty ? undefined : `drop-shadow(0 0 2px ${color}88)`,
   }
 
   const textWrapStyle: React.CSSProperties = {
@@ -184,23 +206,24 @@ export default function TypeIndicator({ type, onClick, className }: TypeIndicato
     lineHeight: 1,
     letterSpacing: '0.3px',
     color,
-    textShadow: `0 0 4px ${color}66`,
+    textShadow: isEmpty ? undefined : `0 0 4px ${color}66`,
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     display: 'block',
+    fontStyle: isEmpty ? 'italic' : 'normal',
   }
 
   const content = (
     <>
-      <div style={iconWrapStyle}>{renderTypeIcon(type)}</div>
+      <div style={iconWrapStyle}>{isEmpty ? renderEmptyIcon() : renderTypeIcon(type)}</div>
       <div style={textWrapStyle}>
         <span style={valueStyle}>{label}</span>
       </div>
     </>
   )
 
-  if (onClick) {
+  if (interactive) {
     return (
       <button
         type="button"

@@ -222,12 +222,10 @@ export function ActivityCard({
                 level={intensityKey ? INTENSITY_KEY_TO_LEVEL[intensityKey] : null}
                 onClick={intensityKey ? (e) => { e.stopPropagation(); setPopup('intensity') } : undefined}
               />
-              {workoutTypeKey && (
-                <TypeIndicator
-                  type={workoutTypeKey}
-                  onClick={(e) => { e.stopPropagation(); setPopup('workoutType') }}
-                />
-              )}
+              <TypeIndicator
+                type={workoutTypeKey}
+                onClick={workoutTypeKey ? (e) => { e.stopPropagation(); setPopup('workoutType') } : undefined}
+              />
             </div>
           </div>
         </div>

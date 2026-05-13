@@ -124,12 +124,22 @@ export function guessIntensity(
 const RUN_SPORTS  = new Set(['Run', 'TrailRun'])
 const BIKE_SPORTS = new Set(['Ride', 'EBikeRide', 'VirtualRide'])
 
-// Home <-> Office commute pattern, regardless of emoji spacing.
-// Matches "Home" / "Office" (case-insensitive) or the 🏠 / 🏢 emojis.
-function isHomeOfficeCommute(name: string, n: string): boolean {
-  const hasHome   = /home/.test(n)   || name.includes('🏠')
-  const hasOffice = /office/.test(n) || name.includes('🏢')
-  return hasHome && hasOffice
+// Commute patterns. Match either:
+//   - "Home"/🏠 AND "Office"/🏢 in the title (regardless of emoji spacing), or
+//   - a place emoji (🚉 station, 👨‍💻 telework, 🏢 office) plus a directional
+//     arrow (➡️, →, ⇨). Covers titles like "🚉 ➡️ 👨‍💻" or "👨‍💻 ➡️ 🚉".
+function isCommutePattern(name: string, n: string): boolean {
+  const hasHome    = /home/.test(n)   || name.includes('🏠')
+  const hasOffice  = /office/.test(n) || name.includes('🏢')
+  if (hasHome && hasOffice) return true
+
+  const hasArrow   = name.includes('➡️') || name.includes('→') || name.includes('⇨')
+  const placeCount =
+    (name.includes('🚉') ? 1 : 0) +
+    (name.includes('👨‍💻') ? 1 : 0) +
+    (name.includes('🏢') ? 1 : 0) +
+    (name.includes('🏠') ? 1 : 0)
+  return hasArrow && placeCount >= 1
 }
 
 export function guessWorkoutType(name: string, sport: string): WorkoutType | null {
@@ -140,7 +150,7 @@ export function guessWorkoutType(name: string, sport: string): WorkoutType | nul
     if (n.includes('runtaf') || n.includes('run taf')
         || name.includes('Home 🏃‍♂️') || name.includes('🏃‍♂️ Home')
         || n.includes('taf')
-        || isHomeOfficeCommute(name, n))
+        || isCommutePattern(name, n))
       return 'runtaf'
   }
 
@@ -149,7 +159,7 @@ export function guessWorkoutType(name: string, sport: string): WorkoutType | nul
     if (n.includes('vélotaf') || n.includes('velotaf') || n.includes('vélo taf')
         || name.includes('Home 🚴🏻') || name.includes('🚴🏻 Home')
         || n.includes('taf')
-        || isHomeOfficeCommute(name, n))
+        || isCommutePattern(name, n))
       return 'velotaf'
   }
 
