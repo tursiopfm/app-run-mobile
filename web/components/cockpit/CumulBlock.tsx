@@ -88,11 +88,11 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-[6px]">
         <div className="flex items-center gap-1">
-          <span className="text-[16px] font-semibold text-trail-muted">
+          <span className="text-[15px] font-semibold text-trail-muted">
             Cumul km/{period === 'month' ? 'mois' : 'année'} —
           </span>
-          <span className="text-[16px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
-          <span className="text-[16px] ml-0.5">{cfg.emoji}</span>
+          <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
+          <span className="text-[15px] ml-0.5">{cfg.emoji}</span>
         </div>
         <div className="flex items-center gap-2">
           {/* Period tabs */}

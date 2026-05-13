@@ -116,7 +116,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
               >
                 <div className="flex items-center justify-between mb-[10px]">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[15px] font-semibold text-trail-text">Objectifs —</span>
+                    <span className="text-[15px] font-semibold text-trail-muted">Objectifs —</span>
                     <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>
                       {cfg.label} {cfg.emoji}
                     </span>

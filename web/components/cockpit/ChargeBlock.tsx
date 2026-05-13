@@ -73,7 +73,7 @@ export function ChargeBlock({ sportOverviews, onHide }: Props) {
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       {/* Header */}
       <div className="flex items-center justify-between mb-[6px]">
-        <p className="text-[13px] font-semibold text-trail-text">
+        <p className="text-[15px] font-semibold text-trail-muted">
           Charge d&apos;entraînement —{' '}
           <span style={{ color: cfg.color }}>{cfg.label}</span>
         </p>
