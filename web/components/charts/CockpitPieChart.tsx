@@ -1,5 +1,6 @@
 'use client'
 
+import { type ReactNode } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { chart } from '@/lib/design/layout'
 
@@ -7,7 +8,9 @@ export type PieSlice = {
   label: string
   value: number  // km
   color: string
+  // Optional decoration in the legend, prefer `icon` (SVG) over `emoji` (text).
   emoji?: string
+  icon?: ReactNode
 }
 
 type Props = {
@@ -78,9 +81,13 @@ export function CockpitPieChart({ data, height = chart.minHeight }: Props) {
                   className="flex-shrink-0 rounded-sm"
                   style={{ width: 11, height: 11, backgroundColor: entry.color }}
                 />
-                {entry.emoji && (
+                {entry.icon ? (
+                  <span className="flex-shrink-0 inline-flex items-center justify-center" style={{ width: 18, height: 18 }}>
+                    {entry.icon}
+                  </span>
+                ) : entry.emoji ? (
                   <span className="flex-shrink-0 text-[13px] leading-none">{entry.emoji}</span>
-                )}
+                ) : null}
                 <span className="text-[13px] font-bold text-trail-text truncate flex-1">{entry.label}</span>
                 <span className="text-[13px] font-semibold text-trail-text flex-shrink-0">
                   {entry.value.toFixed(1)} km

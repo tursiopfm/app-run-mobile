@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/database/supabase-server'
 import { buildDailyMetrics, type DailyLoad, type DailyMetrics } from '@/lib/analytics/fatigue'
 import { type SportKey, SPORT_TYPE_MAP } from '@/lib/design/sports'
-import { calculateHrZones, hrZoneForAvgHr, type HrZone, type HrZoneMethod } from '@/lib/health/hr-zones'
+import { effectiveWorkoutType, type WorkoutType } from '@/lib/activities/intensity'
 
 export type ActivityRow = {
   id: string
@@ -14,6 +14,8 @@ export type ActivityRow = {
   elevation_gain_m: number | null
   moving_time_sec: number | null
   manual_intensity: string | null
+  manual_sport_type: string | null
+  manual_workout_type: string | null
 }
 
 export type DaySession = {
@@ -44,7 +46,7 @@ export type SportOverview = {
   weeklyPoints: WeeklyPoint[]
   cumulMonths: MonthSeries[]
   cumulYears: MonthSeries[]
-  intensityBreakdown: IntensityShare[]
+  workoutTypeBreakdown: WorkoutTypeShare[]
   dailyHistory: DailyHistoryEntry[]
 }
 
@@ -55,8 +57,9 @@ type SlimActivity = {
   elevation_gain_m: number | null
 }
 
-export type IntensityShare = {
-  label: string
+export type WorkoutTypeShare = {
+  // `null` means "Non défini" (no manual override and no auto-detected type).
+  type: WorkoutType | null
   km: number
 }
 
@@ -89,7 +92,9 @@ const YEAR_COLOR_PALETTE = [
   '#C4B5FD', '#FECDD3',
 ]
 const MONTH_SHORT_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
-const INTENSITY_ORDER = ['Footing', 'Sortie longue', 'Seuil', 'VMA']
+const WORKOUT_TYPE_ORDER: (WorkoutType | null)[] = [
+  'sortie_longue', 'fractionne', 'seuil_tempo', 'cotes', 'course', 'runtaf', 'velotaf', null,
+]
 
 // ISO week day to 0-based Mon index: Sun=6, Mon=0, Tue=1 … Sat=5
 function toMonIndex(jsDay: number): number {
@@ -119,51 +124,6 @@ function mondayOfCurrentWeek(): Date {
   mon.setDate(now.getDate() - idx)
   mon.setHours(0, 0, 0, 0)
   return mon
-}
-
-function intensityFromZone(zone: number): string {
-  if (zone <= 2) return 'Footing'
-  if (zone === 3) return 'Sortie longue'
-  if (zone === 4) return 'Seuil'
-  return 'VMA'
-}
-
-const MANUAL_TO_LABEL: Record<string, string> = {
-  recuperation:     'Footing',
-  footing:          'Footing',
-  endurance_active: 'Sortie longue',
-  sortie_longue:    'Sortie longue',
-  cotes:            'Footing',
-  vma:              'VMA',
-  seuil:            'Seuil',
-}
-
-function getIntensityLabel(
-  name: string,
-  ces: number | null,
-  avgHr: number | null,
-  zones: HrZone[],
-  manualIntensity?: string | null,
-): string | null {
-  if (manualIntensity) return MANUAL_TO_LABEL[manualIntensity] ?? null
-
-  const n = name.toLowerCase()
-  if (n.includes('footing') || n.includes(' ef ') || n.includes('endurance facile') || n.includes('récup'))
-    return 'Footing'
-  if (n.includes('sortie longue') || n.includes('sl ') || n.includes('long run') || n.includes('lsl'))
-    return 'Sortie longue'
-  if (n.includes('400') || n.includes('200') || n.includes('vma') || n.includes('interval')
-      || n.includes('fractionné') || n.includes('répétition'))
-    return 'VMA'
-  if (n.includes('seuil') || n.includes('tempo') || n.includes('threshold'))
-    return 'Seuil'
-
-  if (avgHr != null && zones.length > 0) {
-    const zone = hrZoneForAvgHr(avgHr, zones)
-    if (zone !== null) return intensityFromZone(zone)
-  }
-
-  return null
 }
 
 function buildWindowedLoads(rows: ActivityRow[], days: number): DailyLoad[] {
@@ -259,7 +219,6 @@ function buildSportOverview(
   nextMonday: Date,
   janFirst: Date,
   now: Date,
-  hrZones: HrZone[],
 ): SportOverview {
   const acts = filterSport(all365, types)
 
@@ -352,19 +311,20 @@ function buildSportOverview(
     return { label: `${MONTH_SHORT_FR[month]} ${year}`, color: MONTH_CUMUL_COLORS[i], dailyCumul }
   })
 
-  // Intensity breakdown (last 30 days)
+  // Workout-type breakdown (last 30 days) — uses manual override when present,
+  // else auto-detects from the title via guessWorkoutType. Swim → always null.
   const thirtyDaysAgo = new Date(now)
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-  const intensityMap = new Map<string, number>()
+  const workoutTypeMap = new Map<WorkoutType | null, number>()
   for (const a of acts.filter((r) => new Date(r.start_time) >= thirtyDaysAgo)) {
     if (!a.distance_m) continue
-    const label = getIntensityLabel(a.name, a.ces, a.avg_hr, hrZones, a.manual_intensity)
-    if (!label) continue
-    intensityMap.set(label, (intensityMap.get(label) ?? 0) + a.distance_m / 1000)
+    const sport = a.manual_sport_type ?? a.sport_type
+    const t = effectiveWorkoutType(a.manual_workout_type, a.name, sport)
+    workoutTypeMap.set(t, (workoutTypeMap.get(t) ?? 0) + a.distance_m / 1000)
   }
-  const intensityBreakdown: IntensityShare[] = INTENSITY_ORDER
-    .filter((l) => intensityMap.has(l))
-    .map((l) => ({ label: l, km: Math.round((intensityMap.get(l) ?? 0) * 10) / 10 }))
+  const workoutTypeBreakdown: WorkoutTypeShare[] = WORKOUT_TYPE_ORDER
+    .filter((t) => workoutTypeMap.has(t))
+    .map((t) => ({ type: t, km: Math.round((workoutTypeMap.get(t) ?? 0) * 10) / 10 }))
 
   const cumulYears = buildCumulYears(yearActivities, types, now)
 
@@ -408,7 +368,7 @@ function buildSportOverview(
     weeklyPoints,
     cumulMonths,
     cumulYears,
-    intensityBreakdown,
+    workoutTypeBreakdown,
     dailyHistory,
   }
 }
@@ -441,41 +401,18 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   const yearAgo = new Date()
   yearAgo.setDate(yearAgo.getDate() - 365)
 
-  const [{ data: rows }, yearActivities, { data: profile }] = await Promise.all([
+  const [{ data: rows }, yearActivities] = await Promise.all([
     supabase
       .from('activities')
-      .select('id, sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_intensity')
+      .select('id, sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_intensity, manual_sport_type, manual_workout_type')
       .eq('user_id', userId)
       .gte('start_time', yearAgo.toISOString())
       .is('deleted_at', null)
       .order('start_time', { ascending: true }),
     fetchAllHistorySlim(supabase, userId),
-    supabase
-      .from('profiles')
-      .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year')
-      .eq('id', userId)
-      .single(),
   ])
 
   const activities = (rows ?? []) as ActivityRow[]
-
-  const hrZones: HrZone[] = (() => {
-    if (!profile) return []
-    const p = profile as Record<string, number | null>
-    let method: HrZoneMethod = 'auto'
-    if (p.max_hr && p.aerobic_threshold_hr && p.threshold_hr) method = 'seuils'
-    else if (p.max_hr && p.threshold_hr) method = 'test30'
-    else if (p.max_hr && p.resting_hr) method = 'karvonen'
-    else if (p.max_hr) method = 'pct_max'
-    return calculateHrZones({
-      method,
-      maxHr:              p.max_hr,
-      restingHr:          p.resting_hr,
-      aerobicThresholdHr: p.aerobic_threshold_hr,
-      thresholdHr:        p.threshold_hr,
-      birthYear:          p.birth_year,
-    }).zones
-  })()
 
   const globalLoads = buildWindowedLoads(activities, 60)
   const dailyMetrics = buildDailyMetrics(globalLoads)
@@ -493,10 +430,10 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   const janFirst = new Date(now.getFullYear(), 0, 1)
 
   const sportOverviews: Record<SportKey, SportOverview> = {
-    run:  buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.run,  monday, nextMonday, janFirst, now, hrZones),
-    ride: buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.ride, monday, nextMonday, janFirst, now, hrZones),
-    swim: buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.swim, monday, nextMonday, janFirst, now, hrZones),
-    all:  buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.all,  monday, nextMonday, janFirst, now, hrZones),
+    run:  buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.run,  monday, nextMonday, janFirst, now),
+    ride: buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.ride, monday, nextMonday, janFirst, now),
+    swim: buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.swim, monday, nextMonday, janFirst, now),
+    all:  buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.all,  monday, nextMonday, janFirst, now),
   }
 
   const weekActivities = activities.filter((r) => {

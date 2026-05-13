@@ -6,25 +6,14 @@ import type { SportOverview } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import { CockpitPieChart, type PieSlice } from '@/components/charts/CockpitPieChart'
 import { SportSettingsModal } from './SportSettingsModal'
-import { colors } from '@/lib/design/colors'
+import { SESSION_TYPE_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
+import { TypeIcon, UnknownTypeIcon } from '@/components/activity/indicatorIcons'
 
 type Settings = { visible: SportKey[]; default: SportKey }
 const DEFAULT_SETTINGS: Settings = { visible: ['run', 'ride', 'swim', 'all'], default: 'all' }
 const STORAGE_KEY = 'cockpit_intensity_settings'
 
-const INTENSITY_COLORS: Record<string, string> = {
-  'Footing':        colors.pieFooting,
-  'Sortie longue':  colors.pieSortieLongue,
-  'Seuil':          colors.pieSeuil,
-  'VMA':            colors.pieVma,
-}
-
-const INTENSITY_EMOJI: Record<string, string> = {
-  'Footing':        '🦶',
-  'Sortie longue':  '🐢',
-  'Seuil':          '🎯',
-  'VMA':            '🔥',
-}
+const UNDEFINED_COLOR = '#6B7280'
 
 type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
@@ -109,11 +98,11 @@ export function IntensityBlock({ sportOverviews, onHide }: Props) {
       >
         {visibleSports.map((sportKey) => {
           const sov = sportOverviews[sportKey]
-          const pieData: PieSlice[] = sov.intensityBreakdown.map((s) => ({
-            label: s.label,
+          const pieData: PieSlice[] = sov.workoutTypeBreakdown.map((s) => ({
+            label: s.type === null ? 'Non défini' : SESSION_TYPE_LABELS[s.type],
             value: s.km,
-            color: INTENSITY_COLORS[s.label] ?? colors.pieAutre,
-            emoji: INTENSITY_EMOJI[s.label],
+            color: s.type === null ? UNDEFINED_COLOR : SESSION_TYPE_COLORS[s.type],
+            icon:  s.type === null ? <UnknownTypeIcon size={18} /> : <TypeIcon type={s.type} size={18} />,
           }))
 
           return (
