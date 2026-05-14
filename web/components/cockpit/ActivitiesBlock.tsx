@@ -173,7 +173,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
                   subline={
                     <>
                       <span>TSB (Fraîcheur) </span>
-                      <span className="font-semibold" style={{ color: colors.seriesYellow }}>{Math.round(all.tsb)}</span>
+                      <span className="font-semibold text-trail-text">{Math.round(all.tsb)}</span>
                       <span> • 7 derniers jours</span>
                     </>
                   }
@@ -189,10 +189,10 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
                 >
                   <div className="flex items-baseline gap-[2px] flex-nowrap">
                     <span className="text-[13px] text-trail-muted">ATL (7j) </span>
-                    <span className="text-[21px] font-black leading-none" style={{ color: colors.chargeOrange }}>{Math.round(all.atl)}</span>
+                    <span className="text-[21px] font-black leading-none text-trail-text">{Math.round(all.atl)}</span>
                     <span className="text-[13px] text-trail-muted mx-[3px]">·</span>
                     <span className="text-[13px] text-trail-muted">CTL (42j) </span>
-                    <span className="text-[21px] font-black leading-none" style={{ color: colors.seriesBlue }}>{Math.round(all.ctl)}</span>
+                    <span className="text-[21px] font-black leading-none text-trail-text">{Math.round(all.ctl)}</span>
                   </div>
                 </CockpitKpiTile>
               </div>
