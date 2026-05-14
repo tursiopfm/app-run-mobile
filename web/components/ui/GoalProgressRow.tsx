@@ -22,8 +22,9 @@ export function GoalProgressRow({ label, current, target, unit, color }: GoalPro
     <div className="w-full">
       <div className="flex items-center justify-between">
         <span className="text-[16px] text-trail-muted">{label}</span>
-        <span className="text-[16px] font-semibold" style={{ color }}>
-          {fmt(current)}{unit} / {fmt(target)}{unit}
+        <span className="text-[16px] font-semibold">
+          <span className="text-trail-text">{fmt(current)}{unit}</span>
+          <span className="text-trail-muted"> / {fmt(target)}{unit}</span>
         </span>
       </div>
       <div className="mt-[6px] h-[6px] rounded-full bg-trail-border overflow-hidden">
