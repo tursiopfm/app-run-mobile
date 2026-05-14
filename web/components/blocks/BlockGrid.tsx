@@ -23,6 +23,7 @@ type Props = {
   defaultOrder:  string[]
   blocks:        BlockDef[]
   addLabel?:     string
+  defaultHidden?: string[]
 }
 
 const BlockContext = createContext<{ hideSelf: () => void }>({ hideSelf: () => {} })
@@ -101,7 +102,7 @@ function AddBlockPanel({
   )
 }
 
-export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajouter un bloc' }: Props) {
+export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajouter un bloc', defaultHidden = [] }: Props) {
   const orderStorage  = `${storageKey}_block_order`
   const hiddenStorage = `${storageKey}_hidden_blocks`
 
@@ -121,9 +122,13 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
         ])
       }
       const storedHidden = localStorage.getItem(hiddenStorage)
-      if (storedHidden) setHidden(JSON.parse(storedHidden) as string[])
+      if (storedHidden) {
+        setHidden(JSON.parse(storedHidden) as string[])
+      } else if (defaultHidden.length > 0) {
+        setHidden(defaultHidden)
+      }
     } catch {}
-  }, [orderStorage, hiddenStorage, defaultOrder])
+  }, [orderStorage, hiddenStorage, defaultOrder, defaultHidden])
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),

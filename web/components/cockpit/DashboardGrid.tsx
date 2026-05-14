@@ -18,6 +18,7 @@ type Props = {
 }
 
 const DEFAULT_ORDER = ['activities', 'goals', 'weekly', 'charge', 'history', 'cumul', 'intensity', 'week']
+const DEFAULT_HIDDEN = ['charge']
 
 function BlockWithHide({ children }: { children: (onHide: () => void) => React.ReactNode }) {
   const { hideSelf } = useBlockContext()
@@ -35,5 +36,5 @@ export function DashboardGrid({ sportOverviews, weekSessions }: Props) {
     { id: 'intensity',  label: 'Intensité',        emoji: '🔥', render: () => <BlockWithHide>{(onHide) => <IntensityBlock   sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
     { id: 'week',       label: 'Semaine en cours', emoji: '🗓️', render: () => <WeekBlock sportOverviews={sportOverviews} allSessions={weekSessions} /> },
   ]
-  return <BlockGrid storageKey="cockpit" defaultOrder={DEFAULT_ORDER} blocks={blocks} />
+  return <BlockGrid storageKey="cockpit" defaultOrder={DEFAULT_ORDER} defaultHidden={DEFAULT_HIDDEN} blocks={blocks} />
 }
