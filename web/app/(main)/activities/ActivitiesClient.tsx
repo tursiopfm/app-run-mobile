@@ -597,7 +597,23 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
 // ── Main component ─────────────────────────────────────────────────────────────
 const RENDER_BATCH = 50
 
-export default function ActivitiesClient({ initial, hasMore }: { initial: ActivityRow[]; hasMore: boolean }) {
+type AthleteHrProfile = {
+  max_hr:               number | null
+  resting_hr:           number | null
+  aerobic_threshold_hr: number | null
+  threshold_hr:         number | null
+  birth_year:           number | null
+} | null
+
+export default function ActivitiesClient({
+  initial,
+  hasMore,
+  athleteProfile,
+}: {
+  initial:        ActivityRow[]
+  hasMore:        boolean
+  athleteProfile: AthleteHrProfile
+}) {
   const [localActivities, setLocalActivities] = useState<ActivityRow[]>(initial)
   const [loadingMore,     setLoadingMore]     = useState<boolean>(hasMore)
   const [panel,           setPanel]           = useState<'none' | 'search' | 'filter'>('none')
@@ -630,12 +646,19 @@ export default function ActivitiesClient({ initial, hasMore }: { initial: Activi
   }, [hasMore, initial])
 
   useEffect(() => {
+    if (!athleteProfile) return
     try {
       const method = (localStorage.getItem('tc_hr_zone_method') ?? 'pct_max') as HrZoneMethod
-      const raw = localStorage.getItem('tc_athlete_hr')
-      if (raw) setHrZones(calculateHrZones({ method, ...JSON.parse(raw) }).zones)
+      setHrZones(calculateHrZones({
+        method,
+        maxHr:              athleteProfile.max_hr,
+        restingHr:          athleteProfile.resting_hr,
+        aerobicThresholdHr: athleteProfile.aerobic_threshold_hr,
+        thresholdHr:        athleteProfile.threshold_hr,
+        birthYear:          athleteProfile.birth_year,
+      }).zones)
     } catch {}
-  }, [])
+  }, [athleteProfile])
 
   useEffect(() => {
     const savedSearch = sessionStorage.getItem('tc_activities_search')
