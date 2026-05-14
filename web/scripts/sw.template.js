@@ -1,5 +1,7 @@
 // Trail Cockpit - Service Worker
-const VERSION = 'v3'
+// VERSION est injectée par scripts/generate-sw.js au build (SHA du commit).
+// Ne pas modifier manuellement le placeholder.
+const VERSION = '__SW_VERSION__'
 const STATIC_CACHE = `trail-static-${VERSION}`
 const RUNTIME_CACHE = `trail-runtime-${VERSION}`
 
