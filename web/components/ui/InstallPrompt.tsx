@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react'
 import { Download, Share, Plus, X } from 'lucide-react'
 
-const DISMISS_KEY = 'trail.installPrompt.dismissedAt'
-const DISMISS_DAYS = 7
 const SHOW_DELAY_MS = 2500
 
 type BeforeInstallPromptEvent = Event & {
@@ -27,20 +25,6 @@ function isIosSafari(): boolean {
   return isIos && isSafari
 }
 
-function recentlyDismissed(): boolean {
-  try {
-    const raw = localStorage.getItem(DISMISS_KEY)
-    if (!raw) return false
-    const ts = parseInt(raw, 10)
-    if (!Number.isFinite(ts)) return false
-    return (Date.now() - ts) / (1000 * 60 * 60 * 24) < DISMISS_DAYS
-  } catch { return false }
-}
-
-function markDismissed() {
-  try { localStorage.setItem(DISMISS_KEY, String(Date.now())) } catch {}
-}
-
 export function InstallPrompt() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null)
   const [visible, setVisible] = useState(false)
@@ -48,7 +32,7 @@ export function InstallPrompt() {
   const [iosMode, setIosMode] = useState(false)
 
   useEffect(() => {
-    if (isStandalone() || recentlyDismissed()) return
+    if (isStandalone()) return
 
     const onBeforeInstall = (e: Event) => {
       e.preventDefault()
@@ -63,7 +47,10 @@ export function InstallPrompt() {
     let iosTimer: number | undefined
     if (isIosSafari()) {
       setIosMode(true)
-      iosTimer = window.setTimeout(() => setVisible(true), SHOW_DELAY_MS)
+      iosTimer = window.setTimeout(() => {
+        setVisible(true)
+        setShowIosInstructions(true)
+      }, SHOW_DELAY_MS)
     }
 
     return () => {
@@ -80,13 +67,12 @@ export function InstallPrompt() {
     if (!deferred) return
     try {
       await deferred.prompt()
-      const choice = await deferred.userChoice
-      if (choice.outcome === 'dismissed') markDismissed()
+      await deferred.userChoice
       setDeferred(null); setVisible(false)
     } catch { setVisible(false) }
   }
 
-  const handleDismiss = () => { markDismissed(); setVisible(false); setShowIosInstructions(false) }
+  const handleDismiss = () => { setVisible(false); setShowIosInstructions(false) }
 
   if (showIosInstructions) {
     return (
@@ -132,7 +118,7 @@ export function InstallPrompt() {
 
   return (
     <div role="dialog" aria-label="Installer Trail Cockpit"
-      className="fixed left-3 right-3 bottom-[calc(env(safe-area-inset-bottom)+72px)] sm:left-auto sm:right-4 sm:bottom-4 sm:max-w-sm z-[60]">
+      className="fixed left-3 right-3 bottom-3 sm:left-auto sm:right-4 sm:bottom-4 sm:max-w-sm z-[60] pb-safe">
       <div className="bg-trail-card border border-trail-border rounded-2xl p-4 shadow-2xl flex items-center gap-3">
         <img src="/icons/icon-192.png" alt="" aria-hidden="true" className="w-10 h-10 rounded-xl shrink-0" />
         <div className="flex-1 min-w-0">
