@@ -35,24 +35,24 @@ export function LoadStatusCard({ payload }: { payload: ChargeSportPayload }) {
       <div className="grid grid-cols-3 gap-2 mt-3">
         <KpiCell
           label={L.recentFatigue}
+          labelColor={colors.chargeOrange}
           value={atl}
-          valueColor={colors.chargeOrange}
           statusLabel={fatigueLabel}
           statusColor={fatigueStatus.color}
           tooltip={`ATL: ${atl}`}
         />
         <KpiCell
           label={L.baseFitness}
+          labelColor={colors.seriesBlue}
           value={ctl}
-          valueColor={colors.seriesBlue}
           statusLabel={fitnessLabel}
           statusColor={fitnessStatus.color}
           tooltip={`CTL: ${ctl}`}
         />
         <KpiCell
           label={L.freshness}
+          labelColor={colors.seriesYellow}
           value={tsb}
-          valueColor={colors.seriesYellow}
           statusLabel={freshnessLabel}
           statusColor={freshnessStatus.color}
           tooltip={`TSB: ${tsb}`}
@@ -64,18 +64,18 @@ export function LoadStatusCard({ payload }: { payload: ChargeSportPayload }) {
 
 type KpiCellProps = {
   label:       string
+  labelColor:  string
   value:       number
-  valueColor:  string
   statusLabel: string
   statusColor: string
   tooltip:     string
 }
 
-function KpiCell({ label, value, valueColor, statusLabel, statusColor, tooltip }: KpiCellProps) {
+function KpiCell({ label, labelColor, value, statusLabel, statusColor, tooltip }: KpiCellProps) {
   return (
     <div className="rounded-[10px] bg-trail-surface px-2 py-2 text-center" title={tooltip}>
-      <p className="text-[10px] text-trail-muted">{label}</p>
-      <p className="text-[18px] font-black mt-0.5" style={{ color: valueColor }}>{value}</p>
+      <p className="text-[10px] font-semibold" style={{ color: labelColor }}>{label}</p>
+      <p className="text-[18px] font-black mt-0.5 text-trail-text">{value}</p>
       <p
         className="text-[10px] font-medium mt-0.5 flex items-center justify-center gap-1 leading-[14px]"
         style={{ color: statusColor }}
