@@ -7,7 +7,9 @@ import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports
 import { CockpitKpiTile } from '@/components/ui/CockpitKpiTile'
 import { TsbBadge } from '@/components/ui/TsbBadge'
 import { SportSettingsModal } from './SportSettingsModal'
+import { BlockHelpSheet } from '@/components/charge/BlockHelpSheet'
 import { colors } from '@/lib/design/colors'
+import { charge as L } from '@/lib/design/labels'
 
 type Settings = { visible: SportKey[]; default: SportKey }
 const DEFAULT_SETTINGS: Settings = { visible: ['run', 'ride', 'swim', 'all'], default: 'run' }
@@ -31,6 +33,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
   const [settings,    setSettings]    = useState<Settings>(DEFAULT_SETTINGS)
   const [currentIdx,  setCurrentIdx]  = useState(0)
   const [showModal,   setShowModal]   = useState(false)
+  const [showChargeHelp, setShowChargeHelp] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -112,14 +115,15 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
         {visibleSports.map((sportKey) => {
           const scfg = SPORT_CONFIG[sportKey]
           const sov  = sportOverviews[sportKey]
+          const all  = sportOverviews.all
           const kmNorm   = normalize(sov.dailyKm)
           const kmLabels = sov.dailyKm.map((v) => v > 0 ? `${Math.round(v * 10) / 10}` : '')
           const dpNorm   = normalize(sov.dailyDPlus)
           const dpLabels = sov.dailyDPlus.map((v) => v > 0 ? `${Math.round(v)}` : '')
           const mNorm    = normalize(sov.monthlyKm)
           const mLabels  = sov.monthlyKm.map((v) => v > 0 ? `${Math.round(v)}` : '')
-          const tsbNorm  = normalizeTsb(sov.last7Tsb)
-          const tsbLabs  = sov.last7Tsb.map((v) => `${Math.round(v)}`)
+          const tsbNorm  = normalizeTsb(all.last7Tsb)
+          const tsbLabs  = all.last7Tsb.map((v) => `${Math.round(v)}`)
 
           return (
             <div
@@ -165,17 +169,30 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
                 </CockpitKpiTile>
 
                 <CockpitKpiTile
-                  icon="⚡"
-                  title={`CHARGE (${scfg.shortLabel})`}
-                  subline={`TSB (Fraîcheur) ${Math.round(sov.tsb)} • 7 derniers jours`}
+                  title="CHARGE"
+                  subline={
+                    <>
+                      <span>TSB (Fraîcheur) </span>
+                      <span className="font-semibold" style={{ color: colors.seriesYellow }}>{Math.round(all.tsb)}</span>
+                      <span> • 7 derniers jours</span>
+                    </>
+                  }
                   barValues={tsbNorm} barLabels={tsbLabs} barColor={colors.seriesYellow}
+                  headerRight={
+                    <button
+                      type="button"
+                      onClick={() => setShowChargeHelp(true)}
+                      aria-label="Aide sur la charge"
+                      className="text-trail-muted hover:text-trail-text w-5 h-5 flex items-center justify-center text-[12px] leading-none"
+                    >ⓘ</button>
+                  }
                 >
                   <div className="flex items-baseline gap-[2px] flex-nowrap">
-                    <span className="text-[13px] font-bold" style={{ color: colors.chargeOrange }}>ATL (7j) </span>
-                    <span className="text-[21px] font-black leading-none" style={{ color: colors.chargeOrange }}>{Math.round(sov.atl)}</span>
+                    <span className="text-[13px] text-trail-muted">ATL (7j) </span>
+                    <span className="text-[21px] font-black leading-none" style={{ color: colors.chargeOrange }}>{Math.round(all.atl)}</span>
                     <span className="text-[13px] text-trail-muted mx-[3px]">·</span>
-                    <span className="text-[13px] font-bold" style={{ color: colors.seriesBlue }}>CTL (42j) </span>
-                    <span className="text-[21px] font-black leading-none" style={{ color: colors.seriesBlue }}>{Math.round(sov.ctl)}</span>
+                    <span className="text-[13px] text-trail-muted">CTL (42j) </span>
+                    <span className="text-[21px] font-black leading-none" style={{ color: colors.seriesBlue }}>{Math.round(all.ctl)}</span>
                   </div>
                 </CockpitKpiTile>
               </div>
@@ -209,6 +226,13 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
           onSave={handleSave}
           onClose={() => setShowModal(false)}
           onHide={onHide}
+        />
+      )}
+      {showChargeHelp && (
+        <BlockHelpSheet
+          title={L.blocks.status}
+          body={L.help.status}
+          onClose={() => setShowChargeHelp(false)}
         />
       )}
     </div>
