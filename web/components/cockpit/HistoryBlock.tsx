@@ -316,7 +316,6 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
         <div className="flex items-center gap-1.5">
           <span className="text-[15px] font-semibold text-trail-muted">Historique —</span>
           <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
-          <span className="text-[15px] ml-0.5">{cfg.emoji}</span>
         </div>
         <div className="flex items-center gap-2">
           {/* Period tabs */}

@@ -78,7 +78,6 @@ export function IntensityBlock({ sportOverviews, onHide }: Props) {
         <div className="flex items-center gap-1">
           <span className="text-[15px] font-semibold text-trail-muted">Type de séance 30j —</span>
           <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
-          <span className="text-[15px] ml-0.5">{cfg.emoji}</span>
         </div>
         <button
           onClick={() => setShowModal(true)}
