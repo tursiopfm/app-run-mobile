@@ -8,11 +8,11 @@ import { useEffect, useRef } from 'react'
 // qui forcent la fermeture quand :
 //   - le doigt quitte le graphique (touchend / touchcancel)
 //   - la page scrolle (immédiat)
-//   - aucun mouvement n'a eu lieu depuis autoDismissMs (laisse le temps de lire)
+//   - aucun mouvement n'a eu lieu depuis autoDismissMs (10s par défaut)
 //
 // La fermeture est faite en dispatchant des évènements mouseout/mouseleave sur
 // le wrapper Recharts — React 17+ synthétise mouseleave à partir de mouseout.
-export function useChartTooltipDismiss(autoDismissMs = 2000) {
+export function useChartTooltipDismiss(autoDismissMs = 10000) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
