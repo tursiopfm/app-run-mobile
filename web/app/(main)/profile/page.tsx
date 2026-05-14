@@ -14,7 +14,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('max_hr,aerobic_threshold_hr,threshold_hr,resting_hr,ftp_watts,weight_kg,year_goal_km,birth_year,hr_zone_method,hr_zones_custom,hr_method_updated_at')
+    .select('max_hr,aerobic_threshold_hr,threshold_hr,resting_hr,ftp_watts,weight_kg,year_goal_km,birth_year,birth_date,hr_zone_method,hr_zones_custom,hr_method_updated_at')
     .eq('id', user.id)
     .single()
 
@@ -31,12 +31,17 @@ export default async function ProfilePage() {
 
   const initialMethod: HrZoneMethod = (profile?.hr_zone_method as HrZoneMethod) ?? 'seuils'
 
+  const birthYearFromDate =
+    typeof profile?.birth_date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(profile.birth_date)
+      ? Number(profile.birth_date.slice(0, 4))
+      : null
+
   const initialState: CardioState = {
     max_hr:               profile?.max_hr               ?? null,
     resting_hr:           profile?.resting_hr           ?? null,
     aerobic_threshold_hr: profile?.aerobic_threshold_hr ?? null,
     threshold_hr:         profile?.threshold_hr         ?? null,
-    birth_year:           profile?.birth_year           ?? null,
+    birth_year:           profile?.birth_year ?? birthYearFromDate,
     hr_zones_custom:      (profile?.hr_zones_custom as CardioState['hr_zones_custom']) ?? null,
   }
 
