@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-11 · Code: `web/lib/activities/intensity.ts`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Séparation Intensité / Type d'activité
 
 **Date :** 2026-05-11  

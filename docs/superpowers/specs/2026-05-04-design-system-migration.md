@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-04 · Code: `web/lib/design/`, `web/tailwind.config.ts`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Design System Migration — Android → Web
 
 **Date:** 2026-05-04  

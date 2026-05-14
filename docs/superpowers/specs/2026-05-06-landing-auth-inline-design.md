@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-06 · Code: `web/app/page.tsx`, `web/components/auth/`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Landing page — auth inline
 
 **Date:** 2026-05-06  

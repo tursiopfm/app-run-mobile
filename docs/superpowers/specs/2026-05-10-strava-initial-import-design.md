@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-10 · Code: `web/app/api/cron/strava-import/route.ts`, `web/components/ui/ImportProgressBanner.tsx`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Import initial complet des activités Strava — Design
 
 **Date :** 2026-05-10

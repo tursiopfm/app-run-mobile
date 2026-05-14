@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-06 · Code: `web/app/(main)/activities/[id]/`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Spec — Page Détail Activité
 
 Date: 2026-05-06  

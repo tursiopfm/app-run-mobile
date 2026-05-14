@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-07 · Code: `web/app/(main)/admin/`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Admin Panel — Trail Cockpit Web App
 
 **Date:** 2026-05-07  

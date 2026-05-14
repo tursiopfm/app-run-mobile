@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-12 · Code: `web/lib/analytics/charge-insights.ts`, `web/components/charge/`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Redesign onglet Charge — Design Spec
 
 **Date** : 2026-05-12

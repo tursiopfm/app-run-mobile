@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-10 · Code: `web/app/api/cron/strava-import/route.ts`, `web/components/ui/ImportProgressBanner.tsx`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Strava Initial Import Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-06 · Code: `web/lib/design/colors.ts`, `web/tailwind.config.ts`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Thème Clair — Trail Cockpit PWA
 
 **Date:** 2026-05-06  

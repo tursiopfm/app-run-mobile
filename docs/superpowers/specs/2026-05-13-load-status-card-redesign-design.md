@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-13 · Code: `web/components/charge/blocks/LoadStatusCard.tsx`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Refonte du bloc « État du jour » (LoadStatusCard)
 
 **Date** : 2026-05-13

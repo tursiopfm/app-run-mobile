@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-11 · Code: `web/components/cockpit/CumulBlock.tsx`, `web/components/cockpit/YearRangeSelector.tsx`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Sélecteur d'années pour le bloc Cumul km/année
 
 **Date** : 2026-05-11

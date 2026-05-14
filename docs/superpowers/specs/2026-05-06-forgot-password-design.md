@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-06 · Code: `web/app/auth/reset/page.tsx`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Forgot Password — Trail Cockpit Web
 
 **Date:** 2026-05-06  

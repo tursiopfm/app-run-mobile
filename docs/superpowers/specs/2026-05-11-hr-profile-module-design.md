@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-11 · Code: `web/components/settings/HrCalibrationCard.tsx`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Module Profil FC — Refonte pro
 
 **Date** : 2026-05-11

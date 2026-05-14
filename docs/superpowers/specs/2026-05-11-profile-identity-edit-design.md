@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-11 · Code: `web/components/settings/IdentityCard.tsx`, `web/app/api/profile/avatar/route.ts`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Design — Édition identité athlète (nom/prénom + avatar)
 
 **Date :** 2026-05-11  

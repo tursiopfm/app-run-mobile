@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-06 · Code: `web/components/ui/EditActivityModal.tsx`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Spec : Modal d'édition d'activité (onglet Activités)
 
 **Date :** 2026-05-06  

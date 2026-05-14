@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-04 · Code: `web/components/cockpit/ActivitiesBlock.tsx`, `web/components/cockpit/ChargeBlock.tsx`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Blocs Activités & Charge — Swipeable multi-sport
 
 **Date :** 2026-05-04  

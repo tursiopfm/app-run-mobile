@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-04 · Code: `web/components/cockpit/ActivitiesBlock.tsx`, `web/components/cockpit/ChargeBlock.tsx`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Blocs Activités & Charge — Swipeable multi-sport — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

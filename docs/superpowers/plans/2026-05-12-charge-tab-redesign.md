@@ -1,3 +1,6 @@
+> **Status: Implémenté** · Date: 2026-05-12 · Code: `web/lib/analytics/charge-insights.ts`, `web/components/charge/`
+> *Snapshot de design — pour l'état actuel, voir le code.*
+
 # Charge Tab Redesign — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
