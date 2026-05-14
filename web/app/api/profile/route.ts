@@ -8,7 +8,7 @@ export async function PATCH(req: NextRequest) {
 
   const body = await req.json()
   const allowed = [
-    'first_name', 'last_name',
+    'first_name', 'last_name', 'birth_date', 'sex',
     'max_hr', 'threshold_hr', 'resting_hr', 'aerobic_threshold_hr',
     'ftp_watts', 'weight_kg', 'year_goal_km', 'birth_year',
     'threshold_pace_run_sec_per_km', 'threshold_pace_trail_sec_per_km',
@@ -17,6 +17,19 @@ export async function PATCH(req: NextRequest) {
   const update: Record<string, unknown> = {}
   for (const key of allowed) {
     if (key in body) update[key] = body[key]
+  }
+
+  if ('sex' in update && update.sex != null && !['male','female','other'].includes(String(update.sex))) {
+    return NextResponse.json({ error: 'Invalid sex' }, { status: 400 })
+  }
+
+  // Keep birth_year in sync when birth_date is updated (used by HR auto method).
+  if ('birth_date' in update && !('birth_year' in update)) {
+    if (typeof update.birth_date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(update.birth_date)) {
+      update.birth_year = Number(update.birth_date.slice(0, 4))
+    } else if (update.birth_date == null) {
+      update.birth_year = null
+    }
   }
 
   const { error } = await supabase

@@ -1,12 +1,14 @@
-import Link from 'next/link'
-import { Plug2, Palette, Sparkles, LifeBuoy, User, ChevronRight } from 'lucide-react'
+import { Plug2, Palette, Sparkles, LifeBuoy, User } from 'lucide-react'
 import { StravaSection } from '@/components/settings/StravaSection'
 import { AccountSection } from '@/components/settings/AccountSection'
 import { AppearanceSection } from '@/components/settings/AppearanceSection'
 import { HelpAboutSection } from '@/components/settings/HelpAboutSection'
+import { IdentityPreview } from '@/components/settings/IdentityPreview'
+import { HrCalibrationTeaser } from '@/components/settings/HrCalibrationTeaser'
 import { createClient } from '@/lib/database/supabase-server'
 import { getServerUser } from '@/lib/database/get-user'
 import { settings as settingsLabels } from '@/lib/design/labels'
+import type { HrZoneMethod } from '@/lib/health/hr-zones'
 
 // ── Section header with icon + title + subtitle (mirrors a true settings UI rhythm)
 function SectionHeader({
@@ -73,22 +75,47 @@ export default async function SettingsPage() {
 
   let stravaConnected = false
   let stravaAthleteName: string | null = null
+  let firstName: string | null = null
+  let lastName:  string | null = null
+  let avatarUrl: string | null = null
+  let hrMethod:    HrZoneMethod | null = null
+  let maxHr:       number | null = null
+  let thresholdHr: number | null = null
 
   if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('first_name,last_name,avatar_url,max_hr,threshold_hr,hr_zone_method')
+      .eq('id', user.id)
+      .single()
+
+    firstName   = profile?.first_name ?? null
+    lastName    = profile?.last_name  ?? null
+    hrMethod    = (profile?.hr_zone_method as HrZoneMethod | null) ?? null
+    maxHr       = profile?.max_hr       ?? null
+    thresholdHr = profile?.threshold_hr ?? null
+
     const { data: connection } = await supabase
       .from('provider_connections')
       .select('athlete_data')
       .eq('user_id', user.id)
       .eq('provider', 'strava')
-      .single()
+      .maybeSingle()
 
     if (connection) {
       stravaConnected = true
-      const athlete = connection.athlete_data as { firstname?: string; lastname?: string } | null
+      const athlete = connection.athlete_data as { firstname?: string; lastname?: string; profile?: string } | null
       if (athlete?.firstname) {
         stravaAthleteName = `${athlete.firstname} ${athlete.lastname ?? ''}`.trim()
+        firstName ??= athlete.firstname ?? null
+        lastName  ??= athlete.lastname  ?? null
+      }
+      if (athlete?.profile && athlete.profile !== 'avatar/athlete/large.png') {
+        avatarUrl ??= athlete.profile
       }
     }
+
+    avatarUrl ??= profile?.avatar_url ?? null
   }
 
   return (
@@ -116,20 +143,30 @@ export default async function SettingsPage() {
         />
         <SectionCard>
           <AccountSection />
-          <Link
-            href="/profile"
-            className="flex items-center gap-3 px-3 py-[10px] rounded-[10px] bg-trail-surface hover:bg-trail-border/30 transition-colors"
-          >
-            <div className="w-8 h-8 rounded-[10px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
-              <User size={14} className="text-trail-muted" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-trail-muted">Profil</p>
-              <p className="text-[13px] text-trail-text truncate">Mon profil</p>
-            </div>
-            <ChevronRight size={16} className="text-trail-muted flex-shrink-0" />
-          </Link>
           <StravaSection isConnected={stravaConnected} athleteName={stravaAthleteName} />
+        </SectionCard>
+      </section>
+
+      {/* ── Profil athlète ── */}
+      <section>
+        <SectionHeader
+          icon={User}
+          title={settingsLabels.sectionProfile}
+          subtitle="Aperçu de ton profil sportif et accès à la calibration cardiaque"
+        />
+        <SectionCard>
+          <IdentityPreview
+            firstName={firstName}
+            lastName={lastName}
+            email={user?.email ?? null}
+            avatarUrl={avatarUrl}
+            accountCreatedAt={user?.created_at ?? null}
+          />
+          <HrCalibrationTeaser
+            method={hrMethod}
+            maxHr={maxHr}
+            thresholdHr={thresholdHr}
+          />
         </SectionCard>
       </section>
 

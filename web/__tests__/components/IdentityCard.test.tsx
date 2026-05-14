@@ -11,6 +11,8 @@ const defaultProps = {
   firstName: 'Franck',
   lastName: 'Meri',
   email: 'franck@example.com',
+  birthDate: null,
+  sex: null,
   avatarUrl: null,
   hasCustomAvatar: false,
   accountCreatedAt: '2024-01-15T10:00:00Z',
@@ -23,7 +25,7 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
-describe('IdentityCard — mode lecture', () => {
+describe('IdentityCard — affichage', () => {
   it('affiche le nom complet', () => {
     render(<IdentityCard {...defaultProps} />)
     expect(screen.getByText('Franck Meri')).toBeInTheDocument()
@@ -54,56 +56,61 @@ describe('IdentityCard — mode lecture', () => {
     render(<IdentityCard {...defaultProps} hasCustomAvatar={true} avatarUrl="https://example.com/a.jpg" />)
     expect(screen.getByText(/retirer la photo/i)).toBeInTheDocument()
   })
+
+  it('affiche les inputs pré-remplis', () => {
+    render(<IdentityCard {...defaultProps} birthDate="1990-05-12" sex="male" />)
+    expect(screen.getByPlaceholderText('Prénom')).toHaveValue('Franck')
+    expect(screen.getByPlaceholderText('Nom')).toHaveValue('Meri')
+    expect(screen.getByDisplayValue('1990-05-12')).toBeInTheDocument()
+    const homme = screen.getByRole('button', { name: 'Homme' })
+    expect(homme.className).toContain('border-trail-primary')
+  })
 })
 
-describe('IdentityCard — édition du nom', () => {
-  it('passe en mode édition au clic sur le crayon', () => {
+describe('IdentityCard — sauvegarde', () => {
+  it('bouton désactivé tant que rien n\'est modifié', () => {
     render(<IdentityCard {...defaultProps} />)
-    fireEvent.click(screen.getByRole('button', { name: /modifier le nom/i }))
-    expect(screen.getByPlaceholderText('Prénom')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Nom')).toBeInTheDocument()
+    expect(screen.getByText(/aucune modification/i)).toBeInTheDocument()
   })
 
-  it('annuler remet en mode lecture sans appel API', () => {
-    render(<IdentityCard {...defaultProps} />)
-    fireEvent.click(screen.getByRole('button', { name: /modifier le nom/i }))
-    fireEvent.click(screen.getByText('Annuler'))
-    expect(screen.getByText('Franck Meri')).toBeInTheDocument()
-    expect(screen.queryByPlaceholderText('Prénom')).not.toBeInTheDocument()
-  })
-
-  it('sauvegarde le nom via PATCH /api/profile', async () => {
+  it('sauvegarde tous les champs via PATCH /api/profile', async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({}) }) as jest.Mock
 
     render(<IdentityCard {...defaultProps} />)
-    fireEvent.click(screen.getByRole('button', { name: /modifier le nom/i }))
 
-    const firstInput = screen.getByPlaceholderText('Prénom')
-    fireEvent.change(firstInput, { target: { value: 'François' } })
+    fireEvent.change(screen.getByPlaceholderText('Prénom'), { target: { value: 'François' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Homme' }))
 
-    fireEvent.click(screen.getByText('Enregistrer'))
+    fireEvent.click(screen.getByRole('button', { name: /enregistrer les modifications/i }))
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith('/api/profile', expect.objectContaining({
         method: 'PATCH',
-        body: JSON.stringify({ first_name: 'François', last_name: 'Meri' }),
+        body: JSON.stringify({
+          first_name: 'François',
+          last_name:  'Meri',
+          birth_date: null,
+          sex:        'male',
+        }),
       }))
     })
 
-    await waitFor(() => {
-      expect(screen.getByText('François Meri')).toBeInTheDocument()
-    })
-
     expect(mockRefresh).toHaveBeenCalled()
-    expect(screen.queryByPlaceholderText('Prénom')).not.toBeInTheDocument()
+  })
+
+  it('sélectionner deux fois le même sexe le désélectionne', () => {
+    render(<IdentityCard {...defaultProps} sex="female" />)
+    const femme = screen.getByRole('button', { name: 'Femme' })
+    fireEvent.click(femme)
+    expect(screen.getByText(/non précisé/i)).toBeInTheDocument()
   })
 
   it('affiche une erreur si la sauvegarde échoue', async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: false }) as jest.Mock
 
     render(<IdentityCard {...defaultProps} />)
-    fireEvent.click(screen.getByRole('button', { name: /modifier le nom/i }))
-    fireEvent.click(screen.getByText('Enregistrer'))
+    fireEvent.change(screen.getByPlaceholderText('Prénom'), { target: { value: 'X' } })
+    fireEvent.click(screen.getByRole('button', { name: /enregistrer les modifications/i }))
 
     await waitFor(() => {
       expect(screen.getByText(/erreur/i)).toBeInTheDocument()

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutGrid, Dumbbell, Calendar, Footprints, Trophy, Settings, ShieldCheck } from 'lucide-react'
+import { LayoutGrid, Dumbbell, Calendar, Footprints, Trophy, ShieldCheck } from 'lucide-react'
 
 const BASE_NAV = [
   { href: '/dashboard',  icon: LayoutGrid, label: 'Cockpit'   },
@@ -10,7 +10,6 @@ const BASE_NAV = [
   { href: '/plan',       icon: Calendar,   label: 'Plan'      },
   { href: '/activities', icon: Footprints, label: 'Activités' },
   { href: '/courses',    icon: Trophy,     label: 'Courses'   },
-  { href: '/settings',   icon: Settings,   label: 'Réglages'  },
 ]
 
 const ADMIN_NAV = { href: '/admin', icon: ShieldCheck, label: 'Admin' }
