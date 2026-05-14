@@ -57,13 +57,13 @@ export const CHARGE_LABELS: Record<ChargeLevel, string> = {
 
 // ── Session type (réutilise WorkoutType) ───────────────────────────────────────
 export const SESSION_TYPE_COLORS: Record<WorkoutType, string> = {
-  course:        '#E8B968', // or          — Course (trophée)
-  sortie_longue: '#7BC97F', // vert        — Sortie Longue (tortue)
-  fractionne:    '#D85A4A', // rouge       — Fractionné (chrono)
-  seuil_tempo:   '#3DB5E6', // bleu        — Seuil / Tempo
-  cotes:         '#5BA88D', // vert sapin  — Côtes (montagne + drapeau)
-  runtaf:        '#3DB5E6', // bleu        — Runtaf (coureur + laptop)
-  velotaf:       '#B8C25F', // olive       — Velotaf (vélo + laptop)
+  course:        '#E8B968', // or            — Course (trophée)
+  sortie_longue: '#86EFAC', // vert clair    — Sortie Longue (tortue)
+  fractionne:    '#D85A4A', // rouge         — Fractionné (chrono)
+  seuil_tempo:   '#22D3EE', // cyan vif      — Seuil / Tempo
+  cotes:         '#15803D', // vert foncé    — Côtes (montagne + drapeau)
+  runtaf:        '#1E40AF', // bleu marine   — Runtaf (coureur + laptop)
+  velotaf:       '#B8C25F', // olive         — Velotaf (vélo + laptop)
 }
 
 export const SESSION_TYPE_LABELS: Record<WorkoutType, string> = {

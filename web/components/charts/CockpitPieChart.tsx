@@ -18,8 +18,8 @@ type Props = {
   height?: number
 }
 
-const OUTER_R = 72
-const INNER_R = Math.round(OUTER_R * (1 - chart.pieRingRatio))  // 32
+const OUTER_R = 96
+const INNER_R = Math.round(OUTER_R * (1 - chart.pieRingRatio))  // 43
 
 function PctLabel(props: {
   cx: number; cy: number; midAngle: number
@@ -44,9 +44,9 @@ export function CockpitPieChart({ data, height = chart.minHeight }: Props) {
   const renderData = empty ? [{ label: '', value: 1, color: '#1E3530' }] : data
 
   return (
-    <div className="flex items-center gap-3" style={{ minHeight: height }}>
+    <div className="flex items-center gap-5" style={{ minHeight: height }}>
       {/* Donut */}
-      <div style={{ width: 160, height: 160, flexShrink: 0 }}>
+      <div style={{ width: 210, height: 210, flexShrink: 0 }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
