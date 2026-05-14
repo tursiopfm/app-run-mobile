@@ -167,14 +167,14 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
                 <CockpitKpiTile
                   icon="⚡"
                   title={`CHARGE (${scfg.shortLabel})`}
-                  subline={`TSB ${Math.round(sov.tsb)} • 7 derniers jours`}
+                  subline={`TSB (Fraîcheur) ${Math.round(sov.tsb)} • 7 derniers jours`}
                   barValues={tsbNorm} barLabels={tsbLabs} barColor={colors.seriesYellow}
                 >
                   <div className="flex items-baseline gap-[2px] flex-nowrap">
-                    <span className="text-[13px] font-bold" style={{ color: colors.chargeOrange }}>ATL </span>
+                    <span className="text-[13px] font-bold" style={{ color: colors.chargeOrange }}>ATL (7j) </span>
                     <span className="text-[21px] font-black leading-none" style={{ color: colors.chargeOrange }}>{Math.round(sov.atl)}</span>
                     <span className="text-[13px] text-trail-muted mx-[3px]">·</span>
-                    <span className="text-[13px] font-bold" style={{ color: colors.seriesBlue }}>CTL </span>
+                    <span className="text-[13px] font-bold" style={{ color: colors.seriesBlue }}>CTL (42j) </span>
                     <span className="text-[21px] font-black leading-none" style={{ color: colors.seriesBlue }}>{Math.round(sov.ctl)}</span>
                   </div>
                 </CockpitKpiTile>
