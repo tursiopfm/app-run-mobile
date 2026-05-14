@@ -50,14 +50,10 @@ function SortableBlock({ id, isDraggingAny, label, children }: {
           {...attributes}
           {...listeners}
           aria-label={`Déplacer le bloc ${label}`}
-          className="cursor-grab active:cursor-grabbing select-none pointer-events-auto px-3 py-1.5"
+          className="cursor-grab active:cursor-grabbing select-none pointer-events-auto px-4 py-2"
           style={{ touchAction: 'none' }}
         >
-          <div className="flex gap-[3px] opacity-30">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <span key={i} className="w-[3px] h-[3px] rounded-full bg-trail-muted" />
-            ))}
-          </div>
+          <div className="w-10 h-[5px] rounded-full bg-trail-muted hover:bg-trail-text transition-colors" />
         </div>
       </div>
       <div className="pt-4">{children}</div>
