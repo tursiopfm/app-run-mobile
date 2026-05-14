@@ -5,7 +5,6 @@ import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 import { charge as L } from '@/lib/design/labels'
 import { colors } from '@/lib/design/colors'
 import { useChartTooltipDismiss } from '@/lib/charts/use-chart-tooltip-dismiss'
-import { kpiStatusFreshness } from '@/lib/analytics/charge-kpi-status'
 import {
   ComposedChart, Line, Area, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
 } from 'recharts'
@@ -18,8 +17,6 @@ export function FitnessFatigueChart({ payload }: { payload: ChargeSportPayload }
     tsb:  Math.round(m.tsb),
   }))
 
-  const lastTsb = data.length ? data[data.length - 1].tsb : 0
-  const freshnessColor = kpiStatusFreshness(lastTsb).color
   const wrapperRef = useChartTooltipDismiss()
 
   return (
@@ -43,7 +40,7 @@ export function FitnessFatigueChart({ payload }: { payload: ChargeSportPayload }
                 : [v, 'Fraîcheur (TSB)']
               }
             />
-            <Area dataKey="tsb" type="monotone" fill={freshnessColor} stroke="none" fillOpacity={0.18} />
+            <Area dataKey="tsb" type="monotone" fill={colors.seriesYellow} stroke="none" fillOpacity={0.18} />
             <Line dataKey="atl" type="monotone" stroke={colors.chargeOrange} strokeWidth={2} dot={false} />
             <Line dataKey="ctl" type="monotone" stroke={colors.seriesBlue}    strokeWidth={2} dot={false} />
           </ComposedChart>
@@ -57,7 +54,7 @@ export function FitnessFatigueChart({ payload }: { payload: ChargeSportPayload }
           <span className="w-3 h-0.5 rounded-full" style={{ backgroundColor: colors.seriesBlue }} />{L.baseFitness}
         </span>
         <span className="flex items-center gap-1.5 text-[11px] text-trail-muted">
-          <span className="w-3 h-2 rounded-sm" style={{ backgroundColor: freshnessColor, opacity: 0.5 }} />{L.freshness}
+          <span className="w-3 h-2 rounded-sm" style={{ backgroundColor: colors.seriesYellow, opacity: 0.5 }} />{L.freshness}
         </span>
       </div>
     </BlockCard>

@@ -52,7 +52,7 @@ export function LoadStatusCard({ payload }: { payload: ChargeSportPayload }) {
         <KpiCell
           label={L.freshness}
           value={tsb}
-          valueColor={freshnessStatus.color}
+          valueColor={colors.seriesYellow}
           statusLabel={freshnessLabel}
           statusColor={freshnessStatus.color}
           tooltip={`TSB: ${tsb}`}
