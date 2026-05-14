@@ -4,6 +4,7 @@ import { BlockCard } from '../BlockCard'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 import { charge as L } from '@/lib/design/labels'
 import { colors } from '@/lib/design/colors'
+import { useChartTooltipDismiss } from '@/lib/charts/use-chart-tooltip-dismiss'
 import {
   Bar, XAxis, YAxis, Tooltip, Legend, Line, ComposedChart, ResponsiveContainer, CartesianGrid,
 } from 'recharts'
@@ -16,6 +17,7 @@ const SPORT_COLORS = {
 }
 
 export function WeeklyLoadChart({ payload }: { payload: ChargeSportPayload }) {
+  const wrapperRef = useChartTooltipDismiss()
   const data = payload.weeklyLoadByCategory.map(w => ({
     week:  w.weekLabel,
     run:   Math.round(w.run),
@@ -27,7 +29,7 @@ export function WeeklyLoadChart({ payload }: { payload: ChargeSportPayload }) {
 
   return (
     <BlockCard title={L.blocks.weeklyLoad} helpTitle={L.blocks.weeklyLoad} helpBody={L.help.weeklyLoad}>
-      <div style={{ width: '100%', height: 220 }}>
+      <div ref={wrapperRef} style={{ width: '100%', height: 220 }}>
         <ResponsiveContainer>
           <ComposedChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
             <CartesianGrid stroke={colors.border} strokeDasharray="2 2" />

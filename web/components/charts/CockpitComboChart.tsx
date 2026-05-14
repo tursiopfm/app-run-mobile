@@ -16,6 +16,7 @@ import {
 } from 'recharts'
 import { colors } from '@/lib/design/colors'
 import { chart } from '@/lib/design/layout'
+import { useChartTooltipDismiss } from '@/lib/charts/use-chart-tooltip-dismiss'
 
 export type ComboPoint = {
   label: string
@@ -37,9 +38,10 @@ export function CockpitComboChart({
   height    = 220,
 }: Props) {
   const gap = `${Math.round((1 - chart.comboBarRatio) * 100)}%`
+  const wrapperRef = useChartTooltipDismiss()
 
   return (
-    <div style={{ height }}>
+    <div ref={wrapperRef} style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart
           data={data}

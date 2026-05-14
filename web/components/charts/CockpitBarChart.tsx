@@ -15,6 +15,7 @@ import {
 } from 'recharts'
 import { colors } from '@/lib/design/colors'
 import { chart } from '@/lib/design/layout'
+import { useChartTooltipDismiss } from '@/lib/charts/use-chart-tooltip-dismiss'
 
 export type BarPoint = {
   label: string
@@ -37,9 +38,10 @@ export function CockpitBarChart({
 }: Props) {
   const interval = xInterval ?? 0
   const gap = `${Math.round((1 - chart.barWidthRatio) * 100)}%`
+  const wrapperRef = useChartTooltipDismiss()
 
   return (
-    <div style={{ height }}>
+    <div ref={wrapperRef} style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}

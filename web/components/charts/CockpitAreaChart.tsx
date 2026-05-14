@@ -14,6 +14,7 @@ import {
 } from 'recharts'
 import { colors } from '@/lib/design/colors'
 import { chart } from '@/lib/design/layout'
+import { useChartTooltipDismiss } from '@/lib/charts/use-chart-tooltip-dismiss'
 
 export type AreaPoint = {
   date:  string
@@ -35,9 +36,10 @@ export function CockpitAreaChart({
 }: Props) {
   const interval = xInterval ?? Math.max(0, Math.floor(data.length / 8) - 1)
   const gradientId = 'area-gradient'
+  const wrapperRef = useChartTooltipDismiss()
 
   return (
-    <div style={{ height }}>
+    <div ref={wrapperRef} style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={data}

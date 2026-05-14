@@ -15,6 +15,7 @@ import {
 } from 'recharts'
 import { colors } from '@/lib/design/colors'
 import { chart } from '@/lib/design/layout'
+import { useChartTooltipDismiss } from '@/lib/charts/use-chart-tooltip-dismiss'
 
 export type MonthSeries = {
   label:      string    // "Jan 2025"
@@ -61,6 +62,7 @@ function EndDot({ cx, cy, index, payload, dataKey, color, lastIndex }: DotProps)
 
 export function CockpitCumulChart({ months, height = 220, mode = 'month' }: Props) {
   const maxDays = Math.max(...months.map((m) => m.dailyCumul.length), 0)
+  const wrapperRef = useChartTooltipDismiss()
 
   if (maxDays === 0) {
     return (
@@ -79,7 +81,7 @@ export function CockpitCumulChart({ months, height = 220, mode = 'month' }: Prop
   })
 
   return (
-    <div style={{ height }}>
+    <div ref={wrapperRef} style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={data}

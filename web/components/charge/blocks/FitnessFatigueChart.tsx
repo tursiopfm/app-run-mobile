@@ -4,6 +4,7 @@ import { BlockCard } from '../BlockCard'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 import { charge as L } from '@/lib/design/labels'
 import { colors } from '@/lib/design/colors'
+import { useChartTooltipDismiss } from '@/lib/charts/use-chart-tooltip-dismiss'
 import { kpiStatusFreshness } from '@/lib/analytics/charge-kpi-status'
 import {
   ComposedChart, Line, Area, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
@@ -19,10 +20,11 @@ export function FitnessFatigueChart({ payload }: { payload: ChargeSportPayload }
 
   const lastTsb = data.length ? data[data.length - 1].tsb : 0
   const freshnessColor = kpiStatusFreshness(lastTsb).color
+  const wrapperRef = useChartTooltipDismiss()
 
   return (
     <BlockCard title={L.blocks.fitnessFatigue} helpTitle={L.blocks.fitnessFatigue} helpBody={L.help.fitnessFatigue}>
-      <div style={{ width: '100%', height: 220 }}>
+      <div ref={wrapperRef} style={{ width: '100%', height: 220 }}>
         <ResponsiveContainer>
           <ComposedChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
             <CartesianGrid stroke={colors.border} strokeDasharray="2 2" />

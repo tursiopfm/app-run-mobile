@@ -5,6 +5,7 @@ import { BlockCard } from '../BlockCard'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 import { charge as L } from '@/lib/design/labels'
 import { colors } from '@/lib/design/colors'
+import { useChartTooltipDismiss } from '@/lib/charts/use-chart-tooltip-dismiss'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 
 type Win = '7' | '28' | '70'
@@ -20,6 +21,7 @@ const LABELS = { run: 'Course', ride: 'Vélo', swim: 'Natation', other: 'Autres'
 
 export function SportDistributionChart({ payload }: { payload: ChargeSportPayload }) {
   const [win, setWin] = useState<Win>('28')
+  const wrapperRef = useChartTooltipDismiss()
   const d = payload.sportDistribution[win]
   const data = (['run', 'ride', 'swim', 'other'] as const)
     .map(k => ({ name: LABELS[k], value: d[k], color: SPORT_COLORS[k] }))
@@ -48,7 +50,7 @@ export function SportDistributionChart({ payload }: { payload: ChargeSportPayloa
         <p className="text-[12px] text-trail-muted text-center py-6">{L.notEnoughData}</p>
       ) : (
         <div className="flex items-center gap-3">
-          <div style={{ width: 140, height: 140 }}>
+          <div ref={wrapperRef} style={{ width: 140, height: 140 }}>
             <ResponsiveContainer>
               <PieChart>
                 <Pie data={data} dataKey="value" innerRadius={42} outerRadius={64} paddingAngle={2}>
