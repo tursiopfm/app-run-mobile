@@ -31,7 +31,10 @@ export async function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex flex-col min-h-screen bg-trail-bg">
-      <header className="sticky top-0 z-40 bg-trail-header border-b border-trail-border px-4 py-3">
+      <header
+        className="sticky top-0 z-40 bg-trail-header border-b border-trail-border px-4 pb-3"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
+      >
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <span className="text-base font-bold tracking-widest uppercase">
             <span className="text-trail-primary">Trail</span>

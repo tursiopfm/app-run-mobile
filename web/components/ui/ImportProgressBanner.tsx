@@ -105,7 +105,7 @@ export function ImportProgressBanner() {
   if (!data || data.status === 'idle') return null
   if (data.status === 'completed' && hideCompleted) return null
 
-  const baseClasses = 'sticky top-0 z-40 w-full h-9 flex items-center justify-center gap-2 px-3 text-xs font-medium transition-all duration-300'
+  const baseClasses = 'sticky top-0 z-40 w-full min-h-9 flex items-center justify-center gap-2 px-3 pt-safe text-xs font-medium transition-all duration-300'
 
   if (data.status === 'pending' || data.status === 'in_progress') {
     return (

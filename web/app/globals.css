@@ -71,6 +71,10 @@ html, body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--trail-surface); }
 ::-webkit-scrollbar-thumb { background: var(--trail-border); border-radius: 2px; }
