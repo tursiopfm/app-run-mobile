@@ -1,5 +1,5 @@
 // Trail Cockpit - Service Worker
-const VERSION = 'v2'
+const VERSION = 'v3'
 const STATIC_CACHE = `trail-static-${VERSION}`
 const RUNTIME_CACHE = `trail-runtime-${VERSION}`
 
