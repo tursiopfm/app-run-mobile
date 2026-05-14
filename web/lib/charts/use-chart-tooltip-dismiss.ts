@@ -20,6 +20,11 @@ export function useChartTooltipDismiss(autoDismissMs = 2000) {
     if (!el) return
 
     let timer: ReturnType<typeof setTimeout> | null = null
+    // Tant qu'un doigt est posé sur le graphe, on ignore les évènements scroll
+    // de la fenêtre : sinon, un micro-scroll vertical déclenché par le swipe
+    // horizontal masque la tooltip, que le touchmove suivant ré-affiche
+    // → scintillement.
+    let touching = false
 
     const dismiss = () => {
       const wrapper = el.querySelector('.recharts-wrapper') as HTMLElement | null
@@ -40,11 +45,11 @@ export function useChartTooltipDismiss(autoDismissMs = 2000) {
       timer = setTimeout(() => { dismiss(); timer = null }, autoDismissMs)
     }
 
-    const onTouchStart  = () => clearTimer()
-    const onTouchMove   = () => clearTimer()
-    const onTouchEnd    = () => scheduleDismiss()
-    const onTouchCancel = () => { dismiss(); clearTimer() }
-    const onScroll      = () => { dismiss(); clearTimer() }
+    const onTouchStart  = () => { touching = true;  clearTimer() }
+    const onTouchMove   = () => { clearTimer() }
+    const onTouchEnd    = () => { touching = false; scheduleDismiss() }
+    const onTouchCancel = () => { touching = false; dismiss(); clearTimer() }
+    const onScroll      = () => { if (touching) return; dismiss(); clearTimer() }
 
     el.addEventListener('touchstart',  onTouchStart,  { passive: true })
     el.addEventListener('touchmove',   onTouchMove,   { passive: true })
