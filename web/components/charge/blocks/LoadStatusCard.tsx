@@ -38,7 +38,6 @@ export function LoadStatusCard({ payload }: { payload: ChargeSportPayload }) {
           labelColor={colors.chargeOrange}
           value={atl}
           statusLabel={fatigueLabel}
-          statusColor={fatigueStatus.color}
           tooltip={`ATL: ${atl}`}
         />
         <KpiCell
@@ -46,7 +45,6 @@ export function LoadStatusCard({ payload }: { payload: ChargeSportPayload }) {
           labelColor={colors.seriesBlue}
           value={ctl}
           statusLabel={fitnessLabel}
-          statusColor={fitnessStatus.color}
           tooltip={`CTL: ${ctl}`}
         />
         <KpiCell
@@ -54,7 +52,6 @@ export function LoadStatusCard({ payload }: { payload: ChargeSportPayload }) {
           labelColor={colors.seriesYellow}
           value={tsb}
           statusLabel={freshnessLabel}
-          statusColor={freshnessStatus.color}
           tooltip={`TSB: ${tsb}`}
         />
       </div>
@@ -67,20 +64,15 @@ type KpiCellProps = {
   labelColor:  string
   value:       number
   statusLabel: string
-  statusColor: string
   tooltip:     string
 }
 
-function KpiCell({ label, labelColor, value, statusLabel, statusColor, tooltip }: KpiCellProps) {
+function KpiCell({ label, labelColor, value, statusLabel, tooltip }: KpiCellProps) {
   return (
     <div className="rounded-[10px] bg-trail-surface px-2 py-2 text-center" title={tooltip}>
-      <p className="text-[10px] font-semibold" style={{ color: labelColor }}>{label}</p>
+      <p className="text-[12px] font-semibold" style={{ color: labelColor }}>{label}</p>
       <p className="text-[18px] font-black mt-0.5 text-trail-text">{value}</p>
-      <p
-        className="text-[10px] font-medium mt-0.5 flex items-center justify-center gap-1 leading-[14px]"
-        style={{ color: statusColor }}
-      >
-        <span className="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: statusColor }} />
+      <p className="text-[11px] font-medium mt-0.5 text-trail-muted leading-[14px]">
         {statusLabel}
       </p>
     </div>
