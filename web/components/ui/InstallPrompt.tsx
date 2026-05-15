@@ -118,7 +118,7 @@ export function InstallPrompt() {
 
   return (
     <div role="dialog" aria-label="Installer Trail Cockpit"
-      className="fixed left-3 right-3 bottom-3 sm:left-auto sm:right-4 sm:bottom-4 sm:max-w-sm z-[60] pb-safe">
+      className="fixed left-3 right-3 bottom-[calc(env(safe-area-inset-bottom)+72px)] sm:left-auto sm:right-4 sm:bottom-4 sm:max-w-sm z-[60]">
       <div className="bg-trail-card border border-trail-border rounded-2xl p-4 shadow-2xl flex items-center gap-3">
         <img src="/icons/icon-192.png" alt="" aria-hidden="true" className="w-10 h-10 rounded-xl shrink-0" />
         <div className="flex-1 min-w-0">
