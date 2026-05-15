@@ -111,6 +111,12 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
   const [activeId, setActiveId] = useState<string | null>(null)
   const [showAdd,  setShowAdd]  = useState(false)
 
+  // Hydratation depuis localStorage : doit tourner UNE SEULE FOIS au mount.
+  // Les deps `defaultOrder` / `defaultHidden` viennent du parent qui les
+  // recrée à chaque render (default arg `[]`, array literal inline) → si on
+  // les laisse en deps, ce useEffect re-run à chaque render, re-fait setOrder
+  // avec un nouvel array, re-render, re-run → Maximum update depth exceeded.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     try {
       const storedOrder = localStorage.getItem(orderStorage)
@@ -120,7 +126,6 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
           ...parsed.filter(id => defaultOrder.includes(id)),
           ...defaultOrder.filter(id => !parsed.includes(id)),
         ]
-        // Skip si l'ordre stocké == défaut : pas de re-render inutile.
         const isSameAsDefault = merged.length === defaultOrder.length &&
           merged.every((id, i) => id === defaultOrder[i])
         if (!isSameAsDefault) {
@@ -141,13 +146,16 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
         startTransition(() => setHidden(defaultHidden))
       }
     } catch {}
-  }, [orderStorage, hiddenStorage, defaultOrder, defaultHidden])
+  }, [])
 
-  // PointerSensor unifie souris + tactile. Le delay force un long-press sur la
-  // poignée pour démarrer le drag, sans bloquer les autres taps.
+  // Activation par distance (pas par delay) : sur touch, un geste naturel bouge
+  // > 8 px en < 250 ms, ce qui faisait abandonner silencieusement l'activation
+  // avec `{ delay, tolerance }` — la poignée semblait "morte" au doigt.
+  // Avec `{ distance }`, le drag s'active dès 8 px de mouvement. La poignée a
+  // déjà `touch-action: none` donc pas de conflit avec un scroll natif.
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { delay: 250, tolerance: 8 },
+      activationConstraint: { distance: 8 },
     }),
   )
 
