@@ -22,6 +22,14 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
   const [syncing, setSyncing] = useState(false)
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
+    // Ignore les touches qui démarrent sur une poignée de drag (dnd-kit).
+    // Sans ça, le pull-to-refresh peut s'activer en parallèle du drag-and-drop
+    // et déclencher un fetch + router.refresh() qui gèle le router.
+    const target = e.target as HTMLElement | null
+    if (target?.closest?.('[aria-roledescription="sortable"]')) {
+      startY.current = null
+      return
+    }
     startY.current = isAtTop() ? e.touches[0].clientY : null
   }, [])
 

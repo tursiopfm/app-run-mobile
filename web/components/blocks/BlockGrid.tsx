@@ -138,29 +138,35 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
     }),
   )
 
-  // Defensive cleanup : @dnd-kit pose `touch-action: none` sur <html> pendant
-  // le drag pour bloquer le scroll. Si le cleanup natif foire (touchcancel iOS
-  // notamment, ou drag interrompu par un re-render), le style reste collé et
-  // toute la page devient non-tappable — y compris la BottomNav. On force la
-  // remise à zéro quand activeId redevient null.
-  useEffect(() => {
-    if (activeId !== null) return
+  // Cleanup défensif : @dnd-kit pose des inline-styles sur <html>/<body> pendant
+  // le drag (touch-action, overflow, user-select, cursor). Si le cleanup natif
+  // foire (touchcancel iOS, drag interrompu par un re-render, queue React mal
+  // synchronisée), ces styles restent collés et toute la page devient
+  // non-tappable. On nettoie de façon synchrone à la fin de chaque drag — pas
+  // via useEffect car React peut différer l'effect d'une frame.
+  function cleanupDragStyles() {
     const html = document.documentElement
     const body = document.body
     html.style.removeProperty('touch-action')
     html.style.removeProperty('user-select')
+    html.style.removeProperty('-webkit-user-select')
     html.style.removeProperty('overflow')
     html.style.removeProperty('cursor')
     body.style.removeProperty('touch-action')
     body.style.removeProperty('user-select')
+    body.style.removeProperty('-webkit-user-select')
     body.style.removeProperty('overflow')
     body.style.removeProperty('cursor')
-  }, [activeId])
+  }
+
+  // Backup async cleanup pour les rares cas où le sync est zappé.
+  useEffect(() => { if (activeId === null) cleanupDragStyles() }, [activeId])
 
   function handleDragStart(e: DragStartEvent) { setActiveId(e.active.id as string) }
   function handleDragEnd(e: DragEndEvent) {
     const { active, over } = e
     setActiveId(null)
+    cleanupDragStyles()
     if (!over || active.id === over.id) return
     setOrder(prev => {
       const next = arrayMove(prev, prev.indexOf(active.id as string), prev.indexOf(over.id as string))
@@ -168,7 +174,7 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
       return next
     })
   }
-  function handleDragCancel() { setActiveId(null) }
+  function handleDragCancel() { setActiveId(null); cleanupDragStyles() }
   function hide(id: string) {
     setHidden(prev => {
       const next = prev.includes(id) ? prev : [...prev, id]
@@ -213,7 +219,9 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
             })}
           </div>
         </SortableContext>
-        <DragOverlay dropAnimation={{ duration: 200, easing: 'ease' }}>
+        {/* dropAnimation=null : retire l'overlay immédiatement au drop pour éviter
+            que son portail reste 200ms dans le DOM et intercepte des taps. */}
+        <DragOverlay dropAnimation={null}>
           {activeBlock && <DragCard label={activeBlock.label} emoji={activeBlock.emoji} />}
         </DragOverlay>
       </DndContext>
