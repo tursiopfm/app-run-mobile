@@ -29,6 +29,38 @@ type Props = {
 const BlockContext = createContext<{ hideSelf: () => void }>({ hideSelf: () => {} })
 export function useBlockContext() { return useContext(BlockContext) }
 
+// Lecture synchrone du localStorage pour le lazy init du useState. Retourne
+// les défauts côté SSR (pas de window) ou en cas d'erreur — l'utilisateur
+// recevra le bon ordre dès qu'il atteindra le client (mismatch suppressé).
+function readStoredOrder(storageKey: string, defaultOrder: string[]): string[] {
+  if (typeof window === 'undefined') return defaultOrder
+  try {
+    const stored = localStorage.getItem(storageKey)
+    if (!stored) return defaultOrder
+    const parsed = JSON.parse(stored) as string[]
+    return [
+      ...parsed.filter(id => defaultOrder.includes(id)),
+      ...defaultOrder.filter(id => !parsed.includes(id)),
+    ]
+  } catch {
+    return defaultOrder
+  }
+}
+
+function readStoredHidden(storageKey: string, defaultHidden: string[]): string[] {
+  if (typeof window === 'undefined') return defaultHidden
+  try {
+    const stored = localStorage.getItem(storageKey)
+    if (stored) {
+      const parsed = JSON.parse(stored) as string[]
+      if (parsed.length > 0) return parsed
+    }
+    return defaultHidden
+  } catch {
+    return defaultHidden
+  }
+}
+
 function SortableBlock({ id, isDraggingAny, label, children }: {
   id: string
   isDraggingAny: boolean
@@ -123,56 +155,19 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
   const orderStorage  = `${storageKey}_block_order`
   const hiddenStorage = `${storageKey}_hidden_blocks`
 
-  const [order,    setOrder]    = useState<string[]>(defaultOrder)
-  const [hidden,   setHidden]   = useState<string[]>([])
+  // Lecture localStorage en lazy init : la grille rend DIRECTEMENT dans
+  // l'ordre persisté au premier paint client → pas de flash, pas de seconde
+  // passe de re-render. Côté SSR (typeof window === 'undefined') on retombe
+  // sur les défauts ; cela génère un mismatch d'hydratation sur cold-load
+  // (rare en PWA, l'app est déjà montée) qui est suppressé par le
+  // suppressHydrationWarning du wrapper et React reconcilie le DOM client.
+  // Sur nav client-side (cas du clic BottomNav, le plus fréquent), il n'y a
+  // pas d'hydratation : useState init tourne directement avec localStorage
+  // disponible → premier render = configuration utilisateur.
+  const [order,    setOrder]    = useState<string[]>(() => readStoredOrder(orderStorage, defaultOrder))
+  const [hidden,   setHidden]   = useState<string[]>(() => readStoredHidden(hiddenStorage, defaultHidden))
   const [activeId, setActiveId] = useState<string | null>(null)
   const [showAdd,  setShowAdd]  = useState(false)
-  // hydrated=false sur premier render (SSR + premier paint client) → wrapper
-  // opacity-0 cache l'ordre par défaut. Devient true APRÈS application des
-  // valeurs localStorage dans la même transition → la grille apparaît
-  // directement dans l'ordre persisté, sans flash de réorganisation.
-  const [hydrated, setHydrated] = useState(false)
-
-  // Hydratation depuis localStorage : doit tourner UNE SEULE FOIS au mount.
-  // Les deps `defaultOrder` / `defaultHidden` viennent du parent qui les
-  // recrée à chaque render (default arg `[]`, array literal inline) → si on
-  // les laisse en deps, ce useEffect re-run à chaque render, re-fait setOrder
-  // avec un nouvel array, re-render, re-run → Maximum update depth exceeded.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    let nextOrder:  string[] | null = null
-    let nextHidden: string[] | null = null
-    try {
-      const storedOrder = localStorage.getItem(orderStorage)
-      if (storedOrder) {
-        const parsed = JSON.parse(storedOrder) as string[]
-        const merged = [
-          ...parsed.filter(id => defaultOrder.includes(id)),
-          ...defaultOrder.filter(id => !parsed.includes(id)),
-        ]
-        const isSameAsDefault = merged.length === defaultOrder.length &&
-          merged.every((id, i) => id === defaultOrder[i])
-        if (!isSameAsDefault) nextOrder = merged
-      }
-      const storedHidden = localStorage.getItem(hiddenStorage)
-      if (storedHidden) {
-        const parsedHidden = JSON.parse(storedHidden) as string[]
-        if (parsedHidden.length > 0) nextHidden = parsedHidden
-      } else if (defaultHidden.length > 0) {
-        nextHidden = defaultHidden
-      }
-    } catch {}
-    // setOrder + setHidden + setHydrated dans la MÊME transition : garantit
-    // que hydrated ne devient jamais true avant que l'ordre persisté soit
-    // appliqué → pas de flash de l'ordre par défaut visible. startTransition
-    // garde le re-render des 12 blocs (5 Recharts) interruptible pour ne pas
-    // geler les clicks BottomNav.
-    startTransition(() => {
-      if (nextOrder)  setOrder(nextOrder)
-      if (nextHidden) setHidden(nextHidden)
-      setHydrated(true)
-    })
-  }, [])
 
   // Activation par distance (pas par delay) : sur touch, un geste naturel bouge
   // > 8 px en < 250 ms, ce qui faisait abandonner silencieusement l'activation
@@ -215,8 +210,9 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
     setActiveId(null)
     cleanupDragStyles()
     if (!over || active.id === over.id) return
-    // Calcul + persistance synchrones, setOrder en transition pour ne pas
-    // bloquer la file React (cf. commentaire dans le useEffect mount).
+    // Persistance synchrone, setOrder en transition : le re-render des 12
+    // blocs (5 Recharts) est lourd ; transition = interruptible donc les
+    // events urgents (clicks BottomNav) ne sont pas gelés.
     const next = arrayMove(order, order.indexOf(active.id as string), order.indexOf(over.id as string))
     try { localStorage.setItem(orderStorage, JSON.stringify(next)) } catch {}
     startTransition(() => setOrder(next))
@@ -242,12 +238,7 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
   const activeBlock  = blocks.find(b => b.id === activeId)
 
   return (
-    <div
-      style={{
-        opacity:    hydrated ? 1 : 0,
-        transition: hydrated ? 'opacity 80ms ease-out' : undefined,
-      }}
-    >
+    <div suppressHydrationWarning>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
