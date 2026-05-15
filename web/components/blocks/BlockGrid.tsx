@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, startTransition, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
@@ -116,16 +116,29 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
       const storedOrder = localStorage.getItem(orderStorage)
       if (storedOrder) {
         const parsed = JSON.parse(storedOrder) as string[]
-        setOrder([
+        const merged = [
           ...parsed.filter(id => defaultOrder.includes(id)),
           ...defaultOrder.filter(id => !parsed.includes(id)),
-        ])
+        ]
+        // Skip si l'ordre stocké == défaut : pas de re-render inutile.
+        const isSameAsDefault = merged.length === defaultOrder.length &&
+          merged.every((id, i) => id === defaultOrder[i])
+        if (!isSameAsDefault) {
+          // startTransition : le setOrder déclenche le re-render des 12 blocs
+          // (avec 5 charts Recharts à l'intérieur), ce qui est lourd. En
+          // transition, React peut l'interrompre pour traiter les events
+          // urgents (clicks BottomNav notamment) → évite que le router gèle.
+          startTransition(() => setOrder(merged))
+        }
       }
       const storedHidden = localStorage.getItem(hiddenStorage)
       if (storedHidden) {
-        setHidden(JSON.parse(storedHidden) as string[])
+        const parsedHidden = JSON.parse(storedHidden) as string[]
+        if (parsedHidden.length > 0) {
+          startTransition(() => setHidden(parsedHidden))
+        }
       } else if (defaultHidden.length > 0) {
-        setHidden(defaultHidden)
+        startTransition(() => setHidden(defaultHidden))
       }
     } catch {}
   }, [orderStorage, hiddenStorage, defaultOrder, defaultHidden])
@@ -168,11 +181,11 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
     setActiveId(null)
     cleanupDragStyles()
     if (!over || active.id === over.id) return
-    setOrder(prev => {
-      const next = arrayMove(prev, prev.indexOf(active.id as string), prev.indexOf(over.id as string))
-      localStorage.setItem(orderStorage, JSON.stringify(next))
-      return next
-    })
+    // Calcul + persistance synchrones, setOrder en transition pour ne pas
+    // bloquer la file React (cf. commentaire dans le useEffect mount).
+    const next = arrayMove(order, order.indexOf(active.id as string), order.indexOf(over.id as string))
+    try { localStorage.setItem(orderStorage, JSON.stringify(next)) } catch {}
+    startTransition(() => setOrder(next))
   }
   function handleDragCancel() { setActiveId(null); cleanupDragStyles() }
   function hide(id: string) {
