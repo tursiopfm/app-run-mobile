@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { colors } from '@/lib/design/colors'
 import {
   INTENSITY_OPTIONS,
@@ -74,7 +75,8 @@ function FullScreenSheet({ title, onClose, children }: {
   onClose: () => void
   children: React.ReactNode
 }) {
-  return (
+  if (typeof document === 'undefined') return null
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex flex-col"
       style={{ backgroundColor: colors.background }}
@@ -114,7 +116,8 @@ function FullScreenSheet({ title, onClose, children }: {
           Fermer
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
