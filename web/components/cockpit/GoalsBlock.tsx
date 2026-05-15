@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { GoalProgressRow } from '@/components/ui/GoalProgressRow'
 import { SportSettingsModal } from './SportSettingsModal'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
@@ -220,9 +221,15 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
         />
       )}
 
-      {editSport && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
-          <div className="bg-trail-card border border-trail-border rounded-[12px] p-5 w-full max-w-sm">
+      {editSport && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4"
+          onClick={() => setEditSport(null)}
+        >
+          <div
+            className="bg-trail-card border border-trail-border rounded-[12px] p-5 w-full max-w-sm max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-[16px] font-bold text-trail-text mb-4">
               Objectifs {SPORT_CONFIG[editSport].label} {SPORT_CONFIG[editSport].emoji}
             </h3>
@@ -264,7 +271,8 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   )
@@ -275,14 +283,25 @@ function GoalField({
 }: {
   label: string; value: number; onChange: (v: number) => void; unit: string
 }) {
+  const [text, setText] = useState<string>(String(value))
+  useEffect(() => {
+    if ((text === '' ? 0 : Number(text)) !== value) setText(String(value))
+  }, [value]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div>
       <label className="text-[13px] text-trail-muted block mb-1">{label}</label>
       <div className="flex items-center gap-2">
         <input
           type="number"
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value) || 0)}
+          inputMode="numeric"
+          value={text}
+          onChange={(e) => {
+            const raw = e.target.value
+            const normalized = raw === '' ? '' : raw.replace(/^0+(?=\d)/, '')
+            setText(normalized)
+            onChange(normalized === '' ? 0 : Number(normalized))
+          }}
           className="flex-1 bg-trail-surface border border-trail-border rounded-[6px] px-3 py-2 text-[15px] text-trail-text focus:outline-none"
         />
         <span className="text-[13px] text-trail-muted w-6">{unit}</span>
