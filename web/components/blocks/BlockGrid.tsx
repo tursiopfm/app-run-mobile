@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  DndContext, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors,
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent, type DragStartEvent, DragOverlay,
 } from '@dnd-kit/core'
 import {
@@ -130,10 +130,32 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
     } catch {}
   }, [orderStorage, hiddenStorage, defaultOrder, defaultHidden])
 
+  // PointerSensor unifie souris + tactile. Le delay force un long-press sur la
+  // poignée pour démarrer le drag, sans bloquer les autres taps.
   const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 500, tolerance: 8 } }),
+    useSensor(PointerSensor, {
+      activationConstraint: { delay: 250, tolerance: 8 },
+    }),
   )
+
+  // Defensive cleanup : @dnd-kit pose `touch-action: none` sur <html> pendant
+  // le drag pour bloquer le scroll. Si le cleanup natif foire (touchcancel iOS
+  // notamment, ou drag interrompu par un re-render), le style reste collé et
+  // toute la page devient non-tappable — y compris la BottomNav. On force la
+  // remise à zéro quand activeId redevient null.
+  useEffect(() => {
+    if (activeId !== null) return
+    const html = document.documentElement
+    const body = document.body
+    html.style.removeProperty('touch-action')
+    html.style.removeProperty('user-select')
+    html.style.removeProperty('overflow')
+    html.style.removeProperty('cursor')
+    body.style.removeProperty('touch-action')
+    body.style.removeProperty('user-select')
+    body.style.removeProperty('overflow')
+    body.style.removeProperty('cursor')
+  }, [activeId])
 
   function handleDragStart(e: DragStartEvent) { setActiveId(e.active.id as string) }
   function handleDragEnd(e: DragEndEvent) {
@@ -146,6 +168,7 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
       return next
     })
   }
+  function handleDragCancel() { setActiveId(null) }
   function hide(id: string) {
     setHidden(prev => {
       const next = prev.includes(id) ? prev : [...prev, id]
@@ -167,7 +190,14 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
 
   return (
     <>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        autoScroll={false}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
         <SortableContext items={visibleOrder} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
             {visibleOrder.map(id => {
