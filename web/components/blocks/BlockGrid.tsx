@@ -127,6 +127,11 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
   const [hidden,   setHidden]   = useState<string[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [showAdd,  setShowAdd]  = useState(false)
+  // hydrated=false sur premier render (SSR + premier paint client) → wrapper
+  // opacity-0 cache l'ordre par défaut. Devient true APRÈS application des
+  // valeurs localStorage dans la même transition → la grille apparaît
+  // directement dans l'ordre persisté, sans flash de réorganisation.
+  const [hydrated, setHydrated] = useState(false)
 
   // Hydratation depuis localStorage : doit tourner UNE SEULE FOIS au mount.
   // Les deps `defaultOrder` / `defaultHidden` viennent du parent qui les
@@ -135,6 +140,8 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
   // avec un nouvel array, re-render, re-run → Maximum update depth exceeded.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    let nextOrder:  string[] | null = null
+    let nextHidden: string[] | null = null
     try {
       const storedOrder = localStorage.getItem(orderStorage)
       if (storedOrder) {
@@ -145,24 +152,26 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
         ]
         const isSameAsDefault = merged.length === defaultOrder.length &&
           merged.every((id, i) => id === defaultOrder[i])
-        if (!isSameAsDefault) {
-          // startTransition : le setOrder déclenche le re-render des 12 blocs
-          // (avec 5 charts Recharts à l'intérieur), ce qui est lourd. En
-          // transition, React peut l'interrompre pour traiter les events
-          // urgents (clicks BottomNav notamment) → évite que le router gèle.
-          startTransition(() => setOrder(merged))
-        }
+        if (!isSameAsDefault) nextOrder = merged
       }
       const storedHidden = localStorage.getItem(hiddenStorage)
       if (storedHidden) {
         const parsedHidden = JSON.parse(storedHidden) as string[]
-        if (parsedHidden.length > 0) {
-          startTransition(() => setHidden(parsedHidden))
-        }
+        if (parsedHidden.length > 0) nextHidden = parsedHidden
       } else if (defaultHidden.length > 0) {
-        startTransition(() => setHidden(defaultHidden))
+        nextHidden = defaultHidden
       }
     } catch {}
+    // setOrder + setHidden + setHydrated dans la MÊME transition : garantit
+    // que hydrated ne devient jamais true avant que l'ordre persisté soit
+    // appliqué → pas de flash de l'ordre par défaut visible. startTransition
+    // garde le re-render des 12 blocs (5 Recharts) interruptible pour ne pas
+    // geler les clicks BottomNav.
+    startTransition(() => {
+      if (nextOrder)  setOrder(nextOrder)
+      if (nextHidden) setHidden(nextHidden)
+      setHydrated(true)
+    })
   }, [])
 
   // Activation par distance (pas par delay) : sur touch, un geste naturel bouge
@@ -233,7 +242,12 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
   const activeBlock  = blocks.find(b => b.id === activeId)
 
   return (
-    <>
+    <div
+      style={{
+        opacity:    hydrated ? 1 : 0,
+        transition: hydrated ? 'opacity 80ms ease-out' : undefined,
+      }}
+    >
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -276,6 +290,6 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
       {showAdd && (
         <AddBlockPanel hiddenBlocks={hiddenBlocks} onRestore={restore} onClose={() => setShowAdd(false)} />
       )}
-    </>
+    </div>
   )
 }
