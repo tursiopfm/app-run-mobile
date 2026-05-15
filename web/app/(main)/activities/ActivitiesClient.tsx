@@ -264,6 +264,8 @@ function FilterRow({
 }
 
 // ── Search Panel ───────────────────────────────────────────────────────────────
+const SEARCH_RENDER_BATCH = 50
+
 function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset }: {
   state:      SearchState
   setState:   (s: SearchState) => void
@@ -274,6 +276,8 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 }) {
   const FIELDS: SearchField[] = ['Titre', 'Distance', 'Durée', 'D+']
   const si = inputStyle()
+  const [visibleCount, setVisibleCount] = useState(SEARCH_RENDER_BATCH)
+  const sentinelRef = useRef<HTMLDivElement>(null)
 
   const hasInput = state.title.trim() !== ''
     || state.distFrom !== '' || state.distTo !== ''
@@ -281,11 +285,31 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
     || state.dPlusFrom !== '' || state.dPlusTo !== ''
 
   const results = useMemo(
-    () => hasInput ? applySearch([...activities], state) : [],
+    () => hasInput ? applySearch(activities, state) : [],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [activities, state.field, state.title, state.distFrom, state.distTo,
      state.durFrom, state.durTo, state.dPlusFrom, state.dPlusTo, hasInput],
   )
+
+  useEffect(() => { setVisibleCount(SEARCH_RENDER_BATCH) }, [
+    state.field, state.title, state.distFrom, state.distTo,
+    state.durFrom, state.durTo, state.dPlusFrom, state.dPlusTo,
+  ])
+
+  useEffect(() => {
+    if (visibleCount >= results.length) return
+    const el = sentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setVisibleCount(c => Math.min(c + SEARCH_RENDER_BATCH, results.length))
+      }
+    }, { rootMargin: '600px' })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [visibleCount, results.length])
+
+  const visibleResults = useMemo(() => results.slice(0, visibleCount), [results, visibleCount])
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: colors.background }}>
@@ -396,7 +420,12 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
               </div>
             ) : (
               <div className="space-y-[10px]">
-                {results.map(a => <ActivityCard key={a.id} activity={a} onClick={() => onNavigate(a.id)} />)}
+                {visibleResults.map(a => <ActivityCard key={a.id} activity={a} onClick={() => onNavigate(a.id)} />)}
+                {visibleCount < results.length && (
+                  <div ref={sentinelRef} className="h-8 flex items-center justify-center">
+                    <span className="text-[12px]" style={{ color: colors.subtleText }}>…</span>
+                  </div>
+                )}
               </div>
             )}
           </>
