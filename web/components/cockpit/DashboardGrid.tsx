@@ -42,7 +42,7 @@ export function DashboardGrid({ sportOverviews, weekSessions, latestPerSport, we
     { id: 'cumul',          label: 'Cumul mensuel',       emoji: '📈', render: () => <BlockWithHide>{(onHide) => <CumulBlock           sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
     { id: 'intensity',      label: 'Intensité',           emoji: '🔥', render: () => <BlockWithHide>{(onHide) => <IntensityBlock       sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
     { id: 'week',           label: 'Semaine en cours',    emoji: '🗓️', render: () => <WeekBlock sportOverviews={sportOverviews} allSessions={weekSessions} /> },
-    { id: 'weekActivities', label: 'Activités semaine',   emoji: '📋', render: () => <BlockWithHide>{(onHide) => <WeekActivitiesBlock  activities={weekActivities} athleteProfile={athleteProfile} onHide={onHide} />}</BlockWithHide> },
+    { id: 'weekActivities', label: 'Activités semaine',   emoji: '📋', render: () => <BlockWithHide>{(onHide) => <WeekActivitiesBlock  activities={weekActivities} onHide={onHide} />}</BlockWithHide> },
   ]
   return <BlockGrid storageKey="cockpit" defaultOrder={DEFAULT_ORDER} defaultHidden={DEFAULT_HIDDEN} blocks={blocks} />
 }

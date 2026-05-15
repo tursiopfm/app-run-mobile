@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { colors } from '@/lib/design/colors'
 import {
   asIntensityKey,
@@ -221,7 +222,8 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
   const inputCls = 'rounded-[8px] border px-3 py-[8px] text-[14px] w-full'
   const btnBase  = 'flex-1 py-3 rounded-[12px] text-[14px] font-bold'
 
-  return (
+  if (typeof document === 'undefined') return null
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex flex-col" style={{ backgroundColor: colors.background }}>
 
       {/* Header */}
@@ -398,6 +400,7 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
