@@ -14,6 +14,21 @@ const BASE_NAV = [
 
 const ADMIN_NAV = { href: '/admin', icon: ShieldCheck, label: 'Admin' }
 
+// Fallback si le router Next.js est gelé (cas reproductible après visite de
+// /charge avec ordre de blocs custom — voir tasks/lessons). Si l'URL n'a pas
+// changé 700ms après le click, on déclenche une navigation native via
+// location.href. L'utilisateur voit un reload léger plutôt qu'un gel total.
+// À retirer une fois la cause racine corrigée.
+function navWithFallback(href: string) {
+  const start = location.pathname
+  setTimeout(() => {
+    if (location.pathname === start) {
+      console.warn('[BottomNav] router stuck 700ms after click, fallback ->', href)
+      location.href = href
+    }
+  }, 700)
+}
+
 export function BottomNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname()
   const items = isAdmin ? [...BASE_NAV, ADMIN_NAV] : BASE_NAV
@@ -27,6 +42,7 @@ export function BottomNav({ isAdmin = false }: { isAdmin?: boolean }) {
             <Link
               key={href}
               href={href}
+              onClick={() => navWithFallback(href)}
               className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] transition-colors ${
                 active ? 'text-trail-primary' : 'text-trail-muted hover:text-trail-text'
               }`}
