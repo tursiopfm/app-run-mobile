@@ -36,6 +36,11 @@ function SortableBlock({ id, isDraggingAny, label, children }: {
   children: ReactNode
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  // Feedback visuel "attrapé" : scale léger sur le contenu dès le pointerdown,
+  // avant même que distance:8 active le drag. onPointerDownCapture s'exécute en
+  // phase capture donc ne conflicte pas avec le onPointerDown du PointerSensor
+  // dnd-kit (qui est dans {...listeners}). Reset sur pointerup/cancel.
+  const [isPressed, setIsPressed] = useState(false)
   return (
     <div
       ref={setNodeRef}
@@ -53,11 +58,23 @@ function SortableBlock({ id, isDraggingAny, label, children }: {
           aria-label={`Déplacer le bloc ${label}`}
           className="cursor-grab active:cursor-grabbing select-none pointer-events-auto px-4 py-2"
           style={{ touchAction: 'none' }}
+          onPointerDownCapture={() => setIsPressed(true)}
+          onPointerUp={() => setIsPressed(false)}
+          onPointerCancel={() => setIsPressed(false)}
         >
           <div className="w-10 h-[5px] rounded-full bg-trail-muted hover:bg-trail-text transition-colors" />
         </div>
       </div>
-      <div className="pt-4">{children}</div>
+      <div
+        className="pt-4"
+        style={{
+          transform:       isPressed && !isDragging ? 'scale(0.95)' : 'scale(1)',
+          transformOrigin: 'center top',
+          transition:      'transform 120ms ease-out',
+        }}
+      >
+        {children}
+      </div>
     </div>
   )
 }
