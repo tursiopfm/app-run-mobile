@@ -130,11 +130,13 @@ export function ActivityCard({
   onEdit,
   onClick,
   hrZones = [],
+  embedded = false,
 }: {
   activity: ActivityRow
   onEdit?: (a: ActivityRow) => void
   onClick?: () => void
   hrZones?: HrZone[]
+  embedded?: boolean
 }) {
   const [popup, setPopup]     = useState<null | 'effort' | 'intensity' | 'workoutType'>(null)
   const [mounted, setMounted] = useState(false)
@@ -172,7 +174,7 @@ export function ActivityCard({
         <WorkoutTypePopup workoutTypeKey={workoutTypeKey} onClose={() => setPopup(null)} />
       )}
       <div
-        className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]"
+        className={embedded ? '' : 'rounded-[12px] bg-trail-card border border-trail-border p-[10px]'}
         style={onClick ? { cursor: 'pointer' } : undefined}
         onClick={onClick}
       >

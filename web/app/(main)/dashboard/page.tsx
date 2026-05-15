@@ -4,6 +4,7 @@ import { DashboardGrid } from '@/components/cockpit/DashboardGrid'
 import { getDashboardData } from '@/lib/data/dashboard'
 import { createClient } from '@/lib/database/supabase-server'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
+import { SPORT_TYPE_MAP, type SportKey } from '@/lib/design/sports'
 
 const ACTIVITY_CARD_FIELDS =
   'id, name, sport_type, start_time, ces, avg_hr, max_hr, distance_m, elevation_gain_m, moving_time_sec, manual_sport_type, manual_intensity, manual_workout_type, manual_distance_m, manual_moving_time_sec, manual_elevation_gain_m'
@@ -18,6 +19,27 @@ function mondayOfCurrentWeek(): Date {
   return mon
 }
 
+async function fetchLatestPerSport(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<Record<SportKey, ActivityRow | null>> {
+  const keys: SportKey[] = ['run', 'ride', 'swim', 'all']
+  const results = await Promise.all(keys.map(async (k) => {
+    const types = SPORT_TYPE_MAP[k]
+    let q = supabase
+      .from('activities')
+      .select(ACTIVITY_CARD_FIELDS)
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .order('start_time', { ascending: false })
+      .limit(1)
+    if (types) q = q.in('sport_type', types as unknown as string[])
+    const { data } = await q.maybeSingle()
+    return [k, (data ?? null) as ActivityRow | null] as const
+  }))
+  return Object.fromEntries(results) as Record<SportKey, ActivityRow | null>
+}
+
 export default async function DashboardPage() {
   const user = await getServerUser()
   if (!user) redirect('/login')
@@ -29,19 +51,12 @@ export default async function DashboardPage() {
 
   const [
     { sportOverviews, weekSessions },
-    { data: latestRow },
+    latestPerSport,
     { data: weekRows },
     { data: athleteProfile },
   ] = await Promise.all([
     getDashboardData(user.id),
-    supabase
-      .from('activities')
-      .select(ACTIVITY_CARD_FIELDS)
-      .eq('user_id', user.id)
-      .is('deleted_at', null)
-      .order('start_time', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+    fetchLatestPerSport(supabase, user.id),
     supabase
       .from('activities')
       .select(ACTIVITY_CARD_FIELDS)
@@ -57,7 +72,6 @@ export default async function DashboardPage() {
       .maybeSingle(),
   ])
 
-  const lastActivity = (latestRow ?? null) as ActivityRow | null
   const weekActivities = (weekRows ?? []) as ActivityRow[]
 
   return (
@@ -65,7 +79,7 @@ export default async function DashboardPage() {
       <DashboardGrid
         sportOverviews={sportOverviews}
         weekSessions={weekSessions}
-        lastActivity={lastActivity}
+        latestPerSport={latestPerSport}
         weekActivities={weekActivities}
         athleteProfile={athleteProfile ?? null}
       />

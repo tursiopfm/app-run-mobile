@@ -18,7 +18,7 @@ import type { ActivityRow } from '@/components/ui/ActivityCard'
 type Props = {
   sportOverviews: Record<SportKey, SportOverview>
   weekSessions:   DaySession[]
-  lastActivity:   ActivityRow | null
+  latestPerSport: Record<SportKey, ActivityRow | null>
   weekActivities: ActivityRow[]
   athleteProfile: AthleteHrProfile
 }
@@ -31,10 +31,10 @@ function BlockWithHide({ children }: { children: (onHide: () => void) => React.R
   return <>{children(hideSelf)}</>
 }
 
-export function DashboardGrid({ sportOverviews, weekSessions, lastActivity, weekActivities, athleteProfile }: Props) {
+export function DashboardGrid({ sportOverviews, weekSessions, latestPerSport, weekActivities, athleteProfile }: Props) {
   const blocks: BlockDef[] = [
     { id: 'activities',     label: 'Activités',           emoji: '🏅', render: () => <BlockWithHide>{(onHide) => <ActivitiesBlock      sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
-    { id: 'lastActivity',   label: 'Dernière activité',   emoji: '🥇', render: () => <BlockWithHide>{(onHide) => <LastActivityBlock    activity={lastActivity} athleteProfile={athleteProfile} onHide={onHide} />}</BlockWithHide> },
+    { id: 'lastActivity',   label: 'Dernière activité',   emoji: '🥇', render: () => <BlockWithHide>{(onHide) => <LastActivityBlock    latestPerSport={latestPerSport} athleteProfile={athleteProfile} onHide={onHide} />}</BlockWithHide> },
     { id: 'goals',          label: 'Objectifs',           emoji: '🎯', render: () => <BlockWithHide>{(onHide) => <GoalsBlock           sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
     { id: 'weekly',         label: 'Volume & Ratio',      emoji: '📊', render: () => <BlockWithHide>{(onHide) => <WeeklyStatsBlock     sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
     { id: 'charge',         label: 'Charge',              emoji: '⚡', render: () => <BlockWithHide>{(onHide) => <ChargeBlock          sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
