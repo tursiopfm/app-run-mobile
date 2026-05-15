@@ -2,6 +2,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { SPORT_CONFIG, type SportKey } from '@/lib/design/sports'
 
 type Props = {
@@ -28,13 +29,14 @@ export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave
     }
   }
 
-  return (
+  if (typeof document === 'undefined') return null
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
       onClick={onClose}
     >
       <div
-        className="bg-trail-card border border-trail-border rounded-[16px] p-5 w-[320px] max-w-[90vw]"
+        className="bg-trail-card border border-trail-border rounded-[16px] p-5 w-[320px] max-w-[90vw] max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-[16px] font-semibold text-trail-text mb-4">{title}</h2>
@@ -102,6 +104,7 @@ export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave
           </button>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
