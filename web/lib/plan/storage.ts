@@ -326,13 +326,17 @@ export async function getRaces(): Promise<Race[]> {
   return readRacesFromLS()
 }
 
-// La race principale : la première avec is_main=true ; fallback la prochaine date future.
+// La race principale : prochaine course principale par date (la plus proche dans le futur).
 export async function getMainRace(): Promise<Race | null> {
   const all = await getRaces()
   if (all.length === 0) return null
-  const main = all.find(r => r.isMain)
-  if (main) return main
   const todayISO = new Date().toISOString().slice(0, 10)
+  // Prochaine course principale par date (la plus proche dans le futur).
+  const upcomingMain = all.find(r => r.isMain && r.date >= todayISO)
+  if (upcomingMain) return upcomingMain
+  // Fallbacks : dernière principale passée, prochaine non-principale, ou la dernière.
+  const lastMain = [...all].reverse().find(r => r.isMain)
+  if (lastMain) return lastMain
   const upcoming = all.find(r => r.date >= todayISO)
   return upcoming ?? all[all.length - 1]
 }
@@ -346,18 +350,6 @@ export async function getRace(): Promise<Race | null> {
 export async function saveRace(race: Race): Promise<void> {
   const ctx = await getAuthedClient()
   if (ctx) {
-    // Si on marque cette course comme principale, on doit retirer le flag de
-    // toutes les autres AVANT d'upsert celle-ci, pour garantir un seul main.
-    if (race.isMain) {
-      const { error: clearErr } = await ctx.supabase
-        .from('races')
-        .update({ is_main: false })
-        .eq('athlete_id', ctx.athleteId)
-        .neq('id', race.id)
-      if (clearErr && !isMissingTableError(clearErr)) {
-        console.warn('[plan storage] failed to clear other main races:', clearErr.message)
-      }
-    }
     const row = raceToRow(race, ctx.athleteId)
     const { error } = await ctx.supabase.from('races').upsert(row, { onConflict: 'id' })
     if (!error) return
@@ -365,9 +357,9 @@ export async function saveRace(race: Race): Promise<void> {
       console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
     }
   }
-  // Fallback LS : on maintient l'exclusivité de isMain côté liste.
+  // Fallback LS.
   const all = readRacesFromLS()
-  const next = applyMainExclusivity(all, race)
+  const next = mergeRace(all, race)
   writeRacesToLS(next)
 }
 
@@ -406,13 +398,14 @@ function readRacesFromLS(): Race[] {
 function writeRacesToLS(races: Race[]): void {
   const sorted = [...races].sort((a, b) => a.date.localeCompare(b.date))
   writeLS(KEY_RACES, sorted)
-  // On garde KEY_RACE en miroir de la race principale pour compat avec
-  // d'éventuels caches/lecteurs anciens jusqu'à la prochaine purge.
-  const main = sorted.find(r => r.isMain)
-    ?? sorted.find(r => r.date >= new Date().toISOString().slice(0, 10))
+  // Miroir : prochaine course principale par date.
+  const todayISO = new Date().toISOString().slice(0, 10)
+  const upcomingMain = sorted.find(r => r.isMain && r.date >= todayISO)
+  const mirror = upcomingMain
+    ?? sorted.find(r => r.date >= todayISO)
     ?? sorted[sorted.length - 1]
     ?? null
-  writeLS<Race | null>(KEY_RACE, main)
+  writeLS<Race | null>(KEY_RACE, mirror)
 }
 
 function removeRaceFromLS(id: string): void {
@@ -420,15 +413,8 @@ function removeRaceFromLS(id: string): void {
   writeRacesToLS(all)
 }
 
-function applyMainExclusivity(existing: Race[], incoming: Race): Race[] {
+function mergeRace(existing: Race[], incoming: Race): Race[] {
   const idx = existing.findIndex(r => r.id === incoming.id)
-  if (incoming.isMain) {
-    // toutes les autres passent à isMain=false.
-    const next = existing.map(r => r.id === incoming.id ? incoming : { ...r, isMain: false })
-    if (idx < 0) next.push(incoming)
-    return next
-  }
-  // Pas de main : on insère/remplace tel quel.
   if (idx < 0) return [...existing, incoming]
   const next = [...existing]
   next[idx] = incoming

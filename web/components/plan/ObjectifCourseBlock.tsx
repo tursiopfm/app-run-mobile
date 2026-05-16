@@ -71,10 +71,18 @@ export function ObjectifCourseBlock({ onChange }: Props) {
     setModalOpen(true)
   }
 
-  // Tri : principale en premier, puis les autres par date asc.
+  // Tri : prochaine course principale mise en avant, puis les autres par date asc.
   const { mainRace, otherRaces } = useMemo(() => {
-    const main = races.find(r => r.isMain) ?? null
-    const others = races.filter(r => r.id !== main?.id)
+    const todayISO = new Date().toISOString().slice(0, 10)
+    const upcomingMains = races
+      .filter(r => r.isMain && r.date >= todayISO)
+      .sort((a, b) => a.date.localeCompare(b.date))
+    const main = upcomingMains[0]
+      ?? [...races].reverse().find(r => r.isMain)
+      ?? null
+    const others = races
+      .filter(r => r.id !== main?.id)
+      .sort((a, b) => a.date.localeCompare(b.date))
     return { mainRace: main, otherRaces: others }
   }, [races])
 
