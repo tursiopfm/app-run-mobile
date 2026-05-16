@@ -11,6 +11,7 @@ import { getRaces } from '@/lib/plan/storage'
 import { colors } from '@/lib/design/colors'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { RaceEditorModal } from './RaceEditorModal'
+import { RaceCardSkeleton } from './RaceCardSkeleton'
 
 type Props = {
   onChange?: () => void
@@ -76,6 +77,19 @@ export function ObjectifCourseBlock({ onChange }: Props) {
     const others = races.filter(r => r.id !== main?.id)
     return { mainRace: main, otherRaces: others }
   }, [races])
+
+  // ── Skeleton anti-flash (chargement en cours) ──
+  if (!loaded) {
+    return (
+      <BlockCard
+        title="Objectif course"
+        helpTitle="Ton objectif"
+        helpBody="Définis la course principale qui structure ta prépa. Tu peux ajouter d'autres courses secondaires en saison."
+      >
+        <RaceCardSkeleton />
+      </BlockCard>
+    )
+  }
 
   // ── État vide ──
   if (races.length === 0) {
