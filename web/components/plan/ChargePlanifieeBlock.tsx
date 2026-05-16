@@ -75,7 +75,16 @@ function findCurrentPhase(plan: TrainingPlan | null, nowISO: string): Phase | nu
   return plan.phases.find(p => p.startDate <= nowISO && nowISO <= p.endDate) ?? null
 }
 
-export function ChargePlanifieeBlock() {
+type ChargePlanifieeBlockProps = {
+  /**
+   * Compteur incrémenté par le parent (PlanClient) après une opération DnD
+   * (move / create depuis template). Inclus dans les deps du reload pour
+   * forcer un re-fetch sans démonter le composant.
+   */
+  reloadKey?: number
+}
+
+export function ChargePlanifieeBlock({ reloadKey = 0 }: ChargePlanifieeBlockProps = {}) {
   const [buckets, setBuckets] = useState<WeekBucket[]>([])
   const [target, setTarget]   = useState<number | null>(null)
   const [loaded, setLoaded]   = useState(false)
@@ -111,7 +120,7 @@ export function ChargePlanifieeBlock() {
       }
     })()
     return () => { cancelled = true }
-  }, [])
+  }, [reloadKey])
 
   const maxCharge = useMemo(() => {
     const values = [...buckets.map(b => b.charge), target ?? 0, 450]

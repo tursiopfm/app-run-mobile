@@ -66,6 +66,40 @@
 ### PWA
 - [ ] Splash screen PWA (post-domaine personnalisé)
 
+## Onglet Plan — bonus reportés du MVP Mode Manuel
+
+> Détail complet et contexte : `docs/plan-roadmap.md` (section "Bonus reportés").
+
+### Calcul charge avec elevation factor avancé
+- **Quoi** : moduler le facteur D+ de `lib/training/charge.ts` selon technicité terrain + prise en compte des descentes (casse musculaire).
+- **Pourquoi** : la formule actuelle (`1 + elevation/1000 * 0.15`) sous-estime les sorties techniques et ignore l'impact des descentes.
+- **Identifié** : 2026-05-16
+
+### Mini-graph profil intensité par zone (carte PlannedSession)
+- **Quoi** : mini-bar SVG (~30 px) dans la carte journalière de `VueSemaineBlock` représentant la séquence `TrainingZone[]` colorée par intensité (style Strava).
+- **Pourquoi** : lecture instantanée de la structure de séance sans ouvrir le modal.
+- **Identifié** : 2026-05-16
+
+### Coaching tips dynamiques par phase
+- **Quoi** : encart info dans `StructurePrepaBlock` changeant selon la phase courante (tip actionnable ~2 phrases) basé sur `PHASE_DEFINITIONS`.
+- **Pourquoi** : rapprocher l'app du coaching humain en donnant le "pourquoi" de chaque phase.
+- **Identifié** : 2026-05-16
+
+### Validation visuelle (alerte 2 hautes intensités enchaînées)
+- **Quoi** : dans `VueSemaineBlock`, signaler (⚠️ + tooltip) toute paire de séances `intensity ≥ 4` sur 2 jours consécutifs.
+- **Pourquoi** : éviter les erreurs classiques de planification que l'app peut détecter de façon déterministe.
+- **Identifié** : 2026-05-16
+
+### Microcycle pattern 3:1 auto
+- **Quoi** : bouton "Appliquer 3:1" dans `PhaseEditorModal` (3 sem progressives +5/+10/+15 % puis 1 sem -30 %).
+- **Pourquoi** : pattern classique d'entraînement, automatisable sans IA.
+- **Identifié** : 2026-05-16
+
+### Intégration calendrier Cockpit avec séances fantômes
+- **Quoi** : afficher les `PlannedSession` à venir en pointillé 60 % opacity à côté des `Activity` réalisées dans `WeekBlock` / `WeekActivitiesBlock` ; matching via `linkedActivityId`.
+- **Pourquoi** : voir d'un coup d'œil planifié vs réalisé dans le bloc Cockpit, pas seulement dans Plan. Brique commune avec la Vague 2 "intégrations Strava/Garmin" du roadmap Plan.
+- **Identifié** : 2026-05-16
+
 ## À qualifier (ni planifié ni écarté)
 
 - [ ] Authentification Strava avec plusieurs clients API

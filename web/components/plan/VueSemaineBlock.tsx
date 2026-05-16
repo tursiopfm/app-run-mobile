@@ -64,7 +64,16 @@ function findCurrentPhase(plan: TrainingPlan | null, nowISO: string): Phase | nu
 }
 
 // ─── Composant principal ────────────────────────────────────────────────────
-export function VueSemaineBlock() {
+type VueSemaineBlockProps = {
+  /**
+   * Compteur incrémenté par le parent (PlanClient) après une opération DnD
+   * (move / create depuis template). Inclus dans les deps du reload pour
+   * forcer un re-fetch sans démonter le composant.
+   */
+  reloadKey?: number
+}
+
+export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
   // Init = lundi de la semaine courante (UTC).
   const [weekStartISO, setWeekStartISO] = useState<string>(() => toISO(startOfISOWeek(new Date())))
   const [sessions, setSessions] = useState<PlannedSession[]>([])
@@ -102,6 +111,8 @@ export function VueSemaineBlock() {
   // Reload avec garde anti-race : si l'user enchaîne prev/next vite, l'ancienne
   // promesse peut résoudre APRÈS la nouvelle et écraser le state. Le flag
   // `cancelled` côté effect ignore les résolutions obsolètes.
+  // `reloadKey` permet au parent (PlanClient) de forcer un re-fetch après un
+  // drop DnD (move ou création depuis template) sans démonter le composant.
   useEffect(() => {
     let cancelled = false
     void (async () => {
@@ -115,7 +126,7 @@ export function VueSemaineBlock() {
       setLoaded(true)
     })()
     return () => { cancelled = true }
-  }, [weekDays, weekEndISO])
+  }, [weekDays, weekEndISO, reloadKey])
 
   // Sessions groupées par jour ISO.
   const sessionsByDay = useMemo<Record<string, PlannedSession[]>>(() => {
