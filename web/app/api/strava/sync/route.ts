@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/database/supabase-server'
-import { stravaSyncer, INCREMENTAL_WINDOW_DAYS } from '@/lib/providers/strava/syncer'
+import { stravaSyncer } from '@/lib/providers/strava/syncer'
 import { importActivities } from '@/lib/sync/import-activities'
 
 export async function POST(request: Request) {
@@ -34,31 +34,17 @@ export async function POST(request: Request) {
     const result = await importActivities(activities, profile)
     console.log('[sync] upsert:', result.saved, 'sauvegardée(s)')
 
-    let deleted = 0
-    if (!fullSync) {
-      const cutoff = new Date(Date.now() - INCREMENTAL_WINDOW_DAYS * 86_400_000).toISOString()
-      const stravaIds = new Set(activities.map(a => a.providerActivityId))
-      const { data: existing } = await supabase
-        .from('activities')
-        .select('id, provider_activity_id')
-        .eq('user_id', user.id)
-        .eq('provider', 'strava')
-        .gte('start_time', cutoff)
-        .is('deleted_at', null)
+    // NOTE: avant 2026-05-16, ce route faisait un "orphan cleanup" sur la fenêtre
+    // incrémentale : toute activité locale absente de la liste Strava récente
+    // était soft-deleted. C'est dangereux : si `fetchStravaActivities` renvoie
+    // une liste tronquée (page vide ponctuelle, glitch réseau, rate-limit),
+    // on supprime des activités qui existent vraiment côté Strava.
+    // Incident concret : 8 activités running d'avril 2026 perdues d'un coup
+    // (~92 km dont SL Marathon de Paris). Les vraies suppressions Strava sont
+    // déjà gérées par webhook (aspect_type=delete) — pas besoin de doublon ici.
 
-      const orphanIds = (existing ?? [])
-        .filter(a => !stravaIds.has(a.provider_activity_id as string))
-        .map(a => a.id as string)
-
-      console.log('[sync] orphelins à supprimer:', orphanIds.length)
-      if (orphanIds.length > 0) {
-        await supabase.from('activities').update({ deleted_at: new Date().toISOString() }).in('id', orphanIds)
-        deleted = orphanIds.length
-      }
-    }
-
-    console.log('[sync] fin — saved=', result.saved, 'deleted=', deleted)
-    return NextResponse.json({ ...result, deleted })
+    console.log('[sync] fin — saved=', result.saved)
+    return NextResponse.json({ ...result, deleted: 0 })
   } catch (err) {
     console.error('[sync] erreur:', err)
     return NextResponse.json(
