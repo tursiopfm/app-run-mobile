@@ -120,7 +120,7 @@ export default function PlanClient() {
       id: 'structure',
       label: 'Structure de prépa',
       emoji: '🏗️',
-      render: () => <StructurePrepaBlock />,
+      render: () => <StructurePrepaBlock onChange={bumpReload} reloadKey={reloadKey} />,
     },
     {
       id: 'semaine-bibliotheque',

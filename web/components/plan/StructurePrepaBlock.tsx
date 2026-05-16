@@ -52,9 +52,16 @@ function makeId(): string {
 
 type Props = {
   onChange?: () => void
+  /**
+   * Bumpé par le parent (PlanClient) quand une autre donnée du plan change
+   * (race créée, séance déplacée…). Inclus dans les deps du reload pour
+   * éviter d'avoir des blocs désynchronisés (cf. bug "race créée mais
+   * StructurePrepa reste vide tant qu'on ne change pas d'onglet").
+   */
+  reloadKey?: number
 }
 
-export function StructurePrepaBlock({ onChange }: Props) {
+export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
   const [race, setRace] = useState<Race | null>(null)
   const [plan, setPlan] = useState<TrainingPlan | null>(null)
   const [loaded, setLoaded] = useState(false)
@@ -70,7 +77,17 @@ export function StructurePrepaBlock({ onChange }: Props) {
     setLoaded(true)
   }, [])
 
-  useEffect(() => { void reload() }, [reload])
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const [r, p] = await Promise.all([getRace(), getCurrentPlan()])
+      if (cancelled) return
+      setRace(r)
+      setPlan(p)
+      setLoaded(true)
+    })()
+    return () => { cancelled = true }
+  }, [reloadKey])
 
   function handleSaved() {
     void reload()

@@ -84,7 +84,9 @@ export function BibliothequeSeancesBlock() {
       </div>
 
       {/* ── Filtres chips ──────────────────────────────────────────────── */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-1" role="tablist" aria-label="Filtrer par type">
+      {/* flex-wrap pour éviter le slide horizontal (le bloc fait 2 lignes
+          de chips au lieu de scroller — UX mobile préférée). */}
+      <div className="flex flex-wrap items-center gap-1 pb-1" role="tablist" aria-label="Filtrer par type">
         <TypeChip
           active={selectedType === 'all'}
           onClick={() => setSelectedType('all')}

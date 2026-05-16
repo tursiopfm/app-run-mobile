@@ -272,8 +272,12 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
       )}
 
       {/* ── Body : 7 colonnes ───────────────────────────────────────────── */}
-      <div className="mt-3 overflow-x-auto md:overflow-visible">
-        <div className="flex gap-2 md:grid md:grid-cols-7 md:gap-2">
+      {/* Grille 7 colonnes pleine largeur sur tous les viewports : pas de
+          scroll horizontal. Sur mobile très étroit (< 360px), les colonnes
+          font ~45px chacune ; les mini-cartes session se compactent en
+          conséquence (gap réduit à 1, padding interne minimal). */}
+      <div className="mt-3">
+        <div className="grid grid-cols-7 gap-1 md:gap-2">
           {weekDays.map((iso, i) => (
             <DayColumn
               key={iso}
@@ -350,7 +354,7 @@ function DayColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex-shrink-0 min-w-[100px] md:min-w-0 rounded-[8px] border transition-colors ${
+      className={`min-w-0 rounded-[8px] border transition-colors ${
         isOver
           ? 'border-trail-primary bg-trail-primary/10'
           : 'border-trail-border bg-trail-surface'
