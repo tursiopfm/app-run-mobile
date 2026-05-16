@@ -211,12 +211,6 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
     }
   }
 
-  function handleSaveAsTemplate() {
-    // Stub : Task 4 reporte cette feature.
-    console.log('[plan] Enregistrer comme semaine type — bientôt')
-    alert('Bientôt')
-  }
-
   const titleLabel = weekInPlan ? `Semaine ${weekInPlan.x} / ${weekInPlan.y}` : 'Semaine'
 
   return (
@@ -288,6 +282,7 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
       <div className="mt-3 flex items-center justify-between gap-2 flex-wrap">
+        {/* TODO: réintroduire 'Enregistrer comme semaine type' quand la feature bibliothèque-de-semaines-types sera développée. */}
         <button
           type="button"
           onClick={handleDuplicateWeek}
@@ -295,13 +290,6 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
           className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[13px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:border-trail-primary"
         >
           {duplicating ? 'Duplication…' : 'Dupliquer la semaine'}
-        </button>
-        <button
-          type="button"
-          onClick={handleSaveAsTemplate}
-          className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-muted text-[13px] font-semibold hover:border-trail-primary hover:text-trail-text"
-        >
-          Enregistrer comme semaine type
         </button>
       </div>
 
