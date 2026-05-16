@@ -11,6 +11,7 @@ import { getCustomTemplates } from '@/lib/plan/storage'
 import { INTENSITY_LEVEL_COLORS } from '@/lib/activities/indicators'
 import TypeIndicator from '@/components/activity/TypeIndicator'
 import { TemplateEditorModal } from './TemplateEditorModal'
+import { BlockCard } from '@/components/blocks/BlockCard'
 
 const ALL_TYPES: SessionType[] = [
   'sortie_longue', 'fractionne', 'seuil_tempo', 'cotes', 'course', 'runtaf', 'velotaf', 'footing',
@@ -64,25 +65,19 @@ export function BibliothequeSeancesBlock() {
   }
 
   return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <h3
-          className="text-[16px] text-trail-text"
-          style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.04em' }}
-        >
-          BIBLIOTHÈQUE
-        </h3>
+    <BlockCard
+      title="Bibliothèque"
+      helpTitle="Bibliothèque de séances"
+      helpBody="Templates de séances. Glisse-dépose vers un jour de la semaine pour planifier. Crée tes propres templates avec le bouton +."
+      rightSlot={
         <button
           type="button"
           onClick={openCreate}
-          className="px-3 py-1 rounded-[8px] bg-trail-primary text-white text-[12px] font-semibold"
+          className="px-2 py-1 rounded-[8px] bg-trail-primary text-white text-[11px] font-semibold whitespace-nowrap"
           aria-label="Créer un nouveau template de séance"
-        >
-          + Nouveau template
-        </button>
-      </div>
-
+        >+ Nouveau</button>
+      }
+    >
       {/* ── Filtres chips ──────────────────────────────────────────────── */}
       {/* flex-wrap pour éviter le slide horizontal (le bloc fait 2 lignes
           de chips au lieu de scroller — UX mobile préférée). */}
@@ -137,7 +132,7 @@ export function BibliothequeSeancesBlock() {
         onClose={() => setEditorOpen(false)}
         onSaved={() => { void reload() }}
       />
-    </div>
+    </BlockCard>
   )
 }
 
