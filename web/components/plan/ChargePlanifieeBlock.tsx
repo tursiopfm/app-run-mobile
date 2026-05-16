@@ -66,7 +66,7 @@ function chargeColor(c: number): string {
   if (c < 200) return colors.seriesYellow   // #FBBF24
   if (c < 300) return colors.chargeOrange   // #FF6B35
   if (c < 450) return colors.seriesRed      // #F87171
-  return '#A855F7'                          // violet (overload)
+  return colors.pieCotes                    // violet (overload)
 }
 
 // ─── Phase courante (now ∈ [start, end]) ────────────────────────────────────

@@ -90,7 +90,7 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
   }
 
   async function handleDelete() {
-    if (!race) return
+    if (!race || saving) return
     setSaving(true)
     try {
       await deleteRace(race.id)
