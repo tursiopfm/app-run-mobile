@@ -6,6 +6,7 @@
 // La data vient de getRaces() (Supabase ou localStorage selon contexte).
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import type { Race, RaceType } from '@/types/plan'
 import { getRaces } from '@/lib/plan/storage'
 import { colors } from '@/lib/design/colors'
@@ -66,9 +67,9 @@ export function ObjectifCourseBlock({ onChange }: Props) {
     setModalOpen(true)
   }
 
-  function openEdit(race: Race) {
-    setEditing(race)
-    setModalOpen(true)
+  const router = useRouter()
+  function openCourseDetail(race: Race) {
+    router.push(`/plan/courses/${race.id}`)
   }
 
   // Tri : prochaine course principale mise en avant, puis les autres par date asc.
@@ -146,7 +147,7 @@ export function ObjectifCourseBlock({ onChange }: Props) {
     >
       {/* Course principale : grande carte */}
       {mainRace && (
-        <MainRaceCard race={mainRace} onEdit={() => openEdit(mainRace)} />
+        <MainRaceCard race={mainRace} onSelect={() => openCourseDetail(mainRace)} />
       )}
 
       {/* Cartes compactes pour les autres courses */}
@@ -156,7 +157,7 @@ export function ObjectifCourseBlock({ onChange }: Props) {
             <CompactRaceCard
               key={r.id}
               race={r}
-              onEdit={() => openEdit(r)}
+              onSelect={() => openCourseDetail(r)}
             />
           ))}
         </div>
@@ -184,32 +185,23 @@ export function ObjectifCourseBlock({ onChange }: Props) {
 }
 
 // ─── Carte principale (grand format) ───────────────────────────────────────
-function MainRaceCard({ race, onEdit }: { race: Race; onEdit: () => void }) {
+function MainRaceCard({ race, onSelect }: { race: Race; onSelect: () => void }) {
   const daysLeft = computeDaysLeft(race.date)
   const isPast = daysLeft < 0
   const typeLabel = RACE_TYPE_LABEL[race.type] ?? race.type
-
   return (
-    <div className="relative">
-      {/* Bouton Modifier en haut à droite */}
-      <button
-        type="button"
-        onClick={onEdit}
-        className="absolute top-0 right-0 px-2 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-muted hover:text-trail-text text-[12px] font-semibold flex items-center gap-1"
-        aria-label={`Modifier la course ${race.name}`}
+    <button
+      type="button"
+      onClick={onSelect}
+      className="block w-full text-left rounded-[10px] hover:bg-trail-surface/30 transition-colors -mx-1 px-1"
+      aria-label={`Ouvrir le détail de la course ${race.name}`}
+    >
+      <h3
+        className="text-[24px] leading-tight text-trail-text"
+        style={{ fontFamily: "'Bebas Neue', sans-serif" }}
       >
-        <span aria-hidden>✏️</span>
-        <span>Modifier</span>
-      </button>
-
-      <div className="pt-2 pr-[88px]">
-        <h3
-          className="text-[24px] leading-tight text-trail-text"
-          style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-        >
-          {race.name}
-        </h3>
-      </div>
+        {race.name}
+      </h3>
 
       <div className="mt-3">
         {isPast ? (
@@ -217,7 +209,7 @@ function MainRaceCard({ race, onEdit }: { race: Race; onEdit: () => void }) {
         ) : (
           <div className="flex items-baseline gap-2">
             <span
-              className="text-[48px] leading-none text-trail-primary"
+              className="text-[32px] leading-none text-trail-primary"
               style={{ fontFamily: "'Bebas Neue', sans-serif" }}
               aria-label={`J moins ${daysLeft} jours`}
             >
@@ -231,16 +223,8 @@ function MainRaceCard({ race, onEdit }: { race: Race; onEdit: () => void }) {
       </div>
 
       <div className="flex flex-wrap gap-2 mt-3">
-        <Pill
-          bg={`${colors.chargeOrange}26`}
-          color={colors.chargeOrange}
-          label={`${race.distance} km`}
-        />
-        <Pill
-          bg={`${colors.seriesBlue}26`}
-          color={colors.seriesBlue}
-          label={`${race.elevation} m D+`}
-        />
+        <Pill bg={`${colors.chargeOrange}26`} color={colors.chargeOrange} label={`${race.distance} km`} />
+        <Pill bg={`${colors.seriesBlue}26`} color={colors.seriesBlue} label={`${race.elevation} m D+`} />
         <Pill bg="var(--trail-surface)" color="var(--trail-text)" label={typeLabel} />
         {race.location && (
           <Pill
@@ -253,17 +237,24 @@ function MainRaceCard({ race, onEdit }: { race: Race; onEdit: () => void }) {
           className="px-[10px] py-[4px] rounded-full text-[11px] font-bold whitespace-nowrap"
           style={{ backgroundColor: `${colors.chargeOrange}26`, color: colors.chargeOrange }}
         >
-          Principal
+          Principale
         </span>
       </div>
-    </div>
+    </button>
   )
 }
 
 // ─── Carte compacte (1 ligne, courses secondaires/archivées) ───────────────
-function CompactRaceCard({ race, onEdit }: { race: Race; onEdit: () => void }) {
+function CompactRaceCard({ race, onSelect }: { race: Race; onSelect: () => void }) {
+  const daysLeft = computeDaysLeft(race.date)
+  const isPast = daysLeft < 0
   return (
-    <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border">
+    <button
+      type="button"
+      onClick={onSelect}
+      className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border hover:border-trail-primary transition-colors text-left"
+      aria-label={`Ouvrir le détail de la course ${race.name}`}
+    >
       <div className="flex items-center gap-2 min-w-0 flex-1">
         <span
           className="text-[13px] font-semibold text-trail-text truncate"
@@ -271,6 +262,15 @@ function CompactRaceCard({ race, onEdit }: { race: Race; onEdit: () => void }) {
         >
           {race.name}
         </span>
+        {!isPast && (
+          <span
+            className="text-[14px] leading-none text-trail-primary flex-shrink-0"
+            style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+            aria-label={`J moins ${daysLeft} jours`}
+          >
+            J-{daysLeft}
+          </span>
+        )}
         <span className="text-[11px] text-trail-muted flex-shrink-0">
           {formatShortDate(race.date)}
         </span>
@@ -278,27 +278,15 @@ function CompactRaceCard({ race, onEdit }: { race: Race; onEdit: () => void }) {
           · {race.distance} km
         </span>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
+      {race.isMain && (
         <span
-          className="px-2 py-[2px] rounded-full text-[10px] font-bold whitespace-nowrap"
-          style={{
-            backgroundColor: 'var(--trail-card)',
-            color: 'var(--trail-muted)',
-          }}
+          className="px-2 py-[2px] rounded-full text-[10px] font-bold whitespace-nowrap flex-shrink-0"
+          style={{ backgroundColor: `${colors.chargeOrange}26`, color: colors.chargeOrange }}
         >
-          Secondaire
+          Principale
         </span>
-        <button
-          type="button"
-          onClick={onEdit}
-          className="px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-muted hover:text-trail-text text-[11px] font-semibold flex items-center gap-1"
-          aria-label={`Modifier la course ${race.name}`}
-        >
-          <span aria-hidden>✏️</span>
-          <span className="hidden sm:inline">Modifier</span>
-        </button>
-      </div>
-    </div>
+      )}
+    </button>
   )
 }
 
