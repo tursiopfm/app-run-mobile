@@ -15,6 +15,7 @@ import {
 } from '@/lib/plan/storage'
 import type { Phase, PlannedSession, Race, TrainingPlan } from '@/types/plan'
 import { colors } from '@/lib/design/colors'
+import { BlockCard } from '@/components/blocks/BlockCard'
 
 // ─── Helpers date (semaine ISO, lundi → dimanche, UTC) ───────────────────────
 function toISO(d: Date): string {
@@ -199,20 +200,11 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
   }, [todayISO])
 
   return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-      {/* ── Header : titre + sous-titre + badge séances ─────────────────── */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <p
-            className="text-[23px] text-trail-text leading-tight"
-            style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.02em', fontWeight: 700 }}
-          >
-            Plan d&apos;entraînement
-          </p>
-          <p className="text-[12px] text-trail-muted mt-1">
-            S{weekNumber} — {formatDM(weekStartISO)} au {formatDM(weekEndISO)} — {objectiveLabel}
-          </p>
-        </div>
+    <BlockCard
+      title="Résumé semaine"
+      helpTitle="Résumé semaine"
+      helpBody="Comparaison objectif vs prévu vs restant sur la semaine sélectionnée."
+      rightSlot={
         <span
           className="ml-2 flex-shrink-0 rounded-full px-2 py-[3px] text-[11px] font-bold whitespace-nowrap"
           style={{
@@ -223,7 +215,11 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
         >
           {plannedSessionsCount} séances
         </span>
-      </div>
+      }
+    >
+      <p className="text-[12px] text-trail-muted">
+        S{weekNumber} — {formatDM(weekStartISO)} au {formatDM(weekEndISO)} — {objectiveLabel}
+      </p>
 
       {/* ── Nav row : < jour > Aujourd'hui ──────────────────────────────── */}
       <div className="flex items-center gap-2 mt-3">
@@ -317,7 +313,7 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
       {!loaded && (
         <div className="text-center text-trail-muted text-[12px] mt-2" role="status">Chargement…</div>
       )}
-    </div>
+    </BlockCard>
   )
 }
 
