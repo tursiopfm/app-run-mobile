@@ -8,13 +8,14 @@ import { useDraggable } from '@dnd-kit/core'
 import type { SessionTemplate, SessionType } from '@/types/plan'
 import { SESSION_TEMPLATES } from '@/lib/training/session-templates'
 import { getCustomTemplates } from '@/lib/plan/storage'
-import { INTENSITY_LEVEL_COLORS } from '@/lib/activities/indicators'
-import TypeIndicator from '@/components/activity/TypeIndicator'
+import { INTENSITY_LEVEL_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
 import { TemplateEditorModal } from './TemplateEditorModal'
 import { BlockCard } from '@/components/blocks/BlockCard'
 
 const ALL_TYPES: SessionType[] = [
-  'sortie_longue', 'fractionne', 'seuil_tempo', 'cotes', 'course', 'runtaf', 'velotaf', 'footing',
+  'sortie_longue', 'fractionne', 'seuil_tempo', 'cotes', 'footing',
+  'course', 'runtaf', 'velotaf',
+  'velo', 'natation', 'renfo', 'musculation',
 ]
 
 export function BibliothequeSeancesBlock() {
@@ -78,23 +79,23 @@ export function BibliothequeSeancesBlock() {
         >+ Nouveau</button>
       }
     >
-      {/* ── Filtres chips ──────────────────────────────────────────────── */}
-      {/* flex-wrap pour éviter le slide horizontal (le bloc fait 2 lignes
-          de chips au lieu de scroller — UX mobile préférée). */}
-      <div className="flex flex-wrap items-center gap-1 pb-1" role="tablist" aria-label="Filtrer par type">
-        <TypeChip
-          active={selectedType === 'all'}
-          onClick={() => setSelectedType('all')}
-          label="Toutes"
-        />
+      {/* ── Filtres pills ──────────────────────────────────────────────── */}
+      <div
+        className="flex md:flex-wrap items-center gap-2 overflow-x-auto md:overflow-visible pb-2 -mx-1 px-1"
+        style={{ scrollSnapType: 'x mandatory' }}
+        role="tablist"
+        aria-label="Filtrer par type"
+      >
+        <FilterPill active={selectedType === 'all'} onClick={() => setSelectedType('all')} label="Tous" />
         {ALL_TYPES.map(t => (
-          <TypeChip
+          <FilterPill
             key={t}
             active={selectedType === t}
             onClick={() => setSelectedType(t)}
-            type={t}
+            label={SESSION_TYPE_LABELS[t]}
           />
         ))}
+        <FilterPill onClick={openCreate} label="+ Nouveau" isAdd />
       </div>
 
       {/* ── Search ─────────────────────────────────────────────────────── */}
@@ -137,28 +138,30 @@ export function BibliothequeSeancesBlock() {
 }
 
 // ─── Sous-composants ────────────────────────────────────────────────────────
-function TypeChip({
-  active, onClick, label, type,
+function FilterPill({
+  active = false, onClick, label, isAdd = false,
 }: {
-  active: boolean
+  active?: boolean
   onClick: () => void
-  label?: string
-  type?: SessionType
+  label: string
+  isAdd?: boolean
 }) {
   return (
     <button
       type="button"
-      role="tab"
-      aria-selected={active}
+      role={isAdd ? undefined : 'tab'}
+      aria-selected={isAdd ? undefined : active}
       onClick={onClick}
-      className={`flex-shrink-0 px-2 py-1 rounded-full text-[11px] font-semibold border transition-colors ${
-        active
-          ? 'border-trail-primary bg-trail-primary/15 text-trail-primary'
-          : 'border-trail-border bg-trail-surface text-trail-muted hover:text-trail-text'
+      style={{ scrollSnapAlign: 'start' }}
+      className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-semibold whitespace-nowrap transition-colors ${
+        isAdd
+          ? 'border border-dashed border-trail-primary/50 text-trail-primary hover:bg-trail-primary/10'
+          : active
+            ? 'bg-trail-primary text-white border border-trail-primary'
+            : 'bg-trail-surface text-trail-muted border border-trail-border hover:text-trail-text'
       }`}
-      style={type ? { minWidth: 100 } : undefined}
     >
-      {label ?? (type ? <span className="block"><TypeIndicator type={type} /></span> : null)}
+      {label}
     </button>
   )
 }
@@ -190,7 +193,9 @@ function TemplateCard({
       aria-label={`Template ${template.title}${isCustom ? ' (personnalisé, éditable)' : ' (système, lecture seule)'} — glisser vers un jour pour planifier`}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
     >
-      <TypeIndicator type={template.type} />
+      <p className="text-[10px] font-semibold text-trail-muted uppercase tracking-wider">
+        {SESSION_TYPE_LABELS[template.type]}
+      </p>
       <h4
         className="mt-1 text-[14px] text-trail-text leading-tight"
         style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.02em' }}
