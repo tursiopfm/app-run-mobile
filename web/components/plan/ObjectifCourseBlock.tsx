@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Race, RaceType } from '@/types/plan'
 import { getRaces } from '@/lib/plan/storage'
 import { colors } from '@/lib/design/colors'
+import { BlockCard } from '@/components/blocks/BlockCard'
 import { RaceEditorModal } from './RaceEditorModal'
 
 type Props = {
@@ -79,7 +80,11 @@ export function ObjectifCourseBlock({ onChange }: Props) {
   // ── État vide ──
   if (races.length === 0) {
     return (
-      <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
+      <BlockCard
+        title="Objectif course"
+        helpTitle="Ton objectif"
+        helpBody="Définis la course principale qui structure ta prépa. Tu peux ajouter d'autres courses secondaires en saison."
+      >
         <div className="flex flex-col items-center justify-center text-center py-6 px-4">
           <span className="text-[40px] leading-none mb-2" aria-hidden>🎯</span>
           <h3
@@ -107,12 +112,16 @@ export function ObjectifCourseBlock({ onChange }: Props) {
           onClose={() => setModalOpen(false)}
           onSaved={handleSaved}
         />
-      </div>
+      </BlockCard>
     )
   }
 
   return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
+    <BlockCard
+      title="Objectif course"
+      helpTitle="Ton objectif"
+      helpBody="Définis la course principale qui structure ta prépa. Tu peux ajouter d'autres courses secondaires en saison."
+    >
       {/* Course principale : grande carte */}
       {mainRace && (
         <MainRaceCard race={mainRace} onEdit={() => openEdit(mainRace)} />
@@ -148,7 +157,7 @@ export function ObjectifCourseBlock({ onChange }: Props) {
         onClose={() => setModalOpen(false)}
         onSaved={handleSaved}
       />
-    </div>
+    </BlockCard>
   )
 }
 
