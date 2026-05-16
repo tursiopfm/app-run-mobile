@@ -7,7 +7,7 @@ import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports
 import { CockpitKpiTile } from '@/components/ui/CockpitKpiTile'
 import { TsbBadge } from '@/components/ui/TsbBadge'
 import { SportSettingsModal } from './SportSettingsModal'
-import { BlockHelpSheet } from '@/components/charge/BlockHelpSheet'
+import { BlockHelpSheet } from '@/components/blocks/BlockHelpSheet'
 import { colors } from '@/lib/design/colors'
 import { charge as L } from '@/lib/design/labels'
 

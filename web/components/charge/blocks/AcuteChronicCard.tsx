@@ -1,6 +1,6 @@
 'use client'
 
-import { BlockCard } from '../BlockCard'
+import { BlockCard } from '@/components/blocks/BlockCard'
 import { computeLoadBalanceRatio } from '@/lib/analytics/charge-insights'
 import { LOAD_BALANCE } from '@/lib/analytics/charge-thresholds'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'

@@ -1,6 +1,6 @@
 'use client'
 
-import { BlockCard } from '../BlockCard'
+import { BlockCard } from '@/components/blocks/BlockCard'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 import { charge as L } from '@/lib/design/labels'
 

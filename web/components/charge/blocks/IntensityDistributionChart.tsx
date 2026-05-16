@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BlockCard } from '../BlockCard'
+import { BlockCard } from '@/components/blocks/BlockCard'
 import type { ChargeSportPayload, IntensityLabel } from '@/lib/analytics/charge-insights.types'
 import { charge as L } from '@/lib/design/labels'
 import { colors } from '@/lib/design/colors'

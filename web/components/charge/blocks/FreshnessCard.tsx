@@ -1,7 +1,7 @@
 'use client'
 
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
-import { BlockCard } from '../BlockCard'
+import { BlockCard } from '@/components/blocks/BlockCard'
 import { Gauge } from '../Gauge'
 import { computeFreshness } from '@/lib/analytics/charge-insights'
 import { FRESHNESS } from '@/lib/analytics/charge-thresholds'
