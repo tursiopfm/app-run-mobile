@@ -17,6 +17,7 @@ import { colors } from '@/lib/design/colors'
 import { INTENSITY_LEVEL_COLORS } from '@/lib/activities/indicators'
 import TypeIndicator from '@/components/activity/TypeIndicator'
 import { SessionEditorModal } from './SessionEditorModal'
+import { BlockCard } from '@/components/blocks/BlockCard'
 
 // ─── Helpers date (semaine ISO, lundi → dimanche, UTC) ───────────────────────
 function toISO(d: Date): string {
@@ -215,45 +216,37 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
     alert('Bientôt')
   }
 
-  return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-      {/* ── Header : nav + titre + pill phase + totals ──────────────────── */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-2 min-w-0">
-          <button
-            type="button"
-            onClick={() => gotoOffsetWeeks(-1)}
-            className="px-2 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] hover:border-trail-primary"
-            aria-label="Semaine précédente"
-          >
-            ←
-          </button>
-          <h3
-            className="text-[18px] text-trail-text whitespace-nowrap"
-            style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.04em' }}
-          >
-            {weekInPlan
-              ? `Semaine ${weekInPlan.x} / ${weekInPlan.y}`
-              : 'Semaine'}
-            <span className="text-trail-muted text-[13px] font-normal ml-2">
-              du {formatDM(weekDays[0])} au {formatDM(weekEndISO)}
-            </span>
-          </h3>
-          <button
-            type="button"
-            onClick={() => gotoOffsetWeeks(1)}
-            className="px-2 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] hover:border-trail-primary"
-            aria-label="Semaine suivante"
-          >
-            →
-          </button>
-        </div>
+  const titleLabel = weekInPlan ? `Semaine ${weekInPlan.x} / ${weekInPlan.y}` : 'Semaine'
 
+  return (
+    <BlockCard
+      title={titleLabel}
+      helpTitle="Semaine"
+      helpBody="Calendrier de la semaine sélectionnée. Glisse-dépose des templates depuis la bibliothèque pour planifier une séance."
+      rightSlot={
         <div className="flex items-center gap-1 flex-wrap">
           <Pill bg={`${colors.greenOk}26`}    color={colors.greenOk}    label={`${Math.round(totals.duration)} min`} />
           <Pill bg={`${colors.seriesRed}26`}  color={colors.seriesRed}  label={`${Math.round(totals.charge)} TSS`} />
           <Pill bg={`${colors.seriesBlue}26`} color={colors.seriesBlue} label={`${Math.round(totals.elevation)} m D+`} />
         </div>
+      }
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <button
+          type="button"
+          onClick={() => gotoOffsetWeeks(-1)}
+          className="px-2 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] hover:border-trail-primary"
+          aria-label="Semaine précédente"
+        >←</button>
+        <span className="text-[12px] text-trail-muted flex-1 text-center">
+          du {formatDM(weekDays[0])} au {formatDM(weekEndISO)}
+        </span>
+        <button
+          type="button"
+          onClick={() => gotoOffsetWeeks(1)}
+          className="px-2 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] hover:border-trail-primary"
+          aria-label="Semaine suivante"
+        >→</button>
       </div>
 
       {/* ── Sous-header : pill phase courante ──────────────────────────── */}
@@ -322,7 +315,7 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
         onClose={() => setEditorOpen(false)}
         onSaved={() => { void reload() }}
       />
-    </div>
+    </BlockCard>
   )
 }
 
