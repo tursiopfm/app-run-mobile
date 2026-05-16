@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { PlannedSession, TrainingPlan, Phase } from '@/types/plan'
 import { getCurrentPlan, getPlannedSessions } from '@/lib/plan/storage'
 import { colors } from '@/lib/design/colors'
+import { BlockCard } from '@/components/blocks/BlockCard'
 
 type WeekBucket = {
   label:    string
@@ -153,28 +154,20 @@ export function ChargePlanifieeBlock({ reloadKey = 0 }: ChargePlanifieeBlockProp
   const targetY = target != null ? y(target) : null
 
   return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-      <div className="flex items-center justify-between mb-2">
-        <h3
-          className="text-[16px] text-trail-text"
-          style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.04em' }}
+    <BlockCard
+      title="Charge planifiée"
+      helpTitle="Charge planifiée"
+      helpBody="Cumul de la charge estimée des séances planifiées sur 4 semaines (W-1 à W+2). Ligne pointillée = cible hebdo de la phase courante."
+      rightSlot={overshoot ? (
+        <span
+          className="px-[8px] py-[3px] rounded-full text-[10px] font-semibold whitespace-nowrap"
+          style={{ backgroundColor: `${colors.seriesYellow}26`, color: colors.seriesYellow }}
+          aria-label="Écart supérieur à 20% par rapport à la cible"
         >
-          CHARGE PLANIFIÉE
-        </h3>
-        {overshoot && (
-          <span
-            className="px-[8px] py-[3px] rounded-full text-[10px] font-semibold whitespace-nowrap"
-            style={{
-              backgroundColor: `${colors.seriesYellow}26`,
-              color: colors.seriesYellow,
-            }}
-            aria-label="Écart supérieur à 20% par rapport à la cible"
-          >
-            Écart &gt;20% / cible
-          </span>
-        )}
-      </div>
-
+          Écart &gt;20% / cible
+        </span>
+      ) : undefined}
+    >
       <svg
         viewBox={`0 0 ${VB_W} ${VB_H}`}
         width="100%"
@@ -253,6 +246,6 @@ export function ChargePlanifieeBlock({ reloadKey = 0 }: ChargePlanifieeBlockProp
           )
         })}
       </svg>
-    </div>
+    </BlockCard>
   )
 }
