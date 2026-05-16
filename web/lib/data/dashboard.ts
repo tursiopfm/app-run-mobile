@@ -51,10 +51,15 @@ export type SportOverview = {
 }
 
 type SlimActivity = {
-  sport_type: string
-  start_time: string
-  distance_m: number | null
-  elevation_gain_m: number | null
+  sport_type:        string
+  // manual_sport_type est le re-tag utilisateur ; quand présent il OVERRIDE
+  // sport_type pour toutes les agrégations par sport. Sans ça, une activité
+  // tagguée à la main "Run" depuis Strava "Workout" disparaît du total Run
+  // annuel — bug constaté 2026-05-16.
+  manual_sport_type: string | null
+  start_time:        string
+  distance_m:        number | null
+  elevation_gain_m:  number | null
 }
 
 export type WorkoutTypeShare = {
@@ -162,7 +167,10 @@ function buildWindowedLoads(
 
 function filterSport(activities: ActivityRow[], types: readonly string[] | null): ActivityRow[] {
   if (!types) return activities
-  return activities.filter((a) => types.includes(a.sport_type))
+  // manual_sport_type override sport_type pour la catégorisation. Sans ça,
+  // les activités re-tagguées à la main (ex: Strava "Workout" → Run) sont
+  // ignorées par le filtre Run/Ride/Swim.
+  return activities.filter((a) => types.includes(a.manual_sport_type ?? a.sport_type))
 }
 
 function dayOfYearIdx(d: Date): number {
@@ -182,7 +190,7 @@ function buildCumulYears(
   now: Date,
 ): MonthSeries[] {
   const filtered = types
-    ? yearActivities.filter((a) => types.includes(a.sport_type))
+    ? yearActivities.filter((a) => types.includes(a.manual_sport_type ?? a.sport_type))
     : yearActivities
 
   const byYear = new Map<number, SlimActivity[]>()
@@ -350,7 +358,7 @@ function buildSportOverview(
   // Daily history across the user's entire activity range (per sport, slim).
   // Used by HistoryBlock to navigate back through past weeks/months/years.
   const fullHistory = types
-    ? yearActivities.filter((a) => types.includes(a.sport_type))
+    ? yearActivities.filter((a) => types.includes(a.manual_sport_type ?? a.sport_type))
     : yearActivities
   const historyMap = new Map<string, { km: number; dPlus: number }>()
   for (const a of fullHistory) {
@@ -402,7 +410,7 @@ async function fetchAllHistorySlim(
   for (let from = 0; ; from += HISTORY_PAGE_SIZE) {
     const { data, error } = await supabase
       .from('activities')
-      .select('sport_type, start_time, distance_m, elevation_gain_m')
+      .select('sport_type, manual_sport_type, start_time, distance_m, elevation_gain_m')
       .eq('user_id', userId)
       .is('deleted_at', null)
       .order('start_time', { ascending: true })

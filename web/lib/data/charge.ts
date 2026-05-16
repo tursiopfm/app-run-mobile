@@ -23,6 +23,10 @@ export type ChargePageData = {
 type ActivityRow = {
   id:                string
   sport_type:        string
+  // manual_sport_type override sport_type pour la classification de catégorie
+  // (run/ride/swim). Sans ça, une activité re-tagguée à la main "Run" depuis
+  // Strava "Workout" est classée 'other' et disparaît du Charge Run.
+  manual_sport_type: string | null
   name:              string
   start_time:        string
   ces:               number | null
@@ -36,7 +40,7 @@ type ActivityRow = {
 function rowToCesActivity(r: ActivityRow): CesActivity {
   return {
     id:              r.id,
-    rawSportType:    r.sport_type,
+    rawSportType:    r.manual_sport_type ?? r.sport_type,
     name:            r.name,
     startDate:       r.start_time,
     ces:             r.ces ?? 0,
@@ -117,7 +121,7 @@ export async function getChargePageData(userId: string): Promise<ChargePageData>
   const [{ data: rows }, { data: profile }] = await Promise.all([
     supabase
       .from('activities')
-      .select('id, sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_intensity')
+      .select('id, sport_type, manual_sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_intensity')
       .eq('user_id', userId)
       .gte('start_time', since.toISOString())
       .is('deleted_at', null)
