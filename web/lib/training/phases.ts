@@ -131,22 +131,9 @@ export function autoDistributePhases(startDate: string, raceDate: string): Phase
     // Si totalWeeks < 6 : on compresse Spécifique en priorité.
     console.warn('Prépa courte — privilégier Développement + Spécifique.')
 
-    let affutageW = Math.min(2, totalWeeks)
-    let specifiqueW = Math.min(3, Math.max(0, totalWeeks - affutageW))
-    let dvpW = Math.max(0, totalWeeks - affutageW - specifiqueW)
-
-    // Garantir au moins 1 semaine de Développement quand on a ≥ 6 semaines (≥ 2 + 3 + 1).
-    if (totalWeeks >= 6 && dvpW < 1) {
-      // Devrait déjà être >=1 par le calcul ci-dessus, mais on protège.
-      dvpW = 1
-    }
-    // Si on a 5 semaines pile : Affûtage 2 + Spécifique 3 + Dvp 0 → on garde 0.
-    // Si on a 4 semaines : Affûtage 2 + Spécifique 2 + Dvp 0 → réduit le Spécifique.
-    if (totalWeeks < 5) {
-      affutageW = Math.min(2, totalWeeks)
-      specifiqueW = Math.max(0, totalWeeks - affutageW)
-      dvpW = 0
-    }
+    const affutageW = Math.min(2, totalWeeks)
+    const specifiqueW = Math.min(3, Math.max(0, totalWeeks - affutageW))
+    const dvpW = Math.max(0, totalWeeks - affutageW - specifiqueW)
 
     const phases: Phase[] = []
     let cursor = new Date(start)

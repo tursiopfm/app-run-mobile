@@ -53,7 +53,7 @@ create table if not exists planned_sessions (
   plan_id            uuid references training_plans(id) on delete cascade,
   athlete_id         uuid references auth.users(id) on delete cascade not null,
   date               date not null,
-  type               text not null,
+  type               text not null check (type in ('sortie_longue','fractionne','seuil_tempo','cotes','course','runtaf','velotaf')),
   title              text not null,
   duration_min       integer not null,
   distance_km        numeric(8,2),
@@ -77,7 +77,7 @@ create index if not exists idx_planned_sessions_plan on planned_sessions(plan_id
 create table if not exists session_templates (
   id                   uuid primary key default gen_random_uuid(),
   athlete_id           uuid references auth.users(id) on delete cascade,
-  type                 text not null,
+  type                 text not null check (type in ('sortie_longue','fractionne','seuil_tempo','cotes','course','runtaf','velotaf')),
   title                text not null,
   default_duration_min integer not null,
   default_distance_km  numeric(8,2),

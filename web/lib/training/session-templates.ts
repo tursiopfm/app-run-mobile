@@ -145,8 +145,6 @@ export const SESSION_TEMPLATES: SessionTemplate[] = [
     type: 'course',
     title: 'Course objectif',
     defaultDuration: 240,
-    defaultDistance: 0,
-    defaultElevation: 0,
     defaultIntensity: 4,
     description: 'Course cible. Distance, D+ et durée à personnaliser.',
     tags: ['objectif'],

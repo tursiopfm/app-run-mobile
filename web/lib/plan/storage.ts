@@ -94,7 +94,7 @@ function raceFromRow(r: RaceRow): Race {
   }
 }
 
-function raceToRow(race: Race, athleteId: string): Omit<RaceRow, never> {
+function raceToRow(race: Race, athleteId: string): RaceRow {
   return {
     id: race.id,
     athlete_id: athleteId,
@@ -317,7 +317,7 @@ export async function saveRace(race: Race): Promise<void> {
     const { error } = await ctx.supabase.from('races').upsert(row, { onConflict: 'id' })
     if (!error) return
     if (!isMissingTableError(error)) {
-      // Erreur autre que table absente : on persiste quand même en LS.
+      console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
     }
   }
   writeLS(KEY_RACE, race)
@@ -332,6 +332,9 @@ export async function deleteRace(id: string): Promise<void> {
       const current = readLS<Race | null>(KEY_RACE, null)
       if (current?.id === id) writeLS<Race | null>(KEY_RACE, null)
       return
+    }
+    if (!isMissingTableError(error)) {
+      console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
     }
   }
   const current = readLS<Race | null>(KEY_RACE, null)
@@ -381,6 +384,9 @@ export async function saveCurrentPlan(plan: TrainingPlan): Promise<void> {
       }
       return
     }
+    if (!isMissingTableError(upErr)) {
+      console.warn('[plan storage] supabase failed, falling back to LS:', upErr.message)
+    }
   }
   writeLS(KEY_PLAN, plan)
 }
@@ -418,6 +424,9 @@ export async function savePlannedSession(session: PlannedSession): Promise<void>
       .from('planned_sessions')
       .upsert(row, { onConflict: 'id' })
     if (!error) return
+    if (!isMissingTableError(error)) {
+      console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
+    }
   }
   const all = readLS<PlannedSession[]>(KEY_SESSIONS, [])
   const idx = all.findIndex(s => s.id === session.id)
@@ -431,6 +440,9 @@ export async function deletePlannedSession(id: string): Promise<void> {
   if (ctx) {
     const { error } = await ctx.supabase.from('planned_sessions').delete().eq('id', id)
     if (!error) return
+    if (!isMissingTableError(error)) {
+      console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
+    }
   }
   const all = readLS<PlannedSession[]>(KEY_SESSIONS, [])
   writeLS(KEY_SESSIONS, all.filter(s => s.id !== id))
@@ -460,6 +472,9 @@ export async function saveCustomTemplate(template: SessionTemplate): Promise<voi
       .from('session_templates')
       .upsert(row, { onConflict: 'id' })
     if (!error) return
+    if (!isMissingTableError(error)) {
+      console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
+    }
   }
   const all = readLS<SessionTemplate[]>(KEY_TEMPLATES_CUSTOM, [])
   const idx = all.findIndex(t => t.id === template.id)
@@ -473,6 +488,9 @@ export async function deleteCustomTemplate(id: string): Promise<void> {
   if (ctx) {
     const { error } = await ctx.supabase.from('session_templates').delete().eq('id', id)
     if (!error) return
+    if (!isMissingTableError(error)) {
+      console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
+    }
   }
   const all = readLS<SessionTemplate[]>(KEY_TEMPLATES_CUSTOM, [])
   writeLS(KEY_TEMPLATES_CUSTOM, all.filter(t => t.id !== id))
