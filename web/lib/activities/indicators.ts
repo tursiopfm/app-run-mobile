@@ -65,6 +65,10 @@ export const SESSION_TYPE_COLORS: Record<WorkoutType, string> = {
   runtaf:        '#1E40AF', // bleu marine   — Runtaf (coureur + laptop)
   velotaf:       '#B8C25F', // olive         — Velotaf (vélo + laptop)
   footing:       '#4ADE80', // vert (greenOk) — Footing (endurance facile)
+  velo:          '#7C3AED', // violet        — Vélo (entraînement)
+  natation:      '#0EA5E9', // sky           — Natation
+  renfo:         '#F472B6', // pink          — Renforcement
+  musculation:   '#DC2626', // rouge soutenu — Musculation
 }
 
 export const SESSION_TYPE_LABELS: Record<WorkoutType, string> = {
@@ -76,4 +80,8 @@ export const SESSION_TYPE_LABELS: Record<WorkoutType, string> = {
   runtaf:        'Runtaf',
   velotaf:       'Velotaf',
   footing:       'Footing',
+  velo:          'Vélo',
+  natation:      'Natation',
+  renfo:         'Renfo',
+  musculation:   'Musculation',
 }

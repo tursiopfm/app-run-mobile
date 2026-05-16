@@ -6,6 +6,7 @@ export type IntensityKey =
 
 export type WorkoutType =
   | 'sortie_longue' | 'fractionne' | 'seuil_tempo' | 'cotes' | 'course' | 'runtaf' | 'velotaf' | 'footing'
+  | 'velo' | 'natation' | 'renfo' | 'musculation'
 
 const INTENSITY_KEYS: ReadonlySet<string> = new Set([
   'recuperation', 'footing', 'endurance_active', 'seuil', 'vma',
@@ -13,6 +14,7 @@ const INTENSITY_KEYS: ReadonlySet<string> = new Set([
 
 const WORKOUT_TYPE_KEYS: ReadonlySet<string> = new Set([
   'sortie_longue', 'fractionne', 'seuil_tempo', 'cotes', 'course', 'runtaf', 'velotaf', 'footing',
+  'velo', 'natation', 'renfo', 'musculation',
 ])
 
 // Some legacy rows have invalid manual_intensity values (e.g. "runtaf" stored
@@ -64,6 +66,10 @@ export const WORKOUT_TYPE_OPTIONS: WorkoutTypeOption[] = [
   { value: 'runtaf',        label: '🏃‍♂️💻 Runtaf',  sports: ['Run', 'TrailRun'] },
   { value: 'velotaf',       label: '🚴🏻💻 Velotaf', sports: ['Ride', 'EBikeRide', 'VirtualRide'] },
   { value: 'footing',       label: '👟 Footing'      },
+  { value: 'velo',          label: '🚴 Vélo', sports: ['Ride', 'EBikeRide', 'VirtualRide'] },
+  { value: 'natation',      label: '🏊 Natation', sports: ['Swim'] },
+  { value: 'renfo',         label: '🤸 Renfo' },
+  { value: 'musculation',   label: '💪 Musculation', sports: ['WeightTraining'] },
 ]
 
 export const SPORT_OPTIONS: SportOption[] = [

@@ -226,4 +226,90 @@ export const SESSION_TEMPLATES: SessionTemplate[] = [
     description: 'Footing aérobie 1h plat ou légèrement vallonné.',
     tags: ['endurance', 'aérobie'],
   },
+
+  // === Vélo ===
+  {
+    id: 'velo-1h30-eb',
+    type: 'velo',
+    title: 'Vélo 1h30 endurance',
+    defaultDuration: 90,
+    defaultDistance: 40,
+    defaultElevation: 300,
+    defaultIntensity: 2,
+    description: 'Sortie vélo en endurance fondamentale.',
+    tags: ['vélo', 'endurance'],
+  },
+  {
+    id: 'velo-2h-vallonne',
+    type: 'velo',
+    title: 'Vélo 2h vallonnée',
+    defaultDuration: 120,
+    defaultDistance: 55,
+    defaultElevation: 800,
+    defaultIntensity: 3,
+    description: 'Vélo avec parcours vallonné, allure soutenue.',
+    tags: ['vélo', 'côtes'],
+  },
+
+  // === Natation ===
+  {
+    id: 'nat-45min-endurance',
+    type: 'natation',
+    title: 'Natation 45min continue',
+    defaultDuration: 45,
+    defaultDistance: 2,
+    defaultIntensity: 2,
+    description: 'Crawl continu en endurance, récupération active.',
+    tags: ['natation', 'crawl', 'récup'],
+  },
+  {
+    id: 'nat-1h-fract',
+    type: 'natation',
+    title: 'Natation 1h fractionnée',
+    defaultDuration: 60,
+    defaultDistance: 2.5,
+    defaultIntensity: 4,
+    description: '16×50m allure soutenue R=15s. Renforcement cardio.',
+    tags: ['natation', 'fractionné'],
+  },
+
+  // === Renfo ===
+  {
+    id: 'renfo-30min-trail',
+    type: 'renfo',
+    title: 'Renfo trail 30min',
+    defaultDuration: 30,
+    defaultIntensity: 3,
+    description: 'Gainage + spécifique pieds-chevilles-quadri pour trail.',
+    tags: ['renfo', 'gainage', 'trail'],
+  },
+  {
+    id: 'renfo-45min-complet',
+    type: 'renfo',
+    title: 'Renfo complet 45min',
+    defaultDuration: 45,
+    defaultIntensity: 3,
+    description: 'Circuit complet : gainage, squats, fentes, pompes.',
+    tags: ['renfo', 'circuit'],
+  },
+
+  // === Musculation ===
+  {
+    id: 'muscu-jambes',
+    type: 'musculation',
+    title: 'Muscu jambes',
+    defaultDuration: 60,
+    defaultIntensity: 4,
+    description: 'Squat, presse, fentes, mollets. Charges modérées, séries longues.',
+    tags: ['musculation', 'jambes'],
+  },
+  {
+    id: 'muscu-haut-corps',
+    type: 'musculation',
+    title: 'Muscu haut du corps',
+    defaultDuration: 45,
+    defaultIntensity: 3,
+    description: 'Pectoraux, dos, épaules, biceps, triceps. Travail complémentaire.',
+    tags: ['musculation', 'haut du corps'],
+  },
 ]

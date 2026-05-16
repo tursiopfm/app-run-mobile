@@ -66,6 +66,10 @@
 ### PWA
 - [ ] Splash screen PWA (post-domaine personnalisé)
 
+## Onglet Plan — bibliothèque de séances
+
+- [ ] Types de séance custom par utilisateur (table dédiée `user_session_types`) — Plan bibliothèque
+
 ## Onglet Plan — bonus reportés du MVP Mode Manuel
 
 > Détail complet et contexte : `docs/plan-roadmap.md` (section "Bonus reportés").
