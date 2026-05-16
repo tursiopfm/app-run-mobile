@@ -99,7 +99,23 @@ export function VueSemaineBlock() {
     setLoaded(true)
   }, [weekDays, weekEndISO])
 
-  useEffect(() => { void reload() }, [reload])
+  // Reload avec garde anti-race : si l'user enchaîne prev/next vite, l'ancienne
+  // promesse peut résoudre APRÈS la nouvelle et écraser le state. Le flag
+  // `cancelled` côté effect ignore les résolutions obsolètes.
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const [s, p] = await Promise.all([
+        getPlannedSessions(weekDays[0], weekEndISO),
+        getCurrentPlan(),
+      ])
+      if (cancelled) return
+      setSessions(s)
+      setPlan(p)
+      setLoaded(true)
+    })()
+    return () => { cancelled = true }
+  }, [weekDays, weekEndISO])
 
   // Sessions groupées par jour ISO.
   const sessionsByDay = useMemo<Record<string, PlannedSession[]>>(() => {
