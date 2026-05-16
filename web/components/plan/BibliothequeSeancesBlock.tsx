@@ -13,7 +13,7 @@ import TypeIndicator from '@/components/activity/TypeIndicator'
 import { TemplateEditorModal } from './TemplateEditorModal'
 
 const ALL_TYPES: SessionType[] = [
-  'sortie_longue', 'fractionne', 'seuil_tempo', 'cotes', 'course', 'runtaf', 'velotaf',
+  'sortie_longue', 'fractionne', 'seuil_tempo', 'cotes', 'course', 'runtaf', 'velotaf', 'footing',
 ]
 
 export function BibliothequeSeancesBlock() {

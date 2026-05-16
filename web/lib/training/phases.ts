@@ -63,6 +63,24 @@ const DEFAULT_WEEKLY_CHARGE: Record<PhaseType, number> = {
   recuperation:  150,
 }
 
+// Volume hebdo cible (km) par phase. Valeurs indicatives ; éditables côté UI.
+const DEFAULT_WEEKLY_DISTANCE_KM: Record<PhaseType, number> = {
+  foncier:       50,
+  developpement: 60,
+  specifique:    70,
+  affutage:      40,
+  recuperation:  25,
+}
+
+// D+ hebdo cible (m) par phase. Valeurs indicatives ; éditables côté UI.
+const DEFAULT_WEEKLY_ELEVATION_M: Record<PhaseType, number> = {
+  foncier:       800,
+  developpement: 1000,
+  specifique:    1500,
+  affutage:      600,
+  recuperation:  300,
+}
+
 const MS_PER_DAY = 86_400_000
 const MS_PER_WEEK = 7 * MS_PER_DAY
 
@@ -102,6 +120,8 @@ function buildPhase(
     startDate: toISODate(startDate),
     endDate: toISODate(endDate),
     weeklyChargeTarget: DEFAULT_WEEKLY_CHARGE[type],
+    weeklyDistanceKmTarget: DEFAULT_WEEKLY_DISTANCE_KM[type],
+    weeklyElevationMTarget: DEFAULT_WEEKLY_ELEVATION_M[type],
     description: def.description,
   }
 }

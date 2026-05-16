@@ -198,6 +198,27 @@ export function TypeIcon({ type, size = 32 }: { type: WorkoutType | null; size?:
           <line x1="68" y1="71" x2="82" y2="71" stroke="#0a1410" strokeWidth="1" opacity="0.4" />
         </svg>
       )
+    case 'footing':
+      return (
+        <svg viewBox="0 0 100 100" width={w} height={h} aria-hidden="true">
+          {/* Chaussure de running stylisée */}
+          <path d="M14 64 L20 56 L34 50 L46 46 L60 46 L74 50 Q86 54 88 62 L88 70 L18 70 Z" fill="#4ADE80" stroke="#2c8a4d" strokeWidth="1.5" strokeLinejoin="round" />
+          {/* Semelle */}
+          <rect x="14" y="68" width="74" height="6" rx="2" fill="#2c8a4d" />
+          {/* Lacets */}
+          <line x1="38" y1="52" x2="44" y2="58" stroke="#2c8a4d" strokeWidth="1.5" strokeLinecap="round" />
+          <line x1="46" y1="50" x2="52" y2="56" stroke="#2c8a4d" strokeWidth="1.5" strokeLinecap="round" />
+          <line x1="54" y1="48" x2="60" y2="54" stroke="#2c8a4d" strokeWidth="1.5" strokeLinecap="round" />
+          {/* Détail crampons */}
+          <circle cx="24" cy="72" r="1.5" fill="#0a1410" opacity="0.4" />
+          <circle cx="40" cy="72" r="1.5" fill="#0a1410" opacity="0.4" />
+          <circle cx="56" cy="72" r="1.5" fill="#0a1410" opacity="0.4" />
+          <circle cx="72" cy="72" r="1.5" fill="#0a1410" opacity="0.4" />
+          {/* Indications de mouvement (vitesse) */}
+          <line x1="6" y1="48" x2="14" y2="48" stroke="#4ADE80" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+          <line x1="4" y1="56" x2="12" y2="56" stroke="#4ADE80" strokeWidth="1.5" strokeLinecap="round" opacity="0.35" />
+        </svg>
+      )
     case 'velotaf':
       return (
         <svg viewBox="0 0 100 100" width={w} height={h} aria-hidden="true">

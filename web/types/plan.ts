@@ -19,10 +19,12 @@ export type PhaseType =
 export interface Phase {
   id: string
   type: PhaseType
-  label: string              // ex : 'Phase Foncier'
-  startDate: string          // ISO (YYYY-MM-DD)
-  endDate: string            // ISO (YYYY-MM-DD)
-  weeklyChargeTarget: number // TSS cible / semaine
+  label: string                   // ex : 'Phase Foncier'
+  startDate: string               // ISO (YYYY-MM-DD)
+  endDate: string                 // ISO (YYYY-MM-DD)
+  weeklyChargeTarget: number      // TSS cible / semaine
+  weeklyDistanceKmTarget: number  // km cible / semaine
+  weeklyElevationMTarget: number  // D+ cible / semaine (m)
   description?: string
 }
 

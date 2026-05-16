@@ -1,12 +1,13 @@
 'use client'
 
-// Bloc Objectif Course : affiche la course principale (Bebas Neue + countdown J-XX)
-// ou un CTA "Définis ton objectif" si rien n'est défini.
-// La data vient de getRace() (Supabase ou localStorage selon contexte).
+// Bloc Objectif Course : liste multi-races (1 principale + N secondaires).
+// La principale s'affiche en grande carte (Bebas Neue + countdown J-XX) ; les
+// autres en cartes compactes (1 ligne). CTA "+ Nouvelle course" en bas.
+// La data vient de getRaces() (Supabase ou localStorage selon contexte).
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Race, RaceType } from '@/types/plan'
-import { getRace } from '@/lib/plan/storage'
+import { getRaces } from '@/lib/plan/storage'
 import { colors } from '@/lib/design/colors'
 import { RaceEditorModal } from './RaceEditorModal'
 
@@ -28,14 +29,26 @@ function computeDaysLeft(isoDate: string): number {
   return Math.ceil((target - Date.now()) / 86_400_000)
 }
 
+function formatShortDate(iso: string): string {
+  // YYYY-MM-DD → "25 oct."
+  if (!iso || iso.length < 10) return iso
+  const months = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
+  const m = parseInt(iso.slice(5, 7), 10) - 1
+  const d = parseInt(iso.slice(8, 10), 10)
+  if (Number.isNaN(d) || m < 0 || m > 11) return iso
+  return `${d} ${months[m]}`
+}
+
 export function ObjectifCourseBlock({ onChange }: Props) {
-  const [race, setRace] = useState<Race | null>(null)
+  const [races, setRaces] = useState<Race[]>([])
   const [loaded, setLoaded] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
+  // race en édition (null = création).
+  const [editing, setEditing] = useState<Race | null>(null)
 
   const reload = useCallback(async () => {
-    const r = await getRace()
-    setRace(r)
+    const list = await getRaces()
+    setRaces(list)
     setLoaded(true)
   }, [])
 
@@ -46,9 +59,25 @@ export function ObjectifCourseBlock({ onChange }: Props) {
     onChange?.()
   }
 
-  // État vide ou en cours de chargement (on rend le CTA même pendant le load
-  // pour éviter un flash visuel ; getRace est généralement rapide).
-  if (!race) {
+  function openCreate() {
+    setEditing(null)
+    setModalOpen(true)
+  }
+
+  function openEdit(race: Race) {
+    setEditing(race)
+    setModalOpen(true)
+  }
+
+  // Tri : principale en premier, puis les autres par date asc.
+  const { mainRace, otherRaces } = useMemo(() => {
+    const main = races.find(r => r.isMain) ?? null
+    const others = races.filter(r => r.id !== main?.id)
+    return { mainRace: main, otherRaces: others }
+  }, [races])
+
+  // ── État vide ──
+  if (races.length === 0) {
     return (
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
         <div className="flex flex-col items-center justify-center text-center py-6 px-4">
@@ -64,16 +93,16 @@ export function ObjectifCourseBlock({ onChange }: Props) {
           </p>
           <button
             type="button"
-            onClick={() => setModalOpen(true)}
+            onClick={openCreate}
             className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-[14px] font-semibold"
-            aria-label="Définir mon objectif"
-            disabled={!loaded /* évite un double-click avant que la modal ait sa race=null */}
+            aria-label="Définir mon premier objectif"
+            disabled={!loaded}
           >
-            Définir mon objectif
+            + Définir mon premier objectif
           </button>
         </div>
         <RaceEditorModal
-          race={null}
+          race={editing}
           open={modalOpen}
           onClose={() => setModalOpen(false)}
           onSaved={handleSaved}
@@ -82,18 +111,61 @@ export function ObjectifCourseBlock({ onChange }: Props) {
     )
   }
 
+  return (
+    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
+      {/* Course principale : grande carte */}
+      {mainRace && (
+        <MainRaceCard race={mainRace} onEdit={() => openEdit(mainRace)} />
+      )}
+
+      {/* Cartes compactes pour les autres courses */}
+      {otherRaces.length > 0 && (
+        <div className={`flex flex-col gap-2 ${mainRace ? 'mt-3' : ''}`}>
+          {otherRaces.map(r => (
+            <CompactRaceCard
+              key={r.id}
+              race={r}
+              onEdit={() => openEdit(r)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* CTA nouvelle course */}
+      <button
+        type="button"
+        onClick={openCreate}
+        className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-[10px] border border-dashed border-trail-border text-trail-muted hover:border-trail-primary hover:text-trail-primary transition-colors text-[13px] font-semibold"
+        aria-label="Ajouter une nouvelle course"
+      >
+        <span className="text-[16px] leading-none">+</span>
+        <span>Nouvelle course</span>
+      </button>
+
+      <RaceEditorModal
+        race={editing}
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSaved={handleSaved}
+      />
+    </div>
+  )
+}
+
+// ─── Carte principale (grand format) ───────────────────────────────────────
+function MainRaceCard({ race, onEdit }: { race: Race; onEdit: () => void }) {
   const daysLeft = computeDaysLeft(race.date)
-  const isPast   = daysLeft < 0
+  const isPast = daysLeft < 0
   const typeLabel = RACE_TYPE_LABEL[race.type] ?? race.type
 
   return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px] relative">
+    <div className="relative">
       {/* Bouton Modifier en haut à droite */}
       <button
         type="button"
-        onClick={() => setModalOpen(true)}
-        className="absolute top-2 right-2 px-2 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-muted hover:text-trail-text text-[12px] font-semibold flex items-center gap-1"
-        aria-label="Modifier la course"
+        onClick={onEdit}
+        className="absolute top-0 right-0 px-2 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-muted hover:text-trail-text text-[12px] font-semibold flex items-center gap-1"
+        aria-label={`Modifier la course ${race.name}`}
       >
         <span aria-hidden>✏️</span>
         <span>Modifier</span>
@@ -146,14 +218,55 @@ export function ObjectifCourseBlock({ onChange }: Props) {
             label={`📍 ${race.location}`}
           />
         )}
+        <span
+          className="px-[10px] py-[4px] rounded-full text-[11px] font-bold whitespace-nowrap"
+          style={{ backgroundColor: `${colors.chargeOrange}26`, color: colors.chargeOrange }}
+        >
+          Principal
+        </span>
       </div>
+    </div>
+  )
+}
 
-      <RaceEditorModal
-        race={race}
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSaved={handleSaved}
-      />
+// ─── Carte compacte (1 ligne, courses secondaires/archivées) ───────────────
+function CompactRaceCard({ race, onEdit }: { race: Race; onEdit: () => void }) {
+  return (
+    <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <span
+          className="text-[13px] font-semibold text-trail-text truncate"
+          title={race.name}
+        >
+          {race.name}
+        </span>
+        <span className="text-[11px] text-trail-muted flex-shrink-0">
+          {formatShortDate(race.date)}
+        </span>
+        <span className="text-[11px] text-trail-muted flex-shrink-0">
+          · {race.distance} km
+        </span>
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <span
+          className="px-2 py-[2px] rounded-full text-[10px] font-bold whitespace-nowrap"
+          style={{
+            backgroundColor: 'var(--trail-card)',
+            color: 'var(--trail-muted)',
+          }}
+        >
+          Secondaire
+        </span>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-muted hover:text-trail-text text-[11px] font-semibold flex items-center gap-1"
+          aria-label={`Modifier la course ${race.name}`}
+        >
+          <span aria-hidden>✏️</span>
+          <span className="hidden sm:inline">Modifier</span>
+        </button>
+      </div>
     </div>
   )
 }

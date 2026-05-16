@@ -66,6 +66,14 @@ function isMissingTableError(err: unknown): boolean {
   return code === '42P01'
 }
 
+// Détecte une erreur "colonne absente" (42703) — utile quand on déploie le code
+// JS avant d'appliquer manuellement la migration Supabase correspondante.
+function isMissingColumnError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false
+  const code = (err as { code?: string }).code
+  return code === '42703'
+}
+
 // ─── Mappers Supabase row ↔ domain ──────────────────────────────────────────
 type RaceRow = {
   id: string
@@ -128,6 +136,8 @@ type PhaseRow = {
   start_date: string
   end_date: string
   weekly_charge_target: number
+  weekly_distance_km_target?: number | null
+  weekly_elevation_m_target?: number | null
   description: string | null
   position: number
 }
@@ -151,6 +161,9 @@ function planFromRows(plan: PlanRow, phases: PhaseRow[]): TrainingPlan {
         startDate: p.start_date,
         endDate: p.end_date,
         weeklyChargeTarget: p.weekly_charge_target,
+        // Migration 015 pas encore appliquée → colonnes absentes côté DB → fallback 0.
+        weeklyDistanceKmTarget: p.weekly_distance_km_target != null ? Number(p.weekly_distance_km_target) : 0,
+        weeklyElevationMTarget: p.weekly_elevation_m_target ?? 0,
         description: p.description ?? undefined,
       })),
   }
@@ -178,6 +191,8 @@ function phasesToRows(plan: TrainingPlan): PhaseRow[] {
     start_date: p.startDate,
     end_date: p.endDate,
     weekly_charge_target: p.weeklyChargeTarget,
+    weekly_distance_km_target: p.weeklyDistanceKmTarget,
+    weekly_elevation_m_target: p.weeklyElevationMTarget,
     description: p.description ?? null,
     position: i,
   }))
@@ -289,30 +304,60 @@ function templateToRow(t: SessionTemplate, athleteId: string): TemplateRow {
 }
 
 // ─── API publique : Race ────────────────────────────────────────────────────
-export async function getRace(): Promise<Race | null> {
+
+// Liste TOUTES les races de l'athlète, triées par date asc.
+// Fallback LS : on retourne un array contenant l'éventuelle race historique
+// stockée en single-slot (KEY_RACE) + les races multiples (KEY_RACES).
+export async function getRaces(): Promise<Race[]> {
   const ctx = await getAuthedClient()
   if (ctx) {
     const { data, error } = await ctx.supabase
       .from('races')
       .select('*')
       .eq('athlete_id', ctx.athleteId)
-      .order('is_main', { ascending: false })
       .order('date', { ascending: true })
-      .limit(1)
-      .maybeSingle()
-    if (error && !isMissingTableError(error)) {
-      // Erreur réelle : on retombe sur LS pour ne pas planter l'UI.
-      return readLS<Race | null>(KEY_RACE, null)
+    if (!error && data) {
+      return (data as RaceRow[]).map(raceFromRow)
     }
-    if (data) return raceFromRow(data as RaceRow)
-    if (!error) return null
+    if (error && !isMissingTableError(error)) {
+      // Erreur réelle : on continue vers LS.
+    }
   }
-  return readLS<Race | null>(KEY_RACE, null)
+  return readRacesFromLS()
+}
+
+// La race principale : la première avec is_main=true ; fallback la prochaine date future.
+export async function getMainRace(): Promise<Race | null> {
+  const all = await getRaces()
+  if (all.length === 0) return null
+  const main = all.find(r => r.isMain)
+  if (main) return main
+  const todayISO = new Date().toISOString().slice(0, 10)
+  const upcoming = all.find(r => r.date >= todayISO)
+  return upcoming ?? all[all.length - 1]
+}
+
+// Rétrocompat : StructurePrepa et ChargePlanifiee appellent encore getRace().
+// On l'aligne sur getMainRace() pour ne rien casser.
+export async function getRace(): Promise<Race | null> {
+  return getMainRace()
 }
 
 export async function saveRace(race: Race): Promise<void> {
   const ctx = await getAuthedClient()
   if (ctx) {
+    // Si on marque cette course comme principale, on doit retirer le flag de
+    // toutes les autres AVANT d'upsert celle-ci, pour garantir un seul main.
+    if (race.isMain) {
+      const { error: clearErr } = await ctx.supabase
+        .from('races')
+        .update({ is_main: false })
+        .eq('athlete_id', ctx.athleteId)
+        .neq('id', race.id)
+      if (clearErr && !isMissingTableError(clearErr)) {
+        console.warn('[plan storage] failed to clear other main races:', clearErr.message)
+      }
+    }
     const row = raceToRow(race, ctx.athleteId)
     const { error } = await ctx.supabase.from('races').upsert(row, { onConflict: 'id' })
     if (!error) return
@@ -320,7 +365,10 @@ export async function saveRace(race: Race): Promise<void> {
       console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
     }
   }
-  writeLS(KEY_RACE, race)
+  // Fallback LS : on maintient l'exclusivité de isMain côté liste.
+  const all = readRacesFromLS()
+  const next = applyMainExclusivity(all, race)
+  writeRacesToLS(next)
 }
 
 export async function deleteRace(id: string): Promise<void> {
@@ -328,17 +376,63 @@ export async function deleteRace(id: string): Promise<void> {
   if (ctx) {
     const { error } = await ctx.supabase.from('races').delete().eq('id', id)
     if (!error) {
-      // Si on supprime la course stockée en LS, on la nettoie aussi.
-      const current = readLS<Race | null>(KEY_RACE, null)
-      if (current?.id === id) writeLS<Race | null>(KEY_RACE, null)
+      removeRaceFromLS(id)
       return
     }
     if (!isMissingTableError(error)) {
       console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
     }
   }
-  const current = readLS<Race | null>(KEY_RACE, null)
-  if (current?.id === id) writeLS<Race | null>(KEY_RACE, null)
+  removeRaceFromLS(id)
+}
+
+// ─── Helpers LS pour la liste de races ──────────────────────────────────────
+// On lit à la fois KEY_RACES (nouvelle clé, liste) et KEY_RACE (ancienne clé,
+// race unique) pour ne pas perdre une course définie avant la migration multi.
+const KEY_RACES = 'tc:plan:races:v1'
+
+function readRacesFromLS(): Race[] {
+  const list = readLS<Race[]>(KEY_RACES, [])
+  if (list.length > 0) return [...list].sort((a, b) => a.date.localeCompare(b.date))
+  // Pas de liste mais éventuelle race historique single-slot : migrate à la volée.
+  const legacy = readLS<Race | null>(KEY_RACE, null)
+  if (legacy) {
+    writeRacesToLS([legacy])
+    return [legacy]
+  }
+  return []
+}
+
+function writeRacesToLS(races: Race[]): void {
+  const sorted = [...races].sort((a, b) => a.date.localeCompare(b.date))
+  writeLS(KEY_RACES, sorted)
+  // On garde KEY_RACE en miroir de la race principale pour compat avec
+  // d'éventuels caches/lecteurs anciens jusqu'à la prochaine purge.
+  const main = sorted.find(r => r.isMain)
+    ?? sorted.find(r => r.date >= new Date().toISOString().slice(0, 10))
+    ?? sorted[sorted.length - 1]
+    ?? null
+  writeLS<Race | null>(KEY_RACE, main)
+}
+
+function removeRaceFromLS(id: string): void {
+  const all = readRacesFromLS().filter(r => r.id !== id)
+  writeRacesToLS(all)
+}
+
+function applyMainExclusivity(existing: Race[], incoming: Race): Race[] {
+  const idx = existing.findIndex(r => r.id === incoming.id)
+  if (incoming.isMain) {
+    // toutes les autres passent à isMain=false.
+    const next = existing.map(r => r.id === incoming.id ? incoming : { ...r, isMain: false })
+    if (idx < 0) next.push(incoming)
+    return next
+  }
+  // Pas de main : on insère/remplace tel quel.
+  if (idx < 0) return [...existing, incoming]
+  const next = [...existing]
+  next[idx] = incoming
+  return next
 }
 
 // ─── API publique : TrainingPlan ────────────────────────────────────────────
@@ -380,7 +474,16 @@ export async function saveCurrentPlan(plan: TrainingPlan): Promise<void> {
       await ctx.supabase.from('phases').delete().eq('plan_id', plan.id)
       const rows = phasesToRows(plan)
       if (rows.length > 0) {
-        await ctx.supabase.from('phases').insert(rows)
+        const { error: phaseErr } = await ctx.supabase.from('phases').insert(rows)
+        if (phaseErr && isMissingColumnError(phaseErr)) {
+          // Migration 015 pas encore appliquée : retry sans les colonnes km/D+.
+          const legacyRows = rows.map(({
+            weekly_distance_km_target: _km,
+            weekly_elevation_m_target: _dplus,
+            ...rest
+          }) => rest)
+          await ctx.supabase.from('phases').insert(legacyRows)
+        }
       }
       return
     }

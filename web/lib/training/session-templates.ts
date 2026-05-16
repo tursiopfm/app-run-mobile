@@ -194,4 +194,36 @@ export const SESSION_TEMPLATES: SessionTemplate[] = [
     description: 'Trajet vélo modéré, récupération active.',
     tags: ['velotaf', 'transport', 'recup'],
   },
+
+  // === Footing ===
+  {
+    id: 'ft-30',
+    type: 'footing',
+    title: 'Footing 30min',
+    defaultDuration: 30,
+    defaultDistance: 5,
+    defaultIntensity: 2,
+    description: 'Footing facile, Z2.',
+    tags: ['endurance', 'court'],
+  },
+  {
+    id: 'ft-45',
+    type: 'footing',
+    title: 'Footing 45min',
+    defaultDuration: 45,
+    defaultDistance: 7.5,
+    defaultIntensity: 2,
+    description: 'Footing endurance Z2.',
+    tags: ['endurance'],
+  },
+  {
+    id: 'ft-1h',
+    type: 'footing',
+    title: 'Footing 1h',
+    defaultDuration: 60,
+    defaultDistance: 10,
+    defaultIntensity: 2,
+    description: 'Footing aérobie 1h plat ou légèrement vallonné.',
+    tags: ['endurance', 'aérobie'],
+  },
 ]

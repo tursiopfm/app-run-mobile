@@ -45,7 +45,7 @@ type Props = {
 }
 
 const TYPE_OPTIONS: SessionType[] = [
-  'sortie_longue', 'fractionne', 'seuil_tempo', 'cotes', 'course', 'runtaf', 'velotaf',
+  'sortie_longue', 'fractionne', 'seuil_tempo', 'cotes', 'course', 'runtaf', 'velotaf', 'footing',
 ]
 
 const ZONE_PRESETS: Record<ZoneKind, Omit<TrainingZone, 'id'>> = {

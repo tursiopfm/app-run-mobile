@@ -61,6 +61,8 @@ function newEmptyPhase(startDate: string, endDate: string): Phase {
     startDate,
     endDate,
     weeklyChargeTarget: 300,
+    weeklyDistanceKmTarget: 50,
+    weeklyElevationMTarget: 800,
     description: def.description,
   }
 }
@@ -389,6 +391,42 @@ function SortablePhaseRow({
                   />
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-trail-muted pointer-events-none">
                     TSS/sem
+                  </span>
+                </div>
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="Distance hebdo cible">
+                <div className="relative">
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.5"
+                    min={0}
+                    value={Number.isFinite(phase.weeklyDistanceKmTarget) ? phase.weeklyDistanceKmTarget : 0}
+                    onChange={(e) => onChange({ weeklyDistanceKmTarget: Number(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 pr-[40px] rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-trail-muted pointer-events-none">
+                    km
+                  </span>
+                </div>
+              </Field>
+
+              <Field label="D+ hebdo cible">
+                <div className="relative">
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    step="10"
+                    min={0}
+                    value={Number.isFinite(phase.weeklyElevationMTarget) ? phase.weeklyElevationMTarget : 0}
+                    onChange={(e) => onChange({ weeklyElevationMTarget: Number(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 pr-[40px] rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-trail-muted pointer-events-none">
+                    m
                   </span>
                 </div>
               </Field>

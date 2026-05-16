@@ -93,7 +93,7 @@ const YEAR_COLOR_PALETTE = [
 ]
 const MONTH_SHORT_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
 const WORKOUT_TYPE_ORDER: (WorkoutType | null)[] = [
-  'sortie_longue', 'fractionne', 'seuil_tempo', 'cotes', 'course', 'runtaf', 'velotaf', null,
+  'sortie_longue', 'fractionne', 'seuil_tempo', 'cotes', 'course', 'runtaf', 'velotaf', 'footing', null,
 ]
 
 // ISO week day to 0-based Mon index: Sun=6, Mon=0, Tue=1 … Sat=5

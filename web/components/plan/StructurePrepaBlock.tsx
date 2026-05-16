@@ -365,6 +365,14 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
               <span className="text-trail-muted">Charge cible :</span>{' '}
               {expandedPhase.weeklyChargeTarget} TSS/sem
             </span>
+            <span>
+              <span className="text-trail-muted">Distance hebdo :</span>{' '}
+              {expandedPhase.weeklyDistanceKmTarget} km
+            </span>
+            <span>
+              <span className="text-trail-muted">D+ hebdo :</span>{' '}
+              {expandedPhase.weeklyElevationMTarget} m
+            </span>
           </div>
 
           <button

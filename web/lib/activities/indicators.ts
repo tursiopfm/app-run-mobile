@@ -64,6 +64,7 @@ export const SESSION_TYPE_COLORS: Record<WorkoutType, string> = {
   cotes:         '#15803D', // vert foncé    — Côtes (montagne + drapeau)
   runtaf:        '#1E40AF', // bleu marine   — Runtaf (coureur + laptop)
   velotaf:       '#B8C25F', // olive         — Velotaf (vélo + laptop)
+  footing:       '#4ADE80', // vert (greenOk) — Footing (endurance facile)
 }
 
 export const SESSION_TYPE_LABELS: Record<WorkoutType, string> = {
@@ -74,4 +75,5 @@ export const SESSION_TYPE_LABELS: Record<WorkoutType, string> = {
   cotes:         'Côtes',
   runtaf:        'Runtaf',
   velotaf:       'Velotaf',
+  footing:       'Footing',
 }
