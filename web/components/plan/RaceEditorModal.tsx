@@ -1,0 +1,269 @@
+'use client'
+
+// Modal d'édition / création de la course objectif.
+// Pattern portal : copie de AddBlockPanel dans BlockGrid.tsx (overlay click + stopPropagation).
+// Persistance via lib/plan/storage.ts (Supabase si dispo, fallback localStorage).
+
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+import type { Race, RaceType } from '@/types/plan'
+import { deleteRace, saveRace } from '@/lib/plan/storage'
+
+type Props = {
+  race: Race | null
+  open: boolean
+  onClose: () => void
+  onSaved: () => void
+}
+
+const TYPE_OPTIONS: { value: RaceType; label: string }[] = [
+  { value: 'trail',    label: 'Trail'    },
+  { value: 'ultra',    label: 'Ultra'    },
+  { value: 'route',    label: 'Route'    },
+  { value: 'cross',    label: 'Cross'    },
+  { value: 'skyrace',  label: 'Skyrace'  },
+]
+
+function emptyDraft(): Race {
+  return {
+    id: '',
+    name: '',
+    date: '',
+    distance: 0,
+    elevation: 0,
+    type: 'trail',
+    location: undefined,
+    isMain: true,
+    notes: undefined,
+  }
+}
+
+export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
+  const isEdit = race !== null
+  const [draft, setDraft] = useState<Race>(() => race ?? emptyDraft())
+  const [saving, setSaving] = useState(false)
+
+  // Re-sync le draft chaque fois que la modal s'ouvre avec une race différente
+  // (création vs édition de la même course peut se chevaucher dans le parent).
+  useEffect(() => {
+    if (open) setDraft(race ?? emptyDraft())
+  }, [open, race])
+
+  // Échap ferme la modal — cohérent avec les autres portals UX du repo.
+  useEffect(() => {
+    if (!open) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
+  if (!open) return null
+  if (typeof document === 'undefined') return null
+
+  const canSave =
+    draft.name.trim().length > 0 &&
+    draft.date.length > 0 &&
+    draft.distance > 0 &&
+    !saving
+
+  async function handleSave() {
+    if (!canSave) return
+    setSaving(true)
+    try {
+      const toSave: Race = {
+        ...draft,
+        id: draft.id || (typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `race-${Date.now()}`),
+        name: draft.name.trim(),
+        location: draft.location?.trim() || undefined,
+        notes: draft.notes?.trim() || undefined,
+      }
+      await saveRace(toSave)
+      onSaved()
+      onClose()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleDelete() {
+    if (!race) return
+    setSaving(true)
+    try {
+      await deleteRace(race.id)
+      onSaved()
+      onClose()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={isEdit ? 'Modifier la course objectif' : 'Définir la course objectif'}
+    >
+      <div
+        className="bg-trail-card border border-trail-border rounded-t-[20px] md:rounded-[16px] w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 pb-8"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="w-10 h-1 rounded-full bg-trail-border mx-auto mb-4 md:hidden" />
+
+        <h2 className="text-[16px] font-semibold text-trail-text mb-4">
+          {isEdit ? 'Modifier la course' : 'Définir mon objectif'}
+        </h2>
+
+        <div className="space-y-3">
+          <Field label="Nom" required>
+            <input
+              type="text"
+              value={draft.name}
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              placeholder="Ex : Templiers 76 km"
+              className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+            />
+          </Field>
+
+          <Field label="Date" required>
+            <input
+              type="date"
+              value={draft.date}
+              onChange={(e) => setDraft({ ...draft, date: e.target.value })}
+              className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+            />
+          </Field>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Distance (km)" required>
+              <input
+                type="number"
+                inputMode="decimal"
+                step="0.1"
+                min={0}
+                value={Number.isFinite(draft.distance) ? draft.distance : 0}
+                onChange={(e) => setDraft({ ...draft, distance: Number(e.target.value) || 0 })}
+                className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+              />
+            </Field>
+
+            <Field label="D+ (m)">
+              <input
+                type="number"
+                inputMode="numeric"
+                step="1"
+                min={0}
+                value={Number.isFinite(draft.elevation) ? draft.elevation : 0}
+                onChange={(e) => setDraft({ ...draft, elevation: Number(e.target.value) || 0 })}
+                className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+              />
+            </Field>
+          </div>
+
+          <Field label="Type">
+            <select
+              value={draft.type}
+              onChange={(e) => setDraft({ ...draft, type: e.target.value as RaceType })}
+              className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+            >
+              {TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Lieu">
+            <input
+              type="text"
+              value={draft.location ?? ''}
+              onChange={(e) => setDraft({ ...draft, location: e.target.value })}
+              placeholder="Ex : Larzac, France"
+              className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+            />
+          </Field>
+
+          <Field label="Notes">
+            <textarea
+              rows={3}
+              value={draft.notes ?? ''}
+              onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
+              placeholder="Notes libres (parcours, stratégie, etc.)"
+              className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary resize-none"
+            />
+          </Field>
+
+          <label className="flex items-center gap-3 cursor-pointer pt-1">
+            <input
+              type="checkbox"
+              checked={draft.isMain}
+              onChange={(e) => setDraft({ ...draft, isMain: e.target.checked })}
+              className="w-4 h-4"
+            />
+            <span className="text-[14px] text-trail-text">Course principale</span>
+          </label>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 mt-6">
+          {isEdit ? (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={saving}
+              className="px-3 py-2 text-[14px] font-semibold text-trail-danger hover:underline disabled:opacity-50"
+              aria-label="Supprimer la course"
+            >
+              Supprimer
+            </button>
+          ) : (
+            <span />
+          )}
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="px-4 py-2 rounded-[10px] text-[14px] font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={!canSave}
+              className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-[14px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Enregistrer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string
+  required?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <label className="block">
+      <span className="text-[12px] font-semibold text-trail-muted mb-1 block">
+        {label}
+        {required && <span className="text-trail-danger ml-1">*</span>}
+      </span>
+      {children}
+    </label>
+  )
+}
