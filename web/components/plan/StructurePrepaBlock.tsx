@@ -267,29 +267,17 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
           {/* Marqueur TODAY (caché si hors range) */}
           {todayInRange && (
             <div
-              className="absolute top-0 bottom-0 pointer-events-none"
+              className="absolute rounded-full pointer-events-none"
               style={{
-                left: `${td.todayProgress}%`,
-                width: 2,
-                background: 'var(--trail-primary)',
-                transform: 'translateX(-1px)',
+                left: `calc(${td.todayProgress}% - 2px)`,
+                top: -3,
+                bottom: -3,
+                width: 4,
+                backgroundColor: 'var(--trail-text)',
+                boxShadow: '0 0 0 1.5px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.45)',
               }}
               aria-label="Aujourd'hui"
-            >
-              <span
-                className="absolute text-trail-primary"
-                style={{
-                  top: -12,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  fontSize: 10,
-                  lineHeight: 1,
-                }}
-                aria-hidden
-              >
-                ▼
-              </span>
-            </div>
+            />
           )}
 
           {/* Marqueur RACE (drapeau à droite) */}
