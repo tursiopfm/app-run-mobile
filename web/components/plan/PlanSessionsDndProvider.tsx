@@ -49,7 +49,10 @@ export function PlanSessionsDndProvider({
   children, onMoveSession, onCreateFromTemplate,
 }: Props) {
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    // distance 12px : évite les drags accidentels au scroll touch.
+    // Ne PAS passer à { delay, tolerance } — bug touch silencieux dnd-kit
+    // documenté dans tasks/lessons.md 2026-05-15.
+    useSensor(PointerSensor, { activationConstraint: { distance: 12 } }),
   )
   const [active, setActive] = useState<ActivePayload | null>(null)
 
