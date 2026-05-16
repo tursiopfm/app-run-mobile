@@ -29,6 +29,8 @@ import { StructurePrepaBlock } from '@/components/plan/StructurePrepaBlock'
 import { VueSemaineBlock } from '@/components/plan/VueSemaineBlock'
 import { BibliothequeSeancesBlock } from '@/components/plan/BibliothequeSeancesBlock'
 import { ChargePlanifieeBlock } from '@/components/plan/ChargePlanifieeBlock'
+import { ResumeSemaineBlock } from '@/components/plan/ResumeSemaineBlock'
+import { CalendrierMoisBlock } from '@/components/plan/CalendrierMoisBlock'
 import { PlanSessionsDndProvider } from '@/components/plan/PlanSessionsDndProvider'
 import {
   getPlannedSessions,
@@ -38,7 +40,7 @@ import { estimateCharge } from '@/lib/training/charge'
 import type { PlannedSession, SessionTemplate } from '@/types/plan'
 import { seedMockDataIfEmpty } from '@/lib/plan/mock-data'
 
-const DEFAULT_ORDER = ['mode', 'objectif', 'structure', 'semaine-bibliotheque', 'charge']
+const DEFAULT_ORDER = ['mode', 'objectif', 'resume-semaine', 'structure', 'calendrier-mois', 'semaine-bibliotheque', 'charge']
 
 function makeId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -117,10 +119,22 @@ export default function PlanClient() {
       render: () => <ObjectifCourseBlock onChange={bumpReload} />,
     },
     {
+      id: 'resume-semaine',
+      label: 'Résumé semaine',
+      emoji: '📊',
+      render: () => <ResumeSemaineBlock reloadKey={reloadKey} />,
+    },
+    {
       id: 'structure',
       label: 'Structure de prépa',
       emoji: '🏗️',
       render: () => <StructurePrepaBlock onChange={bumpReload} reloadKey={reloadKey} />,
+    },
+    {
+      id: 'calendrier-mois',
+      label: 'Calendrier mois',
+      emoji: '🗓️',
+      render: () => <CalendrierMoisBlock reloadKey={reloadKey} />,
     },
     {
       id: 'semaine-bibliotheque',
