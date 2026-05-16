@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Phase, Race, TrainingPlan } from '@/types/plan'
 import { PHASE_DEFINITIONS, autoDistributePhases } from '@/lib/training/phases'
 import { getCurrentPlan, getRace, saveCurrentPlan } from '@/lib/plan/storage'
+import { BlockCard } from '@/components/blocks/BlockCard'
 import { PhaseEditorModal } from './PhaseEditorModal'
 
 const MS_PER_DAY = 86_400_000
@@ -151,28 +152,28 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
   // ─── États vides ──────────────────────────────────────────────────────────
   if (!race) {
     return (
-      <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
+      <BlockCard
+        title="Structure de prépa"
+        helpTitle="Phases de prépa"
+        helpBody="Découpe le macrocycle en mésocycles : foncier, développement, spécifique, affûtage, récupération."
+      >
         <div className="flex flex-col items-center justify-center text-center py-6 px-4">
           <span className="text-[40px] leading-none mb-2" aria-hidden>🎯</span>
           <p className="text-[13px] text-trail-muted">
             Définis d&apos;abord ton objectif dans le bloc ci-dessus.
           </p>
         </div>
-      </div>
+      </BlockCard>
     )
   }
 
   if (!plan || plan.phases.length === 0) {
     return (
-      <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-        <div className="flex items-center justify-between mb-3">
-          <h3
-            className="text-trail-text"
-            style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 18 }}
-          >
-            STRUCTURE DE PRÉPA
-          </h3>
-        </div>
+      <BlockCard
+        title="Structure de prépa"
+        helpTitle="Phases de prépa"
+        helpBody="Découpe le macrocycle en mésocycles : foncier, développement, spécifique, affûtage, récupération."
+      >
         <div className="flex flex-col items-center justify-center text-center py-6 px-4">
           <p className="text-[13px] text-trail-muted mb-4 max-w-xs">
             Génère automatiquement la structure de ta prépa depuis aujourd&apos;hui jusqu&apos;à ta course.
@@ -193,7 +194,7 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
           onClose={() => setModalOpen(false)}
           onSaved={handleSaved}
         />
-      </div>
+      </BlockCard>
     )
   }
 
@@ -203,28 +204,24 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
   const todayInRange = td.todayProgress >= 0 && td.todayProgress <= 100
 
   return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h3
-          className="text-trail-text"
-          style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 18 }}
-        >
-          STRUCTURE DE PRÉPA
-        </h3>
-        <div className="flex items-center gap-3">
+    <BlockCard
+      title="Structure de prépa"
+      helpTitle="Phases de prépa"
+      helpBody="Découpe le macrocycle en mésocycles : foncier, développement, spécifique, affûtage, récupération."
+      rightSlot={
+        <>
           <span className="text-[12px] text-trail-muted">{td.totalWeeks} sem</span>
           <button
             type="button"
             onClick={() => openEditor()}
-            className="text-[12px] font-semibold text-trail-primary hover:underline"
+            className="text-[12px] font-semibold text-trail-primary hover:underline ml-2"
             aria-label="Régénérer ou éditer les phases"
           >
-            🪄 Régénérer
+            Régénérer
           </button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       {/* Timeline horizontale */}
       <div className="relative">
         <div
@@ -394,6 +391,6 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
         onSaved={handleSaved}
         focusPhaseId={focusPhaseId}
       />
-    </div>
+    </BlockCard>
   )
 }
