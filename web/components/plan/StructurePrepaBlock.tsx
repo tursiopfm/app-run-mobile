@@ -218,6 +218,11 @@ export function StructurePrepaBlock({ onChange }: Props) {
           {td.segments.map(({ phase, weeks }) => {
             const def = PHASE_DEFINITIONS[phase.type]
             const isExpanded = expandedId === phase.id
+            // Ratio largeur segment / largeur totale. Sous ~12% la place est trop
+            // étroite pour le label (cible mobile ~360px → 12% ≈ 43px ; sur desktop
+            // wider). On masque le texte au lieu de tronquer en "Fo…" illisible.
+            const ratio = weeks / td.totalWeeks
+            const showLabel = ratio >= 0.12
             return (
               <button
                 key={phase.id}
@@ -233,12 +238,14 @@ export function StructurePrepaBlock({ onChange }: Props) {
                 aria-label={`Phase ${phase.label}, ${weeks} semaines`}
                 aria-expanded={isExpanded}
               >
-                <span
-                  className="truncate px-1"
-                  style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
-                >
-                  {def.label} · {weeks}sem
-                </span>
+                {showLabel && (
+                  <span
+                    className="truncate px-1"
+                    style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+                  >
+                    {def.label} · {weeks}sem
+                  </span>
+                )}
               </button>
             )
           })}
