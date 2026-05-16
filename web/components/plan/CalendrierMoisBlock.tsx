@@ -10,6 +10,7 @@ import { getPlannedSessions } from '@/lib/plan/storage'
 import type { PlannedSession } from '@/types/plan'
 import { colors } from '@/lib/design/colors'
 import { BlockCard } from '@/components/blocks/BlockCard'
+import { DayDetailPanel } from './DayDetailPanel'
 
 // ─── Helpers date (UTC) ──────────────────────────────────────────────────────
 function toISO(d: Date): string {
@@ -53,10 +54,11 @@ function formatMonthYearFR(d: Date): string {
 // ─── Props ───────────────────────────────────────────────────────────────────
 type CalendrierMoisBlockProps = {
   reloadKey?: number
+  onSessionsChanged?: () => void
 }
 
 // ─── Composant principal ─────────────────────────────────────────────────────
-export function CalendrierMoisBlock({ reloadKey = 0 }: CalendrierMoisBlockProps = {}) {
+export function CalendrierMoisBlock({ reloadKey = 0, onSessionsChanged }: CalendrierMoisBlockProps = {}) {
   // Init = 1er du mois courant en UTC.
   const todayUTC = useMemo(() => {
     const n = new Date()
@@ -68,6 +70,7 @@ export function CalendrierMoisBlock({ reloadKey = 0 }: CalendrierMoisBlockProps 
     () => new Date(Date.UTC(todayUTC.getUTCFullYear(), todayUTC.getUTCMonth(), 1)),
   )
   const [selectedDateISO, setSelectedDateISO] = useState<string>(todayISO)
+  const [openDayISO, setOpenDayISO] = useState<string | null>(null)
   const [sessions, setSessions] = useState<PlannedSession[]>([])
   const [loaded, setLoaded] = useState(false)
 
@@ -127,6 +130,7 @@ export function CalendrierMoisBlock({ reloadKey = 0 }: CalendrierMoisBlockProps 
 
   const handleSelectDate = useCallback((iso: string) => {
     setSelectedDateISO(iso)
+    setOpenDayISO(prev => prev === iso ? null : iso)
   }, [])
 
   return (
@@ -185,6 +189,15 @@ export function CalendrierMoisBlock({ reloadKey = 0 }: CalendrierMoisBlockProps 
 
       {!loaded && (
         <div className="text-center text-trail-muted text-[12px] mt-2" role="status">Chargement…</div>
+      )}
+
+      {openDayISO && (
+        <DayDetailPanel
+          dateISO={openDayISO}
+          onClose={() => setOpenDayISO(null)}
+          reloadKey={reloadKey}
+          onSessionsChanged={() => onSessionsChanged?.()}
+        />
       )}
     </BlockCard>
   )

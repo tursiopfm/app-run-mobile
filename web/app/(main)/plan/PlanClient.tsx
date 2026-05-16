@@ -134,7 +134,7 @@ export default function PlanClient() {
       id: 'calendrier-mois',
       label: 'Calendrier mois',
       emoji: '🗓️',
-      render: () => <CalendrierMoisBlock reloadKey={reloadKey} />,
+      render: () => <CalendrierMoisBlock reloadKey={reloadKey} onSessionsChanged={bumpReload} />,
     },
     {
       id: 'semaine-bibliotheque',
