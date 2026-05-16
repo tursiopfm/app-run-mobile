@@ -27,6 +27,7 @@ import {
   savePlannedSession,
 } from '@/lib/plan/storage'
 import { estimateCharge } from '@/lib/training/charge'
+import { formatDurationColon, parseDurationToMinutes } from '@/lib/training/duration'
 import {
   INTENSITY_LEVEL_COLORS,
   INTENSITY_LEVEL_LABELS,
@@ -129,7 +130,7 @@ export function SessionEditorModal({
     setDraft(d => (d.estimatedCharge === next ? d : { ...d, estimatedCharge: next }))
   }, [draft.duration, draft.intensity, draft.elevation, chargeOverridden])
 
-  const canSave = draft.title.trim().length > 0 && draft.duration > 0 && !saving
+  const canSave = draft.title.trim().length > 0 && !saving
 
   async function handleSave() {
     if (!canSave) return
@@ -358,15 +359,8 @@ function GeneralTab({
       </Field>
 
       <div className="grid grid-cols-3 gap-2">
-        <Field label="Durée (min)" required>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            value={Number.isFinite(draft.duration) ? draft.duration : 0}
-            onChange={e => setDraft({ ...draft, duration: Number(e.target.value) || 0 })}
-            className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
-          />
+        <Field label="Durée">
+          <DurationField value={draft.duration} onChange={(d) => setDraft({ ...draft, duration: d })} />
         </Field>
         <Field label="Distance (km)">
           <input
@@ -668,6 +662,41 @@ function NotesTab({
         className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary resize-none"
       />
     </Field>
+  )
+}
+
+function DurationField({
+  value, onChange,
+}: { value: number; onChange: (next: number) => void }) {
+  const [text, setText] = useState(() => value > 0 ? formatDurationColon(value) : '')
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    setText(value > 0 ? formatDurationColon(value) : '')
+  }, [value])
+
+  function commit(s: string) {
+    if (s.trim() === '') { onChange(0); setError(false); return }
+    const parsed = parseDurationToMinutes(s)
+    if (parsed == null) { setError(true); return }
+    setError(false)
+    onChange(parsed)
+  }
+
+  return (
+    <div>
+      <input
+        type="text"
+        inputMode="numeric"
+        placeholder="ex : 1h30"
+        value={text}
+        onChange={e => { setText(e.target.value); commit(e.target.value) }}
+        onBlur={() => { if (!error && value > 0) setText(formatDurationColon(value)) }}
+        className={`w-full px-3 py-2 rounded-[10px] bg-trail-surface border ${error ? 'border-trail-danger' : 'border-trail-border'} text-trail-text text-[14px] focus:outline-none focus:border-trail-primary`}
+        aria-label="Durée au format heures et minutes"
+      />
+      {error && <p className="text-[10px] text-trail-danger mt-1">Format : 1h30, 1:30 ou 90</p>}
+    </div>
   )
 }
 
