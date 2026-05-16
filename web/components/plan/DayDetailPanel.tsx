@@ -63,15 +63,6 @@ export function DayDetailPanel({ dateISO, onClose, reloadKey, onSessionsChanged 
       </div>
 
       <div className="p-3 space-y-2">
-        {loaded && sessions.length === 0 && (
-          <button
-            type="button"
-            onClick={openCreate}
-            className="w-full py-3 rounded-[8px] border border-dashed border-trail-border text-trail-muted text-[13px] font-semibold hover:border-trail-primary hover:text-trail-primary"
-          >
-            + Créer une séance
-          </button>
-        )}
         {sessions.map(s => (
           <button
             key={s.id}
@@ -97,6 +88,16 @@ export function DayDetailPanel({ dateISO, onClose, reloadKey, onSessionsChanged 
             </p>
           </button>
         ))}
+
+        {loaded && (
+          <button
+            type="button"
+            onClick={openCreate}
+            className="w-full py-2 rounded-[8px] border border-dashed border-trail-border text-trail-muted text-[13px] font-semibold hover:border-trail-primary hover:text-trail-primary"
+          >
+            {sessions.length === 0 ? '+ Créer une séance' : '+ Ajouter une séance'}
+          </button>
+        )}
 
         {/* TODO: emplacement validation Coach IA */}
         <div className="rounded-[6px] border border-dashed border-trail-border bg-trail-card/30 px-2 py-2 text-[11px] text-trail-muted italic">
