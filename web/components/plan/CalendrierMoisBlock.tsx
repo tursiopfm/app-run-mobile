@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getPlannedSessions } from '@/lib/plan/storage'
 import type { PlannedSession } from '@/types/plan'
 import { colors } from '@/lib/design/colors'
+import { BlockCard } from '@/components/blocks/BlockCard'
 
 // ─── Helpers date (UTC) ──────────────────────────────────────────────────────
 function toISO(d: Date): string {
@@ -129,24 +130,27 @@ export function CalendrierMoisBlock({ reloadKey = 0 }: CalendrierMoisBlockProps 
   }, [])
 
   return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-      {/* ── Header : nav mois ─────────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-3">
-        <NavButton
-          label="<"
-          ariaLabel="Mois précédent"
-          onClick={() => gotoMonth(-1)}
-        />
-        <p className="text-[17px] font-black text-trail-text">
-          {formatMonthYearFR(visibleMonth)}
-        </p>
-        <NavButton
-          label=">"
-          ariaLabel="Mois suivant"
-          onClick={() => gotoMonth(1)}
-        />
-      </div>
-
+    <BlockCard
+      title={formatMonthYearFR(visibleMonth)}
+      helpTitle="Calendrier mensuel"
+      helpBody="Vue 6 semaines. Les dots indiquent les jours avec séances planifiées."
+      rightSlot={
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => gotoMonth(-1)}
+            aria-label="Mois précédent"
+            className="w-7 h-7 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[14px] font-bold flex items-center justify-center"
+          >‹</button>
+          <button
+            type="button"
+            onClick={() => gotoMonth(1)}
+            aria-label="Mois suivant"
+            className="w-7 h-7 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[14px] font-bold flex items-center justify-center"
+          >›</button>
+        </div>
+      }
+    >
       {/* ── Day headers ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-7 gap-[5px] mb-[6px]">
         {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
@@ -182,40 +186,11 @@ export function CalendrierMoisBlock({ reloadKey = 0 }: CalendrierMoisBlockProps 
       {!loaded && (
         <div className="text-center text-trail-muted text-[12px] mt-2" role="status">Chargement…</div>
       )}
-    </div>
+    </BlockCard>
   )
 }
 
 // ─── Sous-composants ─────────────────────────────────────────────────────────
-function NavButton({
-  label, ariaLabel, onClick,
-}: { label: string; ariaLabel: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={ariaLabel}
-      style={{
-        width: 40,
-        height: 40,
-        flexShrink: 0,
-        borderRadius: 10,
-        backgroundColor: colors.surface,
-        border: `1px solid ${colors.border}`,
-        color: colors.text,
-        fontSize: 18,
-        fontWeight: 900,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-      }}
-    >
-      {label}
-    </button>
-  )
-}
-
 function CalendarDayCell({
   iso, dayNum, inMonth, isToday, isSelected, plannedCount, onClick,
 }: {
