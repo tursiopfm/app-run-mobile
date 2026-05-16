@@ -15,6 +15,7 @@ import {
 import { PHASE_DEFINITIONS } from '@/lib/training/phases'
 import { colors } from '@/lib/design/colors'
 import { INTENSITY_LEVEL_COLORS } from '@/lib/activities/indicators'
+import { formatDurationHHmm } from '@/lib/training/duration'
 import TypeIndicator from '@/components/activity/TypeIndicator'
 import { SessionEditorModal } from './SessionEditorModal'
 import { BlockCard } from '@/components/blocks/BlockCard'
@@ -225,7 +226,7 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
       helpBody="Calendrier de la semaine sélectionnée. Glisse-dépose des templates depuis la bibliothèque pour planifier une séance."
       rightSlot={
         <div className="flex items-center gap-1 flex-wrap">
-          <Pill bg={`${colors.greenOk}26`}    color={colors.greenOk}    label={`${Math.round(totals.duration)} min`} />
+          <Pill bg={`${colors.greenOk}26`}    color={colors.greenOk}    label={formatDurationHHmm(totals.duration)} />
           <Pill bg={`${colors.seriesRed}26`}  color={colors.seriesRed}  label={`${Math.round(totals.charge)} TSS`} />
           <Pill bg={`${colors.seriesBlue}26`} color={colors.seriesBlue} label={`${Math.round(totals.elevation)} m D+`} />
         </div>
@@ -427,7 +428,7 @@ function DraggableSessionCard({
         {session.title}
       </div>
       <div className="mt-1 flex items-center justify-between gap-1">
-        <span className="text-[10px] text-trail-muted">{session.duration}′</span>
+        <span className="text-[10px] text-trail-muted">{formatDurationHHmm(session.duration)}</span>
         <span
           className="px-[5px] py-[1px] rounded-full text-[9px] font-semibold leading-none"
           style={{ backgroundColor: `${intensityColor}26`, color: intensityColor }}
