@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ActivityCard, type ActivityRow } from '@/components/ui/ActivityCard'
+import { type ActivityRow } from '@/components/ui/ActivityCard'
 import { EditActivityModal } from '@/components/ui/EditActivityModal'
 import { colors } from '@/lib/design/colors'
 import { sportLabel } from '@/lib/design/labels'
@@ -21,6 +21,8 @@ import { IntensityGauge } from '@/components/activity/indicatorIcons'
 import { calculateHrZones, type HrZone, type HrZoneMethod } from '@/lib/health/hr-zones'
 import { getRaces } from '@/lib/plan/storage'
 import type { Race } from '@/types/plan'
+import { BlockGrid, type BlockDef } from '@/components/blocks/BlockGrid'
+import { BlockCard } from '@/components/blocks/BlockCard'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type Sport = 'Running' | 'Cycling' | 'Swimming'
@@ -118,10 +120,28 @@ function parseDate(s: string): Date | null {
 
 function fmt1(v: number): string { return (Math.round(v * 10) / 10).toFixed(1) }
 
-function fmtDate(iso: string): string {
+function fmtDateLong(iso: string): string {
   const d = new Date(iso + (iso.length === 10 ? 'T00:00:00' : ''))
   const M = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
   return `${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()}`
+}
+
+function fmtDateShort(iso: string): string {
+  const d = new Date(iso)
+  const dd   = String(d.getDate()).padStart(2, '0')
+  const mm   = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  return `${dd}/${mm}/${yyyy}`
+}
+
+function fmtChrono(seconds: number | null): string {
+  if (!seconds || seconds <= 0) return '—'
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = seconds % 60
+  return h > 0
+    ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+    : `${m}:${String(s).padStart(2, '0')}`
 }
 
 function todayISO(): string {
@@ -366,14 +386,51 @@ function BackArrow() {
   )
 }
 
+// ── Carte course passée simple (style copie écran) ────────────────────────────
+function PastRaceCard({ activity, onClick }: { activity: ActivityRow; onClick: () => void }) {
+  const distanceKm = activity.manual_distance_m ?? activity.distance_m
+  const elevation  = activity.manual_elevation_gain_m ?? activity.elevation_gain_m
+  const duration   = activity.manual_moving_time_sec ?? activity.moving_time_sec
+
+  return (
+    <button
+      onClick={onClick}
+      className="w-full rounded-[12px] border p-[10px] text-left"
+      style={{ backgroundColor: colors.cardBg, borderColor: colors.border, cursor: 'pointer' }}
+    >
+      <p className="text-[15px] font-semibold text-trail-text truncate">{activity.name}</p>
+      <p className="text-[12px] text-trail-muted mt-[2px]">{fmtDateShort(activity.start_time)}</p>
+      <div className="flex gap-[6px] mt-[8px]">
+        <MetricTile
+          label="Distance"
+          value={distanceKm != null ? fmt1(distanceKm / 1000) : '—'}
+          unit={distanceKm != null ? 'km' : ''}
+          color={colors.chargeOrange}
+        />
+        <MetricTile
+          label="D+"
+          value={elevation != null && elevation > 0 ? Math.round(elevation).toString() : '—'}
+          unit={elevation != null && elevation > 0 ? 'm' : ''}
+          color={colors.chargeOrange}
+        />
+        <MetricTile
+          label="Chrono"
+          value={fmtChrono(duration)}
+          unit=""
+          color={colors.chargeOrange}
+        />
+      </div>
+    </button>
+  )
+}
+
 // ── Panneau Recherche ─────────────────────────────────────────────────────────
 const SEARCH_RENDER_BATCH = 50
 
-function SearchPanel({ state, setState, activities, hrZones, onClose, onNavigate, onReset }: {
+function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset }: {
   state:      SearchState
   setState:   (s: SearchState) => void
   activities: ActivityRow[]
-  hrZones:    HrZone[]
   onClose:    () => void
   onNavigate: (id: string) => void
   onReset:    () => void
@@ -519,7 +576,7 @@ function SearchPanel({ state, setState, activities, hrZones, onClose, onNavigate
               </div>
             ) : (
               <div className="space-y-[10px]">
-                {visibleResults.map(a => <ActivityCard key={a.id} activity={a} hrZones={hrZones} onClick={() => onNavigate(a.id)} />)}
+                {visibleResults.map(a => <PastRaceCard key={a.id} activity={a} onClick={() => onNavigate(a.id)} />)}
                 {visibleCount < results.length && (
                   <div ref={sentinelRef} className="h-8 flex items-center justify-center">
                     <span className="text-[12px]" style={{ color: colors.subtleText }}>…</span>
@@ -569,7 +626,6 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
         >
           <p className="text-[14px] font-bold text-trail-text">Trier et filtrer</p>
 
-          {/* Activité */}
           <div>
             <p className="text-[13px] font-semibold text-trail-text mb-[3px]">Activité</p>
             <div className="flex items-center gap-2">
@@ -588,7 +644,6 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
             </div>
           </div>
 
-          {/* Intensité */}
           <div>
             <p className="text-[13px] font-semibold text-trail-text mb-[3px]">Intensité</p>
             <div className="flex gap-[6px] overflow-x-auto pb-1">
@@ -613,7 +668,6 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
             </div>
           </div>
 
-          {/* Date */}
           <div>
             <p className="text-[13px] font-semibold text-trail-text mb-[3px]">Date</p>
             <div className="flex items-center gap-2">
@@ -687,7 +741,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
   )
 }
 
-// ── Bloc Prochaines courses ───────────────────────────────────────────────────
+// ── Carte Prochaine course ─────────────────────────────────────────────────────
 function UpcomingRaceCard({ race, onClick }: { race: Race; onClick: () => void }) {
   const d = daysUntil(race.date)
   const jLabel = d === 0 ? "J" : d > 0 ? `J-${d}` : `J+${-d}`
@@ -699,9 +753,9 @@ function UpcomingRaceCard({ race, onClick }: { race: Race; onClick: () => void }
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="flex-1 min-w-0">
-          <p className="text-[16px] font-bold truncate" style={{ color: colors.chargeOrange }}>{race.name}</p>
+          <p className="text-[15px] font-semibold text-trail-text truncate">{race.name}</p>
           <p className="text-[12px] text-trail-muted mt-[2px]">
-            {fmtDate(race.date)}{race.location ? ` · ${race.location}` : ''}
+            {fmtDateLong(race.date)}{race.location ? ` · ${race.location}` : ''}
           </p>
         </div>
         <span
@@ -715,9 +769,9 @@ function UpcomingRaceCard({ race, onClick }: { race: Race; onClick: () => void }
           {jLabel}
         </span>
       </div>
-      <div className="flex gap-[6px] overflow-x-auto pb-0.5">
+      <div className="flex gap-[6px]">
         <MetricTile label="Distance"  value={fmt1(race.distance)} unit="km" color={colors.chargeOrange} />
-        <MetricTile label="D+"        value={race.elevation > 0 ? race.elevation.toString() : '—'} unit="m" color={colors.seriesBlue} />
+        <MetricTile label="D+"        value={race.elevation > 0 ? race.elevation.toString() : '—'} unit="m" color={colors.chargeOrange} />
         {race.isMain && (
           <div className="rounded-[10px] px-[10px] py-[8px] flex-shrink-0" style={{ backgroundColor: colors.surface }}>
             <p className="text-[11px] text-trail-muted">Objectif</p>
@@ -726,20 +780,6 @@ function UpcomingRaceCard({ race, onClick }: { race: Race; onClick: () => void }
         )}
       </div>
     </button>
-  )
-}
-
-function UpcomingRacesBlock({ races, onOpen }: { races: Race[]; onOpen: (id: string) => void }) {
-  if (races.length === 0) return null
-  return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-      <p className="text-[15px] font-bold text-trail-text mb-[10px]">Prochaines courses</p>
-      <div className="space-y-[10px]">
-        {races.map(r => (
-          <UpcomingRaceCard key={r.id} race={r} onClick={() => onOpen(r.id)} />
-        ))}
-      </div>
-    </div>
   )
 }
 
@@ -753,7 +793,7 @@ function RecordCard({ record }: { record: PersonalRecord }) {
           <SourceBadge source={record.source} />
           <span className="text-[11px] text-trail-muted">{SPORT_LABEL[record.sport]}</span>
         </div>
-        {record.date && <span className="text-[11px] text-trail-muted">{fmtDate(record.date)}</span>}
+        {record.date && <span className="text-[11px] text-trail-muted">{fmtDateLong(record.date)}</span>}
       </div>
       <p className="text-[14px] font-semibold text-trail-text mb-[6px]">{record.label}</p>
       <div className="flex gap-[6px]">
@@ -812,8 +852,9 @@ function RecordsView({ records }: { records: PersonalRecord[] }) {
   )
 }
 
-// ── Vue Courses (passées + prochaines) ─────────────────────────────────────────
+// ── Composant principal ────────────────────────────────────────────────────────
 const RENDER_BATCH = 50
+const DEFAULT_ORDER = ['upcoming-races', 'summary', 'past-races']
 
 type AthleteHrProfile = {
   max_hr:               number | null
@@ -823,26 +864,63 @@ type AthleteHrProfile = {
   birth_year:           number | null
 } | null
 
-function RacesView({
-  activities,
-  upcomingRaces,
-  hrZones,
-  onNavigateActivity,
-  onNavigateRace,
-  onEditActivity,
+export default function CoursesClient({
+  initial,
+  athleteProfile,
 }: {
-  activities:        ActivityRow[]
-  upcomingRaces:     Race[]
-  hrZones:           HrZone[]
-  onNavigateActivity: (id: string) => void
-  onNavigateRace:    (id: string) => void
-  onEditActivity:    (a: ActivityRow) => void
+  initial:        ActivityRow[]
+  athleteProfile: AthleteHrProfile
 }) {
+  const router = useRouter()
+  const [view, setView] = useState<'Races' | 'Records'>('Races')
+  const [activities, setActivities] = useState<ActivityRow[]>(initial)
+  const [upcomingRaces, setUpcomingRaces] = useState<Race[]>([])
+  const [hrZones, setHrZones] = useState<HrZone[]>([])
+  const [editingActivity, setEditingActivity] = useState<ActivityRow | null>(null)
+
   const [panel,  setPanel]  = useState<'none' | 'search' | 'filter'>('none')
   const [search, setSearch] = useState<SearchState>(DEFAULT_SEARCH)
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER)
   const [visibleCount, setVisibleCount] = useState<number>(RENDER_BATCH)
   const sentinelRef = useRef<HTMLDivElement>(null)
+
+  // Sélection : ne garder que les activités effectivement taguées "course".
+  const courseActivities = useMemo(() => {
+    return activities.filter(a => {
+      const sport = a.manual_sport_type ?? a.sport_type
+      return effectiveWorkoutType(a.manual_workout_type, a.name, sport) === 'course'
+    })
+  }, [activities])
+
+  useEffect(() => {
+    if (!athleteProfile) return
+    try {
+      const method = (localStorage.getItem('tc_hr_zone_method') ?? 'pct_max') as HrZoneMethod
+      setHrZones(calculateHrZones({
+        method,
+        maxHr:              athleteProfile.max_hr,
+        restingHr:          athleteProfile.resting_hr,
+        aerobicThresholdHr: athleteProfile.aerobic_threshold_hr,
+        thresholdHr:        athleteProfile.threshold_hr,
+        birthYear:          athleteProfile.birth_year,
+      }).zones)
+    } catch {}
+  }, [athleteProfile])
+
+  useEffect(() => {
+    let cancelled = false
+    getRaces()
+      .then(list => {
+        if (cancelled) return
+        const today = todayISO()
+        const upcoming = list
+          .filter(r => r.date >= today)
+          .sort((a, b) => a.date.localeCompare(b.date))
+        setUpcomingRaces(upcoming)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     const savedSearch = sessionStorage.getItem('tc_courses_search')
@@ -863,17 +941,27 @@ function RacesView({
     sessionStorage.setItem('tc_courses_search', JSON.stringify(search))
     sessionStorage.setItem('tc_courses_filter', JSON.stringify(filter))
     sessionStorage.setItem('tc_courses_panel',  panel)
-    onNavigateActivity(id)
+    router.push(`/activities/${id}`)
+  }
+
+  function handleSaved(updated: ActivityRow) {
+    setActivities(prev => prev.map(a => a.id === updated.id ? updated : a))
+    setEditingActivity(null)
+  }
+
+  function handleDeleted(id: string) {
+    setActivities(prev => prev.filter(a => a.id !== id))
+    setEditingActivity(null)
   }
 
   const sportTypes = useMemo(() => {
     const seen = new Set<string>()
-    for (const a of activities) seen.add(normalizeSportType(a.sport_type))
+    for (const a of courseActivities) seen.add(normalizeSportType(a.sport_type))
     return Array.from(seen).sort()
-  }, [activities])
+  }, [courseActivities])
 
   const filtered = useMemo(() => {
-    let list = applySearch([...activities], search)
+    let list = applySearch([...courseActivities], search)
 
     if (filter.sport !== 'Toutes') {
       list = list.filter(a => normalizeSportType(a.sport_type) === filter.sport)
@@ -922,7 +1010,7 @@ function RacesView({
     })
 
     return list
-  }, [activities, search, filter, hrZones])
+  }, [courseActivities, search, filter, hrZones])
 
   useEffect(() => { setVisibleCount(RENDER_BATCH) }, [search, filter])
 
@@ -954,21 +1042,151 @@ function RacesView({
     || filter.durFrom  !== '' || filter.durTo  !== ''
     || filter.dPlusFrom !== '' || filter.dPlusTo !== ''
 
-  // Pills résumé (sur la base complète des activités-course, pas la liste filtrée)
-  const totalKm  = activities.reduce((s, a) => s + (a.distance_m ?? 0) / 1000, 0)
-  const maxDPlus = activities.reduce((m, a) => Math.max(m, a.elevation_gain_m ?? 0), 0)
-  const lastDate = activities[0]?.start_time
-    ? fmtDate(activities[0].start_time.slice(0, 10))
+  const totalKm  = courseActivities.reduce((s, a) => s + (a.distance_m ?? 0) / 1000, 0)
+  const maxDPlus = courseActivities.reduce((m, a) => Math.max(m, a.elevation_gain_m ?? 0), 0)
+  const lastDate = courseActivities[0]?.start_time
+    ? fmtDateShort(courseActivities[0].start_time)
     : '—'
 
+  // ── Blocs draggable / maskable ────────────────────────────────────────────
+  const blocks: BlockDef[] = [
+    {
+      id: 'upcoming-races',
+      label: 'Prochaines courses',
+      emoji: '🏁',
+      render: () => (
+        <BlockCard
+          title="Prochaines courses"
+          helpTitle="Prochaines courses"
+          helpBody="Les courses planifiées dans l'onglet Plan dont la date est à venir, triées de la plus proche à la plus lointaine. Clique sur une course pour ouvrir sa fiche."
+          titleClassName="text-[15px] font-semibold text-trail-text"
+        >
+          {upcomingRaces.length === 0 ? (
+            <p className="text-[13px] text-trail-muted">Aucune course planifiée. Ajoute-en une depuis l&apos;onglet Plan.</p>
+          ) : (
+            <div className="space-y-[10px]">
+              {upcomingRaces.map(r => (
+                <UpcomingRaceCard key={r.id} race={r} onClick={() => router.push(`/plan/courses/${r.id}`)} />
+              ))}
+            </div>
+          )}
+        </BlockCard>
+      ),
+    },
+    {
+      id: 'summary',
+      label: 'Résumé',
+      emoji: '📊',
+      render: () => (
+        <BlockCard
+          title="Résumé"
+          helpTitle="Résumé"
+          helpBody="Synthèse globale de tes courses passées : nombre total, kilomètres cumulés, date de la dernière course, dénivelé maximum."
+        >
+          <div className="flex gap-2">
+            <SummaryPill label="courses"   value={courseActivities.length.toString()} color={colors.chargeOrange} />
+            <SummaryPill label="km total"  value={Math.round(totalKm).toString()}     color={colors.seriesBlue} />
+            <SummaryPill label="dernière"  value={lastDate}                           color={colors.greenOk} />
+            <SummaryPill label="max D+"    value={`${Math.round(maxDPlus)} m`}        color={colors.seriesYellow} />
+          </div>
+        </BlockCard>
+      ),
+    },
+    {
+      id: 'past-races',
+      label: 'Courses passées',
+      emoji: '🏆',
+      render: () => (
+        <BlockCard
+          title="Liste des courses"
+          helpTitle="Liste des courses"
+          helpBody="Toutes tes activités taguées comme 'Course' (manuellement ou détectées automatiquement depuis le titre). Utilise la recherche et les filtres pour affiner."
+        >
+          <div
+            className="rounded-[12px] border flex items-center mb-[10px]"
+            style={{ backgroundColor: colors.cardBg, borderColor: colors.border, padding: '4px 6px' }}
+          >
+            <button
+              onClick={() => setPanel('search')}
+              className="flex-1 flex items-center gap-2 px-[10px] py-3"
+              style={{ cursor: 'pointer' }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke={hasActiveSearch ? colors.chargeOrange : colors.subtleText} strokeWidth="2" />
+                <path d="M16.5 16.5L21 21" stroke={hasActiveSearch ? colors.chargeOrange : colors.subtleText} strokeWidth="2" strokeLinecap="round" />
+              </svg>
+              <span className="text-[14px]" style={{ color: hasActiveSearch ? colors.chargeOrange : colors.subtleText }}>
+                Rechercher
+              </span>
+            </button>
+
+            <div className="w-px" style={{ height: 28, backgroundColor: colors.border }} />
+
+            <button
+              onClick={() => setPanel('filter')}
+              className="px-[14px] py-3"
+              style={{ cursor: 'pointer' }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M4 6h16M7 12h10M10 18h4"
+                  stroke={hasActiveFilter ? colors.chargeOrange : colors.subtleText}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {(hasActiveSearch || hasActiveFilter) && (
+            <p className="text-[13px] text-trail-muted px-1 mb-[6px]">
+              {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
+            </p>
+          )}
+
+          {filtered.length === 0 ? (
+            <p className="text-[13px] text-trail-muted">
+              {courseActivities.length === 0
+                ? 'Aucune course enregistrée. Tague une activité comme "Course" dans l\'onglet Activités pour la voir ici.'
+                : 'Aucune course ne correspond aux filtres.'}
+            </p>
+          ) : (
+            <div className="space-y-[10px]">
+              {visible.map(a => (
+                <PastRaceCard key={a.id} activity={a} onClick={() => persistAndNavigateActivity(a.id)} />
+              ))}
+              {visibleCount < filtered.length && (
+                <div ref={sentinelRef} className="h-8 flex items-center justify-center">
+                  <span className="text-[12px]" style={{ color: colors.subtleText }}>…</span>
+                </div>
+              )}
+            </div>
+          )}
+        </BlockCard>
+      ),
+    },
+  ]
+
   return (
-    <div className="space-y-3">
+    <div className="px-3 py-3 space-y-3 max-w-lg mx-auto">
+      <div className="rounded-[12px] bg-trail-card border border-trail-border p-[6px]">
+        <div className="flex gap-2">
+          <SegmentButton label="Courses" selected={view === 'Races'}   onClick={() => setView('Races')} />
+          <SegmentButton label="Records" selected={view === 'Records'} onClick={() => setView('Records')} />
+        </div>
+      </div>
+
+      {view === 'Races' ? (
+        <BlockGrid storageKey="courses" defaultOrder={DEFAULT_ORDER} blocks={blocks} />
+      ) : (
+        <RecordsView records={SAMPLE_RECORDS} />
+      )}
+
       {panel === 'search' && (
         <SearchPanel
           state={search}
           setState={setSearch}
-          activities={activities}
-          hrZones={hrZones}
+          activities={courseActivities}
           onClose={() => setPanel('none')}
           onNavigate={persistAndNavigateActivity}
           onReset={() => {
@@ -992,179 +1210,6 @@ function RacesView({
             setPanel('none')
           }}
         />
-      )}
-
-      <UpcomingRacesBlock races={upcomingRaces} onOpen={onNavigateRace} />
-
-      {/* Pills résumé */}
-      <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-        <div className="flex gap-2">
-          <SummaryPill label="courses"   value={activities.length.toString()}      color={colors.chargeOrange} />
-          <SummaryPill label="km total"  value={Math.round(totalKm).toString()}    color={colors.seriesBlue} />
-          <SummaryPill label="dernière"  value={lastDate}                          color={colors.greenOk} />
-          <SummaryPill label="max D+"    value={`${Math.round(maxDPlus)} m`}       color={colors.seriesYellow} />
-        </div>
-      </div>
-
-      {/* Bloc liste + barre recherche/filtre */}
-      <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-        <p className="text-[15px] font-bold text-trail-text mb-[10px]">Liste des courses</p>
-
-        <div
-          className="rounded-[12px] border flex items-center mb-[10px]"
-          style={{ backgroundColor: colors.cardBg, borderColor: colors.border, padding: '4px 6px' }}
-        >
-          <button
-            onClick={() => setPanel('search')}
-            className="flex-1 flex items-center gap-2 px-[10px] py-3"
-            style={{ cursor: 'pointer' }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <circle cx="11" cy="11" r="7" stroke={hasActiveSearch ? colors.chargeOrange : colors.subtleText} strokeWidth="2" />
-              <path d="M16.5 16.5L21 21" stroke={hasActiveSearch ? colors.chargeOrange : colors.subtleText} strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            <span className="text-[14px]" style={{ color: hasActiveSearch ? colors.chargeOrange : colors.subtleText }}>
-              Rechercher
-            </span>
-          </button>
-
-          <div className="w-px" style={{ height: 28, backgroundColor: colors.border }} />
-
-          <button
-            onClick={() => setPanel('filter')}
-            className="px-[14px] py-3"
-            style={{ cursor: 'pointer' }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M4 6h16M7 12h10M10 18h4"
-                stroke={hasActiveFilter ? colors.chargeOrange : colors.subtleText}
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {(hasActiveSearch || hasActiveFilter) && (
-          <p className="text-[13px] text-trail-muted px-1 mb-[6px]">
-            {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
-          </p>
-        )}
-
-        {filtered.length === 0 ? (
-          <p className="text-[13px] text-trail-muted">
-            {activities.length === 0
-              ? 'Aucune course enregistrée. Tague une activité comme "Course" dans l\'onglet Activités pour la voir ici.'
-              : 'Aucune course ne correspond aux filtres.'}
-          </p>
-        ) : (
-          <div className="space-y-[10px]">
-            {visible.map(a => (
-              <ActivityCard
-                key={a.id}
-                activity={a}
-                hrZones={hrZones}
-                onEdit={onEditActivity}
-                onClick={() => persistAndNavigateActivity(a.id)}
-              />
-            ))}
-            {visibleCount < filtered.length && (
-              <div ref={sentinelRef} className="h-8 flex items-center justify-center">
-                <span className="text-[12px]" style={{ color: colors.subtleText }}>…</span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ── Composant principal ────────────────────────────────────────────────────────
-export default function CoursesClient({
-  initial,
-  athleteProfile,
-}: {
-  initial:        ActivityRow[]
-  athleteProfile: AthleteHrProfile
-}) {
-  const router = useRouter()
-  const [view, setView] = useState<'Races' | 'Records'>('Races')
-  const [activities, setActivities] = useState<ActivityRow[]>(initial)
-  const [upcomingRaces, setUpcomingRaces] = useState<Race[]>([])
-  const [hrZones, setHrZones] = useState<HrZone[]>([])
-  const [editingActivity, setEditingActivity] = useState<ActivityRow | null>(null)
-
-  // Sélection : ne garder que les activités effectivement taguées "course".
-  const courseActivities = useMemo(() => {
-    return activities.filter(a => {
-      const sport = a.manual_sport_type ?? a.sport_type
-      return effectiveWorkoutType(a.manual_workout_type, a.name, sport) === 'course'
-    })
-  }, [activities])
-
-  useEffect(() => {
-    if (!athleteProfile) return
-    try {
-      const method = (localStorage.getItem('tc_hr_zone_method') ?? 'pct_max') as HrZoneMethod
-      setHrZones(calculateHrZones({
-        method,
-        maxHr:              athleteProfile.max_hr,
-        restingHr:          athleteProfile.resting_hr,
-        aerobicThresholdHr: athleteProfile.aerobic_threshold_hr,
-        thresholdHr:        athleteProfile.threshold_hr,
-        birthYear:          athleteProfile.birth_year,
-      }).zones)
-    } catch {}
-  }, [athleteProfile])
-
-  // Charge les courses planifiées (Plan/courses) → upcoming triées asc.
-  useEffect(() => {
-    let cancelled = false
-    getRaces()
-      .then(list => {
-        if (cancelled) return
-        const today = todayISO()
-        const upcoming = list
-          .filter(r => r.date >= today)
-          .sort((a, b) => a.date.localeCompare(b.date))
-        setUpcomingRaces(upcoming)
-      })
-      .catch(() => { /* fallback silencieux : pas de bloc */ })
-    return () => { cancelled = true }
-  }, [])
-
-  function handleSaved(updated: ActivityRow) {
-    setActivities(prev => prev.map(a => a.id === updated.id ? updated : a))
-    setEditingActivity(null)
-  }
-
-  function handleDeleted(id: string) {
-    setActivities(prev => prev.filter(a => a.id !== id))
-    setEditingActivity(null)
-  }
-
-  return (
-    <div className="px-3 py-3 space-y-3 max-w-lg mx-auto">
-      <div className="rounded-[12px] bg-trail-card border border-trail-border p-[6px]">
-        <div className="flex gap-2">
-          <SegmentButton label="Courses" selected={view === 'Races'}   onClick={() => setView('Races')} />
-          <SegmentButton label="Records" selected={view === 'Records'} onClick={() => setView('Records')} />
-        </div>
-      </div>
-
-      {view === 'Races' ? (
-        <RacesView
-          activities={courseActivities}
-          upcomingRaces={upcomingRaces}
-          hrZones={hrZones}
-          onNavigateActivity={(id) => router.push(`/activities/${id}`)}
-          onNavigateRace={(id) => router.push(`/plan/courses/${id}`)}
-          onEditActivity={setEditingActivity}
-        />
-      ) : (
-        <RecordsView records={SAMPLE_RECORDS} />
       )}
 
       {editingActivity && (
