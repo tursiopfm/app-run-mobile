@@ -386,39 +386,40 @@ function BackArrow() {
   )
 }
 
-// ── Carte course passée simple (style copie écran) ────────────────────────────
+// ── Ligne course passée — format "colonnes alignées" (Mockup C) ───────────────
 function PastRaceCard({ activity, onClick }: { activity: ActivityRow; onClick: () => void }) {
-  const distanceKm = activity.manual_distance_m ?? activity.distance_m
+  const distanceM  = activity.manual_distance_m       ?? activity.distance_m
   const elevation  = activity.manual_elevation_gain_m ?? activity.elevation_gain_m
-  const duration   = activity.manual_moving_time_sec ?? activity.moving_time_sec
+  const duration   = activity.manual_moving_time_sec  ?? activity.moving_time_sec
+
+  const hasDist = distanceM != null
+  const hasElev = elevation != null && elevation > 0
+  const hasDur  = duration != null && duration > 0
 
   return (
     <button
       onClick={onClick}
-      className="w-full rounded-[12px] border p-[10px] text-left"
-      style={{ backgroundColor: colors.cardBg, borderColor: colors.border, cursor: 'pointer' }}
+      className="w-full text-left py-[10px] px-1 border-b border-trail-border last:border-0"
+      style={{ cursor: 'pointer' }}
     >
-      <p className="text-[15px] font-semibold text-trail-text truncate">{activity.name}</p>
-      <p className="text-[12px] text-trail-muted mt-[2px]">{fmtDateShort(activity.start_time)}</p>
-      <div className="flex gap-[6px] mt-[8px]">
-        <MetricTile
-          label="Distance"
-          value={distanceKm != null ? fmt1(distanceKm / 1000) : '—'}
-          unit={distanceKm != null ? 'km' : ''}
-          color={colors.chargeOrange}
-        />
-        <MetricTile
-          label="D+"
-          value={elevation != null && elevation > 0 ? Math.round(elevation).toString() : '—'}
-          unit={elevation != null && elevation > 0 ? 'm' : ''}
-          color={colors.chargeOrange}
-        />
-        <MetricTile
-          label="Chrono"
-          value={fmtChrono(duration)}
-          unit=""
-          color={colors.chargeOrange}
-        />
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-[14px] font-semibold text-trail-text truncate flex-1 min-w-0">{activity.name}</p>
+        <span className="text-[12px] flex-shrink-0" style={{ color: colors.subtleText }}>
+          {fmtDateShort(activity.start_time)}
+        </span>
+      </div>
+      <div className="grid grid-cols-3 gap-2 mt-[4px]">
+        <div className="flex items-baseline gap-1">
+          <span className="text-[13px] font-bold text-trail-text">{hasDist ? fmt1(distanceM! / 1000) : '—'}</span>
+          {hasDist && <span className="text-[11px] text-trail-muted">km</span>}
+        </div>
+        <div className="flex items-baseline gap-1">
+          <span className="text-[13px] font-bold text-trail-text">{hasElev ? Math.round(elevation!).toString() : '—'}</span>
+          {hasElev && <span className="text-[11px] text-trail-muted">m D+</span>}
+        </div>
+        <div>
+          <span className="text-[13px] font-bold text-trail-text">{hasDur ? fmtChrono(duration) : '—'}</span>
+        </div>
       </div>
     </button>
   )
@@ -575,7 +576,7 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
                 <p className="text-[13px]" style={{ color: colors.subtleText }}>Aucune course trouvée.</p>
               </div>
             ) : (
-              <div className="space-y-[10px]">
+              <div>
                 {visibleResults.map(a => <PastRaceCard key={a.id} activity={a} onClick={() => onNavigate(a.id)} />)}
                 {visibleCount < results.length && (
                   <div ref={sentinelRef} className="h-8 flex items-center justify-center">
@@ -1151,7 +1152,7 @@ export default function CoursesClient({
                 : 'Aucune course ne correspond aux filtres.'}
             </p>
           ) : (
-            <div className="space-y-[10px]">
+            <div>
               {visible.map(a => (
                 <PastRaceCard key={a.id} activity={a} onClick={() => persistAndNavigateActivity(a.id)} />
               ))}
