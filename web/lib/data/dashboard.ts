@@ -16,6 +16,9 @@ export type ActivityRow = {
   manual_intensity: string | null
   manual_sport_type: string | null
   manual_workout_type: string | null
+  manual_distance_m: number | null
+  manual_elevation_gain_m: number | null
+  manual_moving_time_sec: number | null
 }
 
 export type DaySession = {
@@ -51,15 +54,19 @@ export type SportOverview = {
 }
 
 type SlimActivity = {
-  sport_type:        string
+  sport_type:              string
   // manual_sport_type est le re-tag utilisateur ; quand présent il OVERRIDE
   // sport_type pour toutes les agrégations par sport. Sans ça, une activité
   // tagguée à la main "Run" depuis Strava "Workout" disparaît du total Run
   // annuel — bug constaté 2026-05-16.
-  manual_sport_type: string | null
-  start_time:        string
-  distance_m:        number | null
-  elevation_gain_m:  number | null
+  manual_sport_type:       string | null
+  start_time:              string
+  distance_m:              number | null
+  elevation_gain_m:        number | null
+  // Overrides utilisateur : prioritaires sur les valeurs Strava pour TOUS les
+  // cumuls (semaine, mois, année, historique). Le sync Strava ne les touche pas.
+  manual_distance_m:       number | null
+  manual_elevation_gain_m: number | null
 }
 
 export type WorkoutTypeShare = {
@@ -218,7 +225,7 @@ function buildCumulYears(
     for (const a of yacts) {
       const ad = new Date(a.start_time)
       const idx = dayOfYearIdx(ad)
-      if (idx >= 0 && idx < totalDays) dayKm[idx] += (a.distance_m ?? 0) / 1000
+      if (idx >= 0 && idx < totalDays) dayKm[idx] += ((a.manual_distance_m ?? a.distance_m) ?? 0) / 1000
     }
 
     const dailyCumul: number[] = []
@@ -257,8 +264,8 @@ function buildSportOverview(
   let weekKm = 0, weekDPlus = 0, weekSessions = 0
   for (const a of weekActs) {
     const idx = toMonIndex(new Date(a.start_time).getDay())
-    const km  = (a.distance_m ?? 0) / 1000
-    const dp  = a.elevation_gain_m ?? 0
+    const km  = ((a.manual_distance_m       ?? a.distance_m)       ?? 0) / 1000
+    const dp  = (a.manual_elevation_gain_m ?? a.elevation_gain_m) ?? 0
     dailyKm[idx]    += km
     dailyDPlus[idx] += dp
     if (!dailyLabels[idx]) dailyLabels[idx] = a.name
@@ -269,14 +276,14 @@ function buildSportOverview(
   const weekCes = Math.round(weekActs.reduce((s, a) => s + (a.ces ?? 0), 0))
 
   const ytdActs = acts.filter((a) => new Date(a.start_time) >= janFirst)
-  const ytdKm    = Math.round(ytdActs.reduce((s, a) => s + (a.distance_m ?? 0) / 1000, 0) * 10) / 10
-  const ytdDPlus = Math.round(ytdActs.reduce((s, a) => s + (a.elevation_gain_m ?? 0), 0))
+  const ytdKm    = Math.round(ytdActs.reduce((s, a) => s + ((a.manual_distance_m       ?? a.distance_m)       ?? 0) / 1000, 0) * 10) / 10
+  const ytdDPlus = Math.round(ytdActs.reduce((s, a) => s +  ((a.manual_elevation_gain_m ?? a.elevation_gain_m) ?? 0),         0))
   const monthlyKm   = Array(12).fill(0) as number[]
   const monthlyDPlus = Array(12).fill(0) as number[]
   for (const a of ytdActs) {
     const mo = new Date(a.start_time).getMonth()
-    monthlyKm[mo]   += (a.distance_m    ?? 0) / 1000
-    monthlyDPlus[mo] += (a.elevation_gain_m ?? 0)
+    monthlyKm[mo]   += ((a.manual_distance_m       ?? a.distance_m)       ?? 0) / 1000
+    monthlyDPlus[mo] += (a.manual_elevation_gain_m ?? a.elevation_gain_m) ?? 0
   }
   for (let i = 0; i < 12; i++) {
     monthlyKm[i]   = Math.round(monthlyKm[i] * 10) / 10
@@ -296,8 +303,8 @@ function buildSportOverview(
     const ws = getWeekStart(new Date(a.start_time))
     const isoKey = ws.toISOString().slice(0, 10)
     const entry = weekMap.get(isoKey) ?? { ts: ws.getTime(), km: 0, dPlus: 0 }
-    entry.km    += (a.distance_m       ?? 0) / 1000
-    entry.dPlus += (a.elevation_gain_m ?? 0)
+    entry.km    += ((a.manual_distance_m       ?? a.distance_m)       ?? 0) / 1000
+    entry.dPlus += ((a.manual_elevation_gain_m ?? a.elevation_gain_m) ?? 0)
     weekMap.set(isoKey, entry)
   }
   const weeklyPoints: WeeklyPoint[] = Array.from(weekMap.entries())
@@ -327,7 +334,7 @@ function buildSportOverview(
     const dayKm = Array(lastDay).fill(0) as number[]
     for (const a of (monthActIndex.get(`${year}-${month}`) ?? [])) {
       const dayIdx = new Date(a.start_time).getDate() - 1
-      if (dayIdx < lastDay) dayKm[dayIdx] += (a.distance_m ?? 0) / 1000
+      if (dayIdx < lastDay) dayKm[dayIdx] += ((a.manual_distance_m ?? a.distance_m) ?? 0) / 1000
     }
     const dailyCumul: number[] = []
     let cumul = 0
@@ -344,10 +351,11 @@ function buildSportOverview(
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
   const workoutTypeMap = new Map<WorkoutType | null, number>()
   for (const a of acts.filter((r) => new Date(r.start_time) >= thirtyDaysAgo)) {
-    if (!a.distance_m) continue
+    const effDist = a.manual_distance_m ?? a.distance_m
+    if (!effDist) continue
     const sport = a.manual_sport_type ?? a.sport_type
     const t = effectiveWorkoutType(a.manual_workout_type, a.name, sport)
-    workoutTypeMap.set(t, (workoutTypeMap.get(t) ?? 0) + a.distance_m / 1000)
+    workoutTypeMap.set(t, (workoutTypeMap.get(t) ?? 0) + effDist / 1000)
   }
   const workoutTypeBreakdown: WorkoutTypeShare[] = WORKOUT_TYPE_ORDER
     .filter((t) => workoutTypeMap.has(t))
@@ -364,8 +372,8 @@ function buildSportOverview(
   for (const a of fullHistory) {
     const key = localDateKey(new Date(a.start_time))
     const entry = historyMap.get(key) ?? { km: 0, dPlus: 0 }
-    entry.km    += (a.distance_m       ?? 0) / 1000
-    entry.dPlus += (a.elevation_gain_m  ?? 0)
+    entry.km    += ((a.manual_distance_m       ?? a.distance_m)       ?? 0) / 1000
+    entry.dPlus += ((a.manual_elevation_gain_m ?? a.elevation_gain_m) ?? 0)
     historyMap.set(key, entry)
   }
   const dailyHistory: DailyHistoryEntry[] = Array.from(historyMap.entries())
@@ -410,7 +418,7 @@ async function fetchAllHistorySlim(
   for (let from = 0; ; from += HISTORY_PAGE_SIZE) {
     const { data, error } = await supabase
       .from('activities')
-      .select('sport_type, manual_sport_type, start_time, distance_m, elevation_gain_m')
+      .select('sport_type, manual_sport_type, start_time, distance_m, elevation_gain_m, manual_distance_m, manual_elevation_gain_m')
       .eq('user_id', userId)
       .is('deleted_at', null)
       .order('start_time', { ascending: true })
@@ -431,7 +439,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   const [{ data: rows }, yearActivities] = await Promise.all([
     supabase
       .from('activities')
-      .select('id, sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_intensity, manual_sport_type, manual_workout_type')
+      .select('id, sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_intensity, manual_sport_type, manual_workout_type, manual_distance_m, manual_elevation_gain_m, manual_moving_time_sec')
       .eq('user_id', userId)
       .gte('start_time', yearAgo.toISOString())
       .is('deleted_at', null)
@@ -470,8 +478,8 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   const sessionsByDay = new Map<number, { label: string; km: number; dPlus: number }>()
   for (const a of weekActivities) {
     const dayIdx = toMonIndex(new Date(a.start_time).getDay())
-    const km = (a.distance_m ?? 0) / 1000
-    const dp = a.elevation_gain_m ?? 0
+    const km = ((a.manual_distance_m       ?? a.distance_m)       ?? 0) / 1000
+    const dp = (a.manual_elevation_gain_m ?? a.elevation_gain_m) ?? 0
     const existing = sessionsByDay.get(dayIdx)
     if (existing) {
       existing.km    += km
