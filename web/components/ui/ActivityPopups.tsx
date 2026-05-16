@@ -57,6 +57,10 @@ const WORKOUT_TYPE_DESC: Record<WorkoutType, string> = {
   runtaf:        'trajet maison ↔ bureau à pied (Run / TrailRun)',
   velotaf:       'trajet maison ↔ bureau en vélo (Ride / EBike)',
   footing:       'sortie facile en endurance fondamentale (Z2)',
+  velo:          'sortie vélo (route, gravel, VTT)',
+  natation:      'séance de natation',
+  renfo:         'renforcement musculaire (gainage, PPG, mobilité)',
+  musculation:   'séance de musculation avec charges',
 }
 
 const WORKOUT_TYPE_RULE: Record<WorkoutType, string> = {
@@ -68,6 +72,10 @@ const WORKOUT_TYPE_RULE: Record<WorkoutType, string> = {
   runtaf:        'titre contient "runtaf", "taf", "Home 🏃‍♂️", à la fois "Home"/🏠 et "Office"/🏢, ou un emoji commute (🚉/👨‍💻/🏢/🏠) avec une flèche — si sport = Run/TrailRun',
   velotaf:       'titre contient "vélotaf", "taf", "Home 🚴🏻", à la fois "Home"/🏠 et "Office"/🏢, ou un emoji commute (🚉/👨‍💻/🏢/🏠) avec une flèche — si sport = Ride/EBike/VirtualRide',
   footing:       'type manuel sélectionné dans l\'éditeur (pas de détection automatique depuis le titre)',
+  velo:          'type manuel sélectionné dans l\'éditeur',
+  natation:      'type manuel sélectionné dans l\'éditeur',
+  renfo:         'type manuel sélectionné dans l\'éditeur',
+  musculation:   'type manuel sélectionné dans l\'éditeur',
 }
 
 // ── Layout primitives ────────────────────────────────────────────────────────
