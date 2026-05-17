@@ -209,7 +209,7 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
         >
           <TabButton active={tab === 'general'}   onClick={() => setTab('general')}   label="Général" />
           <TabButton active={tab === 'structure'} onClick={() => setTab('structure')} label="Structure" />
-          <TabButton active={tab === 'notes'}     onClick={() => setTab('notes')}     label="Notes" />
+          <TabButton active={tab === 'notes'}     onClick={() => setTab('notes')}     label="Description" />
         </div>
 
         {tab === 'general' && (
@@ -792,12 +792,12 @@ function NotesTab({
   setDraft: React.Dispatch<React.SetStateAction<SessionTemplate>>
 }) {
   return (
-    <Field label="Description / notes">
+    <Field label="Description">
       <textarea
         rows={8}
         value={draft.description ?? ''}
         onChange={e => setDraft({ ...draft, description: e.target.value })}
-        placeholder="Description, consignes, intentions…"
+        placeholder="Description générique du template (consignes, intentions). Non transmise aux séances créées depuis ce template — utilise les Notes de la séance pour les consignes spécifiques."
         className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary resize-none"
       />
     </Field>
