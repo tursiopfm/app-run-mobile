@@ -27,5 +27,6 @@ export default async function CoursesPage() {
   ])
 
   const initial = (rows ?? []) as ActivityRow[]
-  return <CoursesClient initial={initial} athleteProfile={profile} />
+  const hasMore = initial.length === INITIAL_LIMIT
+  return <CoursesClient initial={initial} hasMore={hasMore} athleteProfile={profile} />
 }

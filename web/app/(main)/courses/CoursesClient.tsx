@@ -870,9 +870,11 @@ type AthleteHrProfile = {
 
 export default function CoursesClient({
   initial,
+  hasMore,
   athleteProfile,
 }: {
   initial:        ActivityRow[]
+  hasMore:        boolean
   athleteProfile: AthleteHrProfile
 }) {
   const router = useRouter()
@@ -881,6 +883,23 @@ export default function CoursesClient({
   const [upcomingRaces, setUpcomingRaces] = useState<Race[]>([])
   const [hrZones, setHrZones] = useState<HrZone[]>([])
   const [editingActivity, setEditingActivity] = useState<ActivityRow | null>(null)
+
+  // Charge en background les activités plus anciennes que le dernier reçu en SSR,
+  // pour ne manquer aucune course si l'historique dépasse la limite initiale.
+  useEffect(() => {
+    if (!hasMore) return
+    const oldest = initial[initial.length - 1]?.start_time
+    if (!oldest) return
+    let cancelled = false
+    fetch(`/api/activities?olderThan=${encodeURIComponent(oldest)}`)
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then((body: { activities: ActivityRow[] }) => {
+        if (cancelled) return
+        setActivities(curr => [...curr, ...body.activities])
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [hasMore, initial])
 
   const [panel,  setPanel]  = useState<'none' | 'search' | 'filter'>('none')
   const [search, setSearch] = useState<SearchState>(DEFAULT_SEARCH)
