@@ -14,7 +14,8 @@ import {
   hideSystemTemplate,
   unhideAllSystemTemplates,
 } from '@/lib/plan/storage'
-import { INTENSITY_LEVEL_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
+import { INTENSITY_LEVEL_COLORS, SESSION_TYPE_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
+import type { WorkoutType } from '@/lib/activities/intensity'
 import { TemplateEditorModal } from './TemplateEditorModal'
 import { ActivityTypesPrefsModal } from './ActivityTypesPrefsModal'
 import { useActivityTypes } from '@/lib/plan/use-activity-types'
@@ -183,6 +184,7 @@ export function BibliothequeSeancesBlock() {
             active={selectedType === t.slug}
             onClick={() => setSelectedType(t.slug)}
             label={t.label}
+            color={SESSION_TYPE_COLORS[t.slug as WorkoutType]}
           />
         ))}
         <FilterPill onClick={() => setPrefsModalOpen(true)} label="⚙ Personnalisé" isCustom />
@@ -251,17 +253,41 @@ export function BibliothequeSeancesBlock() {
 }
 
 // ─── Sous-composants ────────────────────────────────────────────────────────
+// Calcule la luminance perçue d'un hex (#RRGGBB) pour décider texte noir/blanc.
+function pickTextColor(hex?: string): string {
+  if (!hex) return '#fff'
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex)
+  if (!m) return '#fff'
+  const v = parseInt(m[1], 16)
+  const r = (v >> 16) & 0xff
+  const g = (v >> 8) & 0xff
+  const b = v & 0xff
+  const lum = 0.299 * r + 0.587 * g + 0.114 * b
+  return lum > 150 ? '#000' : '#fff'
+}
+
 function FilterPill({
-  active, onClick, label, isCustom,
+  active, onClick, label, isCustom, color,
 }: {
   active?: boolean
   onClick: () => void
   label: string
   isCustom?: boolean
+  color?: string
 }) {
   let cls = 'flex-shrink-0 px-3 py-1 rounded-full text-[12px] font-semibold whitespace-nowrap transition-colors'
+  let inlineStyle: React.CSSProperties = { scrollSnapAlign: 'start' }
+
   if (isCustom) {
     cls += ' border border-trail-border bg-transparent text-trail-muted hover:text-trail-text hover:border-trail-primary'
+  } else if (active && color) {
+    cls += ' border'
+    inlineStyle = {
+      ...inlineStyle,
+      backgroundColor: color,
+      borderColor: color,
+      color: pickTextColor(color),
+    }
   } else if (active) {
     cls += ' bg-trail-primary text-white border border-trail-primary'
   } else {
@@ -273,7 +299,7 @@ function FilterPill({
       role="tab"
       aria-selected={!!active}
       onClick={onClick}
-      style={{ scrollSnapAlign: 'start' }}
+      style={inlineStyle}
       className={cls}
     >
       {label}
