@@ -12,8 +12,9 @@
 
 import { useState, type ReactNode } from 'react'
 import {
-  DndContext, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors,
+  DndContext, pointerWithin, rectIntersection, MouseSensor, TouchSensor, useSensor, useSensors,
   DragOverlay,
+  type CollisionDetection,
   type DragEndEvent, type DragStartEvent, type DragOverEvent,
 } from '@dnd-kit/core'
 import type { SessionTemplate } from '@/types/plan'
@@ -46,6 +47,16 @@ function dayIdToISO(id: string | number): string | null {
   if (typeof id !== 'string') return null
   if (!id.startsWith('day-')) return null
   return id.slice(4)
+}
+
+// Stratégie de collision : on essaie d'abord pointerWithin (le curseur DOIT
+// être à l'intérieur d'un droppable). Si rien, on tombe sur rectIntersection
+// (l'élément draggué recouvre une cellule) — utile sur mobile où le doigt
+// occulte une partie. Si rien non plus → `over` reste null → drop hors zone.
+const pointerWithinElseRectIntersection: CollisionDetection = (args) => {
+  const pointer = pointerWithin(args)
+  if (pointer.length > 0) return pointer
+  return rectIntersection(args)
 }
 
 export function PlanSessionsDndProvider({
@@ -112,7 +123,11 @@ export function PlanSessionsDndProvider({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      // pointerWithin pour que `over` soit null dès que le curseur quitte une
+      // cellule jour (clé pour détecter l'intent de suppression).
+      // Fallback rectIntersection sur mobile / si pointerWithin ne renvoie
+      // rien mais que l'élément draggable recouvre encore la cellule.
+      collisionDetection={pointerWithinElseRectIntersection}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
