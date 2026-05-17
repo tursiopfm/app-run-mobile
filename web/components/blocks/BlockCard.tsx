@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useBlockContext } from '@/components/blocks/BlockGrid'
 import { BlockHelpSheet } from './BlockHelpSheet'
 
@@ -17,6 +17,22 @@ export function BlockCard({ title, helpTitle, helpBody, children, rightSlot, tit
   const { hideSelf } = useBlockContext()
   const [showHelp, setShowHelp] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showMenu) return
+    function handle(e: MouseEvent | TouchEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handle)
+    document.addEventListener('touchstart', handle)
+    return () => {
+      document.removeEventListener('mousedown', handle)
+      document.removeEventListener('touchstart', handle)
+    }
+  }, [showMenu])
 
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
@@ -29,17 +45,14 @@ export function BlockCard({ title, helpTitle, helpBody, children, rightSlot, tit
             onClick={() => setShowHelp(true)}
             className="text-trail-muted hover:text-trail-text w-7 h-7 flex items-center justify-center text-[14px]"
           >ⓘ</button>
-          <div className="relative">
+          <div className="relative" ref={menuRef}>
             <button
               aria-label="Menu du bloc"
               onClick={() => setShowMenu(s => !s)}
               className="text-trail-muted hover:text-trail-text w-7 h-7 flex items-center justify-center text-[18px] leading-none"
             >⋮</button>
             {showMenu && (
-              <div
-                className="absolute right-0 mt-1 w-32 rounded-[8px] bg-trail-surface border border-trail-border shadow-lg z-30"
-                onMouseLeave={() => setShowMenu(false)}
-              >
+              <div className="absolute right-0 mt-1 w-32 rounded-[8px] bg-trail-surface border border-trail-border shadow-lg z-30">
                 <button
                   onClick={() => { setShowMenu(false); hideSelf() }}
                   className="w-full px-3 py-2 text-left text-[12px] text-trail-text hover:bg-trail-card"

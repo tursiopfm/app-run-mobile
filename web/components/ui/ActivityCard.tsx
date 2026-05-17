@@ -19,7 +19,7 @@ const SPORT_COLORS: Record<string, string> = {
   VirtualRide:      colors.seriesGreen,
   EBikeRide:        colors.seriesGreen,
   MountainBikeRide: colors.seriesGreen,
-  Swim:             colors.pieVma,
+  Swim:             colors.seriesBlue,
   Walk:             colors.seriesGreen,
   Hike:             colors.seriesGreen,
   WeightTraining:   colors.subtleText,
