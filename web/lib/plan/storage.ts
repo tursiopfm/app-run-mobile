@@ -11,6 +11,7 @@ import type {
   SessionStatus,
   SessionTemplate,
   SessionType,
+  SessionZone,
   TrainingPlan,
   TrainingZone,
 } from '@/types/plan'
@@ -210,7 +211,7 @@ type SessionRow = {
   elevation_m: number | null
   intensity: PlannedSession['intensity']
   estimated_charge: number
-  zones: TrainingZone[] | null
+  zones: SessionZone[] | null
   notes: string | null
   status: SessionStatus
   linked_activity_id: string | null
@@ -267,7 +268,7 @@ type TemplateRow = {
   default_distance_km: number | null
   default_elevation_m: number | null
   default_intensity: SessionTemplate['defaultIntensity']
-  default_zones: TrainingZone[] | null
+  default_zones: SessionZone[] | null
   description: string | null
   tags: string[] | null
 }
