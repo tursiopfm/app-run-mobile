@@ -21,6 +21,13 @@ CREATE TABLE IF NOT EXISTS activity_types (
 
 CREATE INDEX IF NOT EXISTS idx_activity_types_athlete ON activity_types(athlete_id);
 
+-- Garde-fou : pour les types système (athlete_id IS NULL), la UNIQUE (athlete_id, slug)
+-- ne fonctionne pas (NULL != NULL en Postgres). On ajoute un index partiel sur slug
+-- pour s'assurer qu'un re-run du seed ne duplique pas les 9 types système.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_activity_types_system_slug
+  ON activity_types (slug)
+  WHERE athlete_id IS NULL;
+
 -- ─── Table préférences user ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS user_activity_prefs (
   athlete_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -41,7 +48,7 @@ INSERT INTO activity_types (athlete_id, slug, label, default_intensity, category
   (NULL, 'natation',      'Natation',      2, 'swim',  true),
   (NULL, 'renfo',         'Renfo',         1, 'other', true),
   (NULL, 'musculation',   'Musculation',   1, 'other', true)
-ON CONFLICT (athlete_id, slug) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- ─── RLS ───────────────────────────────────────────────────────────────────
 ALTER TABLE activity_types ENABLE ROW LEVEL SECURITY;

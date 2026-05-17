@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDraggable } from '@dnd-kit/core'
-import type { SessionTemplate, SessionType } from '@/types/plan'
+import type { SessionTemplate } from '@/types/plan'
 import { SESSION_TEMPLATES } from '@/lib/training/session-templates'
 import { getCustomTemplates } from '@/lib/plan/storage'
 import { INTENSITY_LEVEL_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
