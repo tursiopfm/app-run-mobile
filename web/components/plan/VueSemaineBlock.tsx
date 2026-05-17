@@ -426,8 +426,8 @@ function DraggableSessionCard({
         </div>
       )}
       {!!session.elevation && session.elevation > 0 && (
-        <div className="text-[10px] text-trail-muted leading-[13px]" aria-label={`D plus ${session.elevation} mètres`}>
-          {session.elevation} m D+
+        <div className="text-[10px] text-trail-muted leading-[13px] whitespace-nowrap" aria-label={`D plus ${session.elevation} mètres`}>
+          {session.elevation} D+
         </div>
       )}
       {session.notes && (

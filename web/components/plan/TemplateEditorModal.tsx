@@ -96,7 +96,9 @@ function emptyDraft(): SessionTemplate {
 }
 
 export function TemplateEditorModal({ template, open, onClose, onSaved }: Props) {
-  const isEdit = template !== null
+  // isEdit = vrai uniquement pour un template custom existant (id non vide).
+  // Un fork d'un template système arrive avec id='' → considéré comme création.
+  const isEdit = template !== null && (template.id ?? '') !== ''
   const [draft, setDraft] = useState<SessionTemplate>(() => template ?? emptyDraft())
   const [tab, setTab] = useState<Tab>('general')
   const [saving, setSaving] = useState(false)

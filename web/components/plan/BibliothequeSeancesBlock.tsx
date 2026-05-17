@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDraggable } from '@dnd-kit/core'
 import type { SessionTemplate } from '@/types/plan'
 import { SESSION_TEMPLATES } from '@/lib/training/session-templates'
-import { getCustomTemplates } from '@/lib/plan/storage'
+import { deleteCustomTemplate, getCustomTemplates } from '@/lib/plan/storage'
 import { INTENSITY_LEVEL_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
 import { TemplateEditorModal } from './TemplateEditorModal'
 import { ActivityTypesPrefsModal } from './ActivityTypesPrefsModal'
@@ -58,10 +58,22 @@ export function BibliothequeSeancesBlock() {
   }
 
   function openEdit(template: SessionTemplate) {
-    // Templates système : pas d'édition. Pour l'instant on no-op.
-    if (!customIds.has(template.id)) return
-    setEditingTemplate(template)
+    // Custom : édition directe. Système : fork (id réinitialisé → la sauvegarde
+    // créera un nouveau template custom à partir des valeurs système).
+    if (customIds.has(template.id)) {
+      setEditingTemplate(template)
+    } else {
+      setEditingTemplate({ ...template, id: '' })
+    }
     setEditorOpen(true)
+  }
+
+  async function confirmAndDelete(template: SessionTemplate) {
+    if (typeof window === 'undefined') return
+    const ok = window.confirm(`Supprimer le template « ${template.title} » ?\n\nCette action est définitive.`)
+    if (!ok) return
+    await deleteCustomTemplate(template.id)
+    void reload()
   }
 
   return (
@@ -137,6 +149,7 @@ export function BibliothequeSeancesBlock() {
             template={t}
             isCustom={customIds.has(t.id)}
             onClick={() => openEdit(t)}
+            onDelete={() => void confirmAndDelete(t)}
           />
         ))}
         {filtered.length === 0 && (
@@ -201,11 +214,12 @@ function FilterPill({
 }
 
 function TemplateCard({
-  template, isCustom, onClick,
+  template, isCustom, onClick, onDelete,
 }: {
   template: SessionTemplate
   isCustom: boolean
   onClick: () => void
+  onDelete: () => void
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `template-${template.id}`,
@@ -221,16 +235,30 @@ function TemplateCard({
       // touch reste OK car TouchSensor s'arme au long-press immobile (250 ms),
       // moment où dnd-kit prend le pointer-capture qui surclasse touch-action.
       style={{ opacity: isDragging ? 0.4 : 1, touchAction: 'pan-y' }}
-      className={`rounded-[8px] border bg-trail-surface p-2 cursor-pointer transition-colors ${
+      className={`relative rounded-[8px] border bg-trail-surface p-2 cursor-pointer transition-colors ${
         isCustom ? 'border-trail-primary/30 hover:border-trail-primary' : 'border-trail-border hover:border-trail-primary/40'
       }`}
       onClick={onClick}
       role="button"
       tabIndex={0}
-      aria-label={`Template ${template.title}${isCustom ? ' (personnalisé, éditable)' : ' (système, lecture seule)'} — glisser vers un jour pour planifier`}
+      aria-label={`Template ${template.title} — cliquer pour éditer, glisser vers un jour pour planifier`}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
     >
-      <p className="text-[10px] font-semibold text-trail-muted uppercase tracking-wider">
+      {isCustom && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete()
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          aria-label={`Supprimer le template ${template.title}`}
+          className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-trail-card border border-trail-border text-trail-muted hover:text-trail-danger hover:border-trail-danger text-[11px] leading-none z-10"
+        >
+          ✕
+        </button>
+      )}
+      <p className="text-[10px] font-semibold text-trail-muted uppercase tracking-wider pr-6">
         {SESSION_TYPE_LABELS[template.type]}
       </p>
       <h4
@@ -240,7 +268,7 @@ function TemplateCard({
         {template.title}
       </h4>
       <div className="mt-1 flex flex-wrap gap-x-2 gap-y-[2px] text-[10px] text-trail-muted">
-        <span>{template.defaultDuration} min</span>
+        {template.defaultDuration > 0 && <span>{template.defaultDuration} min</span>}
         {template.defaultDistance != null && <span>{template.defaultDistance} km</span>}
         {template.defaultElevation != null && <span>{template.defaultElevation} m D+</span>}
       </div>
