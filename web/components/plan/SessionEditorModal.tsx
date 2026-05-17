@@ -28,6 +28,7 @@ import {
   getCurrentPlan,
   savePlannedSession,
 } from '@/lib/plan/storage'
+import { getDefaultIntensityForType } from '@/lib/plan/type-intensity-map'
 import { estimateCharge } from '@/lib/training/charge'
 import { formatDurationColon, parseDurationToMinutes } from '@/lib/training/duration'
 import {
@@ -339,7 +340,14 @@ function GeneralTab({
         <div className="flex items-center gap-2">
           <select
             value={draft.type}
-            onChange={e => setDraft({ ...draft, type: e.target.value as SessionType })}
+            onChange={e => {
+              const nextType = e.target.value as SessionType
+              setDraft({
+                ...draft,
+                type: nextType,
+                intensity: getDefaultIntensityForType(nextType),
+              })
+            }}
             className="flex-1 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
           >
             {TYPE_OPTIONS.map(t => (
