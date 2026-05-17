@@ -183,7 +183,10 @@ function TemplateCard({
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      style={{ opacity: isDragging ? 0.4 : 1, touchAction: 'none' }}
+      // pan-y (et non 'none') laisse passer le scroll vertical natif. Le drag
+      // touch reste OK car TouchSensor s'arme au long-press immobile (250 ms),
+      // moment où dnd-kit prend le pointer-capture qui surclasse touch-action.
+      style={{ opacity: isDragging ? 0.4 : 1, touchAction: 'pan-y' }}
       className={`rounded-[8px] border bg-trail-surface p-2 cursor-pointer transition-colors ${
         isCustom ? 'border-trail-primary/30 hover:border-trail-primary' : 'border-trail-border hover:border-trail-primary/40'
       }`}

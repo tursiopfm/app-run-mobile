@@ -400,7 +400,10 @@ function DraggableSessionCard({
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      style={{ opacity: isDragging ? 0.4 : 1, touchAction: 'none' }}
+      // pan-y : laisse le scroll vertical natif passer sur la séance, sinon
+      // toucher une carte = scroll bloqué. Le drag s'active quand même via le
+      // long-press TouchSensor (250 ms immobile).
+      style={{ opacity: isDragging ? 0.4 : 1, touchAction: 'pan-y' }}
       className="rounded-[6px] bg-trail-card border border-trail-border p-1 cursor-pointer hover:border-trail-primary"
       onClick={onClick}
       role="button"
