@@ -26,6 +26,7 @@ export type DaySession = {
   label: string
   volumeKm: number
   dPlus: number
+  durationSec: number
 }
 
 export type DailyHistoryEntry = { date: string; km: number; dPlus: number }
@@ -36,6 +37,7 @@ export type SportOverview = {
   weekSessions: number
   dailyKm: number[]
   dailyDPlus: number[]
+  dailyDurationSec: number[]
   dailyLabels: string[]
   ytdKm: number
   ytdDPlus: number
@@ -258,16 +260,19 @@ function buildSportOverview(
     const t = new Date(a.start_time)
     return t >= monday && t < nextMonday
   })
-  const dailyKm     = Array(7).fill(0) as number[]
-  const dailyDPlus  = Array(7).fill(0) as number[]
-  const dailyLabels = Array(7).fill('') as string[]
+  const dailyKm          = Array(7).fill(0) as number[]
+  const dailyDPlus       = Array(7).fill(0) as number[]
+  const dailyDurationSec = Array(7).fill(0) as number[]
+  const dailyLabels      = Array(7).fill('') as string[]
   let weekKm = 0, weekDPlus = 0, weekSessions = 0
   for (const a of weekActs) {
     const idx = toMonIndex(new Date(a.start_time).getDay())
     const km  = ((a.manual_distance_m       ?? a.distance_m)       ?? 0) / 1000
     const dp  = (a.manual_elevation_gain_m ?? a.elevation_gain_m) ?? 0
-    dailyKm[idx]    += km
-    dailyDPlus[idx] += dp
+    const sec = (a.manual_moving_time_sec  ?? a.moving_time_sec)  ?? 0
+    dailyKm[idx]          += km
+    dailyDPlus[idx]       += dp
+    dailyDurationSec[idx] += sec
     if (!dailyLabels[idx]) dailyLabels[idx] = a.name
     weekKm    += km
     weekDPlus += dp
@@ -390,6 +395,7 @@ function buildSportOverview(
     weekSessions,
     dailyKm,
     dailyDPlus,
+    dailyDurationSec,
     dailyLabels,
     ytdKm,
     ytdDPlus,
@@ -475,27 +481,30 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     const t = new Date(r.start_time)
     return t >= monday && t < nextMonday
   })
-  const sessionsByDay = new Map<number, { label: string; km: number; dPlus: number }>()
+  const sessionsByDay = new Map<number, { label: string; km: number; dPlus: number; dur: number }>()
   for (const a of weekActivities) {
     const dayIdx = toMonIndex(new Date(a.start_time).getDay())
-    const km = ((a.manual_distance_m       ?? a.distance_m)       ?? 0) / 1000
-    const dp = (a.manual_elevation_gain_m ?? a.elevation_gain_m) ?? 0
+    const km  = ((a.manual_distance_m       ?? a.distance_m)       ?? 0) / 1000
+    const dp  = (a.manual_elevation_gain_m ?? a.elevation_gain_m) ?? 0
+    const sec = (a.manual_moving_time_sec  ?? a.moving_time_sec)  ?? 0
     const existing = sessionsByDay.get(dayIdx)
     if (existing) {
       existing.km    += km
       existing.dPlus += dp
+      existing.dur   += sec
       existing.label  = existing.label || a.name
     } else {
-      sessionsByDay.set(dayIdx, { label: a.name, km, dPlus: dp })
+      sessionsByDay.set(dayIdx, { label: a.name, km, dPlus: dp, dur: sec })
     }
   }
   const weekSessions: DaySession[] = Array.from({ length: 7 }, (_, i) => {
     const s = sessionsByDay.get(i)
     return {
-      day:      DAY_ABBR[i],
-      label:    s?.label ?? '',
-      volumeKm: s ? Math.round(s.km * 10) / 10 : 0,
-      dPlus:    s ? Math.round(s.dPlus) : 0,
+      day:         DAY_ABBR[i],
+      label:       s?.label ?? '',
+      volumeKm:    s ? Math.round(s.km * 10) / 10 : 0,
+      dPlus:       s ? Math.round(s.dPlus) : 0,
+      durationSec: s ? Math.round(s.dur) : 0,
     }
   })
 

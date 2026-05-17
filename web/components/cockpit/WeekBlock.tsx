@@ -7,19 +7,15 @@ import { type SportOverview } from '@/lib/data/dashboard'
 
 type Props = {
   sportOverviews: Record<SportKey, SportOverview>
-  allSessions: { day: string; label: string; volumeKm: number; dPlus: number }[]
+  allSessions: { day: string; label: string; volumeKm: number; dPlus: number; durationSec: number }[]
 }
 
 const DAY_ABBR = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 
-function fmtDuration(totalKm: number, sessions: { volumeKm: number; dPlus: number }[]): string {
-  // Estimate total duration from km (rough: ~6min/km average)
-  // We use the totalDPlus adjustment: +1min per 100m D+
-  const totalDPlus = sessions.reduce((s, r) => s + r.dPlus, 0)
-  const estSec = Math.round(totalKm * 360 + totalDPlus * 0.6)
-  if (estSec === 0) return '—'
-  const h = Math.floor(estSec / 3600)
-  const m = Math.floor((estSec % 3600) / 60)
+function fmtDuration(totalSec: number): string {
+  if (totalSec <= 0) return '—'
+  const h = Math.floor(totalSec / 3600)
+  const m = Math.floor((totalSec % 3600) / 60)
   return h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m}min`
 }
 
@@ -30,15 +26,17 @@ export function WeekBlock({ sportOverviews, allSessions }: Props) {
     ? allSessions
     : DAY_ABBR.map((day, i) => ({
         day,
-        label:    sportOverviews[activeSport].dailyLabels?.[i] ?? '',
-        volumeKm: sportOverviews[activeSport].dailyKm[i]    ?? 0,
-        dPlus:    Math.round(sportOverviews[activeSport].dailyDPlus[i] ?? 0),
+        label:       sportOverviews[activeSport].dailyLabels?.[i] ?? '',
+        volumeKm:    sportOverviews[activeSport].dailyKm[i]            ?? 0,
+        dPlus:       Math.round(sportOverviews[activeSport].dailyDPlus[i] ?? 0),
+        durationSec: Math.round(sportOverviews[activeSport].dailyDurationSec?.[i] ?? 0),
       }))
 
   const cfg      = SPORT_CONFIG[activeSport]
   const totalKm  = sessions.reduce((s, r) => s + r.volumeKm, 0)
   const totalDp  = sessions.reduce((s, r) => s + r.dPlus, 0)
-  const durLabel = fmtDuration(totalKm, sessions)
+  const totalSec = sessions.reduce((s, r) => s + (r.durationSec ?? 0), 0)
+  const durLabel = fmtDuration(totalSec)
 
   function fmtKm(v: number) {
     if (v === 0) return null
