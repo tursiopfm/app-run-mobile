@@ -18,9 +18,11 @@ import type {
   IntensityLevel,
   SessionTemplate,
   SessionType,
+  SessionZone,
   TrainingZone,
   ZoneKind,
 } from '@/types/plan'
+import { isRepeatZone } from '@/types/plan'
 import {
   deleteCustomTemplate,
   saveCustomTemplate,
@@ -442,7 +444,7 @@ function StructureTab({
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   )
 
-  function setZones(next: TrainingZone[]) {
+  function setZones(next: SessionZone[]) {
     setDraft({ ...draft, defaultZones: next.length > 0 ? next : undefined })
   }
 
@@ -452,7 +454,7 @@ function StructureTab({
   }
 
   function updateZone(id: string, patch: Partial<TrainingZone>) {
-    setZones(zones.map(z => (z.id === id ? { ...z, ...patch } : z)))
+    setZones(zones.map(z => (z.id === id ? { ...z, ...patch } as SessionZone : z)))
   }
 
   function removeZone(id: string) {
@@ -483,18 +485,20 @@ function StructureTab({
         ))}
       </div>
 
-      {zones.length > 0 && <ZonePreviewBar zones={zones} />}
+      {zones.length > 0 && <ZonePreviewBar zones={zones.filter((z): z is TrainingZone => !isRepeatZone(z))} />}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={zones.map(z => z.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
             {zones.map(z => (
+              !isRepeatZone(z) && (
               <SortableZoneRow
                 key={z.id}
                 zone={z}
                 onChange={patch => updateZone(z.id, patch)}
                 onDelete={() => removeZone(z.id)}
               />
+              )
             ))}
             {zones.length === 0 && (
               <div className="text-center text-trail-muted text-[12px] py-4">
