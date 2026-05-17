@@ -28,7 +28,7 @@ export function RepeatStepEditor({ step, sessionType: _sessionType, onSave, onCa
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-[16px] font-semibold text-trail-text mb-4">
-          Modifier l'étape
+          Modifier l&apos;étape
         </h2>
 
         {/* Libellé */}
