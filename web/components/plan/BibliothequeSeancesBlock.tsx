@@ -10,21 +10,20 @@ import { SESSION_TEMPLATES } from '@/lib/training/session-templates'
 import { getCustomTemplates } from '@/lib/plan/storage'
 import { INTENSITY_LEVEL_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
 import { TemplateEditorModal } from './TemplateEditorModal'
+import { ActivityTypesPrefsModal } from './ActivityTypesPrefsModal'
+import { useActivityTypes } from '@/lib/plan/use-activity-types'
 import { BlockCard } from '@/components/blocks/BlockCard'
-
-const ALL_TYPES: SessionType[] = [
-  'sortie_longue', 'fractionne', 'seuil_tempo', 'cotes', 'footing',
-  'course', 'runtaf', 'velotaf',
-  'velo', 'natation', 'renfo', 'musculation',
-]
 
 export function BibliothequeSeancesBlock() {
   const [custom, setCustom] = useState<SessionTemplate[]>([])
   const [search, setSearch] = useState('')
-  const [selectedType, setSelectedType] = useState<SessionType | 'all'>('all')
+  const [selectedType, setSelectedType] = useState<string | 'all'>('all')
 
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<SessionTemplate | null>(null)
+
+  const { types, visibleTypes, prefs, upsertPrefs, createCustom, deleteCustom } = useActivityTypes()
+  const [prefsModalOpen, setPrefsModalOpen] = useState(false)
 
   const reload = useCallback(async () => {
     const c = await getCustomTemplates()
@@ -87,15 +86,15 @@ export function BibliothequeSeancesBlock() {
         aria-label="Filtrer par type"
       >
         <FilterPill active={selectedType === 'all'} onClick={() => setSelectedType('all')} label="Tous" />
-        {ALL_TYPES.map(t => (
+        {visibleTypes.map(t => (
           <FilterPill
-            key={t}
-            active={selectedType === t}
-            onClick={() => setSelectedType(t)}
-            label={SESSION_TYPE_LABELS[t]}
+            key={t.slug}
+            active={selectedType === t.slug}
+            onClick={() => setSelectedType(t.slug)}
+            label={t.label}
           />
         ))}
-        <FilterPill onClick={openCreate} label="+ Nouveau" isAdd />
+        <FilterPill onClick={() => setPrefsModalOpen(true)} label="⚙ Personnalisé" isCustom />
       </div>
 
       {/* ── Search ─────────────────────────────────────────────────────── */}
@@ -133,33 +132,48 @@ export function BibliothequeSeancesBlock() {
         onClose={() => setEditorOpen(false)}
         onSaved={() => { void reload() }}
       />
+      {prefsModalOpen && (
+        <ActivityTypesPrefsModal
+          types={types}
+          prefs={prefs}
+          onSave={(next) => {
+            void upsertPrefs(next)
+            setPrefsModalOpen(false)
+          }}
+          onCreateCustom={createCustom}
+          onDeleteCustom={deleteCustom}
+          onClose={() => setPrefsModalOpen(false)}
+        />
+      )}
     </BlockCard>
   )
 }
 
 // ─── Sous-composants ────────────────────────────────────────────────────────
 function FilterPill({
-  active = false, onClick, label, isAdd = false,
+  active, onClick, label, isCustom,
 }: {
   active?: boolean
   onClick: () => void
   label: string
-  isAdd?: boolean
+  isCustom?: boolean
 }) {
+  let cls = 'flex-shrink-0 px-3 py-1 rounded-full text-[12px] font-semibold whitespace-nowrap transition-colors'
+  if (isCustom) {
+    cls += ' border border-trail-border bg-transparent text-trail-muted hover:text-trail-text hover:border-trail-primary'
+  } else if (active) {
+    cls += ' bg-trail-primary text-white border border-trail-primary'
+  } else {
+    cls += ' bg-trail-surface border border-trail-border text-trail-muted hover:text-trail-text'
+  }
   return (
     <button
       type="button"
-      role={isAdd ? undefined : 'tab'}
-      aria-selected={isAdd ? undefined : active}
+      role="tab"
+      aria-selected={!!active}
       onClick={onClick}
       style={{ scrollSnapAlign: 'start' }}
-      className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-semibold whitespace-nowrap transition-colors ${
-        isAdd
-          ? 'border border-dashed border-trail-primary/50 text-trail-primary hover:bg-trail-primary/10'
-          : active
-            ? 'bg-trail-primary text-white border border-trail-primary'
-            : 'bg-trail-surface text-trail-muted border border-trail-border hover:text-trail-text'
-      }`}
+      className={cls}
     >
       {label}
     </button>
