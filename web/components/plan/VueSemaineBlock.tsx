@@ -420,9 +420,11 @@ function DraggableSessionCard({
       >
         {session.title}
       </div>
-      <div className="mt-1 text-[10px] text-trail-muted leading-[13px]">
-        {formatDurationHHmm(session.duration)}
-      </div>
+      {!!session.duration && session.duration > 0 && (
+        <div className="mt-1 text-[10px] text-trail-muted leading-[13px]">
+          {formatDurationHHmm(session.duration)}
+        </div>
+      )}
       {!!session.elevation && session.elevation > 0 && (
         <div className="text-[10px] text-trail-muted leading-[13px]" aria-label={`D plus ${session.elevation} mètres`}>
           {session.elevation} m D+
