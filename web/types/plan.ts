@@ -70,7 +70,7 @@ export interface PlannedSession {
   elevation?: number         // m D+
   intensity: IntensityLevel  // 1=Récup … 5=VMA
   estimatedCharge: number    // TSS estimé
-  zones?: TrainingZone[]
+  zones?: SessionZone[]
   notes?: string
   status: SessionStatus
   linkedActivityId?: string  // FK vers Activity quand réalisée
@@ -80,13 +80,55 @@ export interface PlannedSession {
 // === Bloc structuré d'une séance (échauffement, séries, retour calme) ===
 export type ZoneKind = 'warmup' | 'main' | 'rest' | 'cooldown'
 
+// Mode de mesure d'une zone simple
+export type ZoneMode = 'duration' | 'distance'
+export type IntensityMode = 'level' | 'pace'
+
 export interface TrainingZone {
   id: string
   kind: ZoneKind
-  durationMin: number
+  // Durée ou distance — au moins l'un des deux doit être présent.
+  // Compat : si `mode` est absent, on interprète comme 'duration' (legacy).
+  mode?: ZoneMode
+  durationMin: number               // toujours présent (legacy + nouveau mode 'duration')
+  distanceM?: number                // requis si mode = 'distance'
   intensity: IntensityLevel
-  repeats?: number           // pour les séries
-  label?: string             // ex : '500m allure VMA'
+  // Compat : si `intensityMode` est absent, on interprète comme 'level' (legacy).
+  intensityMode?: IntensityMode
+  paceSecPerKm?: number             // requis si intensityMode = 'pace'
+  repeats?: number                  // pour les séries simples (legacy, cohabite avec RepeatZone)
+  label?: string
+}
+
+// === Container "Répéter" (Phase 1.6) ===
+// Distinct de TrainingZone via `kind: 'repeat'`. PlannedSession.zones contient
+// désormais `Array<TrainingZone | RepeatZone>`.
+export interface RepeatStep {
+  id: string
+  stepKind: 'effort' | 'recovery'
+  label?: string                    // auto-rempli ("Course à pied" / "Récupération") si vide
+  mode: ZoneMode                    // requis (pas de legacy ici)
+  durationMin?: number              // requis si mode = 'duration'
+  distanceM?: number                // requis si mode = 'distance'
+  intensityMode: IntensityMode
+  intensity?: IntensityLevel        // requis si intensityMode = 'level'
+  paceSecPerKm?: number             // requis si intensityMode = 'pace'
+}
+
+export interface RepeatZone {
+  id: string
+  kind: 'repeat'
+  repeats: number                   // N fois
+  skipLastRecovery?: boolean        // checkbox "Ignorer la dernière récupération"
+  steps: RepeatStep[]
+}
+
+// Type union d'une entrée du tableau zones[]
+export type SessionZone = TrainingZone | RepeatZone
+
+// Type guards
+export function isRepeatZone(z: SessionZone): z is RepeatZone {
+  return z.kind === 'repeat'
 }
 
 // === Template de séance (bibliothèque, pas de date) ===
@@ -98,7 +140,7 @@ export interface SessionTemplate {
   defaultDistance?: number   // km
   defaultElevation?: number  // m D+
   defaultIntensity: IntensityLevel
-  defaultZones?: TrainingZone[]
+  defaultZones?: SessionZone[]
   description: string
   tags?: string[]            // ex : ['VMA', 'piste', 'court']
 }

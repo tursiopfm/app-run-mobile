@@ -16,16 +16,24 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import type {
   IntensityLevel,
+  IntensityMode,
   PlannedSession,
+  RepeatStep,
+  RepeatZone,
   SessionType,
+  SessionZone,
   TrainingZone,
   ZoneKind,
+  ZoneMode,
 } from '@/types/plan'
+import { isRepeatZone } from '@/types/plan'
+import { RepeatZoneCard } from '@/components/plan/RepeatZoneCard'
 import {
   deletePlannedSession,
   getCurrentPlan,
   savePlannedSession,
 } from '@/lib/plan/storage'
+import { getDefaultIntensityForType } from '@/lib/plan/type-intensity-map'
 import { estimateCharge } from '@/lib/training/charge'
 import { formatDurationColon, parseDurationToMinutes } from '@/lib/training/duration'
 import {
@@ -34,6 +42,10 @@ import {
   SESSION_TYPE_LABELS,
 } from '@/lib/activities/indicators'
 import TypeIndicator from '@/components/activity/TypeIndicator'
+import { DurationDistanceToggle } from '@/components/plan/DurationDistanceToggle'
+import { IntensityPaceToggle } from '@/components/plan/IntensityPaceToggle'
+import { PaceField } from '@/components/plan/PaceField'
+import { getDefaultIntensityMode } from '@/lib/plan/type-helpers'
 
 type Tab = 'general' | 'structure' | 'notes'
 
@@ -337,7 +349,14 @@ function GeneralTab({
         <div className="flex items-center gap-2">
           <select
             value={draft.type}
-            onChange={e => setDraft({ ...draft, type: e.target.value as SessionType })}
+            onChange={e => {
+              const nextType = e.target.value as SessionType
+              setDraft({
+                ...draft,
+                type: nextType,
+                intensity: getDefaultIntensityForType(nextType),
+              })
+            }}
             className="flex-1 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
           >
             {TYPE_OPTIONS.map(t => (
@@ -425,6 +444,68 @@ function GeneralTab({
   )
 }
 
+function makeDefaultRepeatZone(): RepeatZone {
+  return {
+    id: makeId(),
+    kind: 'repeat',
+    repeats: 4,
+    skipLastRecovery: false,
+    steps: [
+      {
+        id: makeId(),
+        stepKind: 'effort',
+        mode: 'distance',
+        distanceM: 400,
+        intensityMode: 'level',
+        intensity: 5,
+      },
+      {
+        id: makeId(),
+        stepKind: 'recovery',
+        mode: 'duration',
+        durationMin: 1,
+        intensityMode: 'level',
+        intensity: 1,
+      },
+    ],
+  }
+}
+
+function estimateDurationFromStep(step: RepeatStep): number {
+  if (step.mode === 'distance' && step.distanceM && step.paceSecPerKm) {
+    return Math.max(1, Math.round((step.distanceM / 1000) * step.paceSecPerKm / 60))
+  }
+  return 1
+}
+
+function flattenZonesForPreview(zones: SessionZone[]): TrainingZone[] {
+  const out: TrainingZone[] = []
+  for (const z of zones) {
+    if (isRepeatZone(z)) {
+      for (let i = 0; i < z.repeats; i++) {
+        const skipLast = z.skipLastRecovery && i === z.repeats - 1
+        for (const step of z.steps) {
+          if (skipLast && step.stepKind === 'recovery') continue
+          out.push({
+            id: `${z.id}-${i}-${step.id}`,
+            kind: step.stepKind === 'effort' ? 'main' : 'rest',
+            mode: step.mode,
+            durationMin: step.durationMin ?? estimateDurationFromStep(step),
+            distanceM: step.distanceM,
+            intensity: step.intensity ?? 3,
+            intensityMode: step.intensityMode,
+            paceSecPerKm: step.paceSecPerKm,
+            label: step.label,
+          })
+        }
+      }
+    } else {
+      out.push(z)
+    }
+  }
+  return out
+}
+
 function StructureTab({
   draft, setDraft,
 }: {
@@ -436,7 +517,7 @@ function StructureTab({
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   )
 
-  function setZones(next: TrainingZone[]) {
+  function setZones(next: SessionZone[]) {
     setDraft({ ...draft, zones: next.length > 0 ? next : undefined })
   }
 
@@ -446,7 +527,7 @@ function StructureTab({
   }
 
   function updateZone(id: string, patch: Partial<TrainingZone>) {
-    setZones(zones.map(z => (z.id === id ? { ...z, ...patch } : z)))
+    setZones(zones.map(z => (z.id === id ? { ...z, ...patch } as SessionZone : z)))
   }
 
   function removeZone(id: string) {
@@ -476,23 +557,41 @@ function StructureTab({
             + {ZONE_KIND_LABEL[k]}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => setZones([...zones, makeDefaultRepeatZone()])}
+          className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
+        >
+          + Bloc Répéter
+        </button>
       </div>
 
       {/* Aperçu barre composite */}
-      {zones.length > 0 && <ZonePreviewBar zones={zones} />}
+      {zones.length > 0 && <ZonePreviewBar zones={flattenZonesForPreview(zones)} />}
 
       {/* Liste sortable */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={zones.map(z => z.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
-            {zones.map(z => (
-              <SortableZoneRow
-                key={z.id}
-                zone={z}
-                onChange={patch => updateZone(z.id, patch)}
-                onDelete={() => removeZone(z.id)}
-              />
-            ))}
+            {zones.map(z =>
+              isRepeatZone(z) ? (
+                <RepeatZoneCard
+                  key={z.id}
+                  zone={z}
+                  sessionType={draft.type}
+                  onChange={updated => setZones(zones.map(zz => (zz.id === updated.id ? updated : zz)))}
+                  onDelete={() => removeZone(z.id)}
+                />
+              ) : (
+                <SortableZoneRow
+                  key={z.id}
+                  zone={z}
+                  onChange={patch => updateZone(z.id, patch)}
+                  onDelete={() => removeZone(z.id)}
+                  sessionType={draft.type}
+                />
+              ),
+            )}
             {zones.length === 0 && (
               <div className="text-center text-trail-muted text-[12px] py-4">
                 Ajoute des zones pour structurer la séance.
@@ -506,11 +605,12 @@ function StructureTab({
 }
 
 function SortableZoneRow({
-  zone, onChange, onDelete,
+  zone, onChange, onDelete, sessionType,
 }: {
   zone: TrainingZone
   onChange: (patch: Partial<TrainingZone>) => void
   onDelete: () => void
+  sessionType: SessionType
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: zone.id })
   const color = INTENSITY_LEVEL_COLORS[zone.intensity]
@@ -558,27 +658,63 @@ function SortableZoneRow({
           </div>
 
           <div className="grid grid-cols-3 gap-2">
-            <Field label="Durée (min)">
-              <input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                value={Number.isFinite(zone.durationMin) ? zone.durationMin : 0}
-                onChange={e => onChange({ durationMin: Number(e.target.value) || 0 })}
-                className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+            <div className="flex flex-col gap-1">
+              <DurationDistanceToggle
+                value={zone.mode ?? 'duration'}
+                onChange={(mode) => onChange({ mode })}
               />
-            </Field>
-            <Field label="Intensité">
-              <select
-                value={zone.intensity}
-                onChange={e => onChange({ intensity: Number(e.target.value) as IntensityLevel })}
-                className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
-              >
-                {[1, 2, 3, 4, 5].map(i => (
-                  <option key={i} value={i}>I{i} — {INTENSITY_LEVEL_LABELS[i as IntensityLevel]}</option>
-                ))}
-              </select>
-            </Field>
+              {(zone.mode ?? 'duration') === 'duration' ? (
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  value={Number.isFinite(zone.durationMin) ? zone.durationMin : 0}
+                  onChange={e => onChange({ durationMin: Number(e.target.value) || 0 })}
+                  placeholder="min"
+                  aria-label="Durée en minutes"
+                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                />
+              ) : (
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={50}
+                  value={zone.distanceM ?? ''}
+                  onChange={e =>
+                    onChange({
+                      distanceM: e.target.value === '' ? undefined : Number(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="400"
+                  aria-label="Distance en mètres"
+                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                />
+              )}
+            </div>
+            <div className="flex flex-col gap-1">
+              <IntensityPaceToggle
+                value={zone.intensityMode ?? getDefaultIntensityMode(sessionType)}
+                onChange={(mode) => onChange({ intensityMode: mode })}
+              />
+              {(zone.intensityMode ?? getDefaultIntensityMode(sessionType)) === 'level' ? (
+                <select
+                  value={zone.intensity}
+                  onChange={e => onChange({ intensity: Number(e.target.value) as IntensityLevel })}
+                  aria-label="Niveau d'intensité"
+                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                >
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <option key={i} value={i}>I{i} — {INTENSITY_LEVEL_LABELS[i as IntensityLevel]}</option>
+                  ))}
+                </select>
+              ) : (
+                <PaceField
+                  value={zone.paceSecPerKm ?? null}
+                  onChange={(p) => onChange({ paceSecPerKm: p ?? undefined })}
+                />
+              )}
+            </div>
             {zone.kind === 'main' && (
               <Field label="Répétitions">
                 <input
