@@ -14,7 +14,7 @@ import { useState, type ReactNode } from 'react'
 import {
   DndContext, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors,
   DragOverlay,
-  type DragEndEvent, type DragStartEvent,
+  type DragEndEvent, type DragStartEvent, type DragOverEvent,
 } from '@dnd-kit/core'
 import type { SessionTemplate } from '@/types/plan'
 import { colors } from '@/lib/design/colors'
@@ -36,6 +36,9 @@ type Props = {
   children: ReactNode
   onMoveSession: (sessionId: string, newDateISO: string) => void
   onCreateFromTemplate: (template: SessionTemplate, dateISO: string) => void
+  // Appelée si une PlannedSession existante est droppée hors de toute cellule jour.
+  // Effet : suppression de la séance.
+  onDeleteSession: (sessionId: string) => void
 }
 
 // Extrait la date ISO d'un id de drop target `day-YYYY-MM-DD`.
@@ -46,7 +49,7 @@ function dayIdToISO(id: string | number): string | null {
 }
 
 export function PlanSessionsDndProvider({
-  children, onMoveSession, onCreateFromTemplate,
+  children, onMoveSession, onCreateFromTemplate, onDeleteSession,
 }: Props) {
   const sensors = useSensors(
     // Desktop : drag immédiat après petit déplacement souris.
@@ -60,29 +63,50 @@ export function PlanSessionsDndProvider({
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 30 } }),
   )
   const [active, setActive] = useState<ActivePayload | null>(null)
+  // true quand l'utilisateur draggue une séance existante ET qu'on n'est pas
+  // au-dessus d'une cellule jour → relâcher = suppression (feedback visuel rouge).
+  const [isDeleteIntent, setIsDeleteIntent] = useState(false)
 
   function handleDragStart(e: DragStartEvent) {
     const payload = e.active.data.current as ActivePayload | undefined
     if (payload && (payload.type === 'planned-session' || payload.type === 'session-template')) {
       setActive(payload)
     }
+    setIsDeleteIntent(false)
+  }
+
+  function handleDragOver(e: DragOverEvent) {
+    const payload = e.active.data.current as ActivePayload | undefined
+    if (!payload || payload.type !== 'planned-session') {
+      setIsDeleteIntent(false)
+      return
+    }
+    const targetISO = e.over ? dayIdToISO(e.over.id) : null
+    setIsDeleteIntent(targetISO === null)
   }
 
   function handleDragEnd(e: DragEndEvent) {
     setActive(null)
+    setIsDeleteIntent(false)
     const payload = e.active.data.current as ActivePayload | undefined
     const targetISO = e.over ? dayIdToISO(e.over.id) : null
-    if (!payload || !targetISO) return
+    if (!payload) return
 
     if (payload.type === 'planned-session') {
-      onMoveSession(payload.sessionId, targetISO)
-    } else if (payload.type === 'session-template') {
+      if (targetISO === null) {
+        // Drop hors zone valide → suppression
+        onDeleteSession(payload.sessionId)
+      } else {
+        onMoveSession(payload.sessionId, targetISO)
+      }
+    } else if (payload.type === 'session-template' && targetISO) {
       onCreateFromTemplate(payload.template, targetISO)
     }
   }
 
   function handleDragCancel() {
     setActive(null)
+    setIsDeleteIntent(false)
   }
 
   return (
@@ -90,22 +114,42 @@ export function PlanSessionsDndProvider({
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
       {children}
       <DragOverlay dropAnimation={null}>
-        {active ? <GhostCard active={active} /> : null}
+        {active ? <GhostCard active={active} isDeleteIntent={isDeleteIntent} /> : null}
       </DragOverlay>
     </DndContext>
   )
 }
 
-function GhostCard({ active }: { active: ActivePayload }) {
+function GhostCard({ active, isDeleteIntent }: { active: ActivePayload; isDeleteIntent: boolean }) {
   const label =
     active.type === 'planned-session'
       ? active.title
       : active.template.title
+
+  if (isDeleteIntent) {
+    return (
+      <div
+        className="rounded-[8px] px-2 py-1 text-[11px] font-semibold shadow-2xl flex items-center gap-1"
+        style={{
+          backgroundColor: 'rgba(220, 38, 38, 0.95)',  // red-600 fond opaque pour ressortir
+          border: '2px solid #DC2626',
+          color: '#FFFFFF',
+          maxWidth: 220,
+          pointerEvents: 'none',
+        }}
+        aria-label={`Relâcher pour supprimer ${label}`}
+      >
+        <span style={{ fontSize: 14, lineHeight: 1 }}>✕</span>
+        <span className="truncate">Supprimer · {label}</span>
+      </div>
+    )
+  }
 
   return (
     <div

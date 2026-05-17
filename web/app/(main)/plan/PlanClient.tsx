@@ -33,6 +33,7 @@ import { ResumeSemaineBlock } from '@/components/plan/ResumeSemaineBlock'
 import { CalendrierMoisBlock } from '@/components/plan/CalendrierMoisBlock'
 import { PlanSessionsDndProvider } from '@/components/plan/PlanSessionsDndProvider'
 import {
+  deletePlannedSession,
   getPlannedSessions,
   savePlannedSession,
 } from '@/lib/plan/storage'
@@ -105,6 +106,12 @@ export default function PlanClient() {
     bumpReload()
   }, [bumpReload])
 
+  // ─── Handler : suppression d'une PlannedSession (drop hors zone valide) ──
+  const handleDeleteSession = useCallback(async (sessionId: string) => {
+    await deletePlannedSession(sessionId)
+    bumpReload()
+  }, [bumpReload])
+
   const blocks: BlockDef[] = [
     {
       id: 'mode',
@@ -144,6 +151,7 @@ export default function PlanClient() {
         <PlanSessionsDndProvider
           onMoveSession={handleMoveSession}
           onCreateFromTemplate={handleCreateFromTemplate}
+          onDeleteSession={handleDeleteSession}
         >
           <div className="space-y-2">
             <VueSemaineBlock reloadKey={reloadKey} />
