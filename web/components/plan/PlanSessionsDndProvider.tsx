@@ -12,7 +12,7 @@
 
 import { useState, type ReactNode } from 'react'
 import {
-  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  DndContext, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors,
   DragOverlay,
   type DragEndEvent, type DragStartEvent,
 } from '@dnd-kit/core'
@@ -49,10 +49,15 @@ export function PlanSessionsDndProvider({
   children, onMoveSession, onCreateFromTemplate,
 }: Props) {
   const sensors = useSensors(
-    // distance 12px : évite les drags accidentels au scroll touch.
-    // Ne PAS passer à { delay, tolerance } — bug touch silencieux dnd-kit
-    // documenté dans tasks/lessons.md 2026-05-15.
-    useSensor(PointerSensor, { activationConstraint: { distance: 12 } }),
+    // Desktop : drag immédiat après petit déplacement souris.
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    // Mobile : long-press 250ms pour distinguer drag d'un scroll vertical.
+    // tolerance: 30 = annule l'activation si le doigt bouge > 30px pendant les
+    // 250ms (cas scroll). Sinon (doigt ~stable) le drag s'arme correctement.
+    // NB lesson 2026-05-15 : tolerance: 8 trop bas → annulation silencieuse
+    // sur gestes naturels. Avec 30 on évite cet écueil tout en gardant un
+    // appui long franc qui laisse le scroll natif passer.
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 30 } }),
   )
   const [active, setActive] = useState<ActivePayload | null>(null)
 
