@@ -6,18 +6,7 @@ import { type ActivityRow } from '@/components/ui/ActivityCard'
 import { EditActivityModal } from '@/components/ui/EditActivityModal'
 import { colors } from '@/lib/design/colors'
 import { sportLabel } from '@/lib/design/labels'
-import {
-  INTENSITY_OPTIONS,
-  effectiveWorkoutType,
-  guessIntensity,
-  type IntensityKey,
-} from '@/lib/activities/intensity'
-import {
-  INTENSITY_KEY_TO_LEVEL,
-  INTENSITY_LEVEL_COLORS,
-  INTENSITY_LEVEL_LABELS,
-} from '@/lib/activities/indicators'
-import { IntensityGauge } from '@/components/activity/indicatorIcons'
+import { effectiveWorkoutType } from '@/lib/activities/intensity'
 import { calculateHrZones, type HrZone, type HrZoneMethod } from '@/lib/health/hr-zones'
 import { getRaces } from '@/lib/plan/storage'
 import type { Race } from '@/types/plan'
@@ -44,6 +33,30 @@ type PersonalRecord = {
 type SearchField = 'Titre' | 'Distance' | 'Durée' | 'D+'
 type SortField = 'sport' | 'date' | 'distance' | 'pace' | 'duration' | 'dplus'
 type SortDir = 'asc' | 'desc'
+type DistanceType = 'Toutes' | 'TenKm' | 'Semi' | 'Marathon' | 'TrailLong' | 'Ultra'
+
+const DISTANCE_TYPE_OPTIONS: { key: DistanceType; label: string }[] = [
+  { key: 'Toutes',    label: 'Toutes' },
+  { key: 'TenKm',     label: '10 km' },
+  { key: 'Semi',      label: 'Semi' },
+  { key: 'Marathon',  label: 'Marathon' },
+  { key: 'TrailLong', label: 'Trail long' },
+  { key: 'Ultra',     label: 'Ultra trail' },
+]
+
+function matchesDistanceType(km: number | null, type: DistanceType): boolean {
+  if (type === 'Toutes') return true
+  if (km == null) return false
+  const isMarathon = km >= 40 && km <= 44
+  switch (type) {
+    case 'TenKm':     return km >= 9  && km <= 11
+    case 'Semi':      return km >= 20 && km <= 22
+    case 'Marathon':  return isMarathon
+    case 'TrailLong': return km >= 35 && km < 80 && !isMarathon
+    case 'Ultra':     return km >= 80
+    default:          return false
+  }
+}
 
 interface SearchState {
   field:     SearchField
@@ -57,10 +70,10 @@ interface SearchState {
 }
 
 interface FilterState {
-  sport:     string
-  intensity: string
-  dateFrom:  string
-  dateTo:    string
+  sport:         string
+  distanceType:  DistanceType
+  dateFrom:      string
+  dateTo:        string
   distFrom:  string
   distTo:    string
   paceFrom:  string
@@ -82,7 +95,7 @@ const DEFAULT_SEARCH: SearchState = {
 
 const DEFAULT_FILTER: FilterState = {
   sport: 'Toutes',
-  intensity: 'Toutes',
+  distanceType: 'Toutes',
   dateFrom: '', dateTo: '',
   distFrom: '', distTo: '',
   paceFrom: '', paceTo: '',
@@ -646,26 +659,16 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
           </div>
 
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">Intensité</p>
+            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">Distance type</p>
             <div className="flex gap-[6px] overflow-x-auto pb-1">
-              <FilterIconChip
-                label="Toutes"
-                active={state.intensity === 'Toutes'}
-                onClick={() => setState({ ...state, intensity: 'Toutes' })}
-              />
-              {INTENSITY_OPTIONS.map(opt => {
-                const level = INTENSITY_KEY_TO_LEVEL[opt.key]
-                return (
-                  <FilterIconChip
-                    key={opt.key}
-                    label={INTENSITY_LEVEL_LABELS[level]}
-                    color={INTENSITY_LEVEL_COLORS[level]}
-                    icon={<IntensityGauge level={level} size={20} idSuffix={`flt-${opt.key}`} />}
-                    active={state.intensity === opt.key}
-                    onClick={() => setState({ ...state, intensity: opt.key })}
-                  />
-                )
-              })}
+              {DISTANCE_TYPE_OPTIONS.map(opt => (
+                <FilterIconChip
+                  key={opt.key}
+                  label={opt.label}
+                  active={state.distanceType === opt.key}
+                  onClick={() => setState({ ...state, distanceType: opt.key })}
+                />
+              ))}
             </div>
           </div>
 
@@ -967,13 +970,11 @@ export default function CoursesClient({
     if (filter.sport !== 'Toutes') {
       list = list.filter(a => normalizeSportType(a.sport_type) === filter.sport)
     }
-    if (filter.intensity !== 'Toutes') {
+    if (filter.distanceType !== 'Toutes') {
       list = list.filter(a => {
-        const key = (a.manual_intensity ?? guessIntensity(a.avg_hr, hrZones, {
-          activityMaxHr: a.max_hr,
-          movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
-        })) as IntensityKey | null
-        return key === filter.intensity
+        const distM = a.manual_distance_m ?? a.distance_m
+        const km = distM != null ? distM / 1000 : null
+        return matchesDistanceType(km, filter.distanceType)
       })
     }
     const dateFrom = parseDate(filter.dateFrom)
@@ -1011,7 +1012,7 @@ export default function CoursesClient({
     })
 
     return list
-  }, [courseActivities, search, filter, hrZones])
+  }, [courseActivities, search, filter])
 
   useEffect(() => { setVisibleCount(RENDER_BATCH) }, [search, filter])
 
@@ -1036,7 +1037,7 @@ export default function CoursesClient({
     || search.dPlusFrom !== '' || search.dPlusTo !== ''
 
   const hasActiveFilter = filter.sport !== 'Toutes'
-    || filter.intensity !== 'Toutes'
+    || filter.distanceType !== 'Toutes'
     || filter.dateFrom !== '' || filter.dateTo !== ''
     || filter.distFrom !== '' || filter.distTo !== ''
     || filter.paceFrom !== '' || filter.paceTo !== ''
