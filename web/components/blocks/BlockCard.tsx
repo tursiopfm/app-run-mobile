@@ -7,7 +7,7 @@ import { BlockHelpSheet } from './BlockHelpSheet'
 type Props = {
   title:     string
   helpTitle: string
-  helpBody:  string
+  helpBody:  ReactNode
   children:  ReactNode
   rightSlot?: ReactNode
   titleClassName?: string

@@ -68,7 +68,27 @@ export function BibliothequeSeancesBlock() {
     <BlockCard
       title="Bibliothèque"
       helpTitle="Bibliothèque de séances"
-      helpBody="Templates de séances. Glisse-dépose vers un jour de la semaine pour planifier. Crée tes propres templates avec le bouton +."
+      helpBody={
+        <>
+          <p className="mb-2">
+            <strong className="text-trail-text">Ta bibliothèque personnelle</strong> de séances, organisée par type d&apos;activité.
+          </p>
+          <ul className="space-y-1.5 list-disc list-outside pl-5">
+            <li>
+              <strong className="text-trail-text">Créer une séance</strong> — bouton «&nbsp;+ Nouveau&nbsp;» en haut → formulaire complet (type, durée, structure, notes).
+            </li>
+            <li>
+              <strong className="text-trail-text">Structure</strong> — décomposer en segments : échauffement, blocs «&nbsp;Répéter&nbsp;» avec séries/récup, retour au calme.
+            </li>
+            <li>
+              <strong className="text-trail-text">Ajouter au calendrier</strong> — appui long sur une séance puis glisser dans la semaine.
+            </li>
+            <li>
+              <strong className="text-trail-text">Personnaliser</strong> — pill «&nbsp;⚙ Personnalisé&nbsp;» en fin de barre pour cocher/décocher ou ajouter des activités (Tennis, Yoga…).
+            </li>
+          </ul>
+        </>
+      }
       rightSlot={
         <button
           type="button"
