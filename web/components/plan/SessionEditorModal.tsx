@@ -18,6 +18,8 @@ import type {
   IntensityLevel,
   IntensityMode,
   PlannedSession,
+  RepeatStep,
+  RepeatZone,
   SessionType,
   SessionZone,
   TrainingZone,
@@ -25,6 +27,7 @@ import type {
   ZoneMode,
 } from '@/types/plan'
 import { isRepeatZone } from '@/types/plan'
+import { RepeatZoneCard } from '@/components/plan/RepeatZoneCard'
 import {
   deletePlannedSession,
   getCurrentPlan,
@@ -441,6 +444,68 @@ function GeneralTab({
   )
 }
 
+function makeDefaultRepeatZone(): RepeatZone {
+  return {
+    id: makeId(),
+    kind: 'repeat',
+    repeats: 4,
+    skipLastRecovery: false,
+    steps: [
+      {
+        id: makeId(),
+        stepKind: 'effort',
+        mode: 'distance',
+        distanceM: 400,
+        intensityMode: 'level',
+        intensity: 5,
+      },
+      {
+        id: makeId(),
+        stepKind: 'recovery',
+        mode: 'duration',
+        durationMin: 1,
+        intensityMode: 'level',
+        intensity: 1,
+      },
+    ],
+  }
+}
+
+function estimateDurationFromStep(step: RepeatStep): number {
+  if (step.mode === 'distance' && step.distanceM && step.paceSecPerKm) {
+    return Math.max(1, Math.round((step.distanceM / 1000) * step.paceSecPerKm / 60))
+  }
+  return 1
+}
+
+function flattenZonesForPreview(zones: SessionZone[]): TrainingZone[] {
+  const out: TrainingZone[] = []
+  for (const z of zones) {
+    if (isRepeatZone(z)) {
+      for (let i = 0; i < z.repeats; i++) {
+        const skipLast = z.skipLastRecovery && i === z.repeats - 1
+        for (const step of z.steps) {
+          if (skipLast && step.stepKind === 'recovery') continue
+          out.push({
+            id: `${z.id}-${i}-${step.id}`,
+            kind: step.stepKind === 'effort' ? 'main' : 'rest',
+            mode: step.mode,
+            durationMin: step.durationMin ?? estimateDurationFromStep(step),
+            distanceM: step.distanceM,
+            intensity: step.intensity ?? 3,
+            intensityMode: step.intensityMode,
+            paceSecPerKm: step.paceSecPerKm,
+            label: step.label,
+          })
+        }
+      }
+    } else {
+      out.push(z)
+    }
+  }
+  return out
+}
+
 function StructureTab({
   draft, setDraft,
 }: {
@@ -492,26 +557,41 @@ function StructureTab({
             + {ZONE_KIND_LABEL[k]}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => setZones([...zones, makeDefaultRepeatZone()])}
+          className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
+        >
+          + Bloc Répéter
+        </button>
       </div>
 
       {/* Aperçu barre composite */}
-      {zones.length > 0 && <ZonePreviewBar zones={zones.filter((z): z is TrainingZone => !isRepeatZone(z))} />}
+      {zones.length > 0 && <ZonePreviewBar zones={flattenZonesForPreview(zones)} />}
 
       {/* Liste sortable */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={zones.map(z => z.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
-            {zones.map(z => (
-              !isRepeatZone(z) && (
-              <SortableZoneRow
-                key={z.id}
-                zone={z}
-                onChange={patch => updateZone(z.id, patch)}
-                onDelete={() => removeZone(z.id)}
-                sessionType={draft.type}
-              />
-              )
-            ))}
+            {zones.map(z =>
+              isRepeatZone(z) ? (
+                <RepeatZoneCard
+                  key={z.id}
+                  zone={z}
+                  sessionType={draft.type}
+                  onChange={updated => setZones(zones.map(zz => (zz.id === updated.id ? updated : zz)))}
+                  onDelete={() => removeZone(z.id)}
+                />
+              ) : (
+                <SortableZoneRow
+                  key={z.id}
+                  zone={z}
+                  onChange={patch => updateZone(z.id, patch)}
+                  onDelete={() => removeZone(z.id)}
+                  sessionType={draft.type}
+                />
+              ),
+            )}
             {zones.length === 0 && (
               <div className="text-center text-trail-muted text-[12px] py-4">
                 Ajoute des zones pour structurer la séance.
