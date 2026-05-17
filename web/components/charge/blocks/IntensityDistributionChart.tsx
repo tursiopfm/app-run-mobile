@@ -9,12 +9,12 @@ import { colors } from '@/lib/design/colors'
 type Win = '7' | '28' | '70'
 
 const INTENSITY_COLORS: Record<IntensityLabel, string> = {
-  'Récupération':     colors.greenOk,
-  'Footing':          colors.pieFooting,
-  'Endurance active': colors.pieSortieLongue,
-  'Seuil':            colors.pieSeuil,
-  'VMA':              colors.pieVma,
-  'Non déterminée':   colors.subtleText,
+  'Récupération':           colors.greenOk,
+  'Endurance Fondamentale': colors.pieFooting,
+  'Endurance active':       colors.pieSortieLongue,
+  'Seuil':                  colors.pieSeuil,
+  'VMA':                    colors.pieVma,
+  'Non déterminée':         colors.subtleText,
 }
 
 export function IntensityDistributionChart({ payload }: { payload: ChargeSportPayload }) {

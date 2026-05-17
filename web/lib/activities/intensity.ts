@@ -65,7 +65,7 @@ export const WORKOUT_TYPE_OPTIONS: WorkoutTypeOption[] = [
   { value: 'course',        label: '🏆 Course'         },
   { value: 'runtaf',        label: '🏃‍♂️💻 Runtaf',  sports: ['Run', 'TrailRun'] },
   { value: 'velotaf',       label: '🚴🏻💻 Velotaf', sports: ['Ride', 'EBikeRide', 'VirtualRide'] },
-  { value: 'footing',       label: '👟 Footing'      },
+  { value: 'footing',       label: '👟 Endurance Fondamentale' },
   { value: 'velo',          label: '🚴 Vélo', sports: ['Ride', 'EBikeRide', 'VirtualRide'] },
   { value: 'natation',      label: '🏊 Natation', sports: ['Swim'] },
   { value: 'renfo',         label: '🤸 Renfo' },

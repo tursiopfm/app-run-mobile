@@ -224,15 +224,15 @@ export function computeLoadBalanceRatio(
 // ── Intensity distribution ───────────────────────────────────────────────────
 
 const INTENSITY_ORDER: IntensityLabel[] = [
-  'Récupération', 'Footing', 'Endurance active', 'Seuil', 'VMA', 'Non déterminée',
+  'Récupération', 'Endurance Fondamentale', 'Endurance active', 'Seuil', 'VMA', 'Non déterminée',
 ]
 
 const MANUAL_TO_LABEL: Record<string, IntensityLabel> = {
   recuperation:     'Récupération',
-  footing:          'Footing',
+  footing:          'Endurance Fondamentale',
   endurance_active: 'Endurance active',
   sortie_longue:    'Endurance active',
-  cotes:            'Footing',
+  cotes:            'Endurance Fondamentale',
   vma:              'VMA',
   seuil:            'Seuil',
   seuil_tempo:      'Seuil',
@@ -241,7 +241,7 @@ const MANUAL_TO_LABEL: Record<string, IntensityLabel> = {
 function labelFromName(name: string): IntensityLabel | null {
   const n = name.toLowerCase()
   if (n.includes('récup') || n.includes('recup')) return 'Récupération'
-  if (n.includes('footing') || n.includes(' ef ') || n.includes('endurance facile')) return 'Footing'
+  if (n.includes('footing') || n.includes(' ef ') || n.includes('endurance facile')) return 'Endurance Fondamentale'
   if (n.includes('sortie longue') || n.includes(' sl ') || n.includes('long run') || n.includes('endurance')) return 'Endurance active'
   if (n.includes('vma') || n.includes('400') || n.includes('200') || n.includes('fractionné') || n.includes('interval') || n.includes('répétition')) return 'VMA'
   if (n.includes('seuil') || n.includes('tempo') || n.includes('threshold')) return 'Seuil'
@@ -251,7 +251,7 @@ function labelFromName(name: string): IntensityLabel | null {
 function labelFromZone(zone: number): IntensityLabel {
   if (zone <= 1) return 'Récupération'
   if (zone === 2) return 'Endurance active'
-  if (zone === 3) return 'Footing'
+  if (zone === 3) return 'Endurance Fondamentale'
   if (zone === 4) return 'Seuil'
   return 'VMA'
 }

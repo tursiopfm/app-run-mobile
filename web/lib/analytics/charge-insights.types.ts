@@ -50,7 +50,7 @@ export type SportDistribution = {
 
 export type IntensityLabel =
   | 'Récupération'
-  | 'Footing'
+  | 'Endurance Fondamentale'
   | 'Endurance active'
   | 'Seuil'
   | 'VMA'

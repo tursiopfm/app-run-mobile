@@ -300,7 +300,7 @@ export const intensity = {
   seuil:        'Seuil',
   cotes:        'Côtes',
   sortieLongue: 'Sortie longue',
-  footing:      'Footing',
+  footing:      'Endurance Fondamentale',
   autre:        'Autre',
 } as const
 
