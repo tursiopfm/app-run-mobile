@@ -16,11 +16,13 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import type {
   IntensityLevel,
+  IntensityMode,
   SessionTemplate,
   SessionType,
   SessionZone,
   TrainingZone,
   ZoneKind,
+  ZoneMode,
 } from '@/types/plan'
 import { isRepeatZone } from '@/types/plan'
 import {
@@ -33,6 +35,10 @@ import {
   SESSION_TYPE_LABELS,
 } from '@/lib/activities/indicators'
 import TypeIndicator from '@/components/activity/TypeIndicator'
+import { DurationDistanceToggle } from '@/components/plan/DurationDistanceToggle'
+import { IntensityPaceToggle } from '@/components/plan/IntensityPaceToggle'
+import { PaceField } from '@/components/plan/PaceField'
+import { getDefaultIntensityMode } from '@/lib/plan/type-helpers'
 
 type Tab = 'general' | 'structure' | 'notes'
 
@@ -497,6 +503,7 @@ function StructureTab({
                 zone={z}
                 onChange={patch => updateZone(z.id, patch)}
                 onDelete={() => removeZone(z.id)}
+                sessionType={draft.type}
               />
               )
             ))}
@@ -513,11 +520,12 @@ function StructureTab({
 }
 
 function SortableZoneRow({
-  zone, onChange, onDelete,
+  zone, onChange, onDelete, sessionType,
 }: {
   zone: TrainingZone
   onChange: (patch: Partial<TrainingZone>) => void
   onDelete: () => void
+  sessionType: SessionType
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: zone.id })
   const color = INTENSITY_LEVEL_COLORS[zone.intensity]
@@ -565,27 +573,63 @@ function SortableZoneRow({
           </div>
 
           <div className="grid grid-cols-3 gap-2">
-            <Field label="Durée (min)">
-              <input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                value={Number.isFinite(zone.durationMin) ? zone.durationMin : 0}
-                onChange={e => onChange({ durationMin: Number(e.target.value) || 0 })}
-                className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+            <div className="flex flex-col gap-1">
+              <DurationDistanceToggle
+                value={zone.mode ?? 'duration'}
+                onChange={(mode) => onChange({ mode })}
               />
-            </Field>
-            <Field label="Intensité">
-              <select
-                value={zone.intensity}
-                onChange={e => onChange({ intensity: Number(e.target.value) as IntensityLevel })}
-                className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
-              >
-                {[1, 2, 3, 4, 5].map(i => (
-                  <option key={i} value={i}>I{i} — {INTENSITY_LEVEL_LABELS[i as IntensityLevel]}</option>
-                ))}
-              </select>
-            </Field>
+              {(zone.mode ?? 'duration') === 'duration' ? (
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  value={Number.isFinite(zone.durationMin) ? zone.durationMin : 0}
+                  onChange={e => onChange({ durationMin: Number(e.target.value) || 0 })}
+                  placeholder="min"
+                  aria-label="Durée en minutes"
+                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                />
+              ) : (
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={50}
+                  value={zone.distanceM ?? ''}
+                  onChange={e =>
+                    onChange({
+                      distanceM: e.target.value === '' ? undefined : Number(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="400"
+                  aria-label="Distance en mètres"
+                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                />
+              )}
+            </div>
+            <div className="flex flex-col gap-1">
+              <IntensityPaceToggle
+                value={zone.intensityMode ?? getDefaultIntensityMode(sessionType)}
+                onChange={(mode) => onChange({ intensityMode: mode })}
+              />
+              {(zone.intensityMode ?? getDefaultIntensityMode(sessionType)) === 'level' ? (
+                <select
+                  value={zone.intensity}
+                  onChange={e => onChange({ intensity: Number(e.target.value) as IntensityLevel })}
+                  aria-label="Niveau d'intensité"
+                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                >
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <option key={i} value={i}>I{i} — {INTENSITY_LEVEL_LABELS[i as IntensityLevel]}</option>
+                  ))}
+                </select>
+              ) : (
+                <PaceField
+                  value={zone.paceSecPerKm ?? null}
+                  onChange={(p) => onChange({ paceSecPerKm: p ?? undefined })}
+                />
+              )}
+            </div>
             {zone.kind === 'main' && (
               <Field label="Répétitions">
                 <input
