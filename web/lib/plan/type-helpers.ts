@@ -1,6 +1,6 @@
-import type { SessionType } from '@/types/plan'
+import type { IntensityMode, SessionType } from '@/types/plan'
 
-const RUNNING_TYPES: ReadonlySet<SessionType> = new Set([
+const RUNNING_TYPES: ReadonlySet<SessionType> = new Set<SessionType>([
   'course',
   'sortie_longue',
   'fractionne',
@@ -13,8 +13,6 @@ const RUNNING_TYPES: ReadonlySet<SessionType> = new Set([
 export function isRunningType(type: SessionType): boolean {
   return RUNNING_TYPES.has(type)
 }
-
-export type IntensityMode = 'level' | 'pace'
 
 export function getDefaultIntensityMode(type: SessionType): IntensityMode {
   return isRunningType(type) ? 'pace' : 'level'
