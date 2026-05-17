@@ -7,15 +7,23 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDraggable } from '@dnd-kit/core'
 import type { SessionTemplate } from '@/types/plan'
 import { SESSION_TEMPLATES } from '@/lib/training/session-templates'
-import { deleteCustomTemplate, getCustomTemplates } from '@/lib/plan/storage'
+import {
+  deleteCustomTemplate,
+  getCustomTemplates,
+  getHiddenSystemTemplateIds,
+  hideSystemTemplate,
+  unhideAllSystemTemplates,
+} from '@/lib/plan/storage'
 import { INTENSITY_LEVEL_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
 import { TemplateEditorModal } from './TemplateEditorModal'
 import { ActivityTypesPrefsModal } from './ActivityTypesPrefsModal'
 import { useActivityTypes } from '@/lib/plan/use-activity-types'
 import { BlockCard } from '@/components/blocks/BlockCard'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 export function BibliothequeSeancesBlock() {
   const [custom, setCustom] = useState<SessionTemplate[]>([])
+  const [hiddenSystemIds, setHiddenSystemIds] = useState<string[]>([])
   const [search, setSearch] = useState('')
   const [selectedType, setSelectedType] = useState<string | 'all'>('all')
 
@@ -25,19 +33,31 @@ export function BibliothequeSeancesBlock() {
   const { types, visibleTypes, prefs, upsertPrefs, createCustom, deleteCustom } = useActivityTypes()
   const [prefsModalOpen, setPrefsModalOpen] = useState(false)
 
+  // État de la dialog de confirmation (delete template ou reset défauts).
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    title: string
+    message: string
+    confirmLabel?: string
+    destructive?: boolean
+    onConfirm: () => void | Promise<void>
+  } | null>(null)
+
   const reload = useCallback(async () => {
     const c = await getCustomTemplates()
     setCustom(c)
+    setHiddenSystemIds(getHiddenSystemTemplateIds())
   }, [])
 
   useEffect(() => { void reload() }, [reload])
 
-  // Merge system + custom : custom en premier.
-  const allTemplates = useMemo<SessionTemplate[]>(() => {
-    return [...custom, ...SESSION_TEMPLATES]
-  }, [custom])
-
   const customIds = useMemo(() => new Set(custom.map(t => t.id)), [custom])
+  const hiddenSet = useMemo(() => new Set(hiddenSystemIds), [hiddenSystemIds])
+
+  // Merge system + custom : custom en premier. Les système masqués sont retirés.
+  const allTemplates = useMemo<SessionTemplate[]>(() => {
+    const visibleSystem = SESSION_TEMPLATES.filter(t => !hiddenSet.has(t.id))
+    return [...custom, ...visibleSystem]
+  }, [custom, hiddenSet])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -68,12 +88,39 @@ export function BibliothequeSeancesBlock() {
     setEditorOpen(true)
   }
 
-  async function confirmAndDelete(template: SessionTemplate) {
-    if (typeof window === 'undefined') return
-    const ok = window.confirm(`Supprimer le template « ${template.title} » ?\n\nCette action est définitive.`)
-    if (!ok) return
-    await deleteCustomTemplate(template.id)
-    void reload()
+  function requestDelete(template: SessionTemplate) {
+    const isCustomTpl = customIds.has(template.id)
+    setPendingConfirm({
+      title: `Supprimer « ${template.title} » ?`,
+      message: isCustomTpl
+        ? 'Le template sera définitivement supprimé de ta bibliothèque.'
+        : 'Le template par défaut sera masqué de ta bibliothèque. Tu pourras le restaurer via l’icône ⓘ → « Réinitialiser les séances par défaut ».',
+      confirmLabel: 'Supprimer',
+      destructive: true,
+      onConfirm: async () => {
+        if (isCustomTpl) {
+          await deleteCustomTemplate(template.id)
+        } else {
+          hideSystemTemplate(template.id)
+        }
+        setPendingConfirm(null)
+        void reload()
+      },
+    })
+  }
+
+  function requestResetDefaults() {
+    setPendingConfirm({
+      title: 'Réinitialiser les séances par défaut ?',
+      message: 'Toutes les séances par défaut masquées seront restaurées dans ta bibliothèque. Tes séances personnalisées ne sont pas affectées.',
+      confirmLabel: 'Réinitialiser',
+      destructive: false,
+      onConfirm: () => {
+        unhideAllSystemTemplates()
+        setPendingConfirm(null)
+        void reload()
+      },
+    })
   }
 
   return (
@@ -98,7 +145,19 @@ export function BibliothequeSeancesBlock() {
             <li>
               <strong className="text-trail-text">Personnaliser</strong> — pill «&nbsp;⚙ Personnalisé&nbsp;» en fin de barre pour cocher/décocher ou ajouter des activités (Tennis, Yoga…).
             </li>
+            <li>
+              <strong className="text-trail-text">Supprimer une séance</strong> — croix ✕ en haut à droite de la carte (avec confirmation). Les séances par défaut sont masquées localement et peuvent être restaurées ci-dessous.
+            </li>
           </ul>
+          <button
+            type="button"
+            onClick={requestResetDefaults}
+            disabled={hiddenSystemIds.length === 0}
+            className="mt-4 w-full py-2 rounded-[10px] bg-trail-surface border border-trail-border text-[13px] font-semibold text-trail-text hover:border-trail-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Réinitialiser les séances par défaut
+            {hiddenSystemIds.length > 0 && <span className="ml-1 text-trail-muted">({hiddenSystemIds.length})</span>}
+          </button>
         </>
       }
       rightSlot={
@@ -149,7 +208,7 @@ export function BibliothequeSeancesBlock() {
             template={t}
             isCustom={customIds.has(t.id)}
             onClick={() => openEdit(t)}
-            onDelete={() => void confirmAndDelete(t)}
+            onDelete={() => requestDelete(t)}
           />
         ))}
         {filtered.length === 0 && (
@@ -178,6 +237,15 @@ export function BibliothequeSeancesBlock() {
           onClose={() => setPrefsModalOpen(false)}
         />
       )}
+      <ConfirmDialog
+        open={pendingConfirm !== null}
+        title={pendingConfirm?.title ?? ''}
+        message={pendingConfirm?.message ?? ''}
+        confirmLabel={pendingConfirm?.confirmLabel}
+        destructive={pendingConfirm?.destructive}
+        onConfirm={() => { void pendingConfirm?.onConfirm() }}
+        onCancel={() => setPendingConfirm(null)}
+      />
     </BlockCard>
   )
 }
@@ -244,20 +312,18 @@ function TemplateCard({
       aria-label={`Template ${template.title} — cliquer pour éditer, glisser vers un jour pour planifier`}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
     >
-      {isCustom && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete()
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          aria-label={`Supprimer le template ${template.title}`}
-          className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-trail-card border border-trail-border text-trail-muted hover:text-trail-danger hover:border-trail-danger text-[11px] leading-none z-10"
-        >
-          ✕
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          onDelete()
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+        aria-label={`Supprimer le template ${template.title}`}
+        className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-trail-card border border-trail-border text-trail-muted hover:text-trail-danger hover:border-trail-danger text-[11px] leading-none z-10"
+      >
+        ✕
+      </button>
       <p className="text-[10px] font-semibold text-trail-muted uppercase tracking-wider pr-6">
         {SESSION_TYPE_LABELS[template.type]}
       </p>

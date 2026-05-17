@@ -21,6 +21,7 @@ const KEY_RACE = 'tc:plan:race:v1'
 const KEY_PLAN = 'tc:plan:current_plan:v1'
 const KEY_SESSIONS = 'tc:plan:planned_sessions:v1'
 const KEY_TEMPLATES_CUSTOM = 'tc:plan:templates_custom:v1'
+const KEY_HIDDEN_SYSTEM_TEMPLATES = 'tc:plan:hidden_system_templates:v1'
 
 // ─── Helpers localStorage (SSR-safe) ────────────────────────────────────────
 function readLS<T>(key: string, fallback: T): T {
@@ -584,4 +585,24 @@ export async function deleteCustomTemplate(id: string): Promise<void> {
   }
   const all = readLS<SessionTemplate[]>(KEY_TEMPLATES_CUSTOM, [])
   writeLS(KEY_TEMPLATES_CUSTOM, all.filter(t => t.id !== id))
+}
+
+// ─── Masquage des templates système (LS-only) ──────────────────────────────
+// Les templates système sont définis en dur dans `web/lib/training/session-templates.ts`.
+// Pour permettre à l'utilisateur de les "supprimer" de son point de vue (sans
+// les retirer de la source globale), on stocke les ids masqués en LS.
+// Le bouton "Réinitialiser les séances par défaut" vide cette liste.
+
+export function getHiddenSystemTemplateIds(): string[] {
+  return readLS<string[]>(KEY_HIDDEN_SYSTEM_TEMPLATES, [])
+}
+
+export function hideSystemTemplate(id: string): void {
+  const current = readLS<string[]>(KEY_HIDDEN_SYSTEM_TEMPLATES, [])
+  if (current.includes(id)) return
+  writeLS(KEY_HIDDEN_SYSTEM_TEMPLATES, [...current, id])
+}
+
+export function unhideAllSystemTemplates(): void {
+  writeLS<string[]>(KEY_HIDDEN_SYSTEM_TEMPLATES, [])
 }
