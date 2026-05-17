@@ -405,26 +405,18 @@ function GeneralTab({
         </Field>
       </div>
 
-      <Field label={`Intensité — ${INTENSITY_LEVEL_LABELS[draft.intensity]}`}>
-        <div className="flex items-center gap-3">
-          <input
-            type="range"
-            min={1}
-            max={5}
-            step={1}
-            value={draft.intensity}
-            onChange={e => setDraft({ ...draft, intensity: Number(e.target.value) as IntensityLevel })}
-            className="flex-1"
-            style={{ accentColor: intensityColor }}
-            aria-label={`Intensité ${draft.intensity} sur 5 (${INTENSITY_LEVEL_LABELS[draft.intensity]})`}
-          />
-          <span
-            className="px-2 py-1 rounded-full text-[11px] font-semibold"
-            style={{ backgroundColor: `${intensityColor}26`, color: intensityColor }}
-          >
-            I{draft.intensity}
-          </span>
-        </div>
+      <Field label="Intensité">
+        <select
+          value={draft.intensity}
+          onChange={e => setDraft({ ...draft, intensity: Number(e.target.value) as IntensityLevel })}
+          className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+          style={{ borderLeft: `4px solid ${intensityColor}` }}
+          aria-label={`Intensité (${INTENSITY_LEVEL_LABELS[draft.intensity]})`}
+        >
+          {[1, 2, 3, 4, 5].map(i => (
+            <option key={i} value={i}>{INTENSITY_LEVEL_LABELS[i as IntensityLevel]}</option>
+          ))}
+        </select>
       </Field>
 
       <Field label="Charge estimée (TSS)">
@@ -545,9 +537,9 @@ function StructureTab({
 
   return (
     <div className="space-y-3">
-      {/* Boutons rapides */}
+      {/* Boutons rapides — ordre : Échauffement / Bloc principal / Récup / Bloc Répéter / Retour calme */}
       <div className="flex flex-wrap gap-2">
-        {(['warmup', 'main', 'rest', 'cooldown'] as ZoneKind[]).map(k => (
+        {(['warmup', 'main', 'rest'] as ZoneKind[]).map(k => (
           <button
             key={k}
             type="button"
@@ -563,6 +555,13 @@ function StructureTab({
           className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
         >
           + Bloc Répéter
+        </button>
+        <button
+          type="button"
+          onClick={() => addZone('cooldown')}
+          className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
+        >
+          + {ZONE_KIND_LABEL.cooldown}
         </button>
       </div>
 

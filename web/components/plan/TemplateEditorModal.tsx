@@ -544,7 +544,7 @@ function StructureTab({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {(['warmup', 'main', 'rest', 'cooldown'] as ZoneKind[]).map(k => (
+        {(['warmup', 'main', 'rest'] as ZoneKind[]).map(k => (
           <button
             key={k}
             type="button"
@@ -560,6 +560,13 @@ function StructureTab({
           className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
         >
           + Bloc Répéter
+        </button>
+        <button
+          type="button"
+          onClick={() => addZone('cooldown')}
+          className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
+        >
+          + {ZONE_KIND_LABEL.cooldown}
         </button>
       </div>
 

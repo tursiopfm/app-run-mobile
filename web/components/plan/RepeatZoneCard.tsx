@@ -131,13 +131,8 @@ export function RepeatZoneCard({ zone, sessionType, onChange, onDelete }: Props)
             onChange={(e) => onChange({ ...zone, skipLastRecovery: e.target.checked })}
             aria-label="Ignorer la dernière récupération"
           />
-          <span>Ignorer la dernière récupération</span>
-          <span
-            className="text-trail-muted cursor-help"
-            title="Si activé, la séance se termine sur la dernière étape d'effort sans inclure la récupération finale."
-            aria-label="Aide"
-          >
-            (?)
+          <span title="Si activé, la séance se termine sur la dernière étape d'effort sans inclure la récupération finale.">
+            Ignorer la dernière récupération
           </span>
         </label>
       </div>
