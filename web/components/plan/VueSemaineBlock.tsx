@@ -16,7 +16,6 @@ import { PHASE_DEFINITIONS } from '@/lib/training/phases'
 import { colors } from '@/lib/design/colors'
 import { INTENSITY_LEVEL_COLORS } from '@/lib/activities/indicators'
 import { formatDurationHHmm } from '@/lib/training/duration'
-import TypeIndicator from '@/components/activity/TypeIndicator'
 import { SessionEditorModal } from './SessionEditorModal'
 import { BlockCard } from '@/components/blocks/BlockCard'
 
@@ -415,21 +414,20 @@ function DraggableSessionCard({
       aria-label={`Éditer la séance ${session.title} (intensité ${session.intensity} sur 5, glisser pour déplacer)`}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
     >
-      <TypeIndicator type={session.type} />
       <div
-        className="mt-1 text-[11px] text-trail-text leading-tight"
+        className="text-[11px] text-trail-text leading-tight"
         style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
       >
         {session.title}
       </div>
-      <div className="mt-1 flex items-center gap-2">
-        <span className="text-[10px] text-trail-muted">{formatDurationHHmm(session.duration)}</span>
-        {!!session.elevation && session.elevation > 0 && (
-          <span className="text-[10px] text-trail-muted" aria-label={`D plus ${session.elevation} mètres`}>
-            {session.elevation} m D+
-          </span>
-        )}
+      <div className="mt-1 text-[10px] text-trail-muted leading-[13px]">
+        {formatDurationHHmm(session.duration)}
       </div>
+      {!!session.elevation && session.elevation > 0 && (
+        <div className="text-[10px] text-trail-muted leading-[13px]" aria-label={`D plus ${session.elevation} mètres`}>
+          {session.elevation} m D+
+        </div>
+      )}
       {session.notes && (
         <p
           className="mt-1 text-[10px] text-trail-muted leading-[13px] overflow-hidden text-ellipsis whitespace-nowrap"
