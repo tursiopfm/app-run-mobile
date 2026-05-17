@@ -428,6 +428,14 @@ function DraggableSessionCard({
           I{session.intensity}
         </span>
       </div>
+      {session.notes && (
+        <p
+          className="mt-1 text-[10px] text-trail-muted leading-[13px] overflow-hidden text-ellipsis whitespace-nowrap"
+          title={session.notes}
+        >
+          {session.notes}
+        </p>
+      )}
     </div>
   )
 }
