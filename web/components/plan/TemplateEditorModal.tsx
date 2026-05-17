@@ -119,7 +119,7 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  const canSave = draft.title.trim().length > 0 && draft.defaultDuration > 0 && !saving
+  const canSave = draft.title.trim().length > 0 && !saving
 
   async function handleSave() {
     if (!canSave) return
