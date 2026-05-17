@@ -43,6 +43,7 @@ import { IntensityPaceToggle } from '@/components/plan/IntensityPaceToggle'
 import { PaceField } from '@/components/plan/PaceField'
 import { getDefaultIntensityMode } from '@/lib/plan/type-helpers'
 import { getDefaultIntensityForType } from '@/lib/plan/type-intensity-map'
+import { DurationField } from '@/components/plan/DurationField'
 
 type Tab = 'general' | 'structure' | 'notes'
 
@@ -347,14 +348,10 @@ function GeneralTab({
       </Field>
 
       <div className="grid grid-cols-3 gap-2">
-        <Field label="Durée (min)" required>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            value={Number.isFinite(draft.defaultDuration) ? draft.defaultDuration : 0}
-            onChange={e => setDraft({ ...draft, defaultDuration: Number(e.target.value) || 0 })}
-            className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+        <Field label="Durée">
+          <DurationField
+            value={draft.defaultDuration}
+            onChange={(d) => setDraft({ ...draft, defaultDuration: d })}
           />
         </Field>
         <Field label="Distance (km)">
@@ -380,18 +377,18 @@ function GeneralTab({
         </Field>
       </div>
 
-      <Field label="Intensité">
-        <select
+      <Field label={`Intensité — ${INTENSITY_LEVEL_LABELS[draft.defaultIntensity]}`}>
+        <input
+          type="range"
+          min={1}
+          max={5}
+          step={1}
           value={draft.defaultIntensity}
           onChange={e => setDraft({ ...draft, defaultIntensity: Number(e.target.value) as IntensityLevel })}
-          className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
-          style={{ borderLeft: `4px solid ${intensityColor}` }}
-          aria-label={`Intensité (${INTENSITY_LEVEL_LABELS[draft.defaultIntensity]})`}
-        >
-          {[1, 2, 3, 4, 5].map(i => (
-            <option key={i} value={i}>{INTENSITY_LEVEL_LABELS[i as IntensityLevel]}</option>
-          ))}
-        </select>
+          className="w-full"
+          style={{ accentColor: intensityColor }}
+          aria-label={`Intensité ${draft.defaultIntensity} sur 5 (${INTENSITY_LEVEL_LABELS[draft.defaultIntensity]})`}
+        />
       </Field>
 
       <Field label="Tags">

@@ -403,12 +403,16 @@ function DraggableSessionCard({
       // pan-y : laisse le scroll vertical natif passer sur la séance, sinon
       // toucher une carte = scroll bloqué. Le drag s'active quand même via le
       // long-press TouchSensor (250 ms immobile).
-      style={{ opacity: isDragging ? 0.4 : 1, touchAction: 'pan-y' }}
-      className="rounded-[6px] bg-trail-card border border-trail-border p-1 cursor-pointer hover:border-trail-primary"
+      style={{
+        opacity: isDragging ? 0.4 : 1,
+        touchAction: 'pan-y',
+        borderColor: intensityColor,
+      }}
+      className="rounded-[6px] bg-trail-card border p-1 cursor-pointer"
       onClick={onClick}
       role="button"
       tabIndex={0}
-      aria-label={`Éditer la séance ${session.title} (glisser pour déplacer)`}
+      aria-label={`Éditer la séance ${session.title} (intensité ${session.intensity} sur 5, glisser pour déplacer)`}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
     >
       <TypeIndicator type={session.type} />
@@ -418,15 +422,13 @@ function DraggableSessionCard({
       >
         {session.title}
       </div>
-      <div className="mt-1 flex items-center justify-between gap-1">
+      <div className="mt-1 flex items-center gap-2">
         <span className="text-[10px] text-trail-muted">{formatDurationHHmm(session.duration)}</span>
-        <span
-          className="px-[5px] py-[1px] rounded-full text-[9px] font-semibold leading-none"
-          style={{ backgroundColor: `${intensityColor}26`, color: intensityColor }}
-          aria-label={`Intensité ${session.intensity} sur 5`}
-        >
-          I{session.intensity}
-        </span>
+        {!!session.elevation && session.elevation > 0 && (
+          <span className="text-[10px] text-trail-muted" aria-label={`D plus ${session.elevation} mètres`}>
+            {session.elevation} m D+
+          </span>
+        )}
       </div>
       {session.notes && (
         <p

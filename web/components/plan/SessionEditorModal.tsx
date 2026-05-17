@@ -35,13 +35,13 @@ import {
 } from '@/lib/plan/storage'
 import { getDefaultIntensityForType } from '@/lib/plan/type-intensity-map'
 import { estimateCharge } from '@/lib/training/charge'
-import { formatDurationColon, parseDurationToMinutes } from '@/lib/training/duration'
 import {
   INTENSITY_LEVEL_COLORS,
   INTENSITY_LEVEL_LABELS,
   SESSION_TYPE_LABELS,
 } from '@/lib/activities/indicators'
 import TypeIndicator from '@/components/activity/TypeIndicator'
+import { DurationField } from '@/components/plan/DurationField'
 import { DurationDistanceToggle } from '@/components/plan/DurationDistanceToggle'
 import { IntensityPaceToggle } from '@/components/plan/IntensityPaceToggle'
 import { PaceField } from '@/components/plan/PaceField'
@@ -405,18 +405,18 @@ function GeneralTab({
         </Field>
       </div>
 
-      <Field label="Intensité">
-        <select
+      <Field label={`Intensité — ${INTENSITY_LEVEL_LABELS[draft.intensity]}`}>
+        <input
+          type="range"
+          min={1}
+          max={5}
+          step={1}
           value={draft.intensity}
           onChange={e => setDraft({ ...draft, intensity: Number(e.target.value) as IntensityLevel })}
-          className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
-          style={{ borderLeft: `4px solid ${intensityColor}` }}
-          aria-label={`Intensité (${INTENSITY_LEVEL_LABELS[draft.intensity]})`}
-        >
-          {[1, 2, 3, 4, 5].map(i => (
-            <option key={i} value={i}>{INTENSITY_LEVEL_LABELS[i as IntensityLevel]}</option>
-          ))}
-        </select>
+          className="w-full"
+          style={{ accentColor: intensityColor }}
+          aria-label={`Intensité ${draft.intensity} sur 5 (${INTENSITY_LEVEL_LABELS[draft.intensity]})`}
+        />
       </Field>
 
       <Field label="Charge estimée (TSS)">
@@ -798,41 +798,6 @@ function NotesTab({
         className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary resize-none"
       />
     </Field>
-  )
-}
-
-function DurationField({
-  value, onChange,
-}: { value: number; onChange: (next: number) => void }) {
-  const [text, setText] = useState(() => value > 0 ? formatDurationColon(value) : '')
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    setText(value > 0 ? formatDurationColon(value) : '')
-  }, [value])
-
-  function commit(s: string) {
-    if (s.trim() === '') { onChange(0); setError(false); return }
-    const parsed = parseDurationToMinutes(s)
-    if (parsed == null) { setError(true); return }
-    setError(false)
-    onChange(parsed)
-  }
-
-  return (
-    <div>
-      <input
-        type="text"
-        inputMode="numeric"
-        placeholder="ex : 1h30"
-        value={text}
-        onChange={e => { setText(e.target.value); commit(e.target.value) }}
-        onBlur={() => { if (!error && value > 0) setText(formatDurationColon(value)) }}
-        className={`w-full px-3 py-2 rounded-[10px] bg-trail-surface border ${error ? 'border-trail-danger' : 'border-trail-border'} text-trail-text text-[14px] focus:outline-none focus:border-trail-primary`}
-        aria-label="Durée au format heures et minutes"
-      />
-      {error && <p className="text-[10px] text-trail-danger mt-1">Format : 1h30, 1:30 ou 90</p>}
-    </div>
   )
 }
 
