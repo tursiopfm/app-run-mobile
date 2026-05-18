@@ -16,6 +16,7 @@ import { PHASE_DEFINITIONS } from '@/lib/training/phases'
 import { colors } from '@/lib/design/colors'
 import { INTENSITY_LEVEL_COLORS } from '@/lib/activities/indicators'
 import { formatDurationHHmm } from '@/lib/training/duration'
+import { isRunningType } from '@/lib/plan/type-helpers'
 import { SessionEditorModal } from './SessionEditorModal'
 import { BlockCard } from '@/components/blocks/BlockCard'
 
@@ -139,14 +140,15 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
     return map
   }, [sessions, weekDays])
 
-  // Totaux semaine.
+  // Totaux semaine. Les km ne comptent QUE le running (course, footing, fractionné,
+  // côtes, seuil, sortie longue, runtaf) — vélo/natation exclus.
   const totals = useMemo(() => {
     let duration = 0
     let distance = 0
     let elevation = 0
     for (const s of sessions) {
       duration += s.duration || 0
-      distance += s.distance || 0
+      if (isRunningType(s.type)) distance += s.distance || 0
       elevation += s.elevation || 0
     }
     return { duration, distance, elevation }
@@ -244,11 +246,19 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
           onClick={() => setWeekStartISO(currentMondayISO)}
           aria-pressed={isCurrentWeek}
           aria-label="Revenir à la semaine en cours"
-          className={
-            'px-2 py-1 rounded-[8px] border text-[11px] font-semibold whitespace-nowrap transition-colors ' +
-            (isCurrentWeek
-              ? 'border-trail-primary text-trail-primary bg-trail-primary/10'
-              : 'border-trail-border text-trail-muted hover:border-trail-primary/40 hover:text-trail-text')
+          className="rounded-full px-2 py-[3px] text-[11px] font-bold whitespace-nowrap transition-colors"
+          style={
+            isCurrentWeek
+              ? {
+                  backgroundColor: `${colors.chargeOrange}26`,
+                  color: colors.chargeOrange,
+                  border: `1px solid ${colors.chargeOrange}4D`,
+                }
+              : {
+                  backgroundColor: 'transparent',
+                  color: 'var(--trail-muted)',
+                  border: '1px solid var(--trail-border)',
+                }
           }
         >
           En cours
@@ -443,9 +453,22 @@ function DraggableSessionCard({
           {formatDurationHHmm(session.duration)}
         </div>
       )}
+      {!!session.distance && session.distance > 0 && (
+        <div
+          className="text-[10px] leading-[13px] whitespace-nowrap"
+          style={{ color: colors.seriesOrange }}
+          aria-label={`Distance ${session.distance} kilomètres`}
+        >
+          {session.distance} km
+        </div>
+      )}
       {!!session.elevation && session.elevation > 0 && (
-        <div className="text-[10px] text-trail-muted leading-[13px] whitespace-nowrap" aria-label={`D plus ${session.elevation} mètres`}>
-          {session.elevation} D+
+        <div
+          className="text-[10px] leading-[13px] whitespace-nowrap"
+          style={{ color: colors.seriesBlue }}
+          aria-label={`D plus ${session.elevation} mètres`}
+        >
+          {session.elevation}m
         </div>
       )}
       {session.notes && (
