@@ -142,15 +142,19 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
   // Totaux semaine.
   const totals = useMemo(() => {
     let duration = 0
-    let charge = 0
+    let distance = 0
     let elevation = 0
     for (const s of sessions) {
       duration += s.duration || 0
-      charge += s.estimatedCharge || 0
+      distance += s.distance || 0
       elevation += s.elevation || 0
     }
-    return { duration, charge, elevation }
+    return { duration, distance, elevation }
   }, [sessions])
+
+  // Lundi ISO de la semaine courante (recalculé à chaque render — pas couteux).
+  const currentMondayISO = useMemo(() => toISO(startOfISOWeek(new Date())), [])
+  const isCurrentWeek = weekStartISO === currentMondayISO
 
   // Numéro semaine X / Y dans le plan.
   const weekInPlan = useMemo<{ x: number; y: number } | null>(() => {
@@ -219,9 +223,9 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
       helpBody="Calendrier de la semaine sélectionnée. Glisse-dépose des templates depuis la bibliothèque pour planifier une séance."
       rightSlot={
         <div className="flex items-center gap-1 flex-wrap">
-          <Pill bg={`${colors.greenOk}26`}    color={colors.greenOk}    label={formatDurationHHmm(totals.duration)} />
-          <Pill bg={`${colors.seriesRed}26`}  color={colors.seriesRed}  label={`${Math.round(totals.charge)} TSS`} />
-          <Pill bg={`${colors.seriesBlue}26`} color={colors.seriesBlue} label={`${Math.round(totals.elevation)} m D+`} />
+          <Pill bg={`${colors.seriesOrange}26`} color={colors.seriesOrange} label={`${Math.round(totals.distance)} km`} />
+          <Pill bg={`${colors.seriesBlue}26`}   color={colors.seriesBlue}   label={`${Math.round(totals.elevation)} m D+`} />
+          <Pill bg={`${colors.greenOk}26`}      color={colors.greenOk}      label={formatDurationHHmm(totals.duration)} />
         </div>
       }
     >
@@ -235,6 +239,20 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
         <span className="text-[12px] text-trail-muted flex-1 text-center">
           du {formatDM(weekDays[0])} au {formatDM(weekEndISO)}
         </span>
+        <button
+          type="button"
+          onClick={() => setWeekStartISO(currentMondayISO)}
+          aria-pressed={isCurrentWeek}
+          aria-label="Revenir à la semaine en cours"
+          className={
+            'px-2 py-1 rounded-[8px] border text-[11px] font-semibold whitespace-nowrap transition-colors ' +
+            (isCurrentWeek
+              ? 'border-trail-primary text-trail-primary bg-trail-primary/10'
+              : 'border-trail-border text-trail-muted hover:border-trail-primary/40 hover:text-trail-text')
+          }
+        >
+          En cours
+        </button>
         <button
           type="button"
           onClick={() => gotoOffsetWeeks(1)}
