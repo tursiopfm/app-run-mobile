@@ -140,21 +140,20 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
     return map
   }, [sessions, weekDays])
 
-  // Totaux semaine. Les km ne comptent QUE le running (course, footing, fractionné,
-  // côtes, seuil, sortie longue, runtaf) — vélo/natation exclus.
-  // Durée : si non saisie, on extrapole depuis la distance (running 6 min/km,
-  // vélo 20 km/h) pour avoir un total cohérent quand l'athlète ne renseigne
-  // que la distance.
+  // Totaux semaine — RUNNING UNIQUEMENT (course, footing, fractionné, côtes,
+  // seuil, sortie longue, runtaf). Vélo / natation / renfo exclus des 3 bulles.
+  // Durée : si non saisie, on extrapole depuis la distance (6 min/km running).
   const totals = useMemo(() => {
     let duration = 0
     let distance = 0
     let elevation = 0
     for (const s of sessions) {
+      if (!isRunningType(s.type)) continue
       const dur = s.duration && s.duration > 0
         ? s.duration
         : estimateDurationMin(s.type, s.distance ?? 0)
       duration += dur
-      if (isRunningType(s.type)) distance += s.distance || 0
+      distance += s.distance || 0
       elevation += s.elevation || 0
     }
     return { duration, distance, elevation }
