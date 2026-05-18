@@ -9,13 +9,16 @@ import type { ActivityType, UserActivityPref } from '@/types/activity-types'
 const KEY_TYPES_CUSTOM = 'tc:plan:activity_types_custom:v1'
 const KEY_PREFS = 'tc:plan:user_activity_prefs:v1'
 
-// ─── Catalogue système (fallback LS — miroir du seed migration 018) ───────
+// ─── Catalogue système (fallback LS — miroir des seeds migrations 018+019) ───────
 const SYSTEM_TYPES: ActivityType[] = [
   { id: 'sys-sortie_longue', slug: 'sortie_longue', label: 'Sortie longue', defaultIntensity: 2, category: 'run',   isSystem: true },
   { id: 'sys-fractionne',    slug: 'fractionne',    label: 'Fractionné',    defaultIntensity: 5, category: 'run',   isSystem: true },
   { id: 'sys-seuil_tempo',   slug: 'seuil_tempo',   label: 'Seuil',         defaultIntensity: 4, category: 'run',   isSystem: true },
   { id: 'sys-cotes',         slug: 'cotes',         label: 'Côtes',         defaultIntensity: 3, category: 'run',   isSystem: true },
   { id: 'sys-footing',       slug: 'footing',       label: 'Footing',       defaultIntensity: 2, category: 'run',   isSystem: true },
+  { id: 'sys-course',        slug: 'course',        label: 'Course',        defaultIntensity: 4, category: 'run',   isSystem: true },
+  { id: 'sys-runtaf',        slug: 'runtaf',        label: 'Runtaf',        defaultIntensity: 2, category: 'run',   isSystem: true },
+  { id: 'sys-velotaf',       slug: 'velotaf',       label: 'Velotaf',       defaultIntensity: 2, category: 'bike',  isSystem: true },
   { id: 'sys-velo',          slug: 'velo',          label: 'Vélo',          defaultIntensity: 2, category: 'bike',  isSystem: true },
   { id: 'sys-natation',      slug: 'natation',      label: 'Natation',      defaultIntensity: 2, category: 'swim',  isSystem: true },
   { id: 'sys-renfo',         slug: 'renfo',         label: 'Renfo',         defaultIntensity: 1, category: 'other', isSystem: true },
