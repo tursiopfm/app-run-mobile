@@ -16,7 +16,7 @@ import { PHASE_DEFINITIONS } from '@/lib/training/phases'
 import { colors } from '@/lib/design/colors'
 import { INTENSITY_LEVEL_COLORS } from '@/lib/activities/indicators'
 import { formatDurationHHmm } from '@/lib/training/duration'
-import { isRunningType } from '@/lib/plan/type-helpers'
+import { estimateDurationMin, isRunningType } from '@/lib/plan/type-helpers'
 import { SessionEditorModal } from './SessionEditorModal'
 import { BlockCard } from '@/components/blocks/BlockCard'
 
@@ -142,12 +142,18 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
 
   // Totaux semaine. Les km ne comptent QUE le running (course, footing, fractionné,
   // côtes, seuil, sortie longue, runtaf) — vélo/natation exclus.
+  // Durée : si non saisie, on extrapole depuis la distance (running 6 min/km,
+  // vélo 20 km/h) pour avoir un total cohérent quand l'athlète ne renseigne
+  // que la distance.
   const totals = useMemo(() => {
     let duration = 0
     let distance = 0
     let elevation = 0
     for (const s of sessions) {
-      duration += s.duration || 0
+      const dur = s.duration && s.duration > 0
+        ? s.duration
+        : estimateDurationMin(s.type, s.distance ?? 0)
+      duration += dur
       if (isRunningType(s.type)) distance += s.distance || 0
       elevation += s.elevation || 0
     }
