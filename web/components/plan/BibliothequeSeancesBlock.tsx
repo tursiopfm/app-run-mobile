@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDraggable } from '@dnd-kit/core'
 import type { SessionTemplate } from '@/types/plan'
+import type { ActivityType } from '@/types/activity-types'
 import { SESSION_TEMPLATES } from '@/lib/training/session-templates'
 import {
   deleteCustomTemplate,
@@ -16,6 +17,7 @@ import {
 } from '@/lib/plan/storage'
 import { INTENSITY_LEVEL_COLORS, SESSION_TYPE_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
 import type { WorkoutType } from '@/lib/activities/intensity'
+import { resolveSessionMeta } from '@/lib/plan/session-meta'
 import { TemplateEditorModal } from './TemplateEditorModal'
 import { ActivityTypesPrefsModal } from './ActivityTypesPrefsModal'
 import { useActivityTypes } from '@/lib/plan/use-activity-types'
@@ -208,6 +210,7 @@ export function BibliothequeSeancesBlock() {
           <TemplateCard
             key={t.id}
             template={t}
+            types={types}
             isCustom={customIds.has(t.id)}
             onClick={() => openEdit(t)}
             onDelete={() => requestDelete(t)}
@@ -308,13 +311,15 @@ function FilterPill({
 }
 
 function TemplateCard({
-  template, isCustom, onClick, onDelete,
+  template, types, isCustom, onClick, onDelete,
 }: {
   template: SessionTemplate
+  types: ActivityType[]
   isCustom: boolean
   onClick: () => void
   onDelete: () => void
 }) {
+  const meta = resolveSessionMeta(template.type, types)
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `template-${template.id}`,
     data: { type: 'session-template', template },
@@ -351,7 +356,7 @@ function TemplateCard({
         ✕
       </button>
       <p className="text-[10px] font-semibold text-trail-muted uppercase tracking-wider pr-6">
-        {SESSION_TYPE_LABELS[template.type]}
+        {meta.label}
       </p>
       <h4
         className="mt-1 text-[14px] text-trail-text leading-tight"
