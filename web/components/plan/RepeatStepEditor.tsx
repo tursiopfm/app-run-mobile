@@ -10,11 +10,12 @@ import type { RepeatStep, SessionType, IntensityLevel } from '@/types/plan'
 type Props = {
   step: RepeatStep
   sessionType: SessionType
+  intensityModeDisabled?: boolean
   onSave: (step: RepeatStep) => void
   onCancel: () => void
 }
 
-export function RepeatStepEditor({ step, sessionType: _sessionType, onSave, onCancel }: Props) {
+export function RepeatStepEditor({ step, sessionType: _sessionType, intensityModeDisabled = false, onSave, onCancel }: Props) {
   const [draft, setDraft] = useState<RepeatStep>(step)
   if (typeof document === 'undefined') return null
 
@@ -95,6 +96,7 @@ export function RepeatStepEditor({ step, sessionType: _sessionType, onSave, onCa
             size="md"
             value={draft.intensityMode}
             onChange={(mode) => setDraft({ ...draft, intensityMode: mode })}
+            disabled={intensityModeDisabled}
           />
           {draft.intensityMode === 'level' ? (
             <select

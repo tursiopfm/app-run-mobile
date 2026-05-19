@@ -24,11 +24,12 @@ import type { RepeatZone, RepeatStep, SessionType, IntensityLevel } from '@/type
 type Props = {
   zone: RepeatZone
   sessionType: SessionType
+  intensityModeDisabled?: boolean
   onChange: (zone: RepeatZone) => void
   onDelete: () => void
 }
 
-export function RepeatZoneCard({ zone, sessionType, onChange, onDelete }: Props) {
+export function RepeatZoneCard({ zone, sessionType, intensityModeDisabled = false, onChange, onDelete }: Props) {
   const [editingStepId, setEditingStepId] = useState<string | null>(null)
 
   const sensors = useSensors(
@@ -141,6 +142,7 @@ export function RepeatZoneCard({ zone, sessionType, onChange, onDelete }: Props)
         <RepeatStepEditor
           step={editingStep}
           sessionType={sessionType}
+          intensityModeDisabled={intensityModeDisabled}
           onSave={updateStep}
           onCancel={() => setEditingStepId(null)}
         />

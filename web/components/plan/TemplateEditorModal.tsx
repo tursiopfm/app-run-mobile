@@ -99,6 +99,7 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
   const [saving, setSaving] = useState(false)
   const [tagInput, setTagInput] = useState('')
   const { visibleTypes, types } = useActivityTypes()
+  const intensityModeDisabled = !resolveSessionMeta(draft.type, types).isRunning
 
   useEffect(() => {
     if (open) {
@@ -224,7 +225,7 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
             types={types}
           />
         )}
-        {tab === 'structure' && <StructureTab draft={draft} setDraft={setDraft} />}
+        {tab === 'structure' && <StructureTab draft={draft} setDraft={setDraft} intensityModeDisabled={intensityModeDisabled} />}
         {tab === 'notes' && <NotesTab draft={draft} setDraft={setDraft} />}
 
         <div className="flex items-center justify-between gap-2 mt-6 flex-wrap">
@@ -518,10 +519,11 @@ function flattenZonesForPreview(zones: SessionZone[]): TrainingZone[] {
 }
 
 function StructureTab({
-  draft, setDraft,
+  draft, setDraft, intensityModeDisabled = false,
 }: {
   draft: SessionTemplate
   setDraft: React.Dispatch<React.SetStateAction<SessionTemplate>>
+  intensityModeDisabled?: boolean
 }) {
   const zones = draft.defaultZones ?? []
   const sensors = useSensors(
@@ -594,6 +596,7 @@ function StructureTab({
                   key={z.id}
                   zone={z}
                   sessionType={draft.type}
+                  intensityModeDisabled={intensityModeDisabled}
                   onChange={updated => setZones(zones.map(zz => (zz.id === updated.id ? updated : zz)))}
                   onDelete={() => removeZone(z.id)}
                 />
@@ -604,6 +607,7 @@ function StructureTab({
                   onChange={patch => updateZone(z.id, patch)}
                   onDelete={() => removeZone(z.id)}
                   sessionType={draft.type}
+                  intensityModeDisabled={intensityModeDisabled}
                 />
               ),
             )}
@@ -620,12 +624,13 @@ function StructureTab({
 }
 
 function SortableZoneRow({
-  zone, onChange, onDelete, sessionType,
+  zone, onChange, onDelete, sessionType, intensityModeDisabled = false,
 }: {
   zone: TrainingZone
   onChange: (patch: Partial<TrainingZone>) => void
   onDelete: () => void
   sessionType: SessionType
+  intensityModeDisabled?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: zone.id })
   const color = INTENSITY_LEVEL_COLORS[zone.intensity]
@@ -711,6 +716,7 @@ function SortableZoneRow({
               <IntensityPaceToggle
                 value={zone.intensityMode ?? getDefaultIntensityMode(sessionType)}
                 onChange={(mode) => onChange({ intensityMode: mode })}
+                disabled={intensityModeDisabled}
               />
               {(zone.intensityMode ?? getDefaultIntensityMode(sessionType)) === 'level' ? (
                 <select
