@@ -1,11 +1,33 @@
 // Types pour l'onglet Plan (mode Manuel).
-// SessionType est aliasé sur WorkoutType (l'enum existant dans le repo).
-// IntensityLevel est défini dans lib/activities/indicators.ts (1..5).
+// SessionType est libre (string) pour accepter les slugs custom du catalogue
+// activity_types. Les 12 builtins sont listés dans BUILTIN_SESSION_TYPES.
+// WorkoutType (lib/activities/intensity.ts) reste l'enum fermé côté Activités.
 
-import type { WorkoutType } from '@/lib/activities/intensity'
 import type { IntensityLevel } from '@/lib/activities/indicators'
 
-export type SessionType = WorkoutType
+export type SessionType = string
+
+export const BUILTIN_SESSION_TYPES = [
+  'course',
+  'sortie_longue',
+  'fractionne',
+  'seuil_tempo',
+  'cotes',
+  'runtaf',
+  'velotaf',
+  'footing',
+  'velo',
+  'natation',
+  'renfo',
+  'musculation',
+] as const
+
+export type BuiltinSessionType = typeof BUILTIN_SESSION_TYPES[number]
+
+export function isBuiltinSessionType(t: string): t is BuiltinSessionType {
+  return (BUILTIN_SESSION_TYPES as readonly string[]).includes(t)
+}
+
 export type { IntensityLevel }
 
 // === Phases de prépa (mésocycles) ===
