@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import type { PlannedSession } from '@/types/plan'
 import { getPlannedSessions } from '@/lib/plan/storage'
 import { INTENSITY_LEVEL_COLORS } from '@/lib/activities/indicators'
-import TypeIndicator from '@/components/activity/TypeIndicator'
+import { resolveSessionMeta } from '@/lib/plan/session-meta'
+import { useActivityTypes } from '@/lib/plan/use-activity-types'
 import { SessionEditorModal } from './SessionEditorModal'
 import { formatDurationHHmm } from '@/lib/training/duration'
 
@@ -30,6 +31,7 @@ export function DayDetailPanel({ dateISO, onClose, reloadKey, onSessionsChanged 
   const [loaded, setLoaded] = useState(false)
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingSession, setEditingSession] = useState<PlannedSession | null>(null)
+  const { types } = useActivityTypes()
 
   useEffect(() => {
     let cancelled = false
@@ -71,7 +73,28 @@ export function DayDetailPanel({ dateISO, onClose, reloadKey, onSessionsChanged 
             className="block w-full text-left rounded-[8px] bg-trail-card border border-trail-border p-2 hover:border-trail-primary"
           >
             <div className="flex items-center justify-between gap-2 mb-1">
-              <TypeIndicator type={s.type} />
+              {(() => {
+                const meta = resolveSessionMeta(s.type, types)
+                return (
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: meta.color,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span
+                      style={{ color: meta.color, fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.3px' }}
+                      className="text-[12px] truncate"
+                    >
+                      {meta.label}
+                    </span>
+                  </div>
+                )
+              })()}
               <span
                 className="px-[6px] py-[2px] rounded-full text-[10px] font-semibold"
                 style={{
