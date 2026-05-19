@@ -33,14 +33,14 @@ import {
   getCurrentPlan,
   savePlannedSession,
 } from '@/lib/plan/storage'
-import { getDefaultIntensityForType } from '@/lib/plan/type-intensity-map'
 import { estimateCharge } from '@/lib/training/charge'
 import {
   INTENSITY_LEVEL_COLORS,
   INTENSITY_LEVEL_LABELS,
-  SESSION_TYPE_LABELS,
 } from '@/lib/activities/indicators'
-import TypeIndicator from '@/components/activity/TypeIndicator'
+import { useActivityTypes } from '@/lib/plan/use-activity-types'
+import { resolveSessionMeta } from '@/lib/plan/session-meta'
+import type { ActivityType } from '@/types/activity-types'
 import { DurationField } from '@/components/plan/DurationField'
 import { DurationDistanceToggle } from '@/components/plan/DurationDistanceToggle'
 import { IntensityPaceToggle } from '@/components/plan/IntensityPaceToggle'
@@ -56,11 +56,6 @@ type Props = {
   onClose: () => void
   onSaved: () => void
 }
-
-const TYPE_OPTIONS: SessionType[] = [
-  'sortie_longue', 'fractionne', 'seuil_tempo', 'cotes', 'course', 'runtaf', 'velotaf', 'footing',
-  'velo', 'natation', 'renfo', 'musculation',
-]
 
 const ZONE_PRESETS: Record<ZoneKind, Omit<TrainingZone, 'id'>> = {
   warmup:   { kind: 'warmup',   durationMin: 15, intensity: 2, label: 'Échauffement' },
@@ -116,6 +111,7 @@ export function SessionEditorModal({
   const [tab, setTab] = useState<Tab>('general')
   const [saving, setSaving] = useState(false)
   const [chargeOverridden, setChargeOverridden] = useState(false)
+  const { visibleTypes, types } = useActivityTypes()
 
   useEffect(() => {
     if (open) {
@@ -240,6 +236,8 @@ export function SessionEditorModal({
             draft={draft}
             setDraft={setDraft}
             onChargeEdit={() => setChargeOverridden(true)}
+            visibleTypes={visibleTypes}
+            types={types}
           />
         )}
         {tab === 'structure' && (
@@ -326,11 +324,13 @@ function TabButton({
 }
 
 function GeneralTab({
-  draft, setDraft, onChargeEdit,
+  draft, setDraft, onChargeEdit, visibleTypes, types,
 }: {
   draft: PlannedSession
   setDraft: React.Dispatch<React.SetStateAction<PlannedSession>>
   onChargeEdit: () => void
+  visibleTypes: ActivityType[]
+  types: ActivityType[]
 }) {
   const intensityColor = INTENSITY_LEVEL_COLORS[draft.intensity]
   return (
@@ -350,22 +350,36 @@ function GeneralTab({
           <select
             value={draft.type}
             onChange={e => {
-              const nextType = e.target.value as SessionType
+              const nextType = e.target.value
+              const nextMeta = resolveSessionMeta(nextType, types)
               setDraft({
                 ...draft,
                 type: nextType,
-                intensity: getDefaultIntensityForType(nextType),
+                intensity: nextMeta.defaultIntensity,
+                zones: draft.zones?.map(z => {
+                  if (!nextMeta.isRunning && !isRepeatZone(z) && z.intensityMode === 'pace') {
+                    return { ...z, intensityMode: 'level' as const }
+                  }
+                  return z
+                }),
               })
             }}
             className="flex-1 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
           >
-            {TYPE_OPTIONS.map(t => (
-              <option key={t} value={t}>{SESSION_TYPE_LABELS[t]}</option>
-            ))}
+            {(['run', 'bike', 'swim', 'other'] as const).map(cat => {
+              const optionsInCat = visibleTypes.filter(t => (t.category ?? 'other') === cat)
+              if (optionsInCat.length === 0) return null
+              const labels = { run: 'Course à pied', bike: 'Vélo', swim: 'Natation', other: 'Autre' } as const
+              return (
+                <optgroup key={cat} label={labels[cat]}>
+                  {optionsInCat.map(t => (
+                    <option key={t.slug} value={t.slug}>{t.label}</option>
+                  ))}
+                </optgroup>
+              )
+            })}
           </select>
-          <div style={{ width: 140 }}>
-            <TypeIndicator type={draft.type} />
-          </div>
+          <TypeBadge type={draft.type} types={types} />
         </div>
       </Field>
 
@@ -816,5 +830,49 @@ function Field({
       </span>
       {children}
     </label>
+  )
+}
+
+function TypeBadge({ type, types }: { type: SessionType; types: ActivityType[] }) {
+  const meta = resolveSessionMeta(type, types)
+  return (
+    <div
+      style={{
+        width: 140,
+        height: 26,
+        padding: '3px 8px',
+        borderRadius: 8,
+        border: '1px solid var(--trail-border)',
+        background: 'var(--trail-surface)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        boxSizing: 'border-box',
+      }}
+      aria-label={`Type : ${meta.label}`}
+    >
+      <span
+        style={{
+          width: 10,
+          height: 10,
+          borderRadius: '50%',
+          backgroundColor: meta.color,
+          flexShrink: 0,
+        }}
+      />
+      <span
+        style={{
+          fontFamily: "'Bebas Neue', sans-serif",
+          fontSize: 12,
+          color: meta.color,
+          letterSpacing: '0.3px',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {meta.label}
+      </span>
+    </div>
   )
 }
