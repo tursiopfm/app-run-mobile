@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Mockup — Types d'activité custom dans le Plan</title>
+<style>
+  :root {
+    --bg: #0A0F0E;
+    --surface: #111A18;
+    --card: #162420;
+    --border: #1E3530;
+    --muted: #8BA8A3;
+    --text: #E2ECE9;
+    --orange: #FF6B35;
+    --green: #4ADE80;
+    --blue: #38BDF8;
+    --red: #F87171;
+    --gray: #6B7280;   /* couleur custom par défaut */
+    --gray-bg: #6B72801A;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.4;
+  }
+  h1 { font-size: 18px; margin: 0 0 8px; }
+  h2 { font-size: 14px; margin: 32px 0 12px; color: var(--orange); text-transform: uppercase; letter-spacing: 1px; }
+  .lead { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 900px) { .row { grid-template-columns: 1fr; } }
+
+  /* —— Card générique —— */
+  .block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .block-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .block-title h3 { margin: 0; font-size: 15px; font-weight: 600; }
+
+  /* —— Pills filtres —— */
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  .pill.active { background: var(--orange); border-color: var(--orange); color: #000; }
+  .pill.active.custom { background: var(--gray); border-color: var(--gray); color: #fff; }
+  .pill.gear { background: transparent; }
+
+  /* —— Modal —— */
+  .modal {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .modal h4 { margin: 0 0 4px; font-size: 16px; }
+  .modal .subtitle { color: var(--muted); font-size: 12px; margin-bottom: 16px; }
+
+  /* —— Form fields —— */
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .field input[type="text"],
+  .field select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .field input:focus,
+  .field select:focus { outline: none; border-color: var(--orange); }
+
+  /* —— Category radio buttons —— */
+  .cat-radios {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .cat-radio {
+    text-align: center;
+    padding: 8px 4px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .cat-radio.checked {
+    border-color: var(--orange);
+    background: rgba(255, 107, 53, 0.1);
+    color: var(--orange);
+  }
+  .cat-radio .emoji { font-size: 16px; display: block; margin-bottom: 2px; }
+
+  /* —— Slider intensity —— */
+  .intensity { display: flex; gap: 6px; align-items: center; }
+  .int-dot { width: 18px; height: 18px; border-radius: 4px; background: var(--border); }
+  .int-dot.on-1 { background: #94A3B8; }
+  .int-dot.on-2 { background: #10B981; }
+  .int-dot.on-3 { background: #F59E0B; }
+  .int-dot.on-4 { background: #F97316; }
+  .int-dot.on-5 { background: #EF4444; }
+
+  /* —— List of types in prefs modal —— */
+  .type-list { display: flex; flex-direction: column; gap: 6px; }
+  .type-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .type-row .drag { color: var(--muted); cursor: grab; }
+  .type-row .color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .type-row .name { flex: 1; font-size: 13px; }
+  .type-row .badge-cat {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--gray-bg);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .type-row .badge-custom {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(107, 114, 128, 0.2);
+    color: var(--gray);
+    text-transform: uppercase;
+  }
+  .type-row .toggle {
+    width: 30px; height: 16px; border-radius: 8px;
+    background: var(--orange); position: relative; cursor: pointer; flex-shrink: 0;
+  }
+  .type-row .toggle.off { background: var(--border); }
+  .type-row .toggle::after {
+    content: ''; position: absolute; right: 2px; top: 2px;
+    width: 12px; height: 12px; border-radius: 50%; background: #000;
+  }
+  .type-row .toggle.off::after { right: auto; left: 2px; }
+  .type-row .del { color: var(--muted); cursor: pointer; padding: 0 4px; }
+  .type-row .del:hover { color: var(--red); }
+
+  /* —— Session editor mockup —— */
+  .editor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* —— Intensity mode toggle (pace / level) —— */
+  .mode-toggle {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2px;
+    width: fit-content;
+  }
+  .mode-toggle button {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .mode-toggle button.active { background: var(--orange); color: #000; }
+  .mode-toggle button:disabled {
+    color: #4a5a55;
+    cursor: not-allowed;
+  }
+  .helper-text {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  /* —— Mini-card calendar —— */
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .day-col {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .day-head {
+    padding: 6px 4px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .day-head .dow { font-size: 10px; color: var(--muted); font-weight: 600; }
+  .day-head .num { font-size: 16px; color: var(--text); }
+  .day-body { padding: 4px; min-height: 80px; }
+  .session-card {
+    background: var(--card);
+    border-left: 3px solid var(--gray);
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+  .session-card.running { border-color: var(--green); }
+  .session-card .label-type {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+  }
+  .session-card .title { color: var(--text); margin-top: 2px; font-weight: 500; }
+  .session-card .km { color: var(--orange); margin-top: 2px; }
+  .session-card .dplus { color: var(--blue); }
+  .session-card .gray-km { color: var(--gray); }
+
+  /* —— Callout —— */
+  .callout {
+    background: rgba(255, 107, 53, 0.08);
+    border-left: 3px solid var(--orange);
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+  .callout strong { color: var(--text); }
+  code { background: var(--surface); padding: 2px 6px; border-radius: 4px; font-size: 11px; color: var(--orange); }
+</style>
+</head>
+<body>
+
+<h1>Mockup — Types d'activité custom utilisables dans les fiches séance</h1>
+<p class="lead">Périmètre : onglet Plan uniquement. Approche A — <code>SessionType = string</code> + resolver.</p>
+
+<h2>1. Modal "⚙ Personnalisé" — ajout du sélecteur catégorie</h2>
+
+<div class="row">
+  <div class="modal">
+    <h4>Types d'activité</h4>
+    <p class="subtitle">Coche / décoche, glisse pour réordonner, supprime tes customs avec ✕.</p>
+
+    <div class="type-list">
+      <div class="type-row">
+        <span class="drag">⋮⋮</span>
+        <span class="color-dot" style="background:#86EFAC"></span>
+        <span class="name">Sortie longue</span>
+        <span class="badge-cat">RUN</span>
+        <span class="toggle"></span>
+      </div>
+      <div class="type-row">
+        <span class="drag">⋮⋮</span>
+        <span class="color-dot" style="background:#D85A4A"></span>
+        <span class="name">Fractionné</span>
+        <span class="badge-cat">RUN</span>
+        <span class="toggle"></span>
+      </div>
+      <div class="type-row">
+        <span class="drag">⋮⋮</span>
+        <span class="color-dot" style="background:#4ADE80"></span>
+        <span class="name">Footing</span>
+        <span class="badge-cat">RUN</span>
+        <span class="toggle"></span>
+      </div>
+      <div class="type-row" style="border-color: var(--orange); background: rgba(255,107,53,0.05)">
+        <span class="drag">⋮⋮</span>
+        <span class="color-dot" style="background:var(--gray)"></span>
+        <span class="name">Trail Race</span>
+        <span class="badge-custom">CUSTOM</span>
+        <span class="badge-cat">RUN</span>
+        <span class="toggle"></span>
+        <span class="del">✕</span>
+      </div>
+      <div class="type-row" style="border-color: var(--orange); background: rgba(255,107,53,0.05)">
+        <span class="drag">⋮⋮</span>
+        <span class="color-dot" style="background:var(--gray)"></span>
+        <span class="name">Tennis</span>
+        <span class="badge-custom">CUSTOM</span>
+        <span class="badge-cat">OTHER</span>
+        <span class="toggle"></span>
+        <span class="del">✕</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal">
+    <h4>Créer un type d'activité</h4>
+    <p class="subtitle">Disponible dans la bibliothèque + le formulaire séance.</p>
+
+    <div class="field">
+      <label>Nom</label>
+      <input type="text" value="Trail Race" />
+    </div>
+
+    <div class="field">
+      <label>Catégorie</label>
+      <div class="cat-radios">
+        <div class="cat-radio checked"><span class="emoji">🏃</span>Run</div>
+        <div class="cat-radio"><span class="emoji">🚴</span>Vélo</div>
+        <div class="cat-radio"><span class="emoji">🏊</span>Natation</div>
+        <div class="cat-radio"><span class="emoji">⚙️</span>Autre</div>
+      </div>
+      <div class="helper-text">La catégorie détermine si la séance compte dans les bulles km / D+ / durée du bloc Semaine (running uniquement).</div>
+    </div>
+
+    <div class="field">
+      <label>Intensité par défaut</label>
+      <div class="intensity">
+        <span class="int-dot on-1"></span>
+        <span class="int-dot on-2"></span>
+        <span class="int-dot on-3"></span>
+        <span class="int-dot"></span>
+        <span class="int-dot"></span>
+        <span style="margin-left:8px;font-size:12px;color:var(--muted)">3 / 5</span>
+      </div>
+    </div>
+
+    <button style="background:var(--orange);color:#000;border:none;padding:10px 16px;border-radius:10px;font-weight:600;cursor:pointer;width:100%">
+      + Créer
+    </button>
+  </div>
+</div>
+
+<h2>2. Fiche séance — dropdown alimenté par le catalogue</h2>
+
+<div class="row">
+  <div class="modal">
+    <h4>Nouvelle séance · Mardi 19/05</h4>
+    <p class="subtitle">Le dropdown Type liste maintenant builtins + customs visibles.</p>
+
+    <div class="field">
+      <label>Titre</label>
+      <input type="text" value="Sortie trail vallonnée" />
+    </div>
+
+    <div class="field">
+      <label>Type d'activité</label>
+      <select>
+        <optgroup label="Course à pied">
+          <option>Sortie longue</option>
+          <option>Fractionné</option>
+          <option>Footing</option>
+          <option>Côtes</option>
+          <option>Course</option>
+        </optgroup>
+        <optgroup label="Vélo">
+          <option>Vélo</option>
+          <option>Velotaf</option>
+        </optgroup>
+        <optgroup label="Mes types">
+          <option selected>Trail Race</option>
+          <option>Tennis</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="editor-grid">
+      <div class="field">
+        <label>Mode intensité</label>
+        <div class="mode-toggle">
+          <button class="active">Allure</button>
+          <button>Niveau</button>
+        </div>
+        <div class="helper-text">Catégorie "Run" → mode allure dispo.</div>
+      </div>
+      <div class="field">
+        <label>Intensité</label>
+        <div class="intensity">
+          <span class="int-dot on-1"></span>
+          <span class="int-dot on-2"></span>
+          <span class="int-dot on-3"></span>
+          <span class="int-dot"></span>
+          <span class="int-dot"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal">
+    <h4>Nouvelle séance · Mercredi 20/05</h4>
+    <p class="subtitle">Type "Tennis" (catégorie Other) → mode Allure désactivé.</p>
+
+    <div class="field">
+      <label>Titre</label>
+      <input type="text" value="Match double" />
+    </div>
+
+    <div class="field">
+      <label>Type d'activité</label>
+      <select>
+        <optgroup label="Mes types">
+          <option selected>Tennis</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="editor-grid">
+      <div class="field">
+        <label>Mode intensité</label>
+        <div class="mode-toggle">
+          <button disabled>Allure</button>
+          <button class="active">Niveau</button>
+        </div>
+        <div class="helper-text">Catégorie "Other" → niveau uniquement.</div>
+      </div>
+      <div class="field">
+        <label>Intensité</label>
+        <div class="intensity">
+          <span class="int-dot on-1"></span>
+          <span class="int-dot on-2"></span>
+          <span class="int-dot"></span>
+          <span class="int-dot"></span>
+          <span class="int-dot"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>3. Conséquences visuelles · Bibliothèque & calendrier</h2>
+
+<div class="row">
+  <div class="block">
+    <div class="block-title">
+      <h3>Bibliothèque — pills filtre</h3>
+    </div>
+    <div class="pills">
+      <span class="pill active">Tous</span>
+      <span class="pill">Footing</span>
+      <span class="pill">Sortie longue</span>
+      <span class="pill">Fractionné</span>
+      <span class="pill">Côtes</span>
+      <span class="pill active custom">Trail Race</span>
+      <span class="pill">Tennis</span>
+      <span class="pill gear">⚙ Personnalisé</span>
+    </div>
+    <div class="callout">
+      <strong>Pill custom actif</strong> = gris au lieu de l'orange. Couleur dérivée de la catégorie : <code>category==='run'</code> n'attribue pas une couleur dédiée (gris reste la règle pour distinguer custom).
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-title">
+      <h3>Calendrier — bordure & km/D+</h3>
+    </div>
+    <div class="week-grid">
+      <div class="day-col">
+        <div class="day-head"><div class="dow">LUN</div><div class="num">19</div></div>
+        <div class="day-body">
+          <div class="session-card running">
+            <div class="label-type">FOOTING</div>
+            <div class="title">EF 1h</div>
+            <div class="km">10 km</div>
+            <div class="dplus">100m</div>
+          </div>
+        </div>
+      </div>
+      <div class="day-col">
+        <div class="day-head"><div class="dow">MAR</div><div class="num">20</div></div>
+        <div class="day-body">
+          <div class="session-card">
+            <div class="label-type">TRAIL RACE</div>
+            <div class="title">Sortie trail</div>
+            <div class="km gray-km">15 km</div>
+            <div class="dplus">650m</div>
+          </div>
+        </div>
+      </div>
+      <div class="day-col">
+        <div class="day-head"><div class="dow">MER</div><div class="num">21</div></div>
+        <div class="day-body">
+          <div class="session-card">
+            <div class="label-type">TENNIS</div>
+            <div class="title">Match double</div>
+          </div>
+        </div>
+      </div>
+      <div class="day-col"><div class="day-head"><div class="dow">JEU</div><div class="num">22</div></div><div class="day-body"></div></div>
+      <div class="day-col"><div class="day-head"><div class="dow">VEN</div><div class="num">23</div></div><div class="day-body"></div></div>
+      <div class="day-col"><div class="day-head"><div class="dow">SAM</div><div class="num">24</div></div><div class="day-body"></div></div>
+      <div class="day-col"><div class="day-head"><div class="dow">DIM</div><div class="num">25</div></div><div class="day-body"></div></div>
+    </div>
+    <div class="callout">
+      <strong>Décision UX</strong> : Trail Race (cat. run) contribue aux bulles km + D+ même si bordure grise. Tennis (cat. other) n'apparaît dans aucune bulle. Une couleur réelle par type custom = scope futur si demandé.
+    </div>
+  </div>
+</div>
+
+<h2>4. Resolver — exemple d'API</h2>
+
+<div class="block">
+<pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);line-height:1.5;white-space:pre-wrap"><span style="color:var(--muted)">// lib/plan/session-meta.ts</span>
+resolveSessionMeta(<span style="color:var(--green)">'trail-race-xyz'</span>, catalog) <span style="color:var(--muted)">→</span> {
+  label: <span style="color:var(--green)">'Trail Race'</span>,
+  color: <span style="color:var(--green)">'#6B7280'</span>,        <span style="color:var(--muted)">// gris</span>
+  category: <span style="color:var(--green)">'run'</span>,
+  isRunning: <span style="color:var(--orange)">true</span>,         <span style="color:var(--muted)">// car category === 'run'</span>
+  defaultIntensity: 3
+}
+
+resolveSessionMeta(<span style="color:var(--green)">'footing'</span>, catalog) <span style="color:var(--muted)">→</span> {
+  label: <span style="color:var(--green)">'Endurance Fondamentale'</span>,
+  color: <span style="color:var(--green)">'#4ADE80'</span>,        <span style="color:var(--muted)">// venant de SESSION_TYPE_COLORS</span>
+  category: <span style="color:var(--green)">'run'</span>,
+  isRunning: <span style="color:var(--orange)">true</span>,
+  defaultIntensity: 2
+}
+
+resolveSessionMeta(<span style="color:var(--green)">'unknown-slug'</span>, catalog) <span style="color:var(--muted)">→</span> {
+  label: <span style="color:var(--green)">'unknown-slug'</span>,    <span style="color:var(--muted)">// fallback no-crash</span>
+  color: <span style="color:var(--green)">'#6B7280'</span>,
+  category: <span style="color:var(--green)">'other'</span>,
+  isRunning: <span style="color:var(--orange)">false</span>,
+  defaultIntensity: 2
+}</pre>
+</div>
+
+</body>
+</html>
