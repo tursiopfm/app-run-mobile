@@ -16,7 +16,8 @@ import { PHASE_DEFINITIONS } from '@/lib/training/phases'
 import { colors } from '@/lib/design/colors'
 import { INTENSITY_LEVEL_COLORS } from '@/lib/activities/indicators'
 import { formatDurationHHmm } from '@/lib/training/duration'
-import { estimateDurationMin, isRunningType } from '@/lib/plan/type-helpers'
+import { useActivityTypes } from '@/lib/plan/use-activity-types'
+import { resolveSessionMeta } from '@/lib/plan/session-meta'
 import { SessionEditorModal } from './SessionEditorModal'
 import { BlockCard } from '@/components/blocks/BlockCard'
 
@@ -81,6 +82,8 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
   const [sessions, setSessions] = useState<PlannedSession[]>([])
   const [plan, setPlan] = useState<TrainingPlan | null>(null)
   const [loaded, setLoaded] = useState(false)
+
+  const { types } = useActivityTypes()
 
   // État modal édition / création de séance.
   const [editorOpen, setEditorOpen] = useState(false)
@@ -148,16 +151,19 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
     let distance = 0
     let elevation = 0
     for (const s of sessions) {
-      if (!isRunningType(s.type)) continue
-      const dur = s.duration && s.duration > 0
-        ? s.duration
-        : estimateDurationMin(s.type, s.distance ?? 0)
+      const meta = resolveSessionMeta(s.type, types)
+      if (!meta.isRunning) continue
+      let dur = s.duration && s.duration > 0 ? s.duration : 0
+      if (dur === 0 && s.distance && s.distance > 0) {
+        // Extrapolation : running 6 min/km (couvre tous les types catégorie 'run')
+        dur = s.distance * 6
+      }
       duration += dur
       distance += s.distance || 0
       elevation += s.elevation || 0
     }
     return { duration, distance, elevation }
-  }, [sessions])
+  }, [sessions, types])
 
   // Lundi ISO de la semaine courante (recalculé à chaque render — pas couteux).
   const currentMondayISO = useMemo(() => toISO(startOfISOWeek(new Date())), [])
