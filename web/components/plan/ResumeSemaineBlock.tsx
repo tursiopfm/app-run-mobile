@@ -301,25 +301,25 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
         />
       </div>
 
-      {/* ── 3 progress bars ─────────────────────────────────────────────── */}
+      {/* ── 3 progress bars : Réalisé vs Objectif ───────────────────────── */}
       <div className="mt-3 space-y-2">
         <ProgressLine
           label="Volume semaine"
-          current={planned.km}
+          current={actualKm}
           target={targets.km}
           unit="km"
           color={colors.chargeOrange}
         />
         <ProgressLine
           label="Dénivelé"
-          current={planned.dPlus}
+          current={actualDPlus}
           target={targets.dPlus}
           unit="m"
           color={colors.seriesBlue}
         />
         <ProgressLine
-          label="Charge prévue vs cible"
-          current={planned.load}
+          label="Charge"
+          current={actualLoad}
           target={targets.load}
           unit="pts"
           color={colors.seriesYellow}
