@@ -76,6 +76,7 @@ function newEmptyPhase(startDate: string, endDate: string): Phase {
     weeklyChargeTarget: 300,
     weeklyDistanceKmTarget: 50,
     weeklyElevationMTarget: 800,
+    loadPattern: 'custom',
     description: def.description,
   }
 }
@@ -269,6 +270,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
             startDate,
             endDate,
             phases: sortedPhases,
+            status: 'active',
             createdAt: now,
             updatedAt: now,
           }

@@ -56,6 +56,7 @@ export const MOCK_RACE: Race = {
   type: 'trail',
   location: 'Millau',
   isMain: true,
+  priority: 'A',
   notes: 'Mock dev : course objectif principale.',
 }
 
@@ -73,6 +74,7 @@ function buildMockPlan(): TrainingPlan {
     startDate: todayISO,
     endDate: MOCK_RACE.date,
     phases,
+    status: 'active',
     createdAt: nowISO,
     updatedAt: nowISO,
   }

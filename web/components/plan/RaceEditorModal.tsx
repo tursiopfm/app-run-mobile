@@ -34,6 +34,7 @@ function emptyDraft(): Race {
     type: 'trail',
     location: undefined,
     isMain: true,
+    priority: 'A',
     notes: undefined,
   }
 }
@@ -80,6 +81,10 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
         name: draft.name.trim(),
         location: draft.location?.trim() || undefined,
         notes: draft.notes?.trim() || undefined,
+        // priority est miroir de isMain pour l'UI actuelle (checkbox unique).
+        // 'A' = course principale, 'C' = secondaire. La granularité B viendra
+        // quand l'UI exposera un select de priorité explicite.
+        priority: draft.isMain ? 'A' : 'C',
       }
       await saveRace(toSave)
       onSaved()

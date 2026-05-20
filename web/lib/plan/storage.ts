@@ -4,6 +4,7 @@
 // Pas de sync Supabase ↔ localStorage : on utilise l'un ou l'autre.
 
 import { createClient } from '@/lib/database/supabase-client'
+import { regenerateWeeks } from '@/lib/training/mesocycle-weeks'
 import type {
   Phase,
   PhaseWeeklyTarget,
@@ -88,6 +89,7 @@ type RaceRow = {
   type: Race['type']
   location: string | null
   is_main: boolean
+  priority?: Race['priority']     // ← NEW, optionnel pour tolérer migration non-appliquée
   notes: string | null
 }
 
@@ -101,6 +103,7 @@ function raceFromRow(r: RaceRow): Race {
     type: r.type,
     location: r.location ?? undefined,
     isMain: !!r.is_main,
+    priority: r.priority ?? (r.is_main ? 'A' : 'C'),   // ← fallback si col absente
     notes: r.notes ?? undefined,
   }
 }
@@ -115,7 +118,8 @@ function raceToRow(race: Race, athleteId: string): RaceRow {
     elevation_m: race.elevation,
     type: race.type,
     location: race.location ?? null,
-    is_main: race.isMain,
+    is_main: race.priority === 'A',   // ← miroir
+    priority: race.priority,
     notes: race.notes ?? null,
   }
 }
@@ -127,6 +131,9 @@ type PlanRow = {
   goal_race_id: string | null
   start_date: string
   end_date: string
+  status?: TrainingPlan['status']      // ← NEW (optionnel, fallback 'active')
+  color?: string | null                // ← NEW
+  template_id?: string | null          // ← NEW
   created_at: string
   updated_at: string
 }
@@ -143,6 +150,8 @@ type PhaseRow = {
   weekly_elevation_m_target?: number | null
   // Format JSONB côté DB : [{ km: number, d_plus: number }, ...]
   weekly_targets?: Array<{ km: number; d_plus: number }> | null
+  focus?: string | null               // ← NEW
+  load_pattern?: Phase['loadPattern'] // ← NEW (optionnel, fallback 'custom')
   description: string | null
   position: number
 }
@@ -175,6 +184,9 @@ function planFromRows(plan: PlanRow, phases: PhaseRow[]): TrainingPlan {
     goalRaceId: plan.goal_race_id,
     startDate: plan.start_date,
     endDate: plan.end_date,
+    status: plan.status ?? 'active',
+    color: plan.color ?? undefined,
+    templateId: plan.template_id ?? undefined,
     createdAt: plan.created_at,
     updatedAt: plan.updated_at,
     phases: [...phases]
@@ -191,6 +203,8 @@ function planFromRows(plan: PlanRow, phases: PhaseRow[]): TrainingPlan {
         weeklyElevationMTarget: p.weekly_elevation_m_target ?? 0,
         // Migration 021 pas encore appliquée → colonne absente → undefined.
         weeklyTargets: weeklyTargetsFromJson(p.weekly_targets),
+        focus: p.focus ?? undefined,
+        loadPattern: p.load_pattern ?? 'custom',
         description: p.description ?? undefined,
       })),
   }
@@ -204,6 +218,9 @@ function planToRow(plan: TrainingPlan, athleteId: string): PlanRow {
     goal_race_id: plan.goalRaceId,
     start_date: plan.startDate,
     end_date: plan.endDate,
+    status: plan.status,
+    color: plan.color ?? null,
+    template_id: plan.templateId ?? null,
     created_at: plan.createdAt,
     updated_at: plan.updatedAt,
   }
@@ -221,6 +238,8 @@ function phasesToRows(plan: TrainingPlan): PhaseRow[] {
     weekly_distance_km_target: p.weeklyDistanceKmTarget,
     weekly_elevation_m_target: p.weeklyElevationMTarget,
     weekly_targets: weeklyTargetsToJson(p.weeklyTargets),
+    focus: p.focus ?? null,
+    load_pattern: p.loadPattern ?? 'custom',
     description: p.description ?? null,
     position: i,
   }))
@@ -490,15 +509,32 @@ export async function saveCurrentPlan(plan: TrainingPlan): Promise<void> {
       if (rows.length > 0) {
         const { error: phaseErr } = await ctx.supabase.from('phases').insert(rows)
         if (phaseErr && isMissingColumnError(phaseErr)) {
-          // Migration 015/021 pas encore appliquée : retry sans les colonnes
-          // km/D+ uniformes (015) ni les overrides hebdo (021).
+          // Migration 015/021/022 pas encore appliquée : retry sans les colonnes
+          // km/D+ uniformes (015), overrides hebdo (021), focus + load_pattern (022).
           const legacyRows = rows.map(({
             weekly_distance_km_target: _km,
             weekly_elevation_m_target: _dplus,
             weekly_targets: _wt,
+            focus: _focus,
+            load_pattern: _lp,
             ...rest
           }) => rest)
           await ctx.supabase.from('phases').insert(legacyRows)
+        }
+      }
+      // Pour chaque phase qui a un loadPattern ≠ 'custom', générer/synchroniser
+      // les rows mesocycle_weeks. Préserve les overrides existants. Best-effort :
+      // une erreur ici n'invalide pas l'écriture du plan (tolérance migration 022
+      // non encore appliquée → table absente, géré silencieusement).
+      for (const phase of plan.phases) {
+        if (phase.loadPattern && phase.loadPattern !== 'custom') {
+          try {
+            await regenerateWeeks(phase)
+          } catch (err) {
+            // Table mesocycle_weeks absente (migration pas appliquée) ou autre erreur :
+            // on log et on continue, ça ne doit pas bloquer la sauvegarde du plan.
+            console.warn('[plan storage] regenerateWeeks failed for phase', phase.id, err)
+          }
         }
       }
       return

@@ -126,6 +126,7 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
         startDate: phases[0].startDate,
         endDate: phases[phases.length - 1].endDate,
         phases,
+        status: 'active',
         createdAt: now,
         updatedAt: now,
       }
