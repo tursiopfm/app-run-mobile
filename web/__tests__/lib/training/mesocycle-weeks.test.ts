@@ -99,3 +99,54 @@ describe('regenerateWeeks — cas nominal (aucun override)', () => {
     expect(result[3].targetLoadTss).toBe(325)   // 500 * 0.65
   })
 })
+
+describe('regenerateWeeks — préservation des overrides', () => {
+  it('préserve une semaine is_manual_override=true par défaut', async () => {
+    // Pré-remplir avec une row override sur week_index=2.
+    fakeDb = [{
+      id: 'pre-existing',
+      phase_id: 'phase-1',
+      week_index: 2,
+      week_start_date: '2026-06-15',
+      week_type: 'custom',
+      target_load_tss: 999,           // valeur custom de l'utilisateur
+      target_volume_km: 99,
+      target_dplus_m: 9999,
+      comment: 'ma semaine custom',
+      is_manual_override: true,
+      generated_from_pattern: false,
+    }]
+
+    const result = await regenerateWeeks(phaseFixture())
+    const week2 = result.find(w => w.weekIndex === 2)
+    expect(week2).toBeDefined()
+    expect(week2!.isManualOverride).toBe(true)
+    expect(week2!.targetLoadTss).toBe(999)         // pas écrasée
+    expect(week2!.weekType).toBe('custom')         // pas écrasée
+    // Les 3 autres rows ont bien été générées.
+    expect(calls.upserts[0]).toHaveLength(3)
+    expect(calls.upserts[0].every(r => r.week_index !== 2)).toBe(true)
+  })
+
+  it('écrase tout avec forceOverwrite=true (y compris override)', async () => {
+    fakeDb = [{
+      id: 'pre-existing',
+      phase_id: 'phase-1',
+      week_index: 2,
+      week_start_date: '2026-06-15',
+      week_type: 'custom',
+      target_load_tss: 999,
+      target_volume_km: 99,
+      target_dplus_m: 9999,
+      comment: 'ma semaine custom',
+      is_manual_override: true,
+      generated_from_pattern: false,
+    }]
+
+    const result = await regenerateWeeks(phaseFixture(), { forceOverwrite: true })
+    const week2 = result.find(w => w.weekIndex === 2)
+    expect(week2!.isManualOverride).toBe(false)
+    expect(week2!.targetLoadTss).toBe(500)         // 500 * 1.00 (load 100% du cycle 3_1)
+    expect(calls.upserts[0]).toHaveLength(4)        // toutes les 4 sont upsertées
+  })
+})
