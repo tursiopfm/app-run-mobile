@@ -9,7 +9,7 @@
 
 import { Fragment, useMemo, useState } from 'react'
 import { SquarePen } from 'lucide-react'
-import type { Phase, Race, TrainingPlan } from '@/types/plan'
+import type { Phase, Race, TrainingPlan, WeekType } from '@/types/plan'
 import { PHASE_DEFINITIONS, autoDistributePhases, getPhaseWeeks } from '@/lib/training/phases'
 import { saveCurrentPlan } from '@/lib/plan/storage'
 import { BlockCard } from '@/components/blocks/BlockCard'
@@ -42,7 +42,7 @@ function formatLongDate(iso: string): string {
   return `${d} ${months[m]} ${y}`
 }
 
-const WEEK_TYPE_COLOR: Record<string, { bg: string; fg: string }> = {
+const WEEK_TYPE_COLOR: Record<WeekType, { bg: string; fg: string }> = {
   load:       { bg: '#3B82F622', fg: '#60A5FA' },
   deload:     { bg: '#EAB30822', fg: '#EAB308' },
   recovery:   { bg: '#94A3B822', fg: '#94A3B8' },
@@ -56,7 +56,6 @@ type Props = {
   activeMacrocycle: TrainingPlan | null
   races: Race[]
   onChange?: () => void
-  reloadKey?: number
 }
 
 export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props) {
@@ -171,8 +170,27 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
     )
   }
 
+  // ─── Garde-fou : phase à durée nulle / dates inversées → dégradé ──────────
+  // timelineData renvoie null si totalMs <= 0 (start === end ou start > end).
+  // Sans ça, on crasherait sur `td.todayProgress` au rendu nominal.
+  if (!timelineData) {
+    return (
+      <BlockCard
+        title="Structure de prépa"
+        helpTitle="Cycles de prépa"
+        helpBody="Macrocycle de durée nulle ou inversée — édite les dates pour corriger."
+      >
+        <div className="flex flex-col items-center justify-center text-center py-6 px-4">
+          <p className="text-[13px] text-[color:var(--trail-muted)]">
+            Les dates du macrocycle sont invalides. Édite-le pour repartir d&apos;une plage cohérente.
+          </p>
+        </div>
+      </BlockCard>
+    )
+  }
+
   // ─── Rendu nominal ────────────────────────────────────────────────────────
-  const td = timelineData!
+  const td = timelineData
   const todayInRange = td.todayProgress >= 0 && td.todayProgress <= 100
 
   return (
