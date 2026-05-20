@@ -55,7 +55,6 @@ export function ActivityTypesPrefsModal({
 }: Props) {
   const [drafts, setDrafts] = useState<Draft[]>(() => buildInitialDrafts(types, prefs))
   const [newLabel, setNewLabel] = useState('')
-  const [newIntensity, setNewIntensity] = useState<IntensityLevel>(2)
   const [newCategory, setNewCategory] = useState<NonNullable<ActivityType['category']>>('other')
 
   // État rename inline : id du type en cours d'édition + valeur tampon.
@@ -96,12 +95,11 @@ export function ActivityTypesPrefsModal({
     const created = await onCreateCustom({
       slug,
       label,
-      defaultIntensity: newIntensity,
+      defaultIntensity: 2, // valeur par défaut (modifiable plus tard dans la fiche séance)
       category: newCategory,
     })
     setDrafts([...drafts, { slug: created.slug, label: created.label, isVisible: true, type: created }])
     setNewLabel('')
-    setNewIntensity(2)
     setNewCategory('other')
   }
 
@@ -252,28 +250,14 @@ export function ActivityTypesPrefsModal({
             Détermine si la séance compte dans les bulles km / D+ / durée du bloc Semaine (running uniquement).
           </p>
 
-          <div className="flex items-center gap-2">
-            <select
-              value={newIntensity}
-              onChange={(e) => setNewIntensity(Number(e.target.value) as IntensityLevel)}
-              aria-label="Intensité par défaut de la nouvelle activité"
-              className="px-2 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
-            >
-              <option value={1}>I1</option>
-              <option value={2}>I2</option>
-              <option value={3}>I3</option>
-              <option value={4}>I4</option>
-              <option value={5}>I5</option>
-            </select>
-            <button
-              type="button"
-              onClick={() => void addCustom()}
-              disabled={!newLabel.trim()}
-              className="flex-1 px-3 py-2 rounded-[8px] bg-trail-primary text-black text-[13px] font-semibold disabled:opacity-50"
-            >
-              Ajouter
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => void addCustom()}
+            disabled={!newLabel.trim()}
+            className="w-full px-3 py-2 rounded-[8px] bg-trail-primary text-black text-[13px] font-semibold disabled:opacity-50"
+          >
+            Ajouter
+          </button>
         </div>
 
         {/* Footer */}

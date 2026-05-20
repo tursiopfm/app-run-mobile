@@ -16,8 +16,7 @@ import {
   TEMPLATES_CHANGED,
   unhideAllSystemTemplates,
 } from '@/lib/plan/storage'
-import { INTENSITY_LEVEL_COLORS, SESSION_TYPE_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
-import type { WorkoutType } from '@/lib/activities/intensity'
+import { INTENSITY_LEVEL_COLORS } from '@/lib/activities/indicators'
 import { resolveSessionMeta } from '@/lib/plan/session-meta'
 import { TemplateEditorModal } from './TemplateEditorModal'
 import { ActivityTypesPrefsModal } from './ActivityTypesPrefsModal'
@@ -196,7 +195,7 @@ export function BibliothequeSeancesBlock() {
             active={selectedType === t.slug}
             onClick={() => setSelectedType(t.slug)}
             label={t.label}
-            color={SESSION_TYPE_COLORS[t.slug as WorkoutType]}
+            color={resolveSessionMeta(t.slug, types).color}
           />
         ))}
         <FilterPill onClick={() => setPrefsModalOpen(true)} label="⚙ Personnalisé" isCustom />
