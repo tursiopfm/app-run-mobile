@@ -4,10 +4,11 @@
 // vs restant) avec navigation jour + bouton Aujourd'hui. Lit les vraies données
 // via lib/plan/storage (PlannedSession[], TrainingPlan, Race principale).
 //
-// Périmètre : RUNNING UNIQUEMENT (course, footing, fractionné, côtes, seuil,
-// sortie longue, runtaf). Vélo / natation / renfo / muscu sont exclus des
-// totaux (km / D+ / charge) ET du compteur de séances, pour rester cohérent
-// avec les cibles de phase qui sont définies en running.
+// Périmètre : RUNNING UNIQUEMENT — résolu via lib/plan/session-meta
+// (catégorie 'run' pour les types builtin ET les types custom user). Vélo /
+// natation / renfo / muscu sont exclus des totaux (km / D+ / charge) ET du
+// compteur de séances, pour rester cohérent avec les cibles de phase qui sont
+// définies en running.
 //
 // MVP : pas de notion de "réalisé" (pas de sync Activity ↔ PlannedSession encore).
 // → actualKm / actualDPlus / actualLoad sont à 0 pour l'instant (TODO).
@@ -19,7 +20,8 @@ import {
   getPlannedSessions,
 } from '@/lib/plan/storage'
 import type { Phase, PlannedSession, Race, TrainingPlan } from '@/types/plan'
-import { isRunningType } from '@/lib/plan/type-helpers'
+import { useActivityTypes } from '@/lib/plan/use-activity-types'
+import { resolveSessionMeta } from '@/lib/plan/session-meta'
 import { colors } from '@/lib/design/colors'
 import { BlockCard } from '@/components/blocks/BlockCard'
 
@@ -107,6 +109,10 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
   const [sessions, setSessions] = useState<PlannedSession[]>([])
   const [loaded, setLoaded] = useState(false)
 
+  // Catalogue de types (builtin + custom user) pour résoudre la catégorie
+  // running de chaque séance — y compris les types custom catégorisés 'run'.
+  const { types } = useActivityTypes()
+
   // Bornes de la semaine sélectionnée.
   const weekStartISO = useMemo(
     () => toISO(startOfISOWeek(parseISO(selectedDateISO))),
@@ -148,10 +154,11 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
   }, [currentPhase, mainRace])
 
   // Séances running uniquement (vélo/natation/renfo/muscu exclus) avec un
-  // title non vide — base pour le compteur et les totaux.
+  // title non vide — base pour le compteur et les totaux. Le resolver gère
+  // les types builtin ET les types custom catégorisés 'run'.
   const runningSessions = useMemo(
-    () => sessions.filter(s => s.title && isRunningType(s.type)),
-    [sessions],
+    () => sessions.filter(s => s.title && resolveSessionMeta(s.type, types).isRunning),
+    [sessions, types],
   )
 
   const plannedSessionsCount = runningSessions.length
