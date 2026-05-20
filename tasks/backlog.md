@@ -136,10 +136,11 @@
 - **Identifié** : 2026-05-20
 - **Livré** : PhaseEditorModal avec focus/loadPattern/weekType + tableau sur mesocycle_weeks + boutons Régénérer/Forcer + RegenerateConfirmDialog. PlanWarnings sous timeline (5 règles : race_a_orphan, taper_missing, sharp_ramp, phase_gap, phase_overlap). StructurePrepaBlock lit weeksByPhase (real weekType au lieu du placeholder 'load').
 
-### Sub-project D — Cycles v2 templates de prépa
+### Sub-project D — Cycles v2 templates de prépa ✅ Livré 2026-05-20
 - **Quoi** : modale "Créer depuis course objectif" avec presets ultra / trail_court / reprise / personnalisé.
 - **Pourquoi** : accélérer la création d'un macrocycle complet à partir d'une course en base et d'un template adapté à la distance / au profil.
 - **Identifié** : 2026-05-20
+- **Livré** : 4 templates hard-codés (ultra 21s / trail_court 15s / reprise 12s / custom) + `applyTemplate` avec compression proportionnelle. Select Template dans `NewMacrocycleModal` + preview live (description + warning compression). `mesocycle_weeks` générées automatiquement au save via `regenerateWeeks` (depuis A).
 
 ## À qualifier (ni planifié ni écarté)
 
