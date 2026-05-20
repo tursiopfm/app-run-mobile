@@ -39,6 +39,12 @@ const CYCLE_3_1: ReadonlyArray<{ ratio: number; type: WeekType }> = [
   { ratio: 0.65, type: 'deload' },
 ]
 
+const CYCLE_2_1: ReadonlyArray<{ ratio: number; type: WeekType }> = [
+  { ratio: 0.85, type: 'load' },
+  { ratio: 1.00, type: 'load' },
+  { ratio: 0.65, type: 'deload' },
+]
+
 const MS_PER_DAY = 86_400_000
 
 function parseISODate(iso: string): Date {
@@ -84,6 +90,15 @@ export function generateWeeks(pattern: LoadPattern, input: PatternInput): Genera
     const out: GeneratedWeek[] = []
     for (let i = 0; i < input.weekCount; i++) {
       const step = CYCLE_3_1[i % CYCLE_3_1.length]
+      out.push(makeWeek(input, i, step.ratio, step.type))
+    }
+    return out
+  }
+
+  if (pattern === 'progressive_2_1') {
+    const out: GeneratedWeek[] = []
+    for (let i = 0; i < input.weekCount; i++) {
+      const step = CYCLE_2_1[i % CYCLE_2_1.length]
       out.push(makeWeek(input, i, step.ratio, step.type))
     }
     return out
