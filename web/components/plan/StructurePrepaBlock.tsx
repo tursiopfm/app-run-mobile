@@ -209,7 +209,7 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
     return (
       <BlockCard
         title="Cycle de préparation"
-        helpTitle="Phases de prépa"
+        helpTitle="Cycles de prépa"
         helpBody="Découpe le macrocycle en mésocycles : foncier, développement, spécifique, affûtage, récupération."
       >
         <div className="flex flex-col items-center justify-center text-center py-6 px-4">
@@ -226,7 +226,7 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
     return (
       <BlockCard
         title="Cycle de préparation"
-        helpTitle="Phases de prépa"
+        helpTitle="Cycles de prépa"
         helpBody="Découpe le macrocycle en mésocycles : foncier, développement, spécifique, affûtage, récupération."
       >
         <div className="flex flex-col items-center justify-center text-center py-6 px-4">
@@ -264,7 +264,7 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
   return (
     <BlockCard
       title="Cycle de préparation"
-      helpTitle="Phases de prépa"
+      helpTitle="Cycles de prépa"
       helpBody="Découpe le macrocycle en mésocycles : foncier, développement, spécifique, affûtage, récupération."
       rightSlot={
         <>
@@ -273,8 +273,8 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
             type="button"
             onClick={() => openEditor()}
             className="inline-flex items-center justify-center w-7 h-7 rounded-[6px] text-trail-primary hover:bg-trail-surface ml-2"
-            aria-label="Régénérer ou éditer les phases"
-            title="Régénérer ou éditer les phases"
+            aria-label="Régénérer ou éditer les cycles"
+            title="Régénérer ou éditer les cycles"
           >
             <SquarePen size={16} aria-hidden />
           </button>
@@ -286,7 +286,7 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
         <div
           className="flex w-full rounded-[8px] overflow-hidden relative"
           style={{ height: 36 }}
-          aria-label="Phases du plan"
+          aria-label="Cycles du plan"
         >
           {td.segments.map(({ phase, weeks }) => {
             const def = PHASE_DEFINITIONS[phase.type]
@@ -308,7 +308,7 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
                   opacity: isExpanded ? 1 : 0.92,
                   minWidth: 0,
                 }}
-                aria-label={`Phase ${phase.label}, ${weeks} semaines`}
+                aria-label={`Cycle ${phase.label}, ${weeks} semaines`}
                 aria-expanded={isExpanded}
               >
                 {showLabel && (
@@ -384,7 +384,7 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
               type="button"
               onClick={() => setExpandedId(null)}
               className="text-[11px] text-trail-muted hover:text-trail-text"
-              aria-label="Replier la phase"
+              aria-label="Replier le cycle"
             >
               ✕
             </button>
@@ -483,9 +483,9 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
             type="button"
             onClick={() => openEditor(expandedPhase.id)}
             className="px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
-            aria-label={`Éditer la phase ${expandedPhase.label}`}
+            aria-label={`Éditer le cycle ${expandedPhase.label}`}
           >
-            Éditer cette phase
+            Éditer ce cycle
           </button>
         </div>
       )}

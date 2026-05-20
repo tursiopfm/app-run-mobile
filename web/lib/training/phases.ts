@@ -116,7 +116,7 @@ function buildPhase(
   return {
     id: makeId(),
     type,
-    label: labelOverride ?? `Phase ${def.label}`,
+    label: labelOverride ?? `Cycle ${def.label}`,
     startDate: toISODate(startDate),
     endDate: toISODate(endDate),
     weeklyChargeTarget: DEFAULT_WEEKLY_CHARGE[type],
@@ -213,7 +213,7 @@ export function autoDistributePhases(startDate: string, raceDate: string): Phase
 
     if (foncier1W > 0) {
       const end = addWeeks(cursor, foncier1W)
-      phases.push(buildPhase('foncier', cursor, end, 'Phase Foncier 1'))
+      phases.push(buildPhase('foncier', cursor, end, 'Cycle Foncier 1'))
       cursor = end
     }
     {
@@ -223,7 +223,7 @@ export function autoDistributePhases(startDate: string, raceDate: string): Phase
     }
     if (foncier2W > 0) {
       const end = addWeeks(cursor, foncier2W)
-      phases.push(buildPhase('foncier', cursor, end, 'Phase Foncier 2'))
+      phases.push(buildPhase('foncier', cursor, end, 'Cycle Foncier 2'))
       cursor = end
     }
   } else if (foncierW > 0) {
