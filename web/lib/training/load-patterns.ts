@@ -104,6 +104,19 @@ export function generateWeeks(pattern: LoadPattern, input: PatternInput): Genera
     return out
   }
 
+  if (pattern === 'taper') {
+    const out: GeneratedWeek[] = []
+    const startRatio = 0.85
+    const endRatio = 0.40
+    for (let i = 0; i < input.weekCount; i++) {
+      const ratio = input.weekCount === 1
+        ? startRatio
+        : startRatio - (startRatio - endRatio) * (i / (input.weekCount - 1))
+      out.push(makeWeek(input, i, ratio, 'taper'))
+    }
+    return out
+  }
+
   // Autres patterns : ajoutés progressivement dans les sous-tasks suivantes.
   throw new Error(`Pattern not implemented yet: ${pattern}`)
 }

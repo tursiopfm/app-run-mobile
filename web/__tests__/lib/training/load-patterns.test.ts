@@ -107,3 +107,51 @@ describe('generateWeeks — progressive_2_1', () => {
     expect(weeks.map(w => w.weekType)).toEqual(['load', 'load'])
   })
 })
+
+describe('generateWeeks — taper', () => {
+  it('génère 4 semaines : décroissance linéaire 0.85 → 0.40, type taper', () => {
+    const weeks = generateWeeks('taper', {
+      startDate: '2026-08-05',
+      weekCount: 4,
+      baselineLoadTss: 400,
+      baselineVolumeKm: 50,
+      baselineDplusM: 1000,
+    })
+
+    expect(weeks).toHaveLength(4)
+    expect(weeks.every(w => w.weekType === 'taper')).toBe(true)
+    expect(weeks[0].targetLoadTss).toBe(340)   // 400 * 0.85
+    expect(weeks[1].targetLoadTss).toBe(280)   // 400 * 0.70
+    expect(weeks[2].targetLoadTss).toBe(220)   // 400 * 0.55
+    expect(weeks[3].targetLoadTss).toBe(160)   // 400 * 0.40
+  })
+
+  it('génère 1 semaine : 1 entrée à 0.85', () => {
+    const weeks = generateWeeks('taper', {
+      startDate: '2026-08-25',
+      weekCount: 1,
+      baselineLoadTss: 400,
+      baselineVolumeKm: 50,
+      baselineDplusM: 1000,
+    })
+
+    expect(weeks).toHaveLength(1)
+    expect(weeks[0].weekType).toBe('taper')
+    expect(weeks[0].targetLoadTss).toBe(340)   // 400 * 0.85
+  })
+
+  it('génère 3 semaines : ratios [0.85, 0.625, 0.40]', () => {
+    const weeks = generateWeeks('taper', {
+      startDate: '2026-08-12',
+      weekCount: 3,
+      baselineLoadTss: 400,
+      baselineVolumeKm: 50,
+      baselineDplusM: 1000,
+    })
+
+    expect(weeks).toHaveLength(3)
+    expect(weeks[0].targetLoadTss).toBe(340)
+    expect(weeks[1].targetLoadTss).toBe(250)   // 400 * 0.625
+    expect(weeks[2].targetLoadTss).toBe(160)
+  })
+})
