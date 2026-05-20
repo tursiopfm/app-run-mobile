@@ -137,3 +137,43 @@ export async function regenerateWeeks(
 
   return result.sort((a, b) => a.weekIndex - b.weekIndex)
 }
+
+/**
+ * Patch une semaine existante. Marque AUTOMATIQUEMENT is_manual_override=true
+ * et generated_from_pattern=false : toute édition manuelle de l'utilisateur
+ * doit être préservée par les régénérations futures (sauf forceOverwrite).
+ *
+ * Retourne la row mise à jour, ou null si la row n'existe pas / si Supabase
+ * échoue (logué en console.warn pour aider le debug).
+ */
+export async function updateWeek(
+  weekId: string,
+  patch: Partial<Pick<MesocycleWeek,
+    'weekType' | 'targetLoadTss' | 'targetVolumeKm' | 'targetDplusM' | 'comment'
+  >>,
+): Promise<MesocycleWeek | null> {
+  const supabase = createClient()
+  const row: Partial<Row> = {
+    is_manual_override: true,
+    generated_from_pattern: false,
+  }
+  if (patch.weekType !== undefined) row.week_type = patch.weekType
+  if (patch.targetLoadTss !== undefined) row.target_load_tss = patch.targetLoadTss
+  if (patch.targetVolumeKm !== undefined) row.target_volume_km = patch.targetVolumeKm
+  if (patch.targetDplusM !== undefined) row.target_dplus_m = patch.targetDplusM
+  if (patch.comment !== undefined) row.comment = patch.comment
+
+  const { data, error } = await supabase
+    .from('mesocycle_weeks')
+    .update(row)
+    .eq('id', weekId)
+    .select('*')
+    .maybeSingle()
+
+  if (error) {
+    console.warn('[mesocycle-weeks] updateWeek failed:', error.message)
+    return null
+  }
+  if (!data) return null
+  return weekFromRow(data as Row)
+}
