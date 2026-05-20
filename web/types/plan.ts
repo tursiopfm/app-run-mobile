@@ -38,6 +38,8 @@ export type PhaseType =
   | 'affutage'
   | 'recuperation'
 
+// Pattern de progression de la charge sur les semaines d'un mésocycle. Consommé
+// par le moteur `lib/training/load-patterns.ts` qui génère les semaines.
 export type LoadPattern =
   | 'progressive_3_1'
   | 'progressive_2_1'
@@ -46,23 +48,6 @@ export type LoadPattern =
   | 'recovery'
   | 'competition'
   | 'custom'
-
-export type WeekType =
-  | 'load' | 'deload' | 'recovery' | 'taper' | 'race' | 'transition' | 'custom'
-
-export interface MesocycleWeek {
-  id: string
-  phaseId: string
-  weekIndex: number
-  weekStartDate: string
-  weekType: WeekType
-  targetLoadTss: number
-  targetVolumeKm: number
-  targetDplusM: number
-  comment?: string
-  isManualOverride: boolean
-  generatedFromPattern: boolean
-}
 
 export interface PhaseWeeklyTarget {
   km: number     // km cible pour cette semaine
@@ -85,9 +70,36 @@ export interface Phase {
    * `weeklyDistanceKmTarget` / `weeklyElevationMTarget`.
    */
   weeklyTargets?: PhaseWeeklyTarget[]
-  focus?: string                  // focus libre du cycle (ex : "VMA courte")
-  loadPattern: LoadPattern        // pattern de progression (default 'custom' from DB)
+  focus?: string                  // focus libre du mésocycle (ex : 'VMA courte')
+  loadPattern: LoadPattern        // pattern de progression de la charge
   description?: string
+}
+
+// === Semaines (microcycles) ===
+// Rôle d'une semaine au sein d'un mésocycle. Orthogonal à `LoadPattern` : un
+// mésocycle `progressive_3_1` contient des semaines `load`, `load`, `load`,
+// `deload`. La table `mesocycle_weeks` porte ces rows (migration 022).
+export type WeekType =
+  | 'load'
+  | 'deload'
+  | 'recovery'
+  | 'taper'
+  | 'race'
+  | 'transition'
+  | 'custom'
+
+export interface MesocycleWeek {
+  id: string
+  phaseId: string
+  weekIndex: number          // 0-based dans la phase
+  weekStartDate: string      // ISO (YYYY-MM-DD)
+  weekType: WeekType
+  targetLoadTss: number      // TSS cible de la semaine
+  targetVolumeKm: number     // km cible
+  targetDplusM: number       // D+ cible (m)
+  comment?: string
+  isManualOverride: boolean  // true = ne pas écraser lors d'une régénération
+  generatedFromPattern: boolean
 }
 
 // === Course objectif ===
@@ -103,8 +115,8 @@ export interface Race {
   elevation: number          // m D+
   type: RaceType
   location?: string
-  isMain: boolean            // course objectif principale
-  priority: RacePriority     // priorité A/B/C (default 'C' from DB)
+  isMain: boolean            // course objectif principale (miroir legacy de priority='A')
+  priority: RacePriority     // priorité A (objectif), B (secondaire), C (entraînement)
   notes?: string
 }
 
@@ -119,8 +131,8 @@ export interface TrainingPlan {
   startDate: string          // ISO (YYYY-MM-DD)
   endDate: string            // ISO (YYYY-MM-DD)
   phases: Phase[]
-  status: MacrocycleStatus   // default 'active'
-  color?: string             // couleur d'affichage du macrocycle
+  status: MacrocycleStatus   // planned / active / completed / archived
+  color?: string             // couleur d'affichage (hex '#RRGGBB')
   templateId?: string        // si le plan a été créé depuis un template
   createdAt: string          // ISO timestamp
   updatedAt: string          // ISO timestamp
