@@ -7,6 +7,7 @@ import {
   DEFAULT_WEEKLY_CHARGE,
   DEFAULT_WEEKLY_DISTANCE_KM,
   DEFAULT_WEEKLY_ELEVATION_M,
+  PHASE_DEFINITIONS,
 } from './phases'
 
 export type PrepTemplateId = 'ultra' | 'trail_court' | 'reprise' | 'custom'
@@ -165,6 +166,7 @@ export function applyTemplate(
       weeklyElevationMTarget: DEFAULT_WEEKLY_ELEVATION_M[recipe.type],
       focus: recipe.focus,
       loadPattern: recipe.loadPattern,
+      description: PHASE_DEFINITIONS[recipe.type].description,
     })
     cursorMs = safeEndMs
   }
