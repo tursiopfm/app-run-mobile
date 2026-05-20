@@ -250,3 +250,64 @@ export function autoDistributePhases(startDate: string, raceDate: string): Phase
 
   return phases
 }
+
+// ─── Helpers cibles hebdo (km, D+) ────────────────────────────────────────────
+
+/**
+ * Nombre de semaines (entier, arrondi) couvertes par une phase.
+ * Garantit ≥ 1 même si les dates sont inversées ou identiques (la phase est
+ * toujours « au moins une semaine » côté UI).
+ */
+export function phaseWeekCount(phase: Phase): number {
+  const ms = parseISODate(phase.endDate).getTime() - parseISODate(phase.startDate).getTime()
+  return Math.max(1, Math.round(ms / MS_PER_WEEK))
+}
+
+/**
+ * Renvoie la liste des semaines d'une phase, avec date de début ISO et cibles
+ * effectives (override `phase.weeklyTargets[i]` si présent, sinon cibles
+ * uniformes `weeklyDistanceKmTarget` / `weeklyElevationMTarget` de la phase).
+ */
+export function getPhaseWeeks(phase: Phase): Array<{
+  index: number
+  startISO: string
+  km: number
+  dPlus: number
+}> {
+  const count = phaseWeekCount(phase)
+  const start = parseISODate(phase.startDate)
+  const out: Array<{ index: number; startISO: string; km: number; dPlus: number }> = []
+  for (let i = 0; i < count; i++) {
+    const override = phase.weeklyTargets?.[i]
+    out.push({
+      index: i,
+      startISO: toISODate(addWeeks(start, i)),
+      km: override?.km ?? phase.weeklyDistanceKmTarget,
+      dPlus: override?.dPlus ?? phase.weeklyElevationMTarget,
+    })
+  }
+  return out
+}
+
+/**
+ * Résout les cibles km / D+ effectives pour la semaine débutant à `weekStartISO`
+ * dans une phase donnée. Utilise l'override hebdo s'il existe pour cette
+ * semaine, sinon retombe sur les cibles uniformes de la phase.
+ *
+ * Si la semaine est hors de la phase (index négatif ou supérieur au compte),
+ * on retombe sur les cibles uniformes — appelant responsable de vérifier
+ * l'appartenance via `findCurrentPhase` côté blocs.
+ */
+export function resolveWeeklyTarget(
+  phase: Phase,
+  weekStartISO: string,
+): { km: number; dPlus: number } {
+  const phaseStart = parseISODate(phase.startDate).getTime()
+  const weekStart = parseISODate(weekStartISO).getTime()
+  const idx = Math.floor((weekStart - phaseStart) / MS_PER_WEEK)
+  const override = idx >= 0 ? phase.weeklyTargets?.[idx] : undefined
+  return {
+    km: override?.km ?? phase.weeklyDistanceKmTarget,
+    dPlus: override?.dPlus ?? phase.weeklyElevationMTarget,
+  }
+}

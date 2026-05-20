@@ -6,6 +6,7 @@
 import { createClient } from '@/lib/database/supabase-client'
 import type {
   Phase,
+  PhaseWeeklyTarget,
   PlannedSession,
   Race,
   SessionStatus,
@@ -140,8 +141,30 @@ type PhaseRow = {
   weekly_charge_target: number
   weekly_distance_km_target?: number | null
   weekly_elevation_m_target?: number | null
+  // Format JSONB côté DB : [{ km: number, d_plus: number }, ...]
+  weekly_targets?: Array<{ km: number; d_plus: number }> | null
   description: string | null
   position: number
+}
+
+function weeklyTargetsFromJson(raw: unknown): PhaseWeeklyTarget[] | undefined {
+  if (!Array.isArray(raw)) return undefined
+  const out: PhaseWeeklyTarget[] = []
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue
+    const km = Number((item as { km?: unknown }).km)
+    const dPlus = Number((item as { d_plus?: unknown }).d_plus)
+    out.push({
+      km: Number.isFinite(km) ? km : 0,
+      dPlus: Number.isFinite(dPlus) ? dPlus : 0,
+    })
+  }
+  return out.length > 0 ? out : undefined
+}
+
+function weeklyTargetsToJson(targets: PhaseWeeklyTarget[] | undefined): Array<{ km: number; d_plus: number }> {
+  if (!targets || targets.length === 0) return []
+  return targets.map(t => ({ km: t.km, d_plus: t.dPlus }))
 }
 
 function planFromRows(plan: PlanRow, phases: PhaseRow[]): TrainingPlan {
@@ -166,6 +189,8 @@ function planFromRows(plan: PlanRow, phases: PhaseRow[]): TrainingPlan {
         // Migration 015 pas encore appliquée → colonnes absentes côté DB → fallback 0.
         weeklyDistanceKmTarget: p.weekly_distance_km_target != null ? Number(p.weekly_distance_km_target) : 0,
         weeklyElevationMTarget: p.weekly_elevation_m_target ?? 0,
+        // Migration 021 pas encore appliquée → colonne absente → undefined.
+        weeklyTargets: weeklyTargetsFromJson(p.weekly_targets),
         description: p.description ?? undefined,
       })),
   }
@@ -195,6 +220,7 @@ function phasesToRows(plan: TrainingPlan): PhaseRow[] {
     weekly_charge_target: p.weeklyChargeTarget,
     weekly_distance_km_target: p.weeklyDistanceKmTarget,
     weekly_elevation_m_target: p.weeklyElevationMTarget,
+    weekly_targets: weeklyTargetsToJson(p.weeklyTargets),
     description: p.description ?? null,
     position: i,
   }))
@@ -464,10 +490,12 @@ export async function saveCurrentPlan(plan: TrainingPlan): Promise<void> {
       if (rows.length > 0) {
         const { error: phaseErr } = await ctx.supabase.from('phases').insert(rows)
         if (phaseErr && isMissingColumnError(phaseErr)) {
-          // Migration 015 pas encore appliquée : retry sans les colonnes km/D+.
+          // Migration 015/021 pas encore appliquée : retry sans les colonnes
+          // km/D+ uniformes (015) ni les overrides hebdo (021).
           const legacyRows = rows.map(({
             weekly_distance_km_target: _km,
             weekly_elevation_m_target: _dplus,
+            weekly_targets: _wt,
             ...rest
           }) => rest)
           await ctx.supabase.from('phases').insert(legacyRows)

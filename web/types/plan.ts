@@ -38,6 +38,11 @@ export type PhaseType =
   | 'affutage'
   | 'recuperation'
 
+export interface PhaseWeeklyTarget {
+  km: number     // km cible pour cette semaine
+  dPlus: number  // D+ cible (m) pour cette semaine
+}
+
 export interface Phase {
   id: string
   type: PhaseType
@@ -45,8 +50,15 @@ export interface Phase {
   startDate: string               // ISO (YYYY-MM-DD)
   endDate: string                 // ISO (YYYY-MM-DD)
   weeklyChargeTarget: number      // TSS cible / semaine
-  weeklyDistanceKmTarget: number  // km cible / semaine
-  weeklyElevationMTarget: number  // D+ cible / semaine (m)
+  weeklyDistanceKmTarget: number  // km cible / semaine (défaut, appliqué si weeklyTargets absent)
+  weeklyElevationMTarget: number  // D+ cible / semaine (m) (défaut)
+  /**
+   * Cibles km / D+ semaine par semaine (overrides). Indexé par numéro de
+   * semaine dans la phase (0-based). Si absent ou plus court que le nombre
+   * de semaines, les semaines non couvertes retombent sur les défauts
+   * `weeklyDistanceKmTarget` / `weeklyElevationMTarget`.
+   */
+  weeklyTargets?: PhaseWeeklyTarget[]
   description?: string
 }
 

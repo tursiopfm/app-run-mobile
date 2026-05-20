@@ -133,7 +133,7 @@ export default function PlanClient() {
     },
     {
       id: 'structure',
-      label: 'Structure de prépa',
+      label: 'Cycle de préparation',
       emoji: '🏗️',
       render: () => <StructurePrepaBlock onChange={bumpReload} reloadKey={reloadKey} />,
     },

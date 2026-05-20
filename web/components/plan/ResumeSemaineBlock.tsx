@@ -10,8 +10,9 @@
 // compteur de séances, pour rester cohérent avec les cibles de phase qui sont
 // définies en running.
 //
-// MVP : pas de notion de "réalisé" (pas de sync Activity ↔ PlannedSession encore).
-// → actualKm / actualDPlus / actualLoad sont à 0 pour l'instant (TODO).
+// Réalisé : agrégé côté serveur via /api/activities/week-totals (running
+// uniquement = Run + TrailRun, même règle d'overrides manual_* que le bloc
+// Objectifs du Cockpit — lib/data/dashboard.buildSportOverview).
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
@@ -20,6 +21,7 @@ import {
   getPlannedSessions,
 } from '@/lib/plan/storage'
 import type { Phase, PlannedSession, Race, TrainingPlan } from '@/types/plan'
+import { resolveWeeklyTarget } from '@/lib/training/phases'
 import { useActivityTypes } from '@/lib/plan/use-activity-types'
 import { resolveSessionMeta } from '@/lib/plan/session-meta'
 import { colors } from '@/lib/design/colors'
@@ -176,25 +178,48 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
     return { km, dPlus, load }
   }, [runningSessions])
 
-  // Cibles (phase courante). Si pas de phase : 0.
-  const targets = useMemo(() => ({
-    km:    currentPhase?.weeklyDistanceKmTarget  ?? 0,
-    dPlus: currentPhase?.weeklyElevationMTarget   ?? 0,
-    load:  currentPhase?.weeklyChargeTarget       ?? 0,
-  }), [currentPhase])
+  // Cibles (phase courante). km / D+ utilisent l'override hebdo si présent
+  // pour la semaine en cours (sinon cibles uniformes de la phase). Charge
+  // reste pilotée au niveau phase (pas d'override hebdo demandé pour TSS).
+  const targets = useMemo(() => {
+    if (!currentPhase) return { km: 0, dPlus: 0, load: 0 }
+    const { km, dPlus } = resolveWeeklyTarget(currentPhase, weekStartISO)
+    return { km, dPlus, load: currentPhase.weeklyChargeTarget ?? 0 }
+  }, [currentPhase, weekStartISO])
 
-  // TODO : remplacer par vraies données quand sync Activity ↔ PlannedSession.
-  const actualKm = 0
-  const actualDPlus = 0
-  const actualLoad = 0
+  // Réalisé (running uniquement) : fetché depuis /api/activities/week-totals
+  // sur le range [lundi, lundi+7[. Re-fetch quand on change de semaine ou
+  // après une opération qui peut altérer les activités (reloadKey).
+  const [actual, setActual] = useState<{ km: number; dPlus: number; load: number }>(
+    { km: 0, dPlus: 0, load: 0 },
+  )
+  useEffect(() => {
+    let cancelled = false
+    const toExclusiveISO = toISO(addDays(parseISO(weekStartISO), 7))
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/activities/week-totals?from=${weekStartISO}&to=${toExclusiveISO}&category=run`,
+          { cache: 'no-store' },
+        )
+        if (!res.ok) return
+        const data = await res.json() as { km: number; dPlus: number; ces: number }
+        if (cancelled) return
+        setActual({ km: data.km ?? 0, dPlus: data.dPlus ?? 0, load: data.ces ?? 0 })
+      } catch {
+        if (!cancelled) setActual({ km: 0, dPlus: 0, load: 0 })
+      }
+    })()
+    return () => { cancelled = true }
+  }, [weekStartISO, reloadKey])
 
   // Restant = ce qui reste à exécuter de la planif. Si on a déjà dépassé la
   // planif (actual > planned), restant = 0 (pas de valeur négative).
   const remaining = useMemo(() => ({
-    km:    Math.max(0, planned.km    - actualKm),
-    dPlus: Math.max(0, planned.dPlus - actualDPlus),
-    load:  Math.max(0, planned.load  - actualLoad),
-  }), [planned])
+    km:    Math.max(0, planned.km    - actual.km),
+    dPlus: Math.max(0, planned.dPlus - actual.dPlus),
+    load:  Math.max(0, planned.load  - actual.load),
+  }), [planned, actual])
 
   const weekNumber = useMemo(() => isoWeek(parseISO(weekStartISO)), [weekStartISO])
 
@@ -289,8 +314,8 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
         />
         <MetricTile
           label="Réalisé"
-          main={`${fmt1(actualKm)} km`}
-          sub={`${Math.round(actualDPlus)} m D+`}
+          main={`${fmt1(actual.km)} km`}
+          sub={`${Math.round(actual.dPlus)} m D+`}
           color={colors.greenOk}
         />
         <MetricTile
@@ -305,21 +330,21 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
       <div className="mt-3 space-y-2">
         <ProgressLine
           label="Volume semaine"
-          current={actualKm}
+          current={actual.km}
           target={targets.km}
           unit="km"
           color={colors.chargeOrange}
         />
         <ProgressLine
           label="Dénivelé"
-          current={actualDPlus}
+          current={actual.dPlus}
           target={targets.dPlus}
           unit="m"
           color={colors.seriesBlue}
         />
         <ProgressLine
           label="Charge"
-          current={actualLoad}
+          current={actual.load}
           target={targets.load}
           unit="pts"
           color={colors.seriesYellow}

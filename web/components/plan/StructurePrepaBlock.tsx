@@ -4,9 +4,10 @@
 // Lit Race + TrainingPlan via storage helpers. Click sur un segment → expand.
 // États vides : pas de course → message, course mais pas de plan → CTA générer.
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { Phase, Race, TrainingPlan } from '@/types/plan'
-import { PHASE_DEFINITIONS, autoDistributePhases } from '@/lib/training/phases'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
+import { SquarePen } from 'lucide-react'
+import type { Phase, PhaseWeeklyTarget, Race, TrainingPlan } from '@/types/plan'
+import { PHASE_DEFINITIONS, autoDistributePhases, getPhaseWeeks } from '@/lib/training/phases'
 import { getCurrentPlan, getRace, saveCurrentPlan } from '@/lib/plan/storage'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { PhaseEditorModal } from './PhaseEditorModal'
@@ -70,6 +71,11 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
   const [modalOpen, setModalOpen] = useState(false)
   const [focusPhaseId, setFocusPhaseId] = useState<string | undefined>(undefined)
   const [generating, setGenerating] = useState(false)
+  // Brouillon local des cibles hebdo de la phase ouverte. On édite ici puis on
+  // persiste onBlur (évite d'écrire à chaque keystroke + de remonter onChange
+  // au parent à chaque touche, ce qui ferait remonter reloadKey en boucle).
+  const [weeklyDraft, setWeeklyDraft] = useState<PhaseWeeklyTarget[]>([])
+  const [draftKey, setDraftKey] = useState<string | null>(null)
 
   const reload = useCallback(async () => {
     const [r, p] = await Promise.all([getRace(), getCurrentPlan()])
@@ -131,6 +137,55 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
     }
   }
 
+  // Phase actuellement déroulée (calculée tôt pour pouvoir initialiser le
+  // draft hebdo dans un useEffect appelé inconditionnellement, avant les
+  // early returns "pas de course" / "pas de plan").
+  const expandedPhase = useMemo<Phase | null>(
+    () => (plan && expandedId)
+      ? plan.phases.find(p => p.id === expandedId) ?? null
+      : null,
+    [plan, expandedId],
+  )
+
+  // Clé d'identité du draft hebdo : on ne re-init que si on change de phase
+  // OU si les bornes de la phase changent (le nombre de semaines varie). On
+  // exclut volontairement `weeklyTargets` de la clé pour ne pas réinitialiser
+  // le draft pendant que l'utilisateur tape (cf. onBlur qui persiste).
+  const expandedPhaseKey = expandedPhase
+    ? `${expandedPhase.id}|${expandedPhase.startDate}|${expandedPhase.endDate}`
+    : null
+
+  useEffect(() => {
+    if (!expandedPhase || !expandedPhaseKey) {
+      if (draftKey !== null) {
+        setWeeklyDraft([])
+        setDraftKey(null)
+      }
+      return
+    }
+    if (draftKey === expandedPhaseKey) return
+    const weeks = getPhaseWeeks(expandedPhase)
+    setWeeklyDraft(weeks.map(w => ({ km: w.km, dPlus: w.dPlus })))
+    setDraftKey(expandedPhaseKey)
+  }, [expandedPhase, expandedPhaseKey, draftKey])
+
+  const persistWeeklyTargets = useCallback(
+    async (phaseId: string, targets: PhaseWeeklyTarget[]) => {
+      if (!plan) return
+      const updated: TrainingPlan = {
+        ...plan,
+        phases: plan.phases.map(p =>
+          p.id === phaseId ? { ...p, weeklyTargets: [...targets] } : p,
+        ),
+        updatedAt: new Date().toISOString(),
+      }
+      await saveCurrentPlan(updated)
+      setPlan(updated)
+      onChange?.()
+    },
+    [plan, onChange],
+  )
+
   // Calculs timeline.
   const timelineData = useMemo(() => {
     if (!plan || plan.phases.length === 0) return null
@@ -153,7 +208,7 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
   if (!race) {
     return (
       <BlockCard
-        title="Structure de prépa"
+        title="Cycle de préparation"
         helpTitle="Phases de prépa"
         helpBody="Découpe le macrocycle en mésocycles : foncier, développement, spécifique, affûtage, récupération."
       >
@@ -170,7 +225,7 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
   if (!plan || plan.phases.length === 0) {
     return (
       <BlockCard
-        title="Structure de prépa"
+        title="Cycle de préparation"
         helpTitle="Phases de prépa"
         helpBody="Découpe le macrocycle en mésocycles : foncier, développement, spécifique, affûtage, récupération."
       >
@@ -182,9 +237,11 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
             type="button"
             onClick={handleGenerateInitial}
             disabled={!loaded || generating}
-            className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-[14px] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Générer ma structure de prépa"
+            title="Générer ma structure de prépa"
+            className="inline-flex items-center justify-center w-11 h-11 rounded-[10px] bg-trail-primary text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {generating ? 'Génération…' : 'Générer ma structure de prépa'}
+            <SquarePen size={20} aria-hidden />
           </button>
         </div>
         <PhaseEditorModal
@@ -200,12 +257,13 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
 
   // ─── Plan + phases : timeline composite ───────────────────────────────────
   const td = timelineData!
-  const expandedPhase = expandedId ? plan.phases.find(p => p.id === expandedId) ?? null : null
+  // `expandedPhase` est déjà calculé via useMemo plus haut (besoin de l'init
+  // de draft hebdo avant les early returns).
   const todayInRange = td.todayProgress >= 0 && td.todayProgress <= 100
 
   return (
     <BlockCard
-      title="Structure de prépa"
+      title="Cycle de préparation"
       helpTitle="Phases de prépa"
       helpBody="Découpe le macrocycle en mésocycles : foncier, développement, spécifique, affûtage, récupération."
       rightSlot={
@@ -214,10 +272,11 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
           <button
             type="button"
             onClick={() => openEditor()}
-            className="text-[12px] font-semibold text-trail-primary hover:underline ml-2"
+            className="inline-flex items-center justify-center w-7 h-7 rounded-[6px] text-trail-primary hover:bg-trail-surface ml-2"
             aria-label="Régénérer ou éditer les phases"
+            title="Régénérer ou éditer les phases"
           >
-            Régénérer
+            <SquarePen size={16} aria-hidden />
           </button>
         </>
       }
@@ -350,14 +409,74 @@ export function StructurePrepaBlock({ onChange, reloadKey = 0 }: Props) {
               <span className="text-trail-muted">Charge cible :</span>{' '}
               {expandedPhase.weeklyChargeTarget} TSS/sem
             </span>
-            <span>
-              <span className="text-trail-muted">Distance hebdo :</span>{' '}
-              {expandedPhase.weeklyDistanceKmTarget} km
-            </span>
-            <span>
-              <span className="text-trail-muted">D+ hebdo :</span>{' '}
-              {expandedPhase.weeklyElevationMTarget} m
-            </span>
+          </div>
+
+          {/* Objectifs hebdo : tableau éditable km + D+ pour chaque semaine
+              de la phase. Persistance onBlur (cf. weeklyTargets). */}
+          <div className="mb-3">
+            <div className="text-[11px] font-semibold text-trail-muted mb-2">
+              Objectifs semaine par semaine
+            </div>
+            <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1.5 items-center text-[12px]">
+              <span className="text-[10px] uppercase tracking-wide text-trail-muted">Semaine</span>
+              <span className="text-[10px] uppercase tracking-wide text-trail-muted text-right">Volume</span>
+              <span className="text-[10px] uppercase tracking-wide text-trail-muted text-right">D+</span>
+              {getPhaseWeeks(expandedPhase).map((w, i) => {
+                const draft = weeklyDraft[i] ?? { km: w.km, dPlus: w.dPlus }
+                return (
+                  <Fragment key={`${expandedPhase.id}-w${i}`}>
+                    <span className="text-trail-text">
+                      Sem {i + 1}
+                      <span className="text-trail-muted"> · {formatDDMM(w.startISO)}</span>
+                    </span>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        step="0.5"
+                        min={0}
+                        value={Number.isFinite(draft.km) ? draft.km : 0}
+                        onChange={(e) => {
+                          const v = Number(e.target.value) || 0
+                          setWeeklyDraft(prev => {
+                            const next = [...prev]
+                            while (next.length <= i) next.push({ km: 0, dPlus: 0 })
+                            next[i] = { ...next[i], km: v }
+                            return next
+                          })
+                        }}
+                        onBlur={() => persistWeeklyTargets(expandedPhase.id, weeklyDraft)}
+                        className="w-[84px] pl-2 pr-[28px] py-1 rounded-[6px] bg-trail-card border border-trail-border text-trail-text text-right text-[12px] focus:outline-none focus:border-trail-primary"
+                        aria-label={`Volume km — semaine ${i + 1}`}
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-trail-muted pointer-events-none">km</span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        step="10"
+                        min={0}
+                        value={Number.isFinite(draft.dPlus) ? draft.dPlus : 0}
+                        onChange={(e) => {
+                          const v = Number(e.target.value) || 0
+                          setWeeklyDraft(prev => {
+                            const next = [...prev]
+                            while (next.length <= i) next.push({ km: 0, dPlus: 0 })
+                            next[i] = { ...next[i], dPlus: v }
+                            return next
+                          })
+                        }}
+                        onBlur={() => persistWeeklyTargets(expandedPhase.id, weeklyDraft)}
+                        className="w-[84px] pl-2 pr-[24px] py-1 rounded-[6px] bg-trail-card border border-trail-border text-trail-text text-right text-[12px] focus:outline-none focus:border-trail-primary"
+                        aria-label={`D+ m — semaine ${i + 1}`}
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-trail-muted pointer-events-none">m</span>
+                    </div>
+                  </Fragment>
+                )
+              })}
+            </div>
           </div>
 
           <button
