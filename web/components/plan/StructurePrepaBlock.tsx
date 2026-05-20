@@ -9,11 +9,13 @@
 
 import { Fragment, useMemo, useState } from 'react'
 import { SquarePen } from 'lucide-react'
-import type { Phase, Race, TrainingPlan, WeekType } from '@/types/plan'
-import { PHASE_DEFINITIONS, autoDistributePhases, getPhaseWeeks } from '@/lib/training/phases'
+import type { MesocycleWeek, Phase, Race, TrainingPlan, WeekType } from '@/types/plan'
+import { PHASE_DEFINITIONS, autoDistributePhases } from '@/lib/training/phases'
+import { computeWarnings } from '@/lib/training/plan-warnings'
 import { saveCurrentPlan } from '@/lib/plan/storage'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { PhaseEditorModal } from './PhaseEditorModal'
+import { PlanWarnings } from './PlanWarnings'
 import { RaceMarkers } from './RaceMarkers'
 
 const MS_PER_DAY = 86_400_000
@@ -55,10 +57,14 @@ const WEEK_TYPE_COLOR: Record<WeekType, { bg: string; fg: string }> = {
 type Props = {
   activeMacrocycle: TrainingPlan | null
   races: Race[]
+  macros: TrainingPlan[]
+  weeksByPhase: Record<string, MesocycleWeek[]>
   onChange?: () => void
 }
 
-export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props) {
+export function StructurePrepaBlock({
+  activeMacrocycle, races, macros, weeksByPhase, onChange,
+}: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [focusPhaseId, setFocusPhaseId] = useState<string | undefined>(undefined)
@@ -119,6 +125,11 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
       ? activeMacrocycle.phases.find(p => p.id === expandedId) ?? null
       : null,
     [activeMacrocycle, expandedId])
+
+  const warnings = useMemo(
+    () => computeWarnings({ macros, activeMacrocycle, races, weeksByPhase }),
+    [macros, activeMacrocycle, races, weeksByPhase],
+  )
 
   // ─── États vides ────────────────────────────────────────────────────────────
   if (!activeMacrocycle) {
@@ -282,6 +293,11 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
         <RaceMarkers races={races} macroStart={activeMacrocycle.startDate} macroEnd={activeMacrocycle.endDate} />
       </div>
 
+      <PlanWarnings
+        warnings={warnings}
+        onPhaseClick={(id) => setExpandedId(id)}
+      />
+
       {/* Panneau expand read-only */}
       {expandedPhase && (
         <div className="mt-3 p-3 rounded-[10px] bg-[color:var(--trail-surface)] border border-[color:var(--trail-border)]">
@@ -331,7 +347,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
             <span><span className="text-[color:var(--trail-muted)]">Charge cible :</span> {expandedPhase.weeklyChargeTarget} TSS/sem</span>
           </div>
 
-          {/* Tableau hebdo READ-ONLY (lit JSONB legacy via getPhaseWeeks) */}
+          {/* Tableau hebdo READ-ONLY (lit mesocycle_weeks) */}
           <div className="mb-3">
             <div className="text-[11px] font-semibold text-[color:var(--trail-muted)] mb-2">
               Semaines (lecture seule)
@@ -343,24 +359,23 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
               <span className="text-right">D+</span>
               <span className="text-right">TSS</span>
             </div>
-            {getPhaseWeeks(expandedPhase).map((w, i) => {
-              const wt = 'load' as const  // placeholder — Task C utilisera mesocycle_weeks pour le vrai weekType
-              const colors = WEEK_TYPE_COLOR[wt] ?? WEEK_TYPE_COLOR.load
+            {(weeksByPhase[expandedPhase.id] ?? []).map((w) => {
+              const colors = WEEK_TYPE_COLOR[w.weekType] ?? WEEK_TYPE_COLOR.load
               return (
-                <Fragment key={`${expandedPhase.id}-w${i}`}>
+                <Fragment key={w.id}>
                   <div className="grid grid-cols-[44px_1fr_56px_56px_56px] gap-x-2 gap-y-1 items-center mt-1 py-1.5 px-1 rounded-[6px]" style={{ background: 'var(--trail-card)' }}>
                     <span className="text-[11px] font-semibold text-[color:var(--trail-text)]">
-                      {i + 1}<span className="text-[color:var(--trail-muted)] font-normal text-[9px]"> {formatDDMM(w.startISO)}</span>
+                      {w.weekIndex + 1}<span className="text-[color:var(--trail-muted)] font-normal text-[9px]"> {formatDDMM(w.weekStartDate)}</span>
                     </span>
                     <span
                       className="text-[11px] font-semibold px-2 py-0.5 rounded-[6px] inline-block w-fit"
                       style={{ background: colors.bg, color: colors.fg }}
                     >
-                      {wt}
+                      {w.weekType}
                     </span>
-                    <span className="text-right text-[12px] tabular-nums text-[color:var(--trail-text)]">{w.km}</span>
-                    <span className="text-right text-[12px] tabular-nums text-[color:var(--trail-text)]">{w.dPlus}</span>
-                    <span className="text-right text-[12px] tabular-nums text-[color:var(--trail-text)]">{expandedPhase.weeklyChargeTarget}</span>
+                    <span className="text-right text-[12px] tabular-nums text-[color:var(--trail-text)]">{w.targetVolumeKm}</span>
+                    <span className="text-right text-[12px] tabular-nums text-[color:var(--trail-text)]">{w.targetDplusM}</span>
+                    <span className="text-right text-[12px] tabular-nums text-[color:var(--trail-text)]">{w.targetLoadTss}</span>
                   </div>
                 </Fragment>
               )
