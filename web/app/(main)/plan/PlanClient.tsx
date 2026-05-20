@@ -21,7 +21,7 @@
 // indépendamment, mais le drag template → calendrier fonctionne.
 // ─────────────────────────────────────────────────────────────────────────
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { BlockGrid, type BlockDef } from '@/components/blocks/BlockGrid'
 import { ModeToggleBlock } from '@/components/plan/ModeToggleBlock'
 import { ObjectifCourseBlock } from '@/components/plan/ObjectifCourseBlock'
@@ -32,16 +32,21 @@ import { ChargePlanifieeBlock } from '@/components/plan/ChargePlanifieeBlock'
 import { ResumeSemaineBlock } from '@/components/plan/ResumeSemaineBlock'
 import { CalendrierMoisBlock } from '@/components/plan/CalendrierMoisBlock'
 import { PlanSessionsDndProvider } from '@/components/plan/PlanSessionsDndProvider'
+import { MacrocycleSelectorCard } from '@/components/plan/MacrocycleSelectorCard'
+import { NewMacrocycleModal } from '@/components/plan/NewMacrocycleModal'
 import {
   deletePlannedSession,
+  getAllMacrocycles,
   getPlannedSessions,
+  getRaces,
+  pickActiveMacrocycle,
   savePlannedSession,
 } from '@/lib/plan/storage'
 import { estimateCharge } from '@/lib/training/charge'
-import type { PlannedSession, SessionTemplate } from '@/types/plan'
+import type { PlannedSession, Race, SessionTemplate, TrainingPlan } from '@/types/plan'
 import { seedMockDataIfEmpty } from '@/lib/plan/mock-data'
 
-const DEFAULT_ORDER = ['mode', 'objectif', 'resume-semaine', 'structure', 'calendrier-mois', 'semaine-bibliotheque', 'charge']
+const DEFAULT_ORDER = ['mode', 'objectif', 'resume-semaine', 'macro-selector', 'structure', 'calendrier-mois', 'semaine-bibliotheque', 'charge']
 
 function makeId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -56,6 +61,12 @@ export default function PlanClient() {
   const [reloadKey, setReloadKey] = useState(0)
   const bumpReload = useCallback(() => setReloadKey(k => k + 1), [])
 
+  // Multi-macrocycles : liste, courses, override de sélection, modale de création.
+  const [macros, setMacros] = useState<TrainingPlan[]>([])
+  const [races, setRaces] = useState<Race[]>([])
+  const [activeMacroOverrideId, setActiveMacroOverrideId] = useState<string | null>(null)
+  const [newMacroModalOpen, setNewMacroModalOpen] = useState(false)
+
   // Seed mock en dev (no-op en prod sauf flag NEXT_PUBLIC_PLAN_MOCK=1).
   useEffect(() => {
     void (async () => {
@@ -63,6 +74,25 @@ export default function PlanClient() {
       bumpReload()
     })()
   }, [bumpReload])
+
+  // Re-fetch macros + races à chaque bump de reloadKey (création de cycle, etc.).
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const [m, r] = await Promise.all([getAllMacrocycles(), getRaces()])
+      if (cancelled) return
+      setMacros(m)
+      setRaces(r)
+    })()
+    return () => { cancelled = true }
+  }, [reloadKey])
+
+  const activeMacrocycle = useMemo(() => {
+    if (activeMacroOverrideId) {
+      return macros.find(m => m.id === activeMacroOverrideId) ?? null
+    }
+    return pickActiveMacrocycle(macros, new Date().toISOString().slice(0, 10))
+  }, [macros, activeMacroOverrideId])
 
   // ─── Handler : déplacement d'une PlannedSession existante ────────────────
   const handleMoveSession = useCallback(async (sessionId: string, newDateISO: string) => {
@@ -132,10 +162,29 @@ export default function PlanClient() {
       render: () => <ResumeSemaineBlock reloadKey={reloadKey} />,
     },
     {
+      id: 'macro-selector',
+      label: 'Macrocycle actif',
+      emoji: '🧩',
+      render: () => (
+        <MacrocycleSelectorCard
+          macros={macros}
+          activeMacroId={activeMacrocycle?.id ?? null}
+          onSelect={(id) => setActiveMacroOverrideId(id)}
+          onCreate={() => setNewMacroModalOpen(true)}
+        />
+      ),
+    },
+    {
       id: 'structure',
       label: 'Cycle de préparation',
       emoji: '🏗️',
-      render: () => <StructurePrepaBlock onChange={bumpReload} reloadKey={reloadKey} />,
+      render: () => (
+        <StructurePrepaBlock
+          activeMacrocycle={activeMacrocycle}
+          races={races}
+          onChange={bumpReload}
+        />
+      ),
     },
     {
       id: 'calendrier-mois',
@@ -175,6 +224,16 @@ export default function PlanClient() {
         defaultOrder={DEFAULT_ORDER}
         blocks={blocks}
         addLabel="Ajouter un bloc"
+      />
+      <NewMacrocycleModal
+        open={newMacroModalOpen}
+        onClose={() => setNewMacroModalOpen(false)}
+        onCreated={(newId) => {
+          setActiveMacroOverrideId(newId)
+          setReloadKey(k => k + 1)
+          setNewMacroModalOpen(false)
+        }}
+        races={races}
       />
     </div>
   )
