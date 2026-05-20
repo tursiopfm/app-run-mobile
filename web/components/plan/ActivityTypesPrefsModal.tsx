@@ -20,7 +20,12 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import type { ActivityType, UserActivityPref } from '@/types/activity-types'
 import type { IntensityLevel } from '@/types/plan'
-import { countPlannedSessionsByType, deletePlannedSessionsByType } from '@/lib/plan/storage'
+import {
+  countCustomTemplatesByType,
+  countPlannedSessionsByType,
+  deleteCustomTemplatesByType,
+  deletePlannedSessionsByType,
+} from '@/lib/plan/storage'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 type Draft = {
@@ -102,18 +107,27 @@ export function ActivityTypesPrefsModal({
 
   async function requestRemoveCustom(d: Draft) {
     if (d.type.isSystem) return
-    const count = await countPlannedSessionsByType(d.slug)
-    const baseMessage = `Le type d'activité « ${d.label} » sera supprimé.`
-    const sessionsMessage = count > 0
-      ? `\n\n${count} séance${count > 1 ? 's' : ''} planifiée${count > 1 ? 's' : ''} qui utilise${count > 1 ? 'nt' : ''} ce type ${count > 1 ? 'seront aussi supprimées' : 'sera aussi supprimée'}.`
-      : ''
+    const [sessionsCount, templatesCount] = await Promise.all([
+      countPlannedSessionsByType(d.slug),
+      countCustomTemplatesByType(d.slug),
+    ])
+    const lines: string[] = [`Le type d'activité « ${d.label} » sera supprimé.`]
+    if (templatesCount > 0) {
+      lines.push(
+        `${templatesCount} séance${templatesCount > 1 ? 's' : ''} de la bibliothèque ${templatesCount > 1 ? 'seront aussi supprimées' : 'sera aussi supprimée'}.`
+      )
+    }
+    if (sessionsCount > 0) {
+      lines.push(
+        `${sessionsCount} séance${sessionsCount > 1 ? 's' : ''} planifiée${sessionsCount > 1 ? 's' : ''} ${sessionsCount > 1 ? 'seront aussi supprimées' : 'sera aussi supprimée'}.`
+      )
+    }
     setPendingDelete({
       title: `Supprimer « ${d.label} » ?`,
-      message: baseMessage + sessionsMessage,
+      message: lines.join('\n\n'),
       onConfirm: async () => {
-        if (count > 0) {
-          await deletePlannedSessionsByType(d.slug)
-        }
+        if (templatesCount > 0) await deleteCustomTemplatesByType(d.slug)
+        if (sessionsCount > 0) await deletePlannedSessionsByType(d.slug)
         await onDeleteCustom(d.type.id)
         setDrafts(drafts.filter(x => x.slug !== d.slug))
         setPendingDelete(null)

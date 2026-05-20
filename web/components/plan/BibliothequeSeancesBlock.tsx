@@ -240,7 +240,12 @@ export function BibliothequeSeancesBlock() {
           onCreateCustom={createCustom}
           onDeleteCustom={deleteCustom}
           onRenameCustom={renameCustom}
-          onClose={() => setPrefsModalOpen(false)}
+          onClose={() => {
+            setPrefsModalOpen(false)
+            // Recharge templates : si l'user a supprimé un type custom, on a
+            // aussi supprimé en cascade les templates qui l'utilisaient.
+            void reload()
+          }}
         />
       )}
       <ConfirmDialog

@@ -13,6 +13,17 @@ import { applyActivityPrefs, type OrderedActivityType } from '@/lib/plan/apply-a
 import type { ActivityType, UserActivityPref } from '@/types/activity-types'
 import type { IntensityLevel } from '@/types/plan'
 
+// Évènement custom broadcasté quand le catalogue change (create / delete /
+// rename). Permet à toutes les instances de useActivityTypes (un par composant)
+// de se resync — sinon TemplateEditorModal ne voit pas un type créé via
+// ActivityTypesPrefsModal sans F5.
+const TYPES_CHANGED_EVENT = 'tc:activity-types-changed'
+
+function notifyTypesChanged() {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(TYPES_CHANGED_EVENT))
+}
+
 export interface UseActivityTypesResult {
   loading: boolean
   types: ActivityType[]                 // tous (système + custom user)
@@ -45,6 +56,14 @@ export function useActivityTypes(): UseActivityTypesResult {
 
   useEffect(() => { void refresh() }, [refresh])
 
+  // Resync sur évènement broadcast (autre instance du hook a muté le catalogue).
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handler = () => { void refresh() }
+    window.addEventListener(TYPES_CHANGED_EVENT, handler)
+    return () => window.removeEventListener(TYPES_CHANGED_EVENT, handler)
+  }, [refresh])
+
   const upsertPrefs = useCallback(async (next: UserActivityPref[]) => {
     await upsertUserActivityPrefs(next)
     setPrefs(next)
@@ -53,17 +72,20 @@ export function useActivityTypes(): UseActivityTypesResult {
   const createCustom = useCallback(async (input: Parameters<UseActivityTypesResult['createCustom']>[0]) => {
     const created = await createCustomActivityType(input)
     setTypes(prev => [...prev, created])
+    notifyTypesChanged()
     return created
   }, [])
 
   const deleteCustom = useCallback(async (id: string) => {
     await deleteCustomActivityType(id)
     setTypes(prev => prev.filter(t => t.id !== id))
+    notifyTypesChanged()
   }, [])
 
   const renameCustom = useCallback(async (id: string, newLabel: string) => {
     await renameCustomActivityType(id, newLabel)
     setTypes(prev => prev.map(t => (t.id === id ? { ...t, label: newLabel.trim() } : t)))
+    notifyTypesChanged()
   }, [])
 
   const visibleTypes = useMemo(() => applyActivityPrefs(types, prefs), [types, prefs])

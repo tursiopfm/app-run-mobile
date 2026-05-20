@@ -626,6 +626,43 @@ export async function deleteCustomTemplate(id: string): Promise<void> {
   writeLS(KEY_TEMPLATES_CUSTOM, all.filter(t => t.id !== id))
 }
 
+// Compte les templates custom (bibliothèque) qui utilisent un type donné.
+export async function countCustomTemplatesByType(typeSlug: string): Promise<number> {
+  const ctx = await getAuthedClient()
+  if (ctx) {
+    const { count, error } = await ctx.supabase
+      .from('session_templates')
+      .select('id', { count: 'exact', head: true })
+      .eq('athlete_id', ctx.athleteId)
+      .eq('type', typeSlug)
+    if (!error && count != null) return count
+    if (error && !isMissingTableError(error)) {
+      console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
+    }
+  }
+  const all = readLS<SessionTemplate[]>(KEY_TEMPLATES_CUSTOM, [])
+  return all.filter(t => t.type === typeSlug).length
+}
+
+// Supprime tous les templates custom d'un type donné. Utilisé par le flux
+// "supprimer un type custom" après confirmation explicite de l'user.
+export async function deleteCustomTemplatesByType(typeSlug: string): Promise<void> {
+  const ctx = await getAuthedClient()
+  if (ctx) {
+    const { error } = await ctx.supabase
+      .from('session_templates')
+      .delete()
+      .eq('athlete_id', ctx.athleteId)
+      .eq('type', typeSlug)
+    if (!error) return
+    if (!isMissingTableError(error)) {
+      console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
+    }
+  }
+  const all = readLS<SessionTemplate[]>(KEY_TEMPLATES_CUSTOM, [])
+  writeLS(KEY_TEMPLATES_CUSTOM, all.filter(t => t.type !== typeSlug))
+}
+
 // ─── Masquage des templates système (LS-only) ──────────────────────────────
 // Les templates système sont définis en dur dans `web/lib/training/session-templates.ts`.
 // Pour permettre à l'utilisateur de les "supprimer" de son point de vue (sans
