@@ -48,6 +48,7 @@ export function ActivityTypesPrefsModal({
   const [drafts, setDrafts] = useState<Draft[]>(() => buildInitialDrafts(types, prefs))
   const [newLabel, setNewLabel] = useState('')
   const [newIntensity, setNewIntensity] = useState<IntensityLevel>(2)
+  const [newCategory, setNewCategory] = useState<NonNullable<ActivityType['category']>>('other')
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
@@ -77,11 +78,12 @@ export function ActivityTypesPrefsModal({
       slug,
       label,
       defaultIntensity: newIntensity,
-      category: 'other',
+      category: newCategory,
     })
     setDrafts([...drafts, { slug: created.slug, label: created.label, isVisible: true, type: created }])
     setNewLabel('')
     setNewIntensity(2)
+    setNewCategory('other')
   }
 
   async function removeCustom(d: Draft) {
@@ -140,15 +142,45 @@ export function ActivityTypesPrefsModal({
         {/* Ajout custom */}
         <div className="mb-4 p-3 rounded-[10px] bg-trail-surface border border-trail-border">
           <p className="text-[12px] font-semibold text-trail-text mb-2">+ Ajouter une activité</p>
+
+          <input
+            type="text"
+            value={newLabel}
+            onChange={(e) => setNewLabel(e.target.value)}
+            placeholder="Ex : Tennis"
+            aria-label="Libellé de la nouvelle activité"
+            className="w-full px-3 py-2 mb-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
+          />
+
+          <label className="block text-[11px] font-semibold text-trail-muted uppercase tracking-wider mb-1.5">
+            Catégorie
+          </label>
+          <div className="grid grid-cols-4 gap-1.5 mb-2">
+            {(['run', 'bike', 'swim', 'other'] as const).map(c => {
+              const labels: Record<typeof c, string> = { run: 'Run', bike: 'Vélo', swim: 'Natation', other: 'Autre' }
+              const checked = newCategory === c
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setNewCategory(c)}
+                  className={
+                    'text-center py-2 px-1 rounded-[8px] text-[12px] font-semibold border transition-colors ' +
+                    (checked
+                      ? 'border-trail-primary bg-trail-primary/10 text-trail-primary'
+                      : 'border-trail-border bg-trail-card text-trail-muted hover:text-trail-text')
+                  }
+                >
+                  {labels[c]}
+                </button>
+              )
+            })}
+          </div>
+          <p className="mb-3 text-[11px] text-trail-muted italic">
+            Détermine si la séance compte dans les bulles km / D+ / durée du bloc Semaine (running uniquement).
+          </p>
+
           <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={newLabel}
-              onChange={(e) => setNewLabel(e.target.value)}
-              placeholder="Ex : Tennis"
-              aria-label="Libellé de la nouvelle activité"
-              className="flex-1 px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
-            />
             <select
               value={newIntensity}
               onChange={(e) => setNewIntensity(Number(e.target.value) as IntensityLevel)}
@@ -165,7 +197,7 @@ export function ActivityTypesPrefsModal({
               type="button"
               onClick={() => void addCustom()}
               disabled={!newLabel.trim()}
-              className="px-3 py-2 rounded-[8px] bg-trail-primary text-black text-[13px] font-semibold disabled:opacity-50"
+              className="flex-1 px-3 py-2 rounded-[8px] bg-trail-primary text-black text-[13px] font-semibold disabled:opacity-50"
             >
               Ajouter
             </button>
@@ -217,6 +249,11 @@ function SortableRow({
         aria-label={`Afficher ${draft.label}`}
       />
       <span className="flex-1 text-[13px] text-trail-text truncate">{draft.label}</span>
+      {draft.type.category && (
+        <span className="text-[10px] px-1.5 py-[2px] rounded bg-trail-card border border-trail-border text-trail-muted uppercase tracking-wider whitespace-nowrap">
+          {draft.type.category === 'run' ? 'RUN' : draft.type.category === 'bike' ? 'BIKE' : draft.type.category === 'swim' ? 'SWIM' : 'OTHER'}
+        </span>
+      )}
       {!draft.type.isSystem && (
         <button
           type="button"
