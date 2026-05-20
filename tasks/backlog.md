@@ -130,10 +130,11 @@
 - **Identifié** : 2026-05-20
 - **Livré** : MacrocycleSelectorCard + bottom sheet, NewMacrocycleModal, RaceMarkers (A/B/C + stacking), StructurePrepaBlock refondu props-driven avec expand read-only et focus visible.
 
-### Sub-project C — Cycles v2 édition UI
+### Sub-project C — Cycles v2 édition UI ✅ Livré 2026-05-20
 - **Quoi** : refonte `StructurePrepaBlock` en accordéon (macro > meso > semaines) + warnings pédagogiques (taper manquant avant A, montée brutale).
 - **Pourquoi** : permettre l'édition fine des nouveaux objets persistés (mésocycles, semaines avec `is_manual_override`) et guider l'utilisateur sur les erreurs classiques.
 - **Identifié** : 2026-05-20
+- **Livré** : PhaseEditorModal avec focus/loadPattern/weekType + tableau sur mesocycle_weeks + boutons Régénérer/Forcer + RegenerateConfirmDialog. PlanWarnings sous timeline (5 règles : race_a_orphan, taper_missing, sharp_ramp, phase_gap, phase_overlap). StructurePrepaBlock lit weeksByPhase (real weekType au lieu du placeholder 'load').
 
 ### Sub-project D — Cycles v2 templates de prépa
 - **Quoi** : modale "Créer depuis course objectif" avec presets ultra / trail_court / reprise / personnalisé.
