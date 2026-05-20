@@ -70,6 +70,21 @@
 
 - [ ] Types de séance custom par utilisateur (table dédiée `user_session_types`) — Plan bibliothèque
 
+### Pill "⚙ Personnalisé" — sémantique role
+- **Quoi** : la pill outline `⚙ Personnalisé` dans `BibliothequeSeancesBlock` hérite de `<FilterPill>` qui pose `role="tab"` + `aria-selected`. Or cette pill n'est pas un filtre — elle ouvre une modal. Ajouter une variante `role="button"` pour ce cas.
+- **Pourquoi** : a11y propre (lecture d'écran annonce "tab non sélectionné" pour un bouton qui n'est pas un tab).
+- **Identifié** : 2026-05-17 (suite à PR2 plan-tab-improvements)
+
+### Migration prefs LS → Supabase au login
+- **Quoi** : si un user non-authentifié configure ses prefs/types en LS puis se connecte, les prefs LS sont ignorées par `getUserActivityPrefs()` et `getActivityTypes()` (Supabase retourne `[]`). Au premier login authentifié, faire un push des LS vers Supabase puis vider les LS.
+- **Pourquoi** : éviter de perdre la config faite en mode anonyme.
+- **Identifié** : 2026-05-17 (suite à PR2 plan-tab-improvements)
+
+### SEED_OFFSET dupliqué entre helper et modal
+- **Quoi** : `web/lib/plan/apply-activity-prefs.ts` exporte `SEED_OFFSET = 1000` ; le `buildInitialDrafts` interne du modal `ActivityTypesPrefsModal.tsx` réimplémente la même logique avec `1000 + idx` inline. Importer la constante pour éviter la dérive.
+- **Pourquoi** : single source of truth pour l'ordre de fallback.
+- **Identifié** : 2026-05-17 (suite à PR2 plan-tab-improvements)
+
 ## Onglet Plan — bonus reportés du MVP Mode Manuel
 
 > Détail complet et contexte : `docs/plan-roadmap.md` (section "Bonus reportés").
@@ -103,6 +118,26 @@
 - **Quoi** : afficher les `PlannedSession` à venir en pointillé 60 % opacity à côté des `Activity` réalisées dans `WeekBlock` / `WeekActivitiesBlock` ; matching via `linkedActivityId`.
 - **Pourquoi** : voir d'un coup d'œil planifié vs réalisé dans le bloc Cockpit, pas seulement dans Plan. Brique commune avec la Vague 2 "intégrations Strava/Garmin" du roadmap Plan.
 - **Identifié** : 2026-05-16
+
+## Cycles v2 — sub-projects à venir (suite de la Fondation A)
+
+> Sub-project A (Fondation : migration 022 + types + moteur de génération) livré le 2026-05-20.
+> Spec : `docs/superpowers/specs/2026-05-20-cycles-v2-foundation-design.md`.
+
+### Sub-project B — Cycles v2 timeline UI
+- **Quoi** : refonte timeline horizontale multi-macros + courses A/B/C avec stacking, sélecteur de macrocycle actif.
+- **Pourquoi** : visualiser plusieurs macrocycles simultanés (un par course objectif) et leurs priorités, là où l'UI actuelle n'expose qu'un plan unique.
+- **Identifié** : 2026-05-20
+
+### Sub-project C — Cycles v2 édition UI
+- **Quoi** : refonte `StructurePrepaBlock` en accordéon (macro > meso > semaines) + warnings pédagogiques (taper manquant avant A, montée brutale).
+- **Pourquoi** : permettre l'édition fine des nouveaux objets persistés (mésocycles, semaines avec `is_manual_override`) et guider l'utilisateur sur les erreurs classiques.
+- **Identifié** : 2026-05-20
+
+### Sub-project D — Cycles v2 templates de prépa
+- **Quoi** : modale "Créer depuis course objectif" avec presets ultra / trail_court / reprise / personnalisé.
+- **Pourquoi** : accélérer la création d'un macrocycle complet à partir d'une course en base et d'un template adapté à la distance / au profil.
+- **Identifié** : 2026-05-20
 
 ## À qualifier (ni planifié ni écarté)
 
