@@ -43,7 +43,8 @@ import {
   savePlannedSession,
 } from '@/lib/plan/storage'
 import { estimateCharge } from '@/lib/training/charge'
-import type { PlannedSession, Race, SessionTemplate, TrainingPlan } from '@/types/plan'
+import { getWeeksForPhase } from '@/lib/training/mesocycle-weeks'
+import type { MesocycleWeek, PlannedSession, Race, SessionTemplate, TrainingPlan } from '@/types/plan'
 import { seedMockDataIfEmpty } from '@/lib/plan/mock-data'
 
 const DEFAULT_ORDER = ['mode', 'objectif', 'resume-semaine', 'macro-selector', 'structure', 'calendrier-mois', 'semaine-bibliotheque', 'charge']
@@ -64,6 +65,7 @@ export default function PlanClient() {
   // Multi-macrocycles : liste, courses, override de sélection, modale de création.
   const [macros, setMacros] = useState<TrainingPlan[]>([])
   const [races, setRaces] = useState<Race[]>([])
+  const [weeksByPhase, setWeeksByPhase] = useState<Record<string, MesocycleWeek[]>>({})
   const [activeMacroOverrideId, setActiveMacroOverrideId] = useState<string | null>(null)
   const [newMacroModalOpen, setNewMacroModalOpen] = useState(false)
 
@@ -83,6 +85,17 @@ export default function PlanClient() {
       if (cancelled) return
       setMacros(m)
       setRaces(r)
+      // Fetch toutes les semaines de toutes les phases en parallèle.
+      const phaseIds = m.flatMap(macro => macro.phases.map(p => p.id))
+      if (phaseIds.length === 0) {
+        setWeeksByPhase({})
+        return
+      }
+      const weeksPerPhase = await Promise.all(phaseIds.map(getWeeksForPhase))
+      if (cancelled) return
+      const map: Record<string, MesocycleWeek[]> = {}
+      phaseIds.forEach((id, i) => { map[id] = weeksPerPhase[i] })
+      setWeeksByPhase(map)
     })()
     return () => { cancelled = true }
   }, [reloadKey])
@@ -182,6 +195,8 @@ export default function PlanClient() {
         <StructurePrepaBlock
           activeMacrocycle={activeMacrocycle}
           races={races}
+          macros={macros}
+          weeksByPhase={weeksByPhase}
           onChange={bumpReload}
         />
       ),
