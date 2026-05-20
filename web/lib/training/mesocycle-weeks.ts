@@ -51,7 +51,15 @@ export async function getWeeksForPhase(phaseId: string): Promise<MesocycleWeek[]
     .select('*')
     .eq('phase_id', phaseId)
     .order('week_index', { ascending: true })
-  if (error || !data) return []
+  if (error) {
+    // Logger sans throw : `regenerateWeeks` doit pouvoir continuer même si la
+    // lecture échoue (cas migration 022 pas encore appliquée → table absente).
+    // ATTENTION : une erreur ici peut faire perdre la protection
+    // `is_manual_override` car on retombe en mode « aucun override existant ».
+    console.warn('[mesocycle-weeks] getWeeksForPhase failed:', error.message)
+    return []
+  }
+  if (!data) return []
   return (data as Row[]).map(weekFromRow)
 }
 
@@ -108,18 +116,24 @@ export async function regenerateWeeks(
   }
 
   if (toUpsert.length > 0) {
-    await supabase
+    const { error: upsertErr } = await supabase
       .from('mesocycle_weeks')
       .upsert(toUpsert, { onConflict: 'phase_id,week_index' })
+    if (upsertErr) {
+      console.warn('[mesocycle-weeks] upsert failed:', upsertErr.message)
+    }
   }
 
   // 5. Supprimer les rows hors plage (phase raccourcie). Note : supprime aussi
   // les overrides hors plage — assumé : la semaine n'existe plus, ses données partent.
-  await supabase
+  const { error: deleteErr } = await supabase
     .from('mesocycle_weeks')
     .delete()
     .eq('phase_id', phase.id)
     .gte('week_index', weekCount)
+  if (deleteErr) {
+    console.warn('[mesocycle-weeks] delete trailing rows failed:', deleteErr.message)
+  }
 
   return result.sort((a, b) => a.weekIndex - b.weekIndex)
 }
