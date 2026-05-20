@@ -122,7 +122,11 @@ select
 from phases ph
 cross join lateral generate_series(
   0,
-  greatest(0, ceil(extract(epoch from (ph.end_date - ph.start_date)) / 604800)::int - 1)
+  -- `date - date` renvoie un integer (jours), pas un interval — donc
+  -- `extract(epoch from <integer>)` est invalide en PostgreSQL. On divise
+  -- directement par 7 en castant en numeric pour préserver la fraction
+  -- avant ceil(). Une phase de 28 jours → ceil(28/7)=4 → week_index 0..3.
+  greatest(0, ceil((ph.end_date - ph.start_date)::numeric / 7)::int - 1)
 ) as gs(week_index)
 on conflict (phase_id, week_index) do nothing;
 
