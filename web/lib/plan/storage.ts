@@ -646,6 +646,7 @@ export async function countCustomTemplatesByType(typeSlug: string): Promise<numb
 
 // Supprime tous les templates custom d'un type donné. Utilisé par le flux
 // "supprimer un type custom" après confirmation explicite de l'user.
+// Broadcast un event 'tc:templates-changed' pour que la bibliothèque resync.
 export async function deleteCustomTemplatesByType(typeSlug: string): Promise<void> {
   const ctx = await getAuthedClient()
   if (ctx) {
@@ -654,14 +655,27 @@ export async function deleteCustomTemplatesByType(typeSlug: string): Promise<voi
       .delete()
       .eq('athlete_id', ctx.athleteId)
       .eq('type', typeSlug)
-    if (!error) return
+    if (!error) {
+      notifyTemplatesChanged()
+      return
+    }
     if (!isMissingTableError(error)) {
       console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
     }
   }
   const all = readLS<SessionTemplate[]>(KEY_TEMPLATES_CUSTOM, [])
   writeLS(KEY_TEMPLATES_CUSTOM, all.filter(t => t.type !== typeSlug))
+  notifyTemplatesChanged()
 }
+
+// Broadcast inter-composants : la bibliothèque doit recharger sa liste après
+// une suppression en cascade (modale prefs supprime des templates en masse).
+const TEMPLATES_CHANGED_EVENT = 'tc:templates-changed'
+function notifyTemplatesChanged() {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(TEMPLATES_CHANGED_EVENT))
+}
+export const TEMPLATES_CHANGED = TEMPLATES_CHANGED_EVENT
 
 // ─── Masquage des templates système (LS-only) ──────────────────────────────
 // Les templates système sont définis en dur dans `web/lib/training/session-templates.ts`.

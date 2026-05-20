@@ -13,6 +13,7 @@ import {
   getCustomTemplates,
   getHiddenSystemTemplateIds,
   hideSystemTemplate,
+  TEMPLATES_CHANGED,
   unhideAllSystemTemplates,
 } from '@/lib/plan/storage'
 import { INTENSITY_LEVEL_COLORS, SESSION_TYPE_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
@@ -52,6 +53,15 @@ export function BibliothequeSeancesBlock() {
   }, [])
 
   useEffect(() => { void reload() }, [reload])
+
+  // Resync sur évènement broadcast (suppression en cascade depuis la modale
+  // Personnaliser, ou autre composant qui mute des templates).
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handler = () => { void reload() }
+    window.addEventListener(TEMPLATES_CHANGED, handler)
+    return () => window.removeEventListener(TEMPLATES_CHANGED, handler)
+  }, [reload])
 
   const customIds = useMemo(() => new Set(custom.map(t => t.id)), [custom])
   const hiddenSet = useMemo(() => new Set(hiddenSystemIds), [hiddenSystemIds])
