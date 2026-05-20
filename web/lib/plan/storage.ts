@@ -489,30 +489,102 @@ function mergeRace(existing: Race[], incoming: Race): Race[] {
 }
 
 // ─── API publique : TrainingPlan ────────────────────────────────────────────
-export async function getCurrentPlan(): Promise<TrainingPlan | null> {
+
+/**
+ * Helper PUR (sans I/O). Choisit le macrocycle « actif » selon la date du jour.
+ *
+ * Règles, dans l'ordre :
+ *   1. Macrocycle non-archived avec start <= today <= end (en cours).
+ *      Si plusieurs candidats (ex : saison annuelle + prépa imbriquée), on prend
+ *      celui avec le start_date le plus récent (le plus spécifique).
+ *   2. Sinon, macrocycle non-archived futur le plus proche (start > today).
+ *   3. Sinon, macrocycle non-archived passé le plus récent (end < today).
+ *   4. Sinon, fallback ultime sur l'archived avec end_date le plus récent.
+ *   5. Sinon, null.
+ */
+export function pickActiveMacrocycle(
+  macros: TrainingPlan[],
+  todayISO: string,
+): TrainingPlan | null {
+  if (macros.length === 0) return null
+  const today = todayISO
+  const live = macros.filter(m => m.status !== 'archived')
+
+  // 1. En cours
+  const inWindow = live.filter(m => m.startDate <= today && today <= m.endDate)
+  if (inWindow.length > 0) {
+    return [...inWindow].sort((a, b) => (a.startDate < b.startDate ? 1 : -1))[0]
+  }
+
+  // 2. Futur le plus proche
+  const future = live.filter(m => m.startDate > today)
+  if (future.length > 0) {
+    return [...future].sort((a, b) => (a.startDate < b.startDate ? -1 : 1))[0]
+  }
+
+  // 3. Passé le plus récent
+  const past = live.filter(m => m.endDate < today)
+  if (past.length > 0) {
+    return [...past].sort((a, b) => (a.endDate < b.endDate ? 1 : -1))[0]
+  }
+
+  // 4. Fallback archived (end_date le plus récent)
+  const archived = macros.filter(m => m.status === 'archived')
+  if (archived.length > 0) {
+    return [...archived].sort((a, b) => (a.endDate < b.endDate ? 1 : -1))[0]
+  }
+
+  return null
+}
+
+/**
+ * Retourne tous les macrocycles de l'athlète, triés par start_date desc.
+ * Inclut tous les statuts (planned / active / completed / archived).
+ * Fallback LS si Supabase indisponible.
+ */
+export async function getAllMacrocycles(): Promise<TrainingPlan[]> {
   const ctx = await getAuthedClient()
   if (ctx) {
-    const { data: planRow, error: planErr } = await ctx.supabase
+    const { data: planRows, error: plansErr } = await ctx.supabase
       .from('training_plans')
       .select('*')
       .eq('athlete_id', ctx.athleteId)
       .order('start_date', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-    if (planErr && !isMissingTableError(planErr)) {
-      return readLS<TrainingPlan | null>(KEY_PLAN, null)
+    if (plansErr && !isMissingTableError(plansErr)) {
+      const ls = readLS<TrainingPlan | null>(KEY_PLAN, null)
+      return ls ? [ls] : []
     }
-    if (planRow) {
+    if (planRows && planRows.length > 0) {
+      const planIds = (planRows as PlanRow[]).map(p => p.id)
       const { data: phaseRows } = await ctx.supabase
         .from('phases')
         .select('*')
-        .eq('plan_id', (planRow as PlanRow).id)
+        .in('plan_id', planIds)
         .order('position', { ascending: true })
-      return planFromRows(planRow as PlanRow, (phaseRows ?? []) as PhaseRow[])
+      const phasesByPlan = new Map<string, PhaseRow[]>()
+      for (const pr of (phaseRows ?? []) as PhaseRow[]) {
+        if (!phasesByPlan.has(pr.plan_id)) phasesByPlan.set(pr.plan_id, [])
+        phasesByPlan.get(pr.plan_id)!.push(pr)
+      }
+      return (planRows as PlanRow[]).map(p => planFromRows(p, phasesByPlan.get(p.id) ?? []))
     }
-    if (!planErr) return null
+    if (!plansErr) return []
   }
-  return readLS<TrainingPlan | null>(KEY_PLAN, null)
+  // Fallback LS : on a au mieux 1 plan stocké.
+  const lsPlan = readLS<TrainingPlan | null>(KEY_PLAN, null)
+  return lsPlan ? [lsPlan] : []
+}
+
+/**
+ * Macrocycle actif (le plus pertinent par rapport à today). Maintenu pour
+ * compat avec les consommateurs existants (ChargePlanifieeBlock, VueSemaineBlock,
+ * ResumeSemaineBlock, CalendrierMoisBlock). Sub-project B utilise
+ * getAllMacrocycles + pickActiveMacrocycle directement dans PlanClient.
+ */
+export async function getCurrentPlan(): Promise<TrainingPlan | null> {
+  const macros = await getAllMacrocycles()
+  const today = new Date().toISOString().slice(0, 10)
+  return pickActiveMacrocycle(macros, today)
 }
 
 export async function saveCurrentPlan(plan: TrainingPlan): Promise<void> {
@@ -573,6 +645,13 @@ export async function saveCurrentPlan(plan: TrainingPlan): Promise<void> {
     }
   }
   writeLS(KEY_PLAN, plan)
+}
+
+/**
+ * Alias explicite de saveCurrentPlan pour la création/update d'un macrocycle.
+ */
+export async function saveMacrocycle(plan: TrainingPlan): Promise<void> {
+  return saveCurrentPlan(plan)
 }
 
 // ─── API publique : PlannedSession ──────────────────────────────────────────
