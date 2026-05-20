@@ -27,11 +27,14 @@ const STATUS_LABEL: Record<MacrocycleStatus, string> = {
   archived: 'archivé',
 }
 
+// Hex literals (pas `var(--…)`) car on les concatène avec `22` (suffixe d'alpha
+// hex 8 chiffres) pour les fonds de badges. `var(--…) + '22'` produit du CSS
+// invalide → fond absent au rendu.
 const STATUS_COLOR: Record<MacrocycleStatus, string> = {
   planned: '#3B82F6',
   active: '#10B981',
-  completed: 'var(--trail-muted)',
-  archived: 'var(--trail-muted)',
+  completed: '#94A3B8',
+  archived: '#64748B',
 }
 
 const STATUS_ORDER: MacrocycleStatus[] = ['active', 'planned', 'completed', 'archived']
