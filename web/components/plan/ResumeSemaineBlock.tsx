@@ -4,6 +4,11 @@
 // vs restant) avec navigation jour + bouton Aujourd'hui. Lit les vraies données
 // via lib/plan/storage (PlannedSession[], TrainingPlan, Race principale).
 //
+// Périmètre : RUNNING UNIQUEMENT (course, footing, fractionné, côtes, seuil,
+// sortie longue, runtaf). Vélo / natation / renfo / muscu sont exclus des
+// totaux (km / D+ / charge) ET du compteur de séances, pour rester cohérent
+// avec les cibles de phase qui sont définies en running.
+//
 // MVP : pas de notion de "réalisé" (pas de sync Activity ↔ PlannedSession encore).
 // → actualKm / actualDPlus / actualLoad sont à 0 pour l'instant (TODO).
 
@@ -14,6 +19,7 @@ import {
   getPlannedSessions,
 } from '@/lib/plan/storage'
 import type { Phase, PlannedSession, Race, TrainingPlan } from '@/types/plan'
+import { isRunningType } from '@/lib/plan/type-helpers'
 import { colors } from '@/lib/design/colors'
 import { BlockCard } from '@/components/blocks/BlockCard'
 
@@ -141,25 +147,27 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
     return '—'
   }, [currentPhase, mainRace])
 
-  // Compte des séances non-repos (toutes les PlannedSession comptent — pas de
-  // distinction repos dans le modèle MVP, on filtre sur celles avec un title).
-  const plannedSessionsCount = useMemo(
-    () => sessions.filter(s => s.title).length,
+  // Séances running uniquement (vélo/natation/renfo/muscu exclus) avec un
+  // title non vide — base pour le compteur et les totaux.
+  const runningSessions = useMemo(
+    () => sessions.filter(s => s.title && isRunningType(s.type)),
     [sessions],
   )
 
-  // Sommes prévues (km, D+, charge) sur la semaine.
+  const plannedSessionsCount = runningSessions.length
+
+  // Sommes prévues (km, D+, charge) sur la semaine — running uniquement.
   const planned = useMemo(() => {
     let km = 0
     let dPlus = 0
     let load = 0
-    for (const s of sessions) {
+    for (const s of runningSessions) {
       km += s.distance ?? 0
       dPlus += s.elevation ?? 0
       load += s.estimatedCharge ?? 0
     }
     return { km, dPlus, load }
-  }, [sessions])
+  }, [runningSessions])
 
   // Cibles (phase courante). Si pas de phase : 0.
   const targets = useMemo(() => ({
@@ -173,11 +181,13 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
   const actualDPlus = 0
   const actualLoad = 0
 
+  // Restant = ce qui reste à exécuter de la planif. Si on a déjà dépassé la
+  // planif (actual > planned), restant = 0 (pas de valeur négative).
   const remaining = useMemo(() => ({
-    km:    Math.max(0, targets.km    - actualKm),
-    dPlus: Math.max(0, targets.dPlus - actualDPlus),
-    load:  Math.max(0, targets.load  - actualLoad),
-  }), [targets])
+    km:    Math.max(0, planned.km    - actualKm),
+    dPlus: Math.max(0, planned.dPlus - actualDPlus),
+    load:  Math.max(0, planned.load  - actualLoad),
+  }), [planned])
 
   const weekNumber = useMemo(() => isoWeek(parseISO(weekStartISO)), [weekStartISO])
 
@@ -256,7 +266,7 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
         </button>
       </div>
 
-      {/* ── 3 tuiles métriques ──────────────────────────────────────────── */}
+      {/* ── 4 tuiles métriques : Objectif / Planifié / Réalisé / Restant ── */}
       <div className="flex gap-2 mt-[14px]">
         <MetricTile
           label="Objectif"
@@ -265,16 +275,22 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
           color={colors.chargeOrange}
         />
         <MetricTile
-          label="Prévus"
+          label="Planifié"
           main={`${fmt1(planned.km)} km`}
           sub={`${plannedSessionsCount} séances`}
           color={colors.seriesBlue}
         />
         <MetricTile
+          label="Réalisé"
+          main={`${fmt1(actualKm)} km`}
+          sub={`${Math.round(actualDPlus)} m D+`}
+          color={colors.greenOk}
+        />
+        <MetricTile
           label="Restant"
           main={`${fmt1(remaining.km)} km`}
           sub={`${Math.round(remaining.dPlus)} m D+`}
-          color={colors.greenOk}
+          color={colors.seriesYellow}
         />
       </div>
 
@@ -301,13 +317,6 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
           unit="pts"
           color={colors.seriesYellow}
         />
-      </div>
-
-      {/* ── 3 mini badges : Réalisé / Planifié / Restant ────────────────── */}
-      <div className="flex gap-2 mt-3">
-        <MiniBadge label="Réalisé"  value={`${fmt1(actualKm)} km`}     color={colors.greenOk} />
-        <MiniBadge label="Planifié" value={`${fmt1(planned.km)} km`}   color={colors.seriesBlue} />
-        <MiniBadge label="Restant"  value={`${fmt1(remaining.km)} km`} color={colors.chargeOrange} />
       </div>
 
       {!loaded && (
@@ -358,20 +367,6 @@ function MetricTile({
       <p className="text-[11px] text-trail-muted">{label}</p>
       <p className="text-[18px] font-bold mt-[2px] truncate" style={{ color }}>{main}</p>
       <p className="text-[11px] text-trail-muted mt-[1px] truncate">{sub}</p>
-    </div>
-  )
-}
-
-function MiniBadge({
-  label, value, color,
-}: { label: string; value: string; color: string }) {
-  return (
-    <div
-      className="flex-1 min-w-0 rounded-[10px] px-[8px] py-[6px]"
-      style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}
-    >
-      <p className="text-[11px] font-black truncate" style={{ color }}>{label}</p>
-      <p className="text-[13px] font-bold text-trail-text mt-[2px] truncate">{value}</p>
     </div>
   )
 }
