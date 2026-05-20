@@ -38,6 +38,32 @@ export type PhaseType =
   | 'affutage'
   | 'recuperation'
 
+export type LoadPattern =
+  | 'progressive_3_1'
+  | 'progressive_2_1'
+  | 'taper'
+  | 'maintenance'
+  | 'recovery'
+  | 'competition'
+  | 'custom'
+
+export type WeekType =
+  | 'load' | 'deload' | 'recovery' | 'taper' | 'race' | 'transition' | 'custom'
+
+export interface MesocycleWeek {
+  id: string
+  phaseId: string
+  weekIndex: number
+  weekStartDate: string
+  weekType: WeekType
+  targetLoadTss: number
+  targetVolumeKm: number
+  targetDplusM: number
+  comment?: string
+  isManualOverride: boolean
+  generatedFromPattern: boolean
+}
+
 export interface PhaseWeeklyTarget {
   km: number     // km cible pour cette semaine
   dPlus: number  // D+ cible (m) pour cette semaine
@@ -59,11 +85,15 @@ export interface Phase {
    * `weeklyDistanceKmTarget` / `weeklyElevationMTarget`.
    */
   weeklyTargets?: PhaseWeeklyTarget[]
+  focus?: string                  // focus libre du cycle (ex : "VMA courte")
+  loadPattern: LoadPattern        // pattern de progression (default 'custom' from DB)
   description?: string
 }
 
 // === Course objectif ===
 export type RaceType = 'trail' | 'ultra' | 'route' | 'cross' | 'skyrace'
+
+export type RacePriority = 'A' | 'B' | 'C'
 
 export interface Race {
   id: string
@@ -74,10 +104,13 @@ export interface Race {
   type: RaceType
   location?: string
   isMain: boolean            // course objectif principale
+  priority: RacePriority     // priorité A/B/C (default 'C' from DB)
   notes?: string
 }
 
 // === Plan d'entraînement (macrocycle) ===
+export type MacrocycleStatus = 'planned' | 'active' | 'completed' | 'archived'
+
 export interface TrainingPlan {
   id: string
   athleteId: string
@@ -86,6 +119,9 @@ export interface TrainingPlan {
   startDate: string          // ISO (YYYY-MM-DD)
   endDate: string            // ISO (YYYY-MM-DD)
   phases: Phase[]
+  status: MacrocycleStatus   // default 'active'
+  color?: string             // couleur d'affichage du macrocycle
+  templateId?: string        // si le plan a été créé depuis un template
   createdAt: string          // ISO timestamp
   updatedAt: string          // ISO timestamp
 }
