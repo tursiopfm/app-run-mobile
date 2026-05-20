@@ -31,7 +31,10 @@ export interface GeneratedWeek {
   isManualOverride: false
 }
 
-// Ratios appliqués au baseline pour chaque semaine d'un cycle.
+// Ratios appliqués au baseline pour chaque semaine d'un cycle. Centralisés ici
+// pour rester facilement tunables (grep par nom de pattern).
+
+// progressive_3_1 cycle ratios
 const CYCLE_3_1: ReadonlyArray<{ ratio: number; type: WeekType }> = [
   { ratio: 0.80, type: 'load' },
   { ratio: 0.90, type: 'load' },
@@ -39,11 +42,20 @@ const CYCLE_3_1: ReadonlyArray<{ ratio: number; type: WeekType }> = [
   { ratio: 0.65, type: 'deload' },
 ]
 
+// progressive_2_1 cycle ratios
 const CYCLE_2_1: ReadonlyArray<{ ratio: number; type: WeekType }> = [
   { ratio: 0.85, type: 'load' },
   { ratio: 1.00, type: 'load' },
   { ratio: 0.65, type: 'deload' },
 ]
+
+// taper : décroissance linéaire entre ces deux bornes.
+const TAPER_START_RATIO = 0.85
+const TAPER_END_RATIO = 0.40
+
+// maintenance / recovery : ratio constant appliqué à toutes les semaines.
+const MAINTENANCE_RATIO = 1.00
+const RECOVERY_RATIO = 0.50
 
 const MS_PER_DAY = 86_400_000
 
@@ -106,12 +118,10 @@ export function generateWeeks(pattern: LoadPattern, input: PatternInput): Genera
 
   if (pattern === 'taper') {
     const out: GeneratedWeek[] = []
-    const startRatio = 0.85
-    const endRatio = 0.40
     for (let i = 0; i < input.weekCount; i++) {
       const ratio = input.weekCount === 1
-        ? startRatio
-        : startRatio - (startRatio - endRatio) * (i / (input.weekCount - 1))
+        ? TAPER_START_RATIO
+        : TAPER_START_RATIO - (TAPER_START_RATIO - TAPER_END_RATIO) * (i / (input.weekCount - 1))
       out.push(makeWeek(input, i, ratio, 'taper'))
     }
     return out
@@ -120,7 +130,7 @@ export function generateWeeks(pattern: LoadPattern, input: PatternInput): Genera
   if (pattern === 'maintenance') {
     const out: GeneratedWeek[] = []
     for (let i = 0; i < input.weekCount; i++) {
-      out.push(makeWeek(input, i, 1.00, 'load'))
+      out.push(makeWeek(input, i, MAINTENANCE_RATIO, 'load'))
     }
     return out
   }
@@ -128,7 +138,7 @@ export function generateWeeks(pattern: LoadPattern, input: PatternInput): Genera
   if (pattern === 'recovery') {
     const out: GeneratedWeek[] = []
     for (let i = 0; i < input.weekCount; i++) {
-      out.push(makeWeek(input, i, 0.50, 'recovery'))
+      out.push(makeWeek(input, i, RECOVERY_RATIO, 'recovery'))
     }
     return out
   }
