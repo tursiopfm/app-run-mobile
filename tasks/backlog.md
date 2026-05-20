@@ -124,10 +124,11 @@
 > Sub-project A (Fondation : migration 022 + types + moteur de génération) livré le 2026-05-20.
 > Spec : `docs/superpowers/specs/2026-05-20-cycles-v2-foundation-design.md`.
 
-### Sub-project B — Cycles v2 timeline UI
+### Sub-project B — Cycles v2 timeline UI ✅ Livré 2026-05-20
 - **Quoi** : refonte timeline horizontale multi-macros + courses A/B/C avec stacking, sélecteur de macrocycle actif.
 - **Pourquoi** : visualiser plusieurs macrocycles simultanés (un par course objectif) et leurs priorités, là où l'UI actuelle n'expose qu'un plan unique.
 - **Identifié** : 2026-05-20
+- **Livré** : MacrocycleSelectorCard + bottom sheet, NewMacrocycleModal, RaceMarkers (A/B/C + stacking), StructurePrepaBlock refondu props-driven avec expand read-only et focus visible.
 
 ### Sub-project C — Cycles v2 édition UI
 - **Quoi** : refonte `StructurePrepaBlock` en accordéon (macro > meso > semaines) + warnings pédagogiques (taper manquant avant A, montée brutale).
