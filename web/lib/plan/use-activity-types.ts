@@ -7,6 +7,7 @@ import {
   upsertUserActivityPrefs,
   createCustomActivityType,
   deleteCustomActivityType,
+  renameCustomActivityType,
 } from '@/lib/plan/activity-types-storage'
 import { applyActivityPrefs, type OrderedActivityType } from '@/lib/plan/apply-activity-prefs'
 import type { ActivityType, UserActivityPref } from '@/types/activity-types'
@@ -26,6 +27,7 @@ export interface UseActivityTypesResult {
     category?: ActivityType['category']
   }) => Promise<ActivityType>
   deleteCustom: (id: string) => Promise<void>
+  renameCustom: (id: string, newLabel: string) => Promise<void>
 }
 
 export function useActivityTypes(): UseActivityTypesResult {
@@ -59,7 +61,12 @@ export function useActivityTypes(): UseActivityTypesResult {
     setTypes(prev => prev.filter(t => t.id !== id))
   }, [])
 
+  const renameCustom = useCallback(async (id: string, newLabel: string) => {
+    await renameCustomActivityType(id, newLabel)
+    setTypes(prev => prev.map(t => (t.id === id ? { ...t, label: newLabel.trim() } : t)))
+  }, [])
+
   const visibleTypes = useMemo(() => applyActivityPrefs(types, prefs), [types, prefs])
 
-  return { loading, types, visibleTypes, prefs, refresh, upsertPrefs, createCustom, deleteCustom }
+  return { loading, types, visibleTypes, prefs, refresh, upsertPrefs, createCustom, deleteCustom, renameCustom }
 }

@@ -539,6 +539,45 @@ export async function deletePlannedSession(id: string): Promise<void> {
   writeLS(KEY_SESSIONS, all.filter(s => s.id !== id))
 }
 
+// Compte le nombre de séances planifiées qui utilisent un type donné (slug).
+// Sert au flux "supprimer un type custom" : on prévient l'user que N séances
+// seront aussi supprimées.
+export async function countPlannedSessionsByType(typeSlug: string): Promise<number> {
+  const ctx = await getAuthedClient()
+  if (ctx) {
+    const { count, error } = await ctx.supabase
+      .from('planned_sessions')
+      .select('id', { count: 'exact', head: true })
+      .eq('athlete_id', ctx.athleteId)
+      .eq('type', typeSlug)
+    if (!error && count != null) return count
+    if (error && !isMissingTableError(error)) {
+      console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
+    }
+  }
+  const all = readLS<PlannedSession[]>(KEY_SESSIONS, [])
+  return all.filter(s => s.type === typeSlug).length
+}
+
+// Supprime toutes les séances planifiées d'un type donné. Utilisé par le flux
+// "supprimer un type custom" après confirmation explicite de l'user.
+export async function deletePlannedSessionsByType(typeSlug: string): Promise<void> {
+  const ctx = await getAuthedClient()
+  if (ctx) {
+    const { error } = await ctx.supabase
+      .from('planned_sessions')
+      .delete()
+      .eq('athlete_id', ctx.athleteId)
+      .eq('type', typeSlug)
+    if (!error) return
+    if (!isMissingTableError(error)) {
+      console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
+    }
+  }
+  const all = readLS<PlannedSession[]>(KEY_SESSIONS, [])
+  writeLS(KEY_SESSIONS, all.filter(s => s.type !== typeSlug))
+}
+
 // ─── API publique : SessionTemplate (custom) ────────────────────────────────
 export async function getCustomTemplates(): Promise<SessionTemplate[]> {
   const ctx = await getAuthedClient()

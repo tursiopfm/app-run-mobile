@@ -20,6 +20,8 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import type { ActivityType, UserActivityPref } from '@/types/activity-types'
 import type { IntensityLevel } from '@/types/plan'
+import { countPlannedSessionsByType, deletePlannedSessionsByType } from '@/lib/plan/storage'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 type Draft = {
   slug: string
@@ -39,16 +41,28 @@ type Props = {
     category?: ActivityType['category']
   }) => Promise<ActivityType>
   onDeleteCustom: (id: string) => Promise<void>
+  onRenameCustom: (id: string, newLabel: string) => Promise<void>
   onClose: () => void
 }
 
 export function ActivityTypesPrefsModal({
-  types, prefs, onSave, onCreateCustom, onDeleteCustom, onClose,
+  types, prefs, onSave, onCreateCustom, onDeleteCustom, onRenameCustom, onClose,
 }: Props) {
   const [drafts, setDrafts] = useState<Draft[]>(() => buildInitialDrafts(types, prefs))
   const [newLabel, setNewLabel] = useState('')
   const [newIntensity, setNewIntensity] = useState<IntensityLevel>(2)
   const [newCategory, setNewCategory] = useState<NonNullable<ActivityType['category']>>('other')
+
+  // État rename inline : id du type en cours d'édition + valeur tampon.
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingLabel, setEditingLabel] = useState('')
+
+  // État ConfirmDialog : suppression d'un custom (avec compte de séances).
+  const [pendingDelete, setPendingDelete] = useState<{
+    title: string
+    message: string
+    onConfirm: () => Promise<void>
+  } | null>(null)
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
@@ -86,10 +100,47 @@ export function ActivityTypesPrefsModal({
     setNewCategory('other')
   }
 
-  async function removeCustom(d: Draft) {
+  async function requestRemoveCustom(d: Draft) {
     if (d.type.isSystem) return
-    await onDeleteCustom(d.type.id)
-    setDrafts(drafts.filter(x => x.slug !== d.slug))
+    const count = await countPlannedSessionsByType(d.slug)
+    const baseMessage = `Le type d'activité « ${d.label} » sera supprimé.`
+    const sessionsMessage = count > 0
+      ? `\n\n${count} séance${count > 1 ? 's' : ''} planifiée${count > 1 ? 's' : ''} qui utilise${count > 1 ? 'nt' : ''} ce type ${count > 1 ? 'seront aussi supprimées' : 'sera aussi supprimée'}.`
+      : ''
+    setPendingDelete({
+      title: `Supprimer « ${d.label} » ?`,
+      message: baseMessage + sessionsMessage,
+      onConfirm: async () => {
+        if (count > 0) {
+          await deletePlannedSessionsByType(d.slug)
+        }
+        await onDeleteCustom(d.type.id)
+        setDrafts(drafts.filter(x => x.slug !== d.slug))
+        setPendingDelete(null)
+      },
+    })
+  }
+
+  function startRename(d: Draft) {
+    if (d.type.isSystem) return
+    setEditingId(d.type.id)
+    setEditingLabel(d.label)
+  }
+
+  async function commitRename(d: Draft) {
+    const next = editingLabel.trim()
+    if (!next || next === d.label) {
+      setEditingId(null)
+      return
+    }
+    await onRenameCustom(d.type.id, next)
+    setDrafts(drafts.map(x => (x.slug === d.slug ? { ...x, label: next, type: { ...x.type, label: next } } : x)))
+    setEditingId(null)
+  }
+
+  function cancelRename() {
+    setEditingId(null)
+    setEditingLabel('')
   }
 
   function save() {
@@ -102,6 +153,7 @@ export function ActivityTypesPrefsModal({
   }
 
   return createPortal(
+    <>
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60"
       onClick={onClose}
@@ -132,7 +184,13 @@ export function ActivityTypesPrefsModal({
                   key={d.slug}
                   draft={d}
                   onToggle={() => toggleVisible(d.slug)}
-                  onDelete={() => void removeCustom(d)}
+                  onDelete={() => void requestRemoveCustom(d)}
+                  onStartRename={() => startRename(d)}
+                  onCommitRename={() => void commitRename(d)}
+                  onCancelRename={cancelRename}
+                  isEditing={editingId === d.type.id}
+                  editingLabel={editingLabel}
+                  setEditingLabel={setEditingLabel}
                 />
               ))}
             </div>
@@ -222,14 +280,35 @@ export function ActivityTypesPrefsModal({
           </button>
         </div>
       </div>
-    </div>,
+    </div>
+    <ConfirmDialog
+      open={pendingDelete !== null}
+      title={pendingDelete?.title ?? ''}
+      message={pendingDelete?.message ?? ''}
+      confirmLabel="Supprimer"
+      destructive
+      onConfirm={() => { void pendingDelete?.onConfirm() }}
+      onCancel={() => setPendingDelete(null)}
+    />
+    </>,
     document.body,
   )
 }
 
 function SortableRow({
-  draft, onToggle, onDelete,
-}: { draft: Draft; onToggle: () => void; onDelete: () => void }) {
+  draft, onToggle, onDelete, onStartRename, onCommitRename, onCancelRename,
+  isEditing, editingLabel, setEditingLabel,
+}: {
+  draft: Draft
+  onToggle: () => void
+  onDelete: () => void
+  onStartRename: () => void
+  onCommitRename: () => void
+  onCancelRename: () => void
+  isEditing: boolean
+  editingLabel: string
+  setEditingLabel: (s: string) => void
+}) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: draft.slug })
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -248,21 +327,69 @@ function SortableRow({
         onChange={onToggle}
         aria-label={`Afficher ${draft.label}`}
       />
-      <span className="flex-1 text-[13px] text-trail-text truncate">{draft.label}</span>
+      {isEditing ? (
+        <input
+          type="text"
+          value={editingLabel}
+          onChange={(e) => setEditingLabel(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { e.preventDefault(); onCommitRename() }
+            if (e.key === 'Escape') { e.preventDefault(); onCancelRename() }
+          }}
+          autoFocus
+          aria-label={`Renommer ${draft.label}`}
+          className="flex-1 min-w-0 px-2 py-1 rounded-[6px] bg-trail-card border border-trail-primary text-trail-text text-[13px] focus:outline-none"
+        />
+      ) : (
+        <span className="flex-1 text-[13px] text-trail-text truncate">{draft.label}</span>
+      )}
       {draft.type.category && (
         <span className="text-[10px] px-1.5 py-[2px] rounded bg-trail-card border border-trail-border text-trail-muted uppercase tracking-wider whitespace-nowrap">
           {draft.type.category === 'run' ? 'RUN' : draft.type.category === 'bike' ? 'BIKE' : draft.type.category === 'swim' ? 'SWIM' : 'OTHER'}
         </span>
       )}
-      {!draft.type.isSystem && (
-        <button
-          type="button"
-          onClick={onDelete}
-          aria-label={`Supprimer ${draft.label}`}
-          className="text-trail-danger text-[12px] font-semibold hover:underline"
-        >
-          🗑
-        </button>
+      {!draft.type.isSystem && !isEditing && (
+        <>
+          <button
+            type="button"
+            onClick={onStartRename}
+            aria-label={`Renommer ${draft.label}`}
+            className="text-trail-muted text-[12px] hover:text-trail-primary"
+            title="Renommer"
+          >
+            ✎
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            aria-label={`Supprimer ${draft.label}`}
+            className="text-trail-danger text-[12px] font-semibold hover:underline"
+          >
+            🗑
+          </button>
+        </>
+      )}
+      {!draft.type.isSystem && isEditing && (
+        <>
+          <button
+            type="button"
+            onClick={onCommitRename}
+            aria-label="Valider le nouveau nom"
+            className="text-trail-primary text-[12px] font-semibold"
+            title="Valider (Entrée)"
+          >
+            ✓
+          </button>
+          <button
+            type="button"
+            onClick={onCancelRename}
+            aria-label="Annuler le renommage"
+            className="text-trail-muted text-[12px]"
+            title="Annuler (Échap)"
+          >
+            ✕
+          </button>
+        </>
       )}
       <span
         {...attributes}

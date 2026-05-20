@@ -195,6 +195,28 @@ export async function createCustomActivityType(input: {
   return created
 }
 
+// Renomme un type custom (label uniquement — le slug reste immuable pour
+// préserver les références dans planned_sessions et session_templates).
+export async function renameCustomActivityType(id: string, newLabel: string): Promise<void> {
+  const label = newLabel.trim()
+  if (!label) throw new Error('Label vide')
+  const ctx = await getAuthedClient()
+  if (ctx) {
+    const { error } = await ctx.supabase
+      .from('activity_types')
+      .update({ label })
+      .eq('id', id)
+      .eq('athlete_id', ctx.athleteId)
+    if (!error) return
+    if (!isMissingTableError(error)) {
+      console.warn('[activity-types] supabase failed:', error.message)
+    }
+  }
+  // Fallback LS
+  const custom = readLS<ActivityType[]>(KEY_TYPES_CUSTOM, [])
+  writeLS(KEY_TYPES_CUSTOM, custom.map(t => (t.id === id ? { ...t, label } : t)))
+}
+
 export async function deleteCustomActivityType(id: string): Promise<void> {
   const ctx = await getAuthedClient()
   if (ctx) {

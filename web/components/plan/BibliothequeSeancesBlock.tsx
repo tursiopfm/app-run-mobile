@@ -33,7 +33,7 @@ export function BibliothequeSeancesBlock() {
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<SessionTemplate | null>(null)
 
-  const { types, visibleTypes, prefs, upsertPrefs, createCustom, deleteCustom } = useActivityTypes()
+  const { types, visibleTypes, prefs, upsertPrefs, createCustom, deleteCustom, renameCustom } = useActivityTypes()
   const [prefsModalOpen, setPrefsModalOpen] = useState(false)
 
   // État de la dialog de confirmation (delete template ou reset défauts).
@@ -239,6 +239,7 @@ export function BibliothequeSeancesBlock() {
           }}
           onCreateCustom={createCustom}
           onDeleteCustom={deleteCustom}
+          onRenameCustom={renameCustom}
           onClose={() => setPrefsModalOpen(false)}
         />
       )}

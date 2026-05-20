@@ -17,6 +17,7 @@ describe('<ActivityTypesPrefsModal>', () => {
         onSave={() => {}}
         onCreateCustom={async () => types[2]}
         onDeleteCustom={async () => {}}
+        onRenameCustom={async () => {}}
         onClose={() => {}}
       />
     )
@@ -31,6 +32,7 @@ describe('<ActivityTypesPrefsModal>', () => {
         onSave={() => {}}
         onCreateCustom={async () => types[2]}
         onDeleteCustom={async () => {}}
+        onRenameCustom={async () => {}}
         onClose={() => {}}
       />
     )
@@ -46,6 +48,7 @@ describe('<ActivityTypesPrefsModal>', () => {
         onSave={onSave}
         onCreateCustom={async () => types[2]}
         onDeleteCustom={async () => {}}
+        onRenameCustom={async () => {}}
         onClose={() => {}}
       />
     )
@@ -68,6 +71,7 @@ describe('<ActivityTypesPrefsModal>', () => {
         onSave={onSave}
         onCreateCustom={async () => types[2]}
         onDeleteCustom={async () => {}}
+        onRenameCustom={async () => {}}
         onClose={() => {}}
       />
     )
