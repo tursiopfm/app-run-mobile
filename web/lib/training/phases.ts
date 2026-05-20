@@ -55,7 +55,7 @@ export const PHASE_DEFINITIONS: Record<PhaseType, {
 }
 
 // Charges hebdo cibles (TSS / semaine) par phase. Valeurs indicatives ; éditables côté UI.
-const DEFAULT_WEEKLY_CHARGE: Record<PhaseType, number> = {
+export const DEFAULT_WEEKLY_CHARGE: Record<PhaseType, number> = {
   foncier:       300,
   developpement: 400,
   specifique:    450,
@@ -64,7 +64,7 @@ const DEFAULT_WEEKLY_CHARGE: Record<PhaseType, number> = {
 }
 
 // Volume hebdo cible (km) par phase. Valeurs indicatives ; éditables côté UI.
-const DEFAULT_WEEKLY_DISTANCE_KM: Record<PhaseType, number> = {
+export const DEFAULT_WEEKLY_DISTANCE_KM: Record<PhaseType, number> = {
   foncier:       50,
   developpement: 60,
   specifique:    70,
@@ -73,7 +73,7 @@ const DEFAULT_WEEKLY_DISTANCE_KM: Record<PhaseType, number> = {
 }
 
 // D+ hebdo cible (m) par phase. Valeurs indicatives ; éditables côté UI.
-const DEFAULT_WEEKLY_ELEVATION_M: Record<PhaseType, number> = {
+export const DEFAULT_WEEKLY_ELEVATION_M: Record<PhaseType, number> = {
   foncier:       800,
   developpement: 1000,
   specifique:    1500,
