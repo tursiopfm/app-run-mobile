@@ -255,13 +255,18 @@ export function autoDistributePhases(startDate: string, raceDate: string): Phase
 // ─── Helpers cibles hebdo (km, D+) ────────────────────────────────────────────
 
 /**
- * Nombre de semaines (entier, arrondi) couvertes par une phase.
+ * Nombre de semaines (entier, arrondi vers le haut) couvertes par une phase.
  * Garantit ≥ 1 même si les dates sont inversées ou identiques (la phase est
  * toujours « au moins une semaine » côté UI).
+ *
+ * On utilise `ceil` (pas `round`) pour rester cohérent avec le backfill SQL
+ * de la migration 022 (`ceil((end - start)::numeric / 7)`). Sinon une phase
+ * de 29 jours aurait 4 semaines côté code TS mais 5 rows côté DB, et la 5ᵉ
+ * row serait supprimée à chaque `regenerateWeeks`.
  */
 export function phaseWeekCount(phase: Phase): number {
   const ms = parseISODate(phase.endDate).getTime() - parseISODate(phase.startDate).getTime()
-  return Math.max(1, Math.round(ms / MS_PER_WEEK))
+  return Math.max(1, Math.ceil(ms / MS_PER_WEEK))
 }
 
 /**

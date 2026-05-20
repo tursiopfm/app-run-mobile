@@ -410,7 +410,17 @@ export async function saveRace(race: Race): Promise<void> {
     const row = raceToRow(race, ctx.athleteId)
     const { error } = await ctx.supabase.from('races').upsert(row, { onConflict: 'id' })
     if (!error) return
-    if (!isMissingTableError(error)) {
+    if (isMissingColumnError(error)) {
+      // Migration 022 pas encore appliquée → la colonne `priority` n'existe pas.
+      // Retry sans elle plutôt que de fallback LS (qui ferait disparaître la
+      // race côté serveur).
+      const { priority: _priority, ...legacyRow } = row
+      const { error: retryErr } = await ctx.supabase
+        .from('races')
+        .upsert(legacyRow, { onConflict: 'id' })
+      if (!retryErr) return
+      console.warn('[plan storage] supabase retry failed, falling back to LS:', retryErr.message)
+    } else if (!isMissingTableError(error)) {
       console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
     }
   }
@@ -509,9 +519,18 @@ export async function saveCurrentPlan(plan: TrainingPlan): Promise<void> {
   const ctx = await getAuthedClient()
   if (ctx) {
     const planRow = planToRow(plan, ctx.athleteId)
-    const { error: upErr } = await ctx.supabase
+    let { error: upErr } = await ctx.supabase
       .from('training_plans')
       .upsert(planRow, { onConflict: 'id' })
+    if (upErr && isMissingColumnError(upErr)) {
+      // Migration 022 pas encore appliquée → status / color / template_id absents.
+      // Retry sans elles plutôt que de fallback LS.
+      const { status: _s, color: _c, template_id: _t, ...legacyPlanRow } = planRow
+      const retry = await ctx.supabase
+        .from('training_plans')
+        .upsert(legacyPlanRow, { onConflict: 'id' })
+      upErr = retry.error
+    }
     if (!upErr) {
       // Reset des phases puis insert : plus simple que de réconcilier diff.
       await ctx.supabase.from('phases').delete().eq('plan_id', plan.id)
