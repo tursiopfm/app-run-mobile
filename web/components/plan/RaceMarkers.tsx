@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Race } from '@/types/plan'
 import { computeRaceMarkers, type RaceMarker } from '@/lib/training/race-stacking'
 
@@ -123,11 +123,21 @@ function RaceMarkerNode({ marker, onTap }: { marker: RaceMarker; onTap: () => vo
 }
 
 function RaceDetailDrawer({ race, onClose }: { race: Race; onClose: () => void }) {
+  // Pattern aligné avec RaceEditorModal / ConfirmDialog : Escape ferme le drawer.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50"
       onClick={onClose}
       role="dialog"
+      aria-modal="true"
       aria-label={`Détail de la course ${race.name}`}
     >
       <div
