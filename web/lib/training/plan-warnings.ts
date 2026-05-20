@@ -1,7 +1,7 @@
 // Moteur pur de calcul des warnings pédagogiques sur un plan d'entraînement.
 // Aucune dépendance React/Supabase, testable en isolation.
 
-import type { MesocycleWeek, Phase, Race, TrainingPlan } from '@/types/plan'
+import type { MesocycleWeek, Race, TrainingPlan } from '@/types/plan'
 
 export type WarningSeverity = 'info' | 'warning' | 'critical'
 

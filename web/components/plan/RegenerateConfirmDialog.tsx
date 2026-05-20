@@ -45,7 +45,7 @@ export function RegenerateConfirmDialog({
           Forcer la régénération ?
         </h3>
         <p className="text-[12px] text-[color:var(--trail-muted)] leading-relaxed mb-4">
-          {weekCountWithOverride} semaine{plural} modifiée{plural} manuellement sera écrasée par les valeurs du pattern{' '}
+          {weekCountWithOverride} semaine{plural} modifiée{plural} manuellement {plural ? 'seront écrasées' : 'sera écrasée'} par les valeurs du pattern{' '}
           <span className="font-semibold text-[color:var(--trail-text)]">{loadPattern}</span> du cycle{' '}
           <span className="font-semibold text-[color:var(--trail-text)]">« {phaseLabel} »</span>. Cette action est irréversible.
         </p>
