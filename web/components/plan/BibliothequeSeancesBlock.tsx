@@ -29,6 +29,7 @@ export function BibliothequeSeancesBlock() {
   const [hiddenSystemIds, setHiddenSystemIds] = useState<string[]>([])
   const [search, setSearch] = useState('')
   const [selectedType, setSelectedType] = useState<string | 'all'>('all')
+  const [filtersExpanded, setFiltersExpanded] = useState(false)
 
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<SessionTemplate | null>(null)
@@ -181,25 +182,16 @@ export function BibliothequeSeancesBlock() {
         >+ Nouveau</button>
       }
     >
-      {/* ── Filtres pills ──────────────────────────────────────────────── */}
-      <div
-        className="flex md:flex-wrap items-center gap-2 overflow-x-auto md:overflow-visible pb-2 -mx-1 px-1"
-        style={{ scrollSnapType: 'x mandatory' }}
-        role="tablist"
-        aria-label="Filtrer par type"
-      >
-        <FilterPill active={selectedType === 'all'} onClick={() => setSelectedType('all')} label="Tous" />
-        {visibleTypes.map(t => (
-          <FilterPill
-            key={t.slug}
-            active={selectedType === t.slug}
-            onClick={() => setSelectedType(t.slug)}
-            label={t.label}
-            color={resolveSessionMeta(t.slug, types).color}
-          />
-        ))}
-        <FilterPill onClick={() => setPrefsModalOpen(true)} label="⚙ Personnalisé" isCustom />
-      </div>
+      {/* ── Filtres pills (collapsibles) ─────────────────────────────────── */}
+      <FilterBar
+        visibleTypes={visibleTypes}
+        types={types}
+        selectedType={selectedType}
+        filtersExpanded={filtersExpanded}
+        onSelectType={setSelectedType}
+        onToggleExpand={() => setFiltersExpanded(e => !e)}
+        onOpenPrefs={() => setPrefsModalOpen(true)}
+      />
 
       {/* ── Search ─────────────────────────────────────────────────────── */}
       <div className="mt-2">
@@ -321,6 +313,117 @@ function FilterPill({
       className={cls}
     >
       {label}
+    </button>
+  )
+}
+
+// Barre de filtres avec collapse/expand fluide. Tous + ⚙ Personnalisé toujours
+// visibles; toggle central avec chevron animé + badge count. Si un filtre custom
+// est actif et qu'on collapse, on garde ce filtre visible pour ne pas perdre
+// l'orientation visuelle.
+function FilterBar({
+  visibleTypes, types, selectedType, filtersExpanded,
+  onSelectType, onToggleExpand, onOpenPrefs,
+}: {
+  visibleTypes: { slug: string; label: string }[]
+  types: ActivityType[]
+  selectedType: string | 'all'
+  filtersExpanded: boolean
+  onSelectType: (slug: string | 'all') => void
+  onToggleExpand: () => void
+  onOpenPrefs: () => void
+}) {
+  const hasActiveFilter = selectedType !== 'all'
+  const activeType = hasActiveFilter ? visibleTypes.find(t => t.slug === selectedType) : null
+  // Pill orpheline (active mais retirée du visible-set) : on l'affiche tout de
+  // même en peek si filtersExpanded=false, sinon elle disparaît visuellement.
+  const peekActiveOnly = !filtersExpanded && activeType
+
+  return (
+    <div
+      className="flex items-center gap-2 overflow-x-auto md:overflow-visible pb-2 -mx-1 px-1"
+      style={{ scrollSnapType: 'x mandatory' }}
+      role="tablist"
+      aria-label="Filtrer par type"
+    >
+      <FilterPill
+        active={selectedType === 'all'}
+        onClick={() => onSelectType('all')}
+        label="Tous"
+      />
+
+      {/* Peek du filtre actif quand collapsed (sinon on perd l'orientation) */}
+      {peekActiveOnly && activeType && (
+        <FilterPill
+          key={`peek-${activeType.slug}`}
+          active
+          onClick={() => onSelectType(activeType.slug)}
+          label={activeType.label}
+          color={resolveSessionMeta(activeType.slug, types).color}
+        />
+      )}
+
+      <ExpandToggle
+        expanded={filtersExpanded}
+        count={visibleTypes.length}
+        onClick={onToggleExpand}
+      />
+
+      {/* Container collapsible : grid-template-columns 0fr ↔ 1fr trick */}
+      <div
+        className="grid transition-[grid-template-columns] duration-300 ease-out"
+        style={{ gridTemplateColumns: filtersExpanded ? '1fr' : '0fr' }}
+        aria-hidden={!filtersExpanded}
+      >
+        <div className="overflow-hidden flex items-center gap-2 min-w-0">
+          {visibleTypes.map(t => (
+            <FilterPill
+              key={t.slug}
+              active={selectedType === t.slug}
+              onClick={() => onSelectType(t.slug)}
+              label={t.label}
+              color={resolveSessionMeta(t.slug, types).color}
+            />
+          ))}
+        </div>
+      </div>
+
+      <FilterPill onClick={onOpenPrefs} label="⚙ Personnalisé" isCustom />
+    </div>
+  )
+}
+
+// Toggle pill avec chevron qui pivote 180° à l'ouverture. Bordure trail-primary
+// discrète + badge count quand collapsed (typo plus petite pour discrétion).
+function ExpandToggle({
+  expanded, count, onClick,
+}: { expanded: boolean; count: number; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={expanded}
+      aria-label={expanded ? 'Réduire les filtres' : `Voir tous les filtres (${count})`}
+      className="group flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full border border-trail-primary/40 bg-trail-primary/5 text-trail-primary text-[12px] font-semibold hover:bg-trail-primary/15 hover:border-trail-primary/70 transition-colors"
+    >
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="transition-transform duration-300"
+        style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+        aria-hidden
+      >
+        <polyline points="9 6 15 12 9 18" />
+      </svg>
+      {!expanded && (
+        <span className="text-[10px] opacity-80 tabular-nums">{count}</span>
+      )}
     </button>
   )
 }
