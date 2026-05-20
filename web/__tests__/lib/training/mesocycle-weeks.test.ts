@@ -150,3 +150,32 @@ describe('regenerateWeeks — préservation des overrides', () => {
     expect(calls.upserts[0]).toHaveLength(4)        // toutes les 4 sont upsertées
   })
 })
+
+describe('regenerateWeeks — cas particuliers', () => {
+  it('phase loadPattern=custom : retourne l\'existant, n\'UPSERT rien', async () => {
+    fakeDb = [{
+      id: 'r1', phase_id: 'phase-1', week_index: 0, week_start_date: '2026-06-01',
+      week_type: 'load', target_load_tss: 100, target_volume_km: 20, target_dplus_m: 200,
+      comment: null, is_manual_override: false, generated_from_pattern: true,
+    }]
+
+    const result = await regenerateWeeks(phaseFixture({ loadPattern: 'custom' }))
+    expect(result).toHaveLength(1)
+    expect(calls.upserts).toHaveLength(0)
+  })
+
+  it('raccourcissement : supprime les rows weekIndex >= weekCount', async () => {
+    // 4 rows existantes mais la phase passe à 2 semaines (endDate -2 sem).
+    fakeDb = [0, 1, 2, 3].map(i => ({
+      id: `r${i}`, phase_id: 'phase-1', week_index: i,
+      week_start_date: `2026-06-${String(1 + i * 7).padStart(2, '0')}`,
+      week_type: 'load' as const, target_load_tss: 100, target_volume_km: 20, target_dplus_m: 200,
+      comment: null, is_manual_override: false, generated_from_pattern: true,
+    }))
+
+    await regenerateWeeks(phaseFixture({ endDate: '2026-06-15' }))   // 2 semaines
+
+    // Un appel delete avec gte_week_index = 2 doit être enregistré (supprime les indices >= 2).
+    expect(calls.deletes).toContainEqual({ phase_id: 'phase-1', gte_week_index: 2 })
+  })
+})
