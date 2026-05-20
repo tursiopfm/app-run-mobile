@@ -117,6 +117,37 @@ export function generateWeeks(pattern: LoadPattern, input: PatternInput): Genera
     return out
   }
 
-  // Autres patterns : ajoutés progressivement dans les sous-tasks suivantes.
-  throw new Error(`Pattern not implemented yet: ${pattern}`)
+  if (pattern === 'maintenance') {
+    const out: GeneratedWeek[] = []
+    for (let i = 0; i < input.weekCount; i++) {
+      out.push(makeWeek(input, i, 1.00, 'load'))
+    }
+    return out
+  }
+
+  if (pattern === 'recovery') {
+    const out: GeneratedWeek[] = []
+    for (let i = 0; i < input.weekCount; i++) {
+      out.push(makeWeek(input, i, 0.50, 'recovery'))
+    }
+    return out
+  }
+
+  if (pattern === 'competition') {
+    return [{
+      weekIndex: 0,
+      weekStartDate: input.startDate,
+      weekType: 'race',
+      targetLoadTss: 0,
+      targetVolumeKm: 0,
+      targetDplusM: 0,
+      generatedFromPattern: true,
+      isManualOverride: false,
+    }]
+  }
+
+  // Exhaustivité : si un nouveau LoadPattern est ajouté au type sans être traité ici,
+  // TypeScript signalera l'erreur via le `never`.
+  const _exhaustive: never = pattern
+  throw new Error(`Pattern not implemented: ${_exhaustive}`)
 }

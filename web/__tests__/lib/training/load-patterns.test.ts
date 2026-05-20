@@ -155,3 +155,45 @@ describe('generateWeeks — taper', () => {
     expect(weeks[2].targetLoadTss).toBe(160)
   })
 })
+
+describe('generateWeeks — patterns simples', () => {
+  const baseline: Omit<Parameters<typeof generateWeeks>[1], 'weekCount'> = {
+    startDate: '2026-06-01',
+    baselineLoadTss: 400,
+    baselineVolumeKm: 50,
+    baselineDplusM: 1000,
+  }
+
+  it('maintenance : toutes les semaines à 100%, type load', () => {
+    const weeks = generateWeeks('maintenance', { ...baseline, weekCount: 3 })
+    expect(weeks).toHaveLength(3)
+    expect(weeks.every(w => w.weekType === 'load')).toBe(true)
+    expect(weeks.every(w => w.targetLoadTss === 400)).toBe(true)
+  })
+
+  it('recovery : toutes les semaines à 50%, type recovery', () => {
+    const weeks = generateWeeks('recovery', { ...baseline, weekCount: 2 })
+    expect(weeks).toHaveLength(2)
+    expect(weeks.every(w => w.weekType === 'recovery')).toBe(true)
+    expect(weeks[0].targetLoadTss).toBe(200)
+  })
+
+  it('competition : 1 semaine type race, volumes à 0', () => {
+    const weeks = generateWeeks('competition', { ...baseline, weekCount: 1 })
+    expect(weeks).toHaveLength(1)
+    expect(weeks[0].weekType).toBe('race')
+    expect(weeks[0].targetLoadTss).toBe(0)
+    expect(weeks[0].targetVolumeKm).toBe(0)
+    expect(weeks[0].targetDplusM).toBe(0)
+  })
+
+  it('custom : retourne []', () => {
+    const weeks = generateWeeks('custom', { ...baseline, weekCount: 4 })
+    expect(weeks).toEqual([])
+  })
+
+  it('weekCount = 0 : retourne []', () => {
+    const weeks = generateWeeks('progressive_3_1', { ...baseline, weekCount: 0 })
+    expect(weeks).toEqual([])
+  })
+})
