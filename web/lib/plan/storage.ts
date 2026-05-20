@@ -89,7 +89,9 @@ type RaceRow = {
   type: Race['type']
   location: string | null
   is_main: boolean
-  priority?: Race['priority']     // ← NEW, optionnel pour tolérer migration non-appliquée
+  // priority/status/focus/load_pattern : optionnels pour tolérer migration 022
+  // non encore appliquée (fallbacks en lecture, miroir en écriture).
+  priority?: Race['priority']
   notes: string | null
 }
 
@@ -103,7 +105,9 @@ function raceFromRow(r: RaceRow): Race {
     type: r.type,
     location: r.location ?? undefined,
     isMain: !!r.is_main,
-    priority: r.priority ?? (r.is_main ? 'A' : 'C'),   // ← fallback si col absente
+    // Fallback si la colonne `priority` est absente (migration 022 non appliquée) :
+    // une race main devient prio A, sinon C.
+    priority: r.priority ?? (r.is_main ? 'A' : 'C'),
     notes: r.notes ?? undefined,
   }
 }
@@ -118,7 +122,10 @@ function raceToRow(race: Race, athleteId: string): RaceRow {
     elevation_m: race.elevation,
     type: race.type,
     location: race.location ?? null,
-    is_main: race.priority === 'A',   // ← miroir
+    // is_main est écrit en miroir de priority='A' pour que ObjectifCourseBlock
+    // (qui lit encore is_main) reste cohérent pendant la transition vers
+    // l'usage de priority partout dans l'UI.
+    is_main: race.priority === 'A',
     priority: race.priority,
     notes: race.notes ?? null,
   }
@@ -131,9 +138,11 @@ type PlanRow = {
   goal_race_id: string | null
   start_date: string
   end_date: string
-  status?: TrainingPlan['status']      // ← NEW (optionnel, fallback 'active')
-  color?: string | null                // ← NEW
-  template_id?: string | null          // ← NEW
+  // Colonnes ajoutées par migration 022 — optionnelles pour tolérer DB legacy
+  // (le code fallback sur 'active' et undefined côté lecture).
+  status?: TrainingPlan['status']
+  color?: string | null
+  template_id?: string | null
   created_at: string
   updated_at: string
 }
@@ -150,8 +159,9 @@ type PhaseRow = {
   weekly_elevation_m_target?: number | null
   // Format JSONB côté DB : [{ km: number, d_plus: number }, ...]
   weekly_targets?: Array<{ km: number; d_plus: number }> | null
-  focus?: string | null               // ← NEW
-  load_pattern?: Phase['loadPattern'] // ← NEW (optionnel, fallback 'custom')
+  // Colonnes migration 022 — optionnelles pour tolérer DB legacy.
+  focus?: string | null
+  load_pattern?: Phase['loadPattern']
   description: string | null
   position: number
 }
