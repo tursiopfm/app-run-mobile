@@ -3,12 +3,13 @@
 // Modal de création d'un nouveau macrocycle (TrainingPlan).
 // Pattern portal cohérent avec RaceEditorModal (createPortal + Escape + stopPropagation).
 // Persistance via lib/plan/storage.ts (Supabase si dispo, fallback localStorage).
+// Le macro est créé vide (phases=[]) — l'utilisateur génère les cycles via
+// PhaseEditorModal après création.
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import type { Phase, Race, TrainingPlan } from '@/types/plan'
+import type { Race, TrainingPlan } from '@/types/plan'
 import { saveMacrocycle } from '@/lib/plan/storage'
-import { applyTemplate, PREP_TEMPLATES, type PrepTemplateId } from '@/lib/training/prep-templates'
 
 type Props = {
   open: boolean
@@ -38,28 +39,19 @@ export function NewMacrocycleModal({ open, onClose, onCreated, races }: Props) {
   const [startDate, setStartDate] = useState(todayISO())
   const [endDate, setEndDate] = useState(addWeeksISO(todayISO(), 12))
   const [goalRaceId, setGoalRaceId] = useState<string>('')
-  const [templateId, setTemplateId] = useState<PrepTemplateId>('custom')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const templatePreview = useMemo(() => {
-    if (templateId === 'custom') return null
-    return applyTemplate(templateId, startDate, endDate)
-  }, [templateId, startDate, endDate])
-
-  // Reset form on open
   useEffect(() => {
     if (open) {
       setName('')
       setStartDate(todayISO())
       setEndDate(addWeeksISO(todayISO(), 12))
       setGoalRaceId('')
-      setTemplateId('custom')
       setError(null)
     }
   }, [open])
 
-  // Escape key handler
   useEffect(() => {
     if (!open) return
     function onKey(e: KeyboardEvent) {
@@ -84,17 +76,6 @@ export function NewMacrocycleModal({ open, onClose, onCreated, races }: Props) {
     }
     setSaving(true)
     try {
-      // Appliquer le template si choisi (sinon phases vide → custom)
-      let phases: Phase[] = []
-      if (templateId !== 'custom') {
-        const result = applyTemplate(templateId, startDate, endDate)
-        if (result.meta.error === 'too_short') {
-          setError('Période trop courte pour ce template.')
-          return
-        }
-        phases = result.phases
-      }
-
       const today = todayISO()
       const status: TrainingPlan['status'] =
         startDate <= today && today <= endDate ? 'active' : 'planned'
@@ -107,9 +88,8 @@ export function NewMacrocycleModal({ open, onClose, onCreated, races }: Props) {
         goalRaceId: goalRaceId || null,
         startDate,
         endDate,
-        phases,
+        phases: [],
         status,
-        templateId: templateId === 'custom' ? undefined : templateId,
         createdAt: now,
         updatedAt: now,
       }
@@ -186,38 +166,6 @@ export function NewMacrocycleModal({ open, onClose, onCreated, races }: Props) {
               ))}
             </select>
           </Field>
-
-          <Field label="Template de prépa">
-            <select
-              value={templateId}
-              onChange={(e) => setTemplateId(e.target.value as PrepTemplateId)}
-              className="w-full px-3 py-2 rounded-[8px] bg-[color:var(--trail-surface)] border border-[color:var(--trail-border)] text-[14px] text-[color:var(--trail-text)] focus:outline-none focus:border-[color:var(--trail-primary)]"
-            >
-              {Object.values(PREP_TEMPLATES).map(t => (
-                <option key={t.id} value={t.id}>
-                  {t.label}{t.nominalWeeks > 0 ? ` · ${t.nominalWeeks} sem nominales` : ''}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          {templateId !== 'custom' && (
-            <p className="text-[11px] text-[color:var(--trail-muted)] mt-1 px-1 leading-relaxed">
-              {PREP_TEMPLATES[templateId].description}
-            </p>
-          )}
-
-          {templatePreview && templatePreview.meta.compressed && !templatePreview.meta.error && (
-            <p className="text-[11px] mt-1 px-1" style={{ color: '#EAB308' }}>
-              ⚠ Prépa compressée : {templatePreview.meta.nominalWeeks} → {templatePreview.meta.availableWeeks} sem disponibles.
-            </p>
-          )}
-
-          {templatePreview?.meta.error === 'too_short' && (
-            <p className="text-[11px] text-red-400 mt-1 px-1">
-              Période trop courte pour appliquer ce template. Choisis &apos;Personnalisé&apos; ou allonge la fin.
-            </p>
-          )}
 
           {error && (
             <p className="text-[12px] text-red-400 px-1">{error}</p>
