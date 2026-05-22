@@ -12,7 +12,7 @@ import { Fragment, useMemo, useState } from 'react'
 import { SquarePen } from 'lucide-react'
 import type { Phase, Race, TrainingPlan } from '@/types/plan'
 import { PHASE_DEFINITIONS, autoDistributePhases, getPhaseWeeks } from '@/lib/training/phases'
-import { saveCurrentPlan } from '@/lib/plan/storage'
+import { saveCurrentPlan, saveMacrocycle } from '@/lib/plan/storage'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { PhaseEditorModal } from './PhaseEditorModal'
 import { RaceMarkers } from './RaceMarkers'
@@ -43,6 +43,30 @@ function formatLongDate(iso: string): string {
   return `${d} ${months[m]} ${y}`
 }
 
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function makeId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return `macro-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+}
+
+// Trouve la course pour démarrer la prépa : priorité A future, sinon main race future,
+// sinon priorité A passée la plus récente. Null si aucune course n'a été définie.
+function pickGoalRace(races: Race[]): Race | null {
+  const today = todayISO()
+  const upcomingA = races.filter(r => r.priority === 'A' && r.date >= today).sort((a, b) => a.date.localeCompare(b.date))
+  if (upcomingA.length > 0) return upcomingA[0]
+  const upcomingMain = races.filter(r => r.isMain && r.date >= today).sort((a, b) => a.date.localeCompare(b.date))
+  if (upcomingMain.length > 0) return upcomingMain[0]
+  const pastA = races.filter(r => r.priority === 'A').sort((a, b) => b.date.localeCompare(a.date))
+  if (pastA.length > 0) return pastA[0]
+  return null
+}
+
 type Props = {
   activeMacrocycle: TrainingPlan | null
   races: Race[]
@@ -65,12 +89,39 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
     return races.find(r => r.id === activeMacrocycle.goalRaceId) ?? null
   }, [activeMacrocycle, races])
 
+  // Course candidate pour démarrer une prépa quand aucun macro n'existe encore.
+  const seedRace = useMemo<Race | null>(() => pickGoalRace(races), [races])
+
   async function handleGenerateInitial() {
-    if (generating || !activeMacrocycle) return
-    const start = activeMacrocycle.startDate
-    const end = goalRace?.date ?? activeMacrocycle.endDate
+    if (generating) return
     setGenerating(true)
     try {
+      // Cas 1 : aucun macro → on en crée un depuis la course objectif détectée.
+      if (!activeMacrocycle) {
+        if (!seedRace) return
+        const start = todayISO()
+        const end = seedRace.date
+        const phases = autoDistributePhases(start, end)
+        const now = new Date().toISOString()
+        const newPlan: TrainingPlan = {
+          id: makeId(),
+          athleteId: '',
+          name: `Prépa ${seedRace.name}`,
+          goalRaceId: seedRace.id,
+          startDate: start,
+          endDate: end,
+          phases,
+          status: 'active',
+          createdAt: now,
+          updatedAt: now,
+        }
+        await saveMacrocycle(newPlan)
+        onChange?.()
+        return
+      }
+      // Cas 2 : macro existant sans phases → on les génère.
+      const start = activeMacrocycle.startDate
+      const end = goalRace?.date ?? activeMacrocycle.endDate
       const phases = autoDistributePhases(start, end)
       if (phases.length === 0) {
         openEditor()
@@ -112,17 +163,41 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
     [activeMacrocycle, expandedId])
 
   if (!activeMacrocycle) {
+    if (!seedRace) {
+      return (
+        <BlockCard
+          title="Structure de prépa"
+          helpTitle="Cycles de prépa"
+          helpBody="Définis une course objectif au-dessus pour démarrer ta prépa."
+        >
+          <div className="flex flex-col items-center justify-center text-center py-6 px-4">
+            <span className="text-[40px] leading-none mb-2" aria-hidden>🎯</span>
+            <p className="text-[13px] text-[color:var(--trail-muted)]">
+              Définis d&apos;abord ta course objectif dans le bloc ci-dessus.
+            </p>
+          </div>
+        </BlockCard>
+      )
+    }
     return (
       <BlockCard
         title="Structure de prépa"
         helpTitle="Cycles de prépa"
-        helpBody="Crée d'abord un macrocycle pour commencer."
+        helpBody="Découpe la prépa en mésocycles : foncier, développement, spécifique, affûtage, récupération."
       >
         <div className="flex flex-col items-center justify-center text-center py-6 px-4">
-          <span className="text-[40px] leading-none mb-2" aria-hidden>📅</span>
-          <p className="text-[13px] text-[color:var(--trail-muted)]">
-            Aucun macrocycle actif. Crée-en un depuis la carte ci-dessus.
+          <p className="text-[13px] text-[color:var(--trail-muted)] mb-4 max-w-xs">
+            Génère ta prépa pour <span className="font-semibold text-[color:var(--trail-text)]">{seedRace.name}</span> ({seedRace.date}) depuis aujourd&apos;hui.
           </p>
+          <button
+            type="button"
+            onClick={handleGenerateInitial}
+            disabled={generating}
+            className="inline-flex items-center justify-center w-11 h-11 rounded-[10px] bg-[color:var(--trail-primary)] text-white disabled:opacity-50"
+            aria-label="Générer ma prépa"
+          >
+            <SquarePen size={20} aria-hidden />
+          </button>
         </div>
       </BlockCard>
     )
