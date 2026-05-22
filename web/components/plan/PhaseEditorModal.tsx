@@ -75,7 +75,6 @@ function newEmptyPhase(startDate: string, endDate: string): Phase {
     weeklyChargeTarget: 300,
     weeklyDistanceKmTarget: 50,
     weeklyElevationMTarget: 800,
-    loadPattern: 'custom',
     description: def.description,
   }
 }

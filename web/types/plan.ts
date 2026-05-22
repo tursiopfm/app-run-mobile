@@ -38,17 +38,6 @@ export type PhaseType =
   | 'affutage'
   | 'recuperation'
 
-// Pattern de progression de la charge sur les semaines d'un mésocycle. Consommé
-// par le moteur `lib/training/load-patterns.ts` qui génère les semaines.
-export type LoadPattern =
-  | 'progressive_3_1'
-  | 'progressive_2_1'
-  | 'taper'
-  | 'maintenance'
-  | 'recovery'
-  | 'competition'
-  | 'custom'
-
 export interface PhaseWeeklyTarget {
   km: number     // km cible pour cette semaine
   dPlus: number  // D+ cible (m) pour cette semaine
@@ -71,35 +60,7 @@ export interface Phase {
    */
   weeklyTargets?: PhaseWeeklyTarget[]
   focus?: string                  // focus libre du mésocycle (ex : 'VMA courte')
-  loadPattern: LoadPattern        // pattern de progression de la charge
   description?: string
-}
-
-// === Semaines (microcycles) ===
-// Rôle d'une semaine au sein d'un mésocycle. Orthogonal à `LoadPattern` : un
-// mésocycle `progressive_3_1` contient des semaines `load`, `load`, `load`,
-// `deload`. La table `mesocycle_weeks` porte ces rows (migration 022).
-export type WeekType =
-  | 'load'
-  | 'deload'
-  | 'recovery'
-  | 'taper'
-  | 'race'
-  | 'transition'
-  | 'custom'
-
-export interface MesocycleWeek {
-  id: string
-  phaseId: string
-  weekIndex: number          // 0-based dans la phase
-  weekStartDate: string      // ISO (YYYY-MM-DD)
-  weekType: WeekType
-  targetLoadTss: number      // TSS cible de la semaine
-  targetVolumeKm: number     // km cible
-  targetDplusM: number       // D+ cible (m)
-  comment?: string
-  isManualOverride: boolean  // true = ne pas écraser lors d'une régénération
-  generatedFromPattern: boolean
 }
 
 // === Course objectif ===

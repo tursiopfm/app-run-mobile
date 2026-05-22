@@ -122,7 +122,6 @@ function buildPhase(
     weeklyChargeTarget: DEFAULT_WEEKLY_CHARGE[type],
     weeklyDistanceKmTarget: DEFAULT_WEEKLY_DISTANCE_KM[type],
     weeklyElevationMTarget: DEFAULT_WEEKLY_ELEVATION_M[type],
-    loadPattern: 'custom',
     description: def.description,
   }
 }

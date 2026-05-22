@@ -159,9 +159,8 @@ type PhaseRow = {
   weekly_elevation_m_target?: number | null
   // Format JSONB côté DB : [{ km: number, d_plus: number }, ...]
   weekly_targets?: Array<{ km: number; d_plus: number }> | null
-  // Colonnes migration 022 — optionnelles pour tolérer DB legacy.
+  // Colonne migration 022 — optionnelle pour tolérer DB legacy.
   focus?: string | null
-  load_pattern?: Phase['loadPattern']
   description: string | null
   position: number
 }
@@ -214,7 +213,6 @@ function planFromRows(plan: PlanRow, phases: PhaseRow[]): TrainingPlan {
         // Migration 021 pas encore appliquée → colonne absente → undefined.
         weeklyTargets: weeklyTargetsFromJson(p.weekly_targets),
         focus: p.focus ?? undefined,
-        loadPattern: p.load_pattern ?? 'custom',
         description: p.description ?? undefined,
       })),
   }
@@ -249,7 +247,6 @@ function phasesToRows(plan: TrainingPlan): PhaseRow[] {
     weekly_elevation_m_target: p.weeklyElevationMTarget,
     weekly_targets: weeklyTargetsToJson(p.weeklyTargets),
     focus: p.focus ?? null,
-    load_pattern: p.loadPattern ?? 'custom',
     description: p.description ?? null,
     position: i,
   }))
@@ -611,13 +608,12 @@ export async function saveCurrentPlan(plan: TrainingPlan): Promise<void> {
         const { error: phaseErr } = await ctx.supabase.from('phases').insert(rows)
         if (phaseErr && isMissingColumnError(phaseErr)) {
           // Migration 015/021/022 pas encore appliquée : retry sans les colonnes
-          // km/D+ uniformes (015), overrides hebdo (021), focus + load_pattern (022).
+          // km/D+ uniformes (015), overrides hebdo (021), focus (022).
           const legacyRows = rows.map(({
             weekly_distance_km_target: _km,
             weekly_elevation_m_target: _dplus,
             weekly_targets: _wt,
             focus: _focus,
-            load_pattern: _lp,
             ...rest
           }) => rest)
           await ctx.supabase.from('phases').insert(legacyRows)
