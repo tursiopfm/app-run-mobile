@@ -340,55 +340,60 @@ function FilterBar({
   const peekActiveOnly = !filtersExpanded && activeType
 
   return (
-    <div
-      className="flex items-center gap-2 overflow-x-auto md:overflow-visible pb-2 -mx-1 px-1"
-      style={{ scrollSnapType: 'x mandatory' }}
-      role="tablist"
-      aria-label="Filtrer par type"
-    >
-      <FilterPill
-        active={selectedType === 'all'}
-        onClick={() => onSelectType('all')}
-        label="Tous"
-      />
-
-      {/* Peek du filtre actif quand collapsed (sinon on perd l'orientation) */}
-      {peekActiveOnly && activeType && (
-        <FilterPill
-          key={`peek-${activeType.slug}`}
-          active
-          onClick={() => onSelectType(activeType.slug)}
-          label={activeType.label}
-          color={resolveSessionMeta(activeType.slug, types).color}
-        />
-      )}
-
-      <ExpandToggle
-        expanded={filtersExpanded}
-        count={visibleTypes.length}
-        onClick={onToggleExpand}
-      />
-
-      {/* Container collapsible : grid-template-columns 0fr ↔ 1fr trick */}
+    <div role="tablist" aria-label="Filtrer par type">
+      {/* Rangée 1 : pills clés toujours visibles + toggle + peek du filtre actif */}
       <div
-        className="grid transition-[grid-template-columns] duration-300 ease-out"
-        style={{ gridTemplateColumns: filtersExpanded ? '1fr' : '0fr' }}
-        aria-hidden={!filtersExpanded}
+        className="flex items-center gap-2 overflow-x-auto md:overflow-visible -mx-1 px-1"
+        style={{ scrollSnapType: 'x mandatory' }}
       >
-        <div className="overflow-hidden flex items-center gap-2 min-w-0">
-          {visibleTypes.map(t => (
-            <FilterPill
-              key={t.slug}
-              active={selectedType === t.slug}
-              onClick={() => onSelectType(t.slug)}
-              label={t.label}
-              color={resolveSessionMeta(t.slug, types).color}
-            />
-          ))}
-        </div>
+        <FilterPill
+          active={selectedType === 'all'}
+          onClick={() => onSelectType('all')}
+          label="Tous"
+        />
+
+        {/* Peek du filtre actif quand collapsed (sinon on perd l'orientation) */}
+        {peekActiveOnly && activeType && (
+          <FilterPill
+            key={`peek-${activeType.slug}`}
+            active
+            onClick={() => onSelectType(activeType.slug)}
+            label={activeType.label}
+            color={resolveSessionMeta(activeType.slug, types).color}
+          />
+        )}
+
+        <ExpandToggle
+          expanded={filtersExpanded}
+          count={visibleTypes.length}
+          onClick={onToggleExpand}
+        />
+
+        <FilterPill onClick={onOpenPrefs} label="⚙ Personnalisé" isCustom />
       </div>
 
-      <FilterPill onClick={onOpenPrefs} label="⚙ Personnalisé" isCustom />
+      {/* Rangée 2 : tous les types visibles, scrollable horizontalement avec
+          scrollbar visible. Trick grid-template-rows 0fr ↔ 1fr pour animer
+          l'ouverture sans figer la hauteur. */}
+      <div
+        className="grid transition-[grid-template-rows] duration-300 ease-out"
+        style={{ gridTemplateRows: filtersExpanded ? '1fr' : '0fr' }}
+        aria-hidden={!filtersExpanded}
+      >
+        <div className="overflow-hidden">
+          <div className="filter-bar-scroll mt-2 flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+            {visibleTypes.map(t => (
+              <FilterPill
+                key={t.slug}
+                active={selectedType === t.slug}
+                onClick={() => onSelectType(t.slug)}
+                label={t.label}
+                color={resolveSessionMeta(t.slug, types).color}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

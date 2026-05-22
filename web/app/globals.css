@@ -79,6 +79,29 @@ html, body {
 ::-webkit-scrollbar-track { background: var(--trail-surface); }
 ::-webkit-scrollbar-thumb { background: var(--trail-border); border-radius: 2px; }
 
+/* Scrollbar horizontale toujours visible (BibliothequeSeancesBlock filter strip).
+   Sur mobile iOS, les scrollbars sont masquées par défaut ; on force l'affichage
+   via -webkit-appearance pour servir d'indicateur visuel de scroll. */
+.filter-bar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--trail-primary) transparent;
+}
+.filter-bar-scroll::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+  -webkit-appearance: none;
+  display: block;
+}
+.filter-bar-scroll::-webkit-scrollbar-track {
+  background: var(--trail-surface);
+  border-radius: 3px;
+}
+.filter-bar-scroll::-webkit-scrollbar-thumb {
+  background: var(--trail-primary);
+  border-radius: 3px;
+  min-width: 24px;
+}
+
 .km-tooltip {
   background: var(--trail-card) !important;
   border: 1px solid var(--trail-border) !important;
