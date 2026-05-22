@@ -1,6 +1,7 @@
 # Spec — Cycles d'entraînement v2 · Édition + warnings (sub-project C)
 
-> **Status: Implémenté** · 2026-05-20 · Code: web/lib/training/{plan-warnings,mesocycle-weeks}.ts, web/components/plan/{PhaseEditorModal,StructurePrepaBlock,PlanWarnings,RegenerateConfirmDialog}.tsx, web/app/(main)/plan/PlanClient.tsx
+> **Status: Supersédé** · 2026-05-22 · Module supprimé via `chore/cycles-simplify` car trop complexe pour l'utilisateur lambda. Garder les références pour la phase Coach IA future.
+> ~~**Status: Implémenté** · 2026-05-20~~
 > **Périmètre :** finir l'édition multi-macros (focus, loadPattern, weekType par-semaine), basculer la persistance sur `mesocycle_weeks`, livrer 5 warnings pédagogiques.
 
 ## Goal

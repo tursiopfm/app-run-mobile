@@ -1,6 +1,7 @@
 # Spec — Cycles d'entraînement v2 · Templates de prépa (sub-project D)
 
-> **Status: Implémenté** · 2026-05-20 · Code: web/lib/training/{prep-templates,phases}.ts, web/components/plan/NewMacrocycleModal.tsx
+> **Status: Supersédé** · 2026-05-22 · Module supprimé via `chore/cycles-simplify` car trop complexe. Garder les recipes de templates (ultra/trail_court/reprise) comme référence pour la phase Coach IA future.
+> ~~**Status: Implémenté** · 2026-05-20~~
 > **Périmètre :** ajouter 4 presets de prépa (ultra / trail_court / reprise / personnalisé) sélectionnables dans la modale de création de macrocycle, avec génération auto des mésocycles et compression proportionnelle si la durée disponible est courte.
 
 ## Goal
