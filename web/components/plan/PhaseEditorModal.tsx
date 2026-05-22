@@ -2,10 +2,9 @@
 
 // Modal d'édition des cycles d'un plan d'entraînement.
 // Pattern portal cohérent avec RaceEditorModal (overlay click + escape + bottom sheet mobile).
-// DnD intra-liste via dnd-kit (pattern simplifié vs BlockGrid : pas de dragHandle séparé).
-// Présentation accordéon : header coloré toujours visible, body collapsible
-// (édition détaillée + tableau hebdo km/D+ pour chaque semaine du cycle).
-// Persistance via saveCurrentPlan() de lib/plan/storage.
+// DnD intra-liste via dnd-kit. Accordéon : header coloré toujours visible, body
+// collapsible (édition détaillée + tableau hebdo km/D+ pour chaque semaine).
+// Persistance via saveCurrentPlan() de lib/plan/storage (JSONB weekly_targets).
 
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -18,15 +17,14 @@ import {
   SortableContext, verticalListSortingStrategy, arrayMove, useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { LoadPattern, MesocycleWeek, Phase, PhaseType, Race, TrainingPlan, WeekType } from '@/types/plan'
+import type { Phase, PhaseType, PhaseWeeklyTarget, Race, TrainingPlan } from '@/types/plan'
 import {
   PHASE_DEFINITIONS,
   autoDistributePhases,
+  getPhaseWeeks,
   phaseWeekCount,
 } from '@/lib/training/phases'
-import { getWeeksForPhase, regenerateWeeks, updateWeek } from '@/lib/training/mesocycle-weeks'
 import { saveCurrentPlan } from '@/lib/plan/storage'
-import { RegenerateConfirmDialog } from './RegenerateConfirmDialog'
 
 type Props = {
   plan: TrainingPlan | null
@@ -44,28 +42,6 @@ const PHASE_TYPE_OPTIONS: { value: PhaseType; label: string }[] = [
   { value: 'affutage',      label: 'Affûtage'      },
   { value: 'recuperation',  label: 'Récupération'  },
 ]
-
-const LOAD_PATTERN_OPTIONS: { value: LoadPattern; label: string }[] = [
-  { value: 'custom',           label: 'custom (manuel)' },
-  { value: 'progressive_3_1',  label: 'progressive 3:1' },
-  { value: 'progressive_2_1',  label: 'progressive 2:1' },
-  { value: 'taper',            label: 'taper' },
-  { value: 'maintenance',      label: 'maintenance' },
-  { value: 'recovery',         label: 'recovery' },
-  { value: 'competition',      label: 'competition' },
-]
-
-const WEEK_TYPE_OPTIONS: WeekType[] = ['load', 'deload', 'recovery', 'taper', 'race', 'transition', 'custom']
-
-const WEEK_TYPE_COLOR: Record<WeekType, { bg: string; fg: string }> = {
-  load:       { bg: '#3B82F622', fg: '#60A5FA' },
-  deload:     { bg: '#EAB30822', fg: '#EAB308' },
-  recovery:   { bg: '#94A3B822', fg: '#94A3B8' },
-  taper:      { bg: '#10B98122', fg: '#10B981' },
-  race:       { bg: '#F9731622', fg: '#F97316' },
-  transition: { bg: '#A855F722', fg: '#A855F7' },
-  custom:     { bg: '#1B1F27',   fg: '#8A93A6' },
-}
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10)
@@ -111,21 +87,12 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
   // Accordéon : ids des cycles dépliés. Multi-ouvert autorisé. À l'ouverture
   // du modal on déplie le cycle ciblé (focusPhaseId) ou le premier.
   const [openIds, setOpenIds] = useState<Set<string>>(new Set())
-  // Dialog de confirmation pour Forcer la régénération (écrase les overrides).
-  const [confirmForce, setConfirmForce] = useState<{
-    phaseId: string
-    phaseLabel: string
-    loadPattern: string
-    weekCountWithOverride: number
-  } | null>(null)
 
-  // Re-sync à l'ouverture (le plan peut changer entre 2 ouvertures).
   useEffect(() => {
     if (open) {
       const next = plan?.phases ?? []
       setPhases(next)
       setError(null)
-      // Init accordéon : focus phase si présente, sinon premier cycle.
       const initialOpen = new Set<string>()
       if (focusPhaseId && next.some(p => p.id === focusPhaseId)) {
         initialOpen.add(focusPhaseId)
@@ -136,7 +103,6 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
     }
   }, [open, plan, focusPhaseId])
 
-  // Échap ferme.
   useEffect(() => {
     if (!open) return
     function onKey(e: KeyboardEvent) {
@@ -146,7 +112,6 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  // Scroll vers le cycle ciblé à l'ouverture.
   useEffect(() => {
     if (!open || !focusPhaseId) return
     const el = document.getElementById(`phase-row-${focusPhaseId}`)
@@ -203,7 +168,6 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
       const start = last ? last.endDate : (race?.date ? addDaysISO(race.date, -7) : todayISO())
       const end = addDaysISO(start, 7)
       const created = newEmptyPhase(start, end)
-      // Ouvre automatiquement le nouveau cycle pour qu'on puisse l'éditer.
       setOpenIds(o => {
         const next = new Set(o)
         next.add(created.id)
@@ -221,9 +185,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
     const def = PHASE_DEFINITIONS[type]
     setPhases(prev => prev.map(p => {
       if (p.id !== id) return p
-      // Relabel auto seulement si l'utilisateur n'a pas customisé le nom (les
-      // labels auto sont préfixés « Cycle » — anciennement « Phase » avant le
-      // refactor 2026-05-20, donc on accepte les deux pour la rétrocompat).
+      // Relabel auto seulement si l'utilisateur n'a pas customisé le nom.
       const auto = p.label.startsWith('Cycle ') || p.label.startsWith('Phase ')
       return { ...p, type, label: auto ? `Cycle ${def.label}` : p.label }
     }))
@@ -247,35 +209,30 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
     })
   }
 
-  async function handleWeekFieldChange(
-    weekId: string,
-    patch: Parameters<typeof updateWeek>[1],
+  function handleWeeklyTargetChange(
+    phaseId: string,
+    weekIdx: number,
+    field: 'km' | 'dPlus',
+    value: number,
   ) {
-    const result = await updateWeek(weekId, patch)
-    if (!result) {
-      console.warn('[PhaseEditorModal] updateWeek returned null for', weekId)
-    }
-  }
-
-  async function handleRegenerate(phaseId: string, force: boolean) {
-    const phase = phases.find(p => p.id === phaseId)
-    if (!phase) return
-    await regenerateWeeks(phase, { forceOverwrite: force })
-    onSaved()
-  }
-
-  function handleClickForce(phase: Phase, weeks: MesocycleWeek[]) {
-    const overrides = weeks.filter(w => w.isManualOverride).length
-    if (overrides === 0) {
-      void handleRegenerate(phase.id, true)
-      return
-    }
-    setConfirmForce({
-      phaseId: phase.id,
-      phaseLabel: phase.label || phase.type,
-      loadPattern: phase.loadPattern,
-      weekCountWithOverride: overrides,
-    })
+    setPhases(prev => prev.map(p => {
+      if (p.id !== phaseId) return p
+      const count = phaseWeekCount(p)
+      // Matérialise un tableau de longueur = nombre de semaines, rempli depuis
+      // les overrides existants ou les cibles uniformes.
+      const next: PhaseWeeklyTarget[] = []
+      for (let i = 0; i < count; i++) {
+        const existing = p.weeklyTargets?.[i]
+        next[i] = existing ?? {
+          km: p.weeklyDistanceKmTarget,
+          dPlus: p.weeklyElevationMTarget,
+        }
+      }
+      if (weekIdx >= 0 && weekIdx < count) {
+        next[weekIdx] = { ...next[weekIdx], [field]: value }
+      }
+      return { ...p, weeklyTargets: next }
+    }))
   }
 
   async function handleSave() {
@@ -375,9 +332,9 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
                   onToggle={() => toggleOpen(p.id)}
                   onChange={(patch) => handlePhaseChange(p.id, patch)}
                   onTypeChange={(t) => handlePhaseTypeChange(p.id, t)}
-                  onWeekFieldChange={handleWeekFieldChange}
-                  onRegenerate={handleRegenerate}
-                  onForce={handleClickForce}
+                  onWeeklyChange={(weekIdx, field, value) =>
+                    handleWeeklyTargetChange(p.id, weekIdx, field, value)
+                  }
                   onDelete={() => handleDeletePhase(p.id)}
                 />
               ))}
@@ -413,28 +370,13 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
           </button>
         </div>
       </div>
-      {confirmForce && (
-        <RegenerateConfirmDialog
-          open={true}
-          phaseLabel={confirmForce.phaseLabel}
-          loadPattern={confirmForce.loadPattern}
-          weekCountWithOverride={confirmForce.weekCountWithOverride}
-          onConfirm={() => {
-            const pid = confirmForce.phaseId
-            setConfirmForce(null)
-            void handleRegenerate(pid, true)
-          }}
-          onCancel={() => setConfirmForce(null)}
-        />
-      )}
     </div>,
     document.body,
   )
 }
 
 function SortablePhaseRow({
-  phase, isOpen, highlight, onToggle, onChange, onTypeChange,
-  onWeekFieldChange, onRegenerate, onForce, onDelete,
+  phase, isOpen, highlight, onToggle, onChange, onTypeChange, onWeeklyChange, onDelete,
 }: {
   phase: Phase
   isOpen: boolean
@@ -442,14 +384,13 @@ function SortablePhaseRow({
   onToggle: () => void
   onChange: (patch: Partial<Phase>) => void
   onTypeChange: (type: PhaseType) => void
-  onWeekFieldChange: (weekId: string, patch: Parameters<typeof updateWeek>[1]) => Promise<void>
-  onRegenerate: (phaseId: string, force: boolean) => Promise<void>
-  onForce: (phase: Phase, weeks: MesocycleWeek[]) => void
+  onWeeklyChange: (weekIdx: number, field: 'km' | 'dPlus', value: number) => void
   onDelete: () => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: phase.id })
   const def = PHASE_DEFINITIONS[phase.type]
   const weekCount = phaseWeekCount(phase)
+  const weeks = useMemo(() => getPhaseWeeks(phase), [phase])
 
   return (
     <div
@@ -559,20 +500,14 @@ function SortablePhaseRow({
               </select>
             </Field>
 
-            <Field label="Charge cible">
-              <div className="relative">
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  value={Number.isFinite(phase.weeklyChargeTarget) ? phase.weeklyChargeTarget : 0}
-                  onChange={(e) => onChange({ weeklyChargeTarget: Number(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 pr-[60px] rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
-                />
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-trail-muted pointer-events-none">
-                  TSS/sem
-                </span>
-              </div>
+            <Field label="Focus (libre)">
+              <input
+                type="text"
+                value={phase.focus ?? ''}
+                onChange={(e) => onChange({ focus: e.target.value })}
+                placeholder="Base aérobie, VMA, Côtes…"
+                className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
+              />
             </Field>
           </div>
 
@@ -595,35 +530,51 @@ function SortablePhaseRow({
             </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="Focus (libre)">
-              <input
-                type="text"
-                value={phase.focus ?? ''}
-                onChange={(e) => onChange({ focus: e.target.value })}
-                placeholder="Base aérobie, VMA, Côtes…"
-                className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
-              />
-            </Field>
-            <Field label="Pattern de charge">
-              <select
-                value={phase.loadPattern}
-                onChange={(e) => onChange({ loadPattern: e.target.value as LoadPattern })}
-                className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
-              >
-                {LOAD_PATTERN_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </Field>
+          {/* Objectifs semaine par semaine (km + D+) */}
+          <div>
+            <div className="text-[11px] font-semibold text-trail-muted mb-2">
+              Objectifs semaine par semaine
+            </div>
+            <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1.5 items-center text-[12px]">
+              <span className="text-[10px] uppercase tracking-wide text-trail-muted">Semaine</span>
+              <span className="text-[10px] uppercase tracking-wide text-trail-muted text-right">Volume</span>
+              <span className="text-[10px] uppercase tracking-wide text-trail-muted text-right">D+</span>
+              {weeks.map((w, i) => (
+                <Fragment key={`${phase.id}-w${i}`}>
+                  <span className="text-trail-text">
+                    Sem {i + 1}
+                    <span className="text-trail-muted"> · {formatDDMM(w.startISO)}</span>
+                  </span>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="0.5"
+                      min={0}
+                      value={Number.isFinite(w.km) ? w.km : 0}
+                      onChange={(e) => onWeeklyChange(i, 'km', Number(e.target.value) || 0)}
+                      className="w-[84px] pl-2 pr-[28px] py-1 rounded-[6px] bg-trail-card border border-trail-border text-trail-text text-right text-[12px] focus:outline-none focus:border-trail-primary"
+                      aria-label={`Volume km — semaine ${i + 1} du cycle ${phase.label}`}
+                    />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-trail-muted pointer-events-none">km</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      step="10"
+                      min={0}
+                      value={Number.isFinite(w.dPlus) ? w.dPlus : 0}
+                      onChange={(e) => onWeeklyChange(i, 'dPlus', Number(e.target.value) || 0)}
+                      className="w-[84px] pl-2 pr-[24px] py-1 rounded-[6px] bg-trail-card border border-trail-border text-trail-text text-right text-[12px] focus:outline-none focus:border-trail-primary"
+                      aria-label={`D+ m — semaine ${i + 1} du cycle ${phase.label}`}
+                    />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-trail-muted pointer-events-none">m</span>
+                  </div>
+                </Fragment>
+              ))}
+            </div>
           </div>
-
-          <WeeklyEditor
-            phase={phase}
-            onWeekFieldChange={onWeekFieldChange}
-            onRegenerate={onRegenerate}
-            onForce={onForce}
-          />
 
           <Field label="Description">
             <textarea
@@ -654,156 +605,5 @@ function Field({
       </span>
       {children}
     </label>
-  )
-}
-
-function WeeklyEditor({
-  phase, onWeekFieldChange, onRegenerate, onForce,
-}: {
-  phase: Phase
-  onWeekFieldChange: (weekId: string, patch: Parameters<typeof updateWeek>[1]) => Promise<void>
-  onRegenerate: (phaseId: string, force: boolean) => Promise<void>
-  onForce: (phase: Phase, weeks: MesocycleWeek[]) => void
-}) {
-  const [weeks, setWeeks] = useState<MesocycleWeek[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    void (async () => {
-      const w = await getWeeksForPhase(phase.id)
-      if (cancelled) return
-      setWeeks(w)
-      setLoading(false)
-    })()
-    return () => { cancelled = true }
-  }, [phase.id, phase.startDate, phase.endDate, phase.loadPattern])
-
-  function updateLocal(weekId: string, patch: Partial<MesocycleWeek>) {
-    setWeeks(prev => prev.map(w => w.id === weekId ? { ...w, ...patch, isManualOverride: true, generatedFromPattern: false } : w))
-  }
-
-  function handlePatch(
-    weekId: string,
-    patch: Parameters<typeof updateWeek>[1],
-  ) {
-    updateLocal(weekId, patch)
-    void onWeekFieldChange(weekId, patch)
-  }
-
-  const isCustom = phase.loadPattern === 'custom'
-
-  return (
-    <div>
-      <div className="text-[11px] font-semibold text-trail-muted mb-2">Semaines</div>
-
-      {loading && (
-        <div className="text-[12px] text-trail-muted py-2">Chargement…</div>
-      )}
-      {!loading && weeks.length === 0 && (
-        <div className="text-[12px] text-trail-muted py-2">
-          Aucune semaine. Régénère depuis le pattern ou ajuste les dates.
-        </div>
-      )}
-      {!loading && weeks.length > 0 && (
-        <div className="grid grid-cols-[44px_92px_60px_60px_60px_20px] gap-x-2 gap-y-1 items-center text-[10px] uppercase tracking-wider text-trail-muted">
-          <span>Sem</span>
-          <span>Type</span>
-          <span className="text-right">Km</span>
-          <span className="text-right">D+</span>
-          <span className="text-right">TSS</span>
-          <span></span>
-          {weeks.map((w, i) => {
-            const c = WEEK_TYPE_COLOR[w.weekType] ?? WEEK_TYPE_COLOR.load
-            return (
-              <Fragment key={w.id}>
-                <span className="text-[11px] font-semibold text-trail-text">
-                  {i + 1}<span className="text-trail-muted font-normal text-[9px]"> {formatDDMM(w.weekStartDate)}</span>
-                </span>
-                <select
-                  value={w.weekType}
-                  onChange={(e) => handlePatch(w.id, { weekType: e.target.value as WeekType })}
-                  className="w-full px-1.5 py-0.5 rounded-[6px] text-[11px] font-semibold border border-trail-border focus:outline-none focus:border-trail-primary"
-                  style={{ background: c.bg, color: c.fg }}
-                  aria-label={`Type de la semaine ${i + 1}`}
-                >
-                  {WEEK_TYPE_OPTIONS.map(wt => (
-                    <option key={wt} value={wt} style={{ background: 'var(--trail-card)', color: 'var(--trail-text)' }}>{wt}</option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.5"
-                  min={0}
-                  defaultValue={Number.isFinite(w.targetVolumeKm) ? w.targetVolumeKm : 0}
-                  onBlur={(e) => {
-                    const v = Number(e.target.value) || 0
-                    if (v !== w.targetVolumeKm) handlePatch(w.id, { targetVolumeKm: v })
-                  }}
-                  className="w-full px-1 py-0.5 rounded-[6px] bg-trail-card border border-trail-border text-trail-text text-right text-[12px] focus:outline-none focus:border-trail-primary"
-                  aria-label={`Volume km semaine ${i + 1}`}
-                />
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  step="10"
-                  min={0}
-                  defaultValue={Number.isFinite(w.targetDplusM) ? w.targetDplusM : 0}
-                  onBlur={(e) => {
-                    const v = Number(e.target.value) || 0
-                    if (v !== w.targetDplusM) handlePatch(w.id, { targetDplusM: v })
-                  }}
-                  className="w-full px-1 py-0.5 rounded-[6px] bg-trail-card border border-trail-border text-trail-text text-right text-[12px] focus:outline-none focus:border-trail-primary"
-                  aria-label={`D+ m semaine ${i + 1}`}
-                />
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  step="10"
-                  min={0}
-                  defaultValue={Number.isFinite(w.targetLoadTss) ? w.targetLoadTss : 0}
-                  onBlur={(e) => {
-                    const v = Number(e.target.value) || 0
-                    if (v !== w.targetLoadTss) handlePatch(w.id, { targetLoadTss: v })
-                  }}
-                  className="w-full px-1 py-0.5 rounded-[6px] bg-trail-card border border-trail-border text-trail-text text-right text-[12px] focus:outline-none focus:border-trail-primary"
-                  aria-label={`Charge TSS semaine ${i + 1}`}
-                />
-                <span
-                  className="text-[10px] text-trail-primary text-center"
-                  aria-label={w.isManualOverride ? 'Modifié manuellement' : ''}
-                  title={w.isManualOverride ? 'Modifié manuellement' : ''}
-                >
-                  {w.isManualOverride ? '✎' : ''}
-                </span>
-              </Fragment>
-            )
-          })}
-        </div>
-      )}
-
-      <div className="flex flex-wrap gap-2 pt-3 mt-2 border-t border-trail-border">
-        <button
-          type="button"
-          onClick={() => onRegenerate(phase.id, false)}
-          disabled={isCustom}
-          className="px-2.5 py-1.5 rounded-[6px] text-[11px] font-semibold bg-trail-card border border-trail-border text-trail-muted hover:border-trail-primary hover:text-trail-text disabled:opacity-40 disabled:cursor-not-allowed"
-          title={isCustom ? "Pattern 'custom' : pas de régénération automatique" : 'Régénère les semaines en préservant tes modifications'}
-        >
-          ↻ Régénérer (préserve)
-        </button>
-        <button
-          type="button"
-          onClick={() => onForce(phase, weeks)}
-          disabled={isCustom}
-          className="px-2.5 py-1.5 rounded-[6px] text-[11px] font-semibold bg-red-900/30 border border-red-700/40 text-red-300 hover:border-red-500 disabled:opacity-40 disabled:cursor-not-allowed"
-          title={isCustom ? "Pattern 'custom' : rien à régénérer" : 'Écrase TOUTES les semaines (y compris tes modifs)'}
-        >
-          ↻ Forcer (efface)
-        </button>
-      </div>
-    </div>
   )
 }
