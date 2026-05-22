@@ -1,21 +1,20 @@
 'use client'
 
-// Bloc Structure de prépa v2 : timeline horizontale du macrocycle ACTIF, avec
-// courses A/B/C affichées en dessous via <RaceMarkers />. Expand inline READ-ONLY
-// par segment — l'édition complète est réservée au sub-project C.
+// Bloc Structure de prépa : timeline horizontale du macrocycle ACTIF, avec
+// courses A/B/C affichées en dessous via <RaceMarkers />. Expand inline par
+// segment montre les objectifs km/D+ par semaine en lecture seule (via JSONB
+// legacy weekly_targets) et un bouton "Éditer ce cycle" qui ouvre le modal.
 //
-// Le composant ne fait plus de fetch lui-même : il reçoit activeMacrocycle et
+// Le composant ne fait pas de fetch lui-même : il reçoit activeMacrocycle et
 // races en props (orchestration dans PlanClient).
 
 import { Fragment, useMemo, useState } from 'react'
 import { SquarePen } from 'lucide-react'
-import type { MesocycleWeek, Phase, Race, TrainingPlan, WeekType } from '@/types/plan'
-import { PHASE_DEFINITIONS, autoDistributePhases } from '@/lib/training/phases'
-import { computeWarnings } from '@/lib/training/plan-warnings'
+import type { Phase, Race, TrainingPlan } from '@/types/plan'
+import { PHASE_DEFINITIONS, autoDistributePhases, getPhaseWeeks } from '@/lib/training/phases'
 import { saveCurrentPlan } from '@/lib/plan/storage'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { PhaseEditorModal } from './PhaseEditorModal'
-import { PlanWarnings } from './PlanWarnings'
 import { RaceMarkers } from './RaceMarkers'
 
 const MS_PER_DAY = 86_400_000
@@ -44,27 +43,13 @@ function formatLongDate(iso: string): string {
   return `${d} ${months[m]} ${y}`
 }
 
-const WEEK_TYPE_COLOR: Record<WeekType, { bg: string; fg: string }> = {
-  load:       { bg: '#3B82F622', fg: '#60A5FA' },
-  deload:     { bg: '#EAB30822', fg: '#EAB308' },
-  recovery:   { bg: '#94A3B822', fg: '#94A3B8' },
-  taper:      { bg: '#10B98122', fg: '#10B981' },
-  race:       { bg: '#F9731622', fg: '#F97316' },
-  transition: { bg: '#A855F722', fg: '#A855F7' },
-  custom:     { bg: '#1B1F27',   fg: '#8A93A6' },
-}
-
 type Props = {
   activeMacrocycle: TrainingPlan | null
   races: Race[]
-  macros: TrainingPlan[]
-  weeksByPhase: Record<string, MesocycleWeek[]>
   onChange?: () => void
 }
 
-export function StructurePrepaBlock({
-  activeMacrocycle, races, macros, weeksByPhase, onChange,
-}: Props) {
+export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [focusPhaseId, setFocusPhaseId] = useState<string | undefined>(undefined)
@@ -126,12 +111,6 @@ export function StructurePrepaBlock({
       : null,
     [activeMacrocycle, expandedId])
 
-  const warnings = useMemo(
-    () => computeWarnings({ macros, activeMacrocycle, races, weeksByPhase }),
-    [macros, activeMacrocycle, races, weeksByPhase],
-  )
-
-  // ─── États vides ────────────────────────────────────────────────────────────
   if (!activeMacrocycle) {
     return (
       <BlockCard
@@ -181,9 +160,6 @@ export function StructurePrepaBlock({
     )
   }
 
-  // ─── Garde-fou : phase à durée nulle / dates inversées → dégradé ──────────
-  // timelineData renvoie null si totalMs <= 0 (start === end ou start > end).
-  // Sans ça, on crasherait sur `td.todayProgress` au rendu nominal.
   if (!timelineData) {
     return (
       <BlockCard
@@ -200,7 +176,6 @@ export function StructurePrepaBlock({
     )
   }
 
-  // ─── Rendu nominal ────────────────────────────────────────────────────────
   const td = timelineData
   const todayInRange = td.todayProgress >= 0 && td.todayProgress <= 100
 
@@ -293,12 +268,7 @@ export function StructurePrepaBlock({
         <RaceMarkers races={races} macroStart={activeMacrocycle.startDate} macroEnd={activeMacrocycle.endDate} />
       </div>
 
-      <PlanWarnings
-        warnings={warnings}
-        onPhaseClick={(id) => setExpandedId(id)}
-      />
-
-      {/* Panneau expand read-only */}
+      {/* Panneau expand read-only : objectifs km/D+ par semaine via JSONB */}
       {expandedPhase && (
         <div className="mt-3 p-3 rounded-[10px] bg-[color:var(--trail-surface)] border border-[color:var(--trail-border)]">
           <div className="flex items-center justify-between mb-2">
@@ -314,16 +284,6 @@ export function StructurePrepaBlock({
               {expandedPhase.focus && (
                 <span className="text-[11px] text-[color:var(--trail-muted)] truncate">· {expandedPhase.focus}</span>
               )}
-              <span
-                className="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                style={{
-                  background: 'var(--trail-card)',
-                  color: 'var(--trail-muted)',
-                  border: '1px solid var(--trail-border)',
-                }}
-              >
-                {expandedPhase.loadPattern}
-              </span>
             </div>
             <button
               type="button"
@@ -344,42 +304,28 @@ export function StructurePrepaBlock({
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[color:var(--trail-text)] mb-3">
             <span><span className="text-[color:var(--trail-muted)]">Début → Fin :</span> {formatLongDate(expandedPhase.startDate)} → {formatLongDate(expandedPhase.endDate)}</span>
             <span><span className="text-[color:var(--trail-muted)]">Durée :</span> {diffWeeks(expandedPhase.startDate, expandedPhase.endDate)} sem</span>
-            <span><span className="text-[color:var(--trail-muted)]">Charge cible :</span> {expandedPhase.weeklyChargeTarget} TSS/sem</span>
           </div>
 
-          {/* Tableau hebdo READ-ONLY (lit mesocycle_weeks) */}
+          {/* Objectifs hebdo km/D+ READ-ONLY */}
           <div className="mb-3">
             <div className="text-[11px] font-semibold text-[color:var(--trail-muted)] mb-2">
-              Semaines (lecture seule)
+              Objectifs semaine par semaine
             </div>
-            <div className="grid grid-cols-[44px_1fr_56px_56px_56px] gap-x-2 gap-y-1 items-center text-[10px] uppercase tracking-wider text-[color:var(--trail-muted)]">
-              <span>Sem</span>
-              <span>Type</span>
-              <span className="text-right">Km</span>
-              <span className="text-right">D+</span>
-              <span className="text-right">TSS</span>
-            </div>
-            {(weeksByPhase[expandedPhase.id] ?? []).map((w) => {
-              const colors = WEEK_TYPE_COLOR[w.weekType] ?? WEEK_TYPE_COLOR.load
-              return (
-                <Fragment key={w.id}>
-                  <div className="grid grid-cols-[44px_1fr_56px_56px_56px] gap-x-2 gap-y-1 items-center mt-1 py-1.5 px-1 rounded-[6px]" style={{ background: 'var(--trail-card)' }}>
-                    <span className="text-[11px] font-semibold text-[color:var(--trail-text)]">
-                      {w.weekIndex + 1}<span className="text-[color:var(--trail-muted)] font-normal text-[9px]"> {formatDDMM(w.weekStartDate)}</span>
-                    </span>
-                    <span
-                      className="text-[11px] font-semibold px-2 py-0.5 rounded-[6px] inline-block w-fit"
-                      style={{ background: colors.bg, color: colors.fg }}
-                    >
-                      {w.weekType}
-                    </span>
-                    <span className="text-right text-[12px] tabular-nums text-[color:var(--trail-text)]">{w.targetVolumeKm}</span>
-                    <span className="text-right text-[12px] tabular-nums text-[color:var(--trail-text)]">{w.targetDplusM}</span>
-                    <span className="text-right text-[12px] tabular-nums text-[color:var(--trail-text)]">{w.targetLoadTss}</span>
-                  </div>
+            <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1 items-center text-[12px]">
+              <span className="text-[10px] uppercase tracking-wide text-[color:var(--trail-muted)]">Semaine</span>
+              <span className="text-[10px] uppercase tracking-wide text-[color:var(--trail-muted)] text-right">Km</span>
+              <span className="text-[10px] uppercase tracking-wide text-[color:var(--trail-muted)] text-right">D+</span>
+              {getPhaseWeeks(expandedPhase).map((w, i) => (
+                <Fragment key={`${expandedPhase.id}-w${i}`}>
+                  <span className="text-[color:var(--trail-text)]">
+                    Sem {i + 1}
+                    <span className="text-[color:var(--trail-muted)]"> · {formatDDMM(w.startISO)}</span>
+                  </span>
+                  <span className="text-right tabular-nums">{w.km} <span className="text-[10px] text-[color:var(--trail-muted)]">km</span></span>
+                  <span className="text-right tabular-nums">{w.dPlus} <span className="text-[10px] text-[color:var(--trail-muted)]">m</span></span>
                 </Fragment>
-              )
-            })}
+              ))}
+            </div>
           </div>
 
           <button
