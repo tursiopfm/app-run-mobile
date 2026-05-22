@@ -4,7 +4,7 @@
 // Pas de sync Supabase ↔ localStorage : on utilise l'un ou l'autre.
 
 import { createClient } from '@/lib/database/supabase-client'
-import { regenerateWeeks } from '@/lib/training/mesocycle-weeks'
+// Note : import regenerateWeeks retiré — le module mesocycle-weeks est supprimé.
 import type {
   Phase,
   PhaseWeeklyTarget,
@@ -621,21 +621,6 @@ export async function saveCurrentPlan(plan: TrainingPlan): Promise<void> {
             ...rest
           }) => rest)
           await ctx.supabase.from('phases').insert(legacyRows)
-        }
-      }
-      // Pour chaque phase qui a un loadPattern ≠ 'custom', générer/synchroniser
-      // les rows mesocycle_weeks. Préserve les overrides existants. Best-effort :
-      // une erreur ici n'invalide pas l'écriture du plan (tolérance migration 022
-      // non encore appliquée → table absente, géré silencieusement).
-      for (const phase of plan.phases) {
-        if (phase.loadPattern && phase.loadPattern !== 'custom') {
-          try {
-            await regenerateWeeks(phase)
-          } catch (err) {
-            // Table mesocycle_weeks absente (migration pas appliquée) ou autre erreur :
-            // on log et on continue, ça ne doit pas bloquer la sauvegarde du plan.
-            console.warn('[plan storage] regenerateWeeks failed for phase', phase.id, err)
-          }
         }
       }
       return
