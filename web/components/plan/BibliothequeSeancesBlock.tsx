@@ -24,12 +24,18 @@ import { useActivityTypes } from '@/lib/plan/use-activity-types'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
+// Nombre de templates affichés par défaut avant le bouton « Voir plus ».
+// Volontairement bas (2) pour éviter que le bloc Bibliothèque domine la page
+// quand l'utilisateur n'a pas filtré (« Tous » sélectionné).
+const COLLAPSED_TEMPLATES_COUNT = 2
+
 export function BibliothequeSeancesBlock() {
   const [custom, setCustom] = useState<SessionTemplate[]>([])
   const [hiddenSystemIds, setHiddenSystemIds] = useState<string[]>([])
   const [search, setSearch] = useState('')
   const [selectedType, setSelectedType] = useState<string | 'all'>('all')
   const [filtersExpanded, setFiltersExpanded] = useState(false)
+  const [showAllTemplates, setShowAllTemplates] = useState(false)
 
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<SessionTemplate | null>(null)
@@ -206,8 +212,11 @@ export function BibliothequeSeancesBlock() {
       </div>
 
       {/* ── Grille ─────────────────────────────────────────────────────── */}
+      {/* Par défaut on affiche les 2 premiers templates pour ne pas exploser
+          la hauteur du bloc. Bouton « Voir plus » apparaît dès qu'il y a
+          plus de 2 résultats. */}
       <div className="mt-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-        {filtered.map(t => (
+        {(showAllTemplates ? filtered : filtered.slice(0, COLLAPSED_TEMPLATES_COUNT)).map(t => (
           <TemplateCard
             key={t.id}
             template={t}
@@ -223,6 +232,18 @@ export function BibliothequeSeancesBlock() {
           </div>
         )}
       </div>
+      {filtered.length > COLLAPSED_TEMPLATES_COUNT && (
+        <button
+          type="button"
+          onClick={() => setShowAllTemplates(v => !v)}
+          aria-expanded={showAllTemplates}
+          className="mt-2 w-full py-2 rounded-[8px] border border-trail-border bg-trail-surface text-trail-muted hover:text-trail-text hover:border-trail-primary text-[12px] font-semibold transition-colors"
+        >
+          {showAllTemplates
+            ? '↑ Voir moins'
+            : `↓ Voir ${filtered.length - COLLAPSED_TEMPLATES_COUNT} template${filtered.length - COLLAPSED_TEMPLATES_COUNT > 1 ? 's' : ''} de plus`}
+        </button>
+      )}
 
       <TemplateEditorModal
         template={editingTemplate}
