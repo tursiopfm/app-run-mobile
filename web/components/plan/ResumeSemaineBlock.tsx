@@ -17,10 +17,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   getCurrentPlan,
-  getMainRace,
   getPlannedSessions,
 } from '@/lib/plan/storage'
-import type { Phase, PlannedSession, Race, TrainingPlan } from '@/types/plan'
+import type { Phase, PlannedSession, TrainingPlan } from '@/types/plan'
 import { resolveWeeklyTarget } from '@/lib/training/phases'
 import { useActivityTypes } from '@/lib/plan/use-activity-types'
 import { resolveSessionMeta } from '@/lib/plan/session-meta'
@@ -107,7 +106,6 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
   const [selectedDateISO, setSelectedDateISO] = useState<string>(todayISO)
 
   const [plan, setPlan] = useState<TrainingPlan | null>(null)
-  const [mainRace, setMainRace] = useState<Race | null>(null)
   const [sessions, setSessions] = useState<PlannedSession[]>([])
   const [loaded, setLoaded] = useState(false)
 
@@ -129,15 +127,13 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
   useEffect(() => {
     let cancelled = false
     void (async () => {
-      const [s, p, r] = await Promise.all([
+      const [s, p] = await Promise.all([
         getPlannedSessions(weekStartISO, weekEndISO),
         getCurrentPlan(),
-        getMainRace(),
       ])
       if (cancelled) return
       setSessions(s)
       setPlan(p)
-      setMainRace(r)
       setLoaded(true)
     })()
     return () => { cancelled = true }
@@ -147,13 +143,6 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
     () => findCurrentPhase(plan, weekStartISO),
     [plan, weekStartISO],
   )
-
-  // Label objectif : phase courante si dispo, sinon course principale, sinon "—".
-  const objectiveLabel = useMemo(() => {
-    if (currentPhase) return currentPhase.label
-    if (mainRace) return mainRace.name
-    return '—'
-  }, [currentPhase, mainRace])
 
   // Séances running uniquement (vélo/natation/renfo/muscu exclus) avec un
   // title non vide — base pour le compteur et les totaux. Le resolver gère
@@ -248,7 +237,7 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
       helpBody="Comparaison objectif vs prévu vs restant sur la semaine sélectionnée."
     >
       <p className="text-[12px] text-trail-muted">
-        S{weekNumber} — {formatDM(weekStartISO)} au {formatDM(weekEndISO)} — {objectiveLabel}
+        S{weekNumber} — {formatDM(weekStartISO)} au {formatDM(weekEndISO)}
       </p>
 
       {/* ── Nav row : < jour > Aujourd'hui ──────────────────────────────── */}
@@ -374,14 +363,25 @@ function NavButton({
 function MetricTile({
   label, main, sub, color,
 }: { label: string; main: string; sub: string; color: string }) {
+  // Sépare valeur et unité (ex: "80.0 km" → "80.0" + "km") pour rendre l'unité
+  // dans une typo plus petite, garantir qu'elle n'est jamais coupée par le truncate,
+  // et économiser de la largeur sur les tuiles étroites en mobile.
+  const firstSpace = main.indexOf(' ')
+  const mainValue = firstSpace > 0 ? main.slice(0, firstSpace) : main
+  const mainUnit  = firstSpace > 0 ? main.slice(firstSpace + 1) : ''
   return (
     <div
-      className="flex-1 min-w-0 rounded-[10px] px-[10px] py-[8px]"
+      className="flex-1 min-w-0 rounded-[10px] px-[6px] py-[8px]"
       style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}
     >
       <p className="text-[11px] text-trail-muted">{label}</p>
-      <p className="text-[18px] font-bold mt-[2px] truncate" style={{ color }}>{main}</p>
-      <p className="text-[11px] text-trail-muted mt-[1px] truncate">{sub}</p>
+      <p className="mt-[2px] flex items-baseline gap-[2px] min-w-0">
+        <span className="text-[18px] font-bold leading-none truncate" style={{ color }}>{mainValue}</span>
+        {mainUnit && (
+          <span className="text-[11px] text-trail-muted leading-none flex-shrink-0">{mainUnit}</span>
+        )}
+      </p>
+      <p className="text-[11px] text-trail-muted mt-[2px] truncate">{sub}</p>
     </div>
   )
 }

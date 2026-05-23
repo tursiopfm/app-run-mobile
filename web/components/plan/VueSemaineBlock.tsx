@@ -6,13 +6,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
-import type { Phase, PlannedSession, TrainingPlan } from '@/types/plan'
+import type { PlannedSession, TrainingPlan } from '@/types/plan'
 import {
   getPlannedSessions,
   savePlannedSession,
   getCurrentPlan,
 } from '@/lib/plan/storage'
-import { PHASE_DEFINITIONS } from '@/lib/training/phases'
 import { colors } from '@/lib/design/colors'
 import { INTENSITY_LEVEL_COLORS } from '@/lib/activities/indicators'
 import { formatDurationHHmm } from '@/lib/training/duration'
@@ -60,11 +59,6 @@ function makeId(): string {
 }
 
 const DAY_LABELS = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM']
-
-function findCurrentPhase(plan: TrainingPlan | null, nowISO: string): Phase | null {
-  if (!plan) return null
-  return plan.phases.find(p => p.startDate <= nowISO && nowISO <= p.endDate) ?? null
-}
 
 // ─── Composant principal ────────────────────────────────────────────────────
 type VueSemaineBlockProps = {
@@ -181,11 +175,6 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
     return { x, y }
   }, [plan, weekStartISO])
 
-  const currentPhase = useMemo(
-    () => findCurrentPhase(plan, weekStartISO),
-    [plan, weekStartISO],
-  )
-
   function gotoOffsetWeeks(offset: number) {
     const next = toISO(addDays(parseISO(weekStartISO), offset * 7))
     setWeekStartISO(next)
@@ -281,21 +270,6 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
           aria-label="Semaine suivante"
         >→</button>
       </div>
-
-      {/* ── Sous-header : pill phase courante ──────────────────────────── */}
-      {currentPhase && (
-        <div className="mt-2">
-          <span
-            className="inline-block px-[10px] py-[3px] rounded-full text-[11px] font-semibold"
-            style={{
-              backgroundColor: `${PHASE_DEFINITIONS[currentPhase.type].color}26`,
-              color: PHASE_DEFINITIONS[currentPhase.type].color,
-            }}
-          >
-            {currentPhase.label}
-          </span>
-        </div>
-      )}
 
       {/* ── Body : 7 colonnes ───────────────────────────────────────────── */}
       {/* Grille 7 colonnes pleine largeur sur tous les viewports : pas de
