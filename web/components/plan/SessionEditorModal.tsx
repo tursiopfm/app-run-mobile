@@ -6,6 +6,9 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
+import Link from 'next/link'
+import { colors } from '@/lib/design/colors'
+import type { MatchableActivity } from '@/lib/plan/session-matching'
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -53,6 +56,13 @@ type Props = {
   session: PlannedSession | null
   initialDate?: string
   open: boolean
+  /**
+   * Activité(s) automatiquement matchée(s) à cette séance (auto-link bloc Semaine).
+   * 1 ou 2 entrées (2 = cumul aller+retour pour runtaf/velotaf).
+   */
+  matchedActivities?: MatchableActivity[] | null
+  /** Délier les activités matchées — les paires sont gardées en LS pour ne plus être proposées. */
+  onUnlink?: (sessionId: string, activityIds: string[]) => void
   onClose: () => void
   onSaved: () => void
 }
@@ -104,7 +114,7 @@ function emptyDraft(initialDate: string | undefined): PlannedSession {
 }
 
 export function SessionEditorModal({
-  session, initialDate, open, onClose, onSaved,
+  session, initialDate, open, matchedActivities, onUnlink, onClose, onSaved,
 }: Props) {
   const isEdit = session !== null
   const [draft, setDraft] = useState<PlannedSession>(() => session ?? emptyDraft(initialDate))
@@ -220,6 +230,61 @@ export function SessionEditorModal({
             {isEdit ? 'Modifier la séance' : 'Créer une séance'}
           </h2>
         </div>
+
+        {isEdit && matchedActivities && matchedActivities.length > 0 && (
+          <div
+            className="flex items-center justify-between gap-3 mb-3 p-3 rounded-[10px] border"
+            style={{
+              backgroundColor: `${colors.greenOk}1A`,
+              borderColor: `${colors.greenOk}66`,
+            }}
+            role="status"
+          >
+            <div className="flex items-start gap-2 min-w-0 flex-1">
+              <span
+                aria-hidden="true"
+                className="flex-shrink-0 flex items-center justify-center rounded-full text-[11px] font-bold mt-[2px]"
+                style={{ backgroundColor: colors.greenOk, color: '#fff', width: 18, height: 18 }}
+              >
+                ✓
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[12px] font-semibold" style={{ color: colors.greenOk }}>
+                  {matchedActivities.length === 1
+                    ? 'Activité réalisée'
+                    : `${matchedActivities.length} activités réalisées (cumul)`}
+                </div>
+                {matchedActivities.map(a => (
+                  <Link
+                    key={a.id}
+                    href={`/activities/${a.id}`}
+                    className="block text-[13px] text-trail-text hover:underline truncate"
+                    title={a.name || 'Voir l’activité'}
+                  >
+                    {a.name || 'Voir l’activité'}
+                    {' '}
+                    <span className="text-trail-muted text-[11px]">
+                      ({a.distanceKm.toFixed(1)} km
+                      {a.elevationM > 0 ? ` · ${Math.round(a.elevationM)} m D+` : ''})
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+            {onUnlink && (
+              <button
+                type="button"
+                onClick={() => onUnlink(draft.id, matchedActivities.map(a => a.id))}
+                className="flex-shrink-0 px-2 py-1 rounded-[8px] text-[12px] font-semibold text-trail-muted border border-trail-border hover:text-trail-text hover:border-trail-primary"
+                aria-label={matchedActivities.length === 1
+                  ? 'Délier cette activité de la séance planifiée'
+                  : 'Délier ces activités de la séance planifiée'}
+              >
+                Délier
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Tabs */}
         <div

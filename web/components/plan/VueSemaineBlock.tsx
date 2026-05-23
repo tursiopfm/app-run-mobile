@@ -12,6 +12,12 @@ import {
   savePlannedSession,
   getCurrentPlan,
 } from '@/lib/plan/storage'
+import {
+  matchSessionsToActivities,
+  getUnlinkedPairs,
+  addUnlinkedPair,
+  type MatchableActivity,
+} from '@/lib/plan/session-matching'
 import { colors } from '@/lib/design/colors'
 import { INTENSITY_LEVEL_COLORS } from '@/lib/activities/indicators'
 import { formatDurationHHmm } from '@/lib/training/duration'
@@ -76,6 +82,10 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
   const [sessions, setSessions] = useState<PlannedSession[]>([])
   const [plan, setPlan] = useState<TrainingPlan | null>(null)
   const [loaded, setLoaded] = useState(false)
+  const [weekActivities, setWeekActivities] = useState<MatchableActivity[]>([])
+  // Paires (sessionId|activityId) que l'user a explicitement déliées.
+  // Lu depuis LS, mis à jour quand on délie depuis la modal.
+  const [unlinkedTick, setUnlinkedTick] = useState(0)
 
   const { types } = useActivityTypes()
 
@@ -126,6 +136,47 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
     })()
     return () => { cancelled = true }
   }, [weekDays, weekEndISO, reloadKey])
+
+  // Fetch des activités réalisées de la semaine pour le matching ↔ séances.
+  // Indépendant du fetch sessions (sources différentes) : on l'isole dans son
+  // propre effect pour qu'une erreur d'API n'empêche pas l'affichage des séances.
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/activities/for-period?from=${weekDays[0]}&to=${weekEndISO}`,
+          { cache: 'no-store' },
+        )
+        if (!res.ok) {
+          if (!cancelled) setWeekActivities([])
+          return
+        }
+        const json = (await res.json()) as { activities: MatchableActivity[] }
+        if (cancelled) return
+        setWeekActivities(json.activities ?? [])
+      } catch {
+        if (!cancelled) setWeekActivities([])
+      }
+    })()
+    return () => { cancelled = true }
+  }, [weekDays, weekEndISO, reloadKey])
+
+  // Map sessionId → activityIds réalisées (1 ou 2). Recalculé quand sessions,
+  // activités, catalogue de types ou la liste des paires déliées changent.
+  const matchMap = useMemo<Map<string, string[]>>(() => {
+    const unlinked = getUnlinkedPairs()
+    // unlinkedTick est dans les deps implicites via getUnlinkedPairs (LS) — on
+    // référence la var pour que React relance le useMemo après un délier.
+    void unlinkedTick
+    return matchSessionsToActivities(sessions, weekActivities, types, unlinked)
+  }, [sessions, weekActivities, types, unlinkedTick])
+
+  const activitiesById = useMemo<Map<string, MatchableActivity>>(() => {
+    const m = new Map<string, MatchableActivity>()
+    for (const a of weekActivities) m.set(a.id, a)
+    return m
+  }, [weekActivities])
 
   // Sessions groupées par jour ISO.
   const sessionsByDay = useMemo<Record<string, PlannedSession[]>>(() => {
@@ -283,6 +334,7 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
               label={DAY_LABELS[i]}
               isToday={iso === todayISO}
               sessions={sessionsByDay[iso] ?? []}
+              matchMap={matchMap}
               onSessionClick={openEdit}
               onAdd={() => openCreate(iso)}
             />
@@ -311,6 +363,20 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
         session={editingSession}
         initialDate={editorInitialDate}
         open={editorOpen}
+        matchedActivities={editingSession ? (() => {
+          const ids = matchMap.get(editingSession.id)
+          if (!ids) return null
+          const list: MatchableActivity[] = []
+          for (const id of ids) {
+            const a = activitiesById.get(id)
+            if (a) list.push(a)
+          }
+          return list.length > 0 ? list : null
+        })() : null}
+        onUnlink={(sessionId, activityIds) => {
+          for (const aid of activityIds) addUnlinkedPair(sessionId, aid)
+          setUnlinkedTick(t => t + 1)
+        }}
         onClose={() => setEditorOpen(false)}
         onSaved={() => { void reload() }}
       />
@@ -360,12 +426,13 @@ function Pill({ bg, color, label }: { bg: string; color: string; label: string }
 }
 
 function DayColumn({
-  iso, label, isToday, sessions, onSessionClick, onAdd,
+  iso, label, isToday, sessions, matchMap, onSessionClick, onAdd,
 }: {
   iso: string
   label: string
   isToday: boolean
   sessions: PlannedSession[]
+  matchMap: Map<string, string[]>
   onSessionClick: (s: PlannedSession) => void
   onAdd: () => void
 }) {
@@ -407,7 +474,12 @@ function DayColumn({
       {/* Corps colonne */}
       <div className="p-1 flex flex-col gap-1 min-h-[120px]">
         {sessions.map(s => (
-          <DraggableSessionCard key={s.id} session={s} onClick={() => onSessionClick(s)} />
+          <DraggableSessionCard
+            key={s.id}
+            session={s}
+            done={matchMap.has(s.id)}
+            onClick={() => onSessionClick(s)}
+          />
         ))}
         <button
           type="button"
@@ -423,9 +495,10 @@ function DayColumn({
 }
 
 function DraggableSessionCard({
-  session, onClick,
+  session, done, onClick,
 }: {
   session: PlannedSession
+  done: boolean
   onClick: () => void
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -447,13 +520,28 @@ function DraggableSessionCard({
         touchAction: 'pan-y',
         borderColor: intensityColor,
       }}
-      className="rounded-[6px] bg-trail-card border p-1 cursor-pointer"
+      className="relative rounded-[6px] bg-trail-card border p-1 cursor-pointer"
       onClick={onClick}
       role="button"
       tabIndex={0}
-      aria-label={`Éditer la séance ${session.title} (intensité ${session.intensity} sur 5, glisser pour déplacer)`}
+      aria-label={`Éditer la séance ${session.title}${done ? ' (réalisée)' : ''} (intensité ${session.intensity} sur 5, glisser pour déplacer)`}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
     >
+      {done && (
+        <span
+          aria-hidden="true"
+          className="absolute -top-1 -right-1 flex items-center justify-center rounded-full text-[10px] font-bold leading-none"
+          style={{
+            backgroundColor: colors.greenOk,
+            color: '#fff',
+            width: 14,
+            height: 14,
+            boxShadow: '0 0 0 1.5px var(--trail-card)',
+          }}
+        >
+          ✓
+        </span>
+      )}
       <div
         className="text-[11px] text-trail-text leading-tight"
         style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
