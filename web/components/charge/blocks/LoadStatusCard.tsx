@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 import { charge as L } from '@/lib/design/labels'
@@ -9,8 +10,15 @@ import {
   kpiStatusFitness,
   kpiStatusFreshness,
 } from '@/lib/analytics/charge-kpi-status'
+import { FreshnessHelpSheet } from '@/components/ui/FreshnessHelpSheet'
+import { FatigueHelpSheet } from '@/components/ui/FatigueHelpSheet'
+import { FitnessHelpSheet } from '@/components/ui/FitnessHelpSheet'
+
+type HelpKey = 'fatigue' | 'fitness' | 'freshness' | null
 
 export function LoadStatusCard({ payload }: { payload: ChargeSportPayload }) {
+  const [openHelp, setOpenHelp] = useState<HelpKey>(null)
+
   const last = payload.dailyMetrics[payload.dailyMetrics.length - 1]
   const atl  = Math.round(last?.atl ?? 0)
   const ctl  = Math.round(last?.ctl ?? 0)
@@ -39,6 +47,7 @@ export function LoadStatusCard({ payload }: { payload: ChargeSportPayload }) {
           value={atl}
           statusLabel={fatigueLabel}
           tooltip={`ATL: ${atl}`}
+          onClick={() => setOpenHelp('fatigue')}
         />
         <KpiCell
           label={L.baseFitness}
@@ -46,6 +55,7 @@ export function LoadStatusCard({ payload }: { payload: ChargeSportPayload }) {
           value={ctl}
           statusLabel={fitnessLabel}
           tooltip={`CTL: ${ctl}`}
+          onClick={() => setOpenHelp('fitness')}
         />
         <KpiCell
           label={L.freshness}
@@ -53,8 +63,18 @@ export function LoadStatusCard({ payload }: { payload: ChargeSportPayload }) {
           value={tsb}
           statusLabel={freshnessLabel}
           tooltip={`TSB: ${tsb}`}
+          onClick={() => setOpenHelp('freshness')}
         />
       </div>
+      {openHelp === 'fatigue' && (
+        <FatigueHelpSheet currentId={fatigueStatus.id} onClose={() => setOpenHelp(null)} />
+      )}
+      {openHelp === 'fitness' && (
+        <FitnessHelpSheet currentId={fitnessStatus.id} onClose={() => setOpenHelp(null)} />
+      )}
+      {openHelp === 'freshness' && (
+        <FreshnessHelpSheet currentId={freshnessStatus.id} onClose={() => setOpenHelp(null)} />
+      )}
     </BlockCard>
   )
 }
@@ -65,16 +85,23 @@ type KpiCellProps = {
   value:       number
   statusLabel: string
   tooltip:     string
+  onClick:     () => void
 }
 
-function KpiCell({ label, labelColor, value, statusLabel, tooltip }: KpiCellProps) {
+function KpiCell({ label, labelColor, value, statusLabel, tooltip, onClick }: KpiCellProps) {
   return (
-    <div className="rounded-[10px] bg-trail-surface px-2 py-2 text-center" title={tooltip}>
+    <button
+      type="button"
+      onClick={onClick}
+      title={tooltip}
+      aria-label={`${label} — voir les explications`}
+      className="rounded-[10px] bg-trail-surface px-2 py-2 text-center hover:brightness-110 transition cursor-pointer w-full"
+    >
       <p className="text-[12px] font-semibold" style={{ color: labelColor }}>{label}</p>
       <p className="text-[18px] font-black mt-0.5 text-trail-text">{value}</p>
       <p className="text-[11px] font-medium mt-0.5 text-trail-muted leading-[14px]">
         {statusLabel}
       </p>
-    </div>
+    </button>
   )
 }

@@ -6,10 +6,12 @@ import type { SportOverview } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import { CockpitKpiTile } from '@/components/ui/CockpitKpiTile'
 import { TsbBadge } from '@/components/ui/TsbBadge'
+import { FreshnessHelpSheet } from '@/components/ui/FreshnessHelpSheet'
 import { SportSettingsModal } from './SportSettingsModal'
 import { BlockHelpSheet } from '@/components/blocks/BlockHelpSheet'
 import { colors } from '@/lib/design/colors'
 import { charge as L } from '@/lib/design/labels'
+import { kpiStatusFreshness } from '@/lib/analytics/charge-kpi-status'
 
 type Settings = { visible: SportKey[]; default: SportKey }
 const DEFAULT_SETTINGS: Settings = { visible: ['run', 'ride', 'swim', 'all'], default: 'run' }
@@ -34,6 +36,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
   const [currentIdx,  setCurrentIdx]  = useState(0)
   const [showModal,   setShowModal]   = useState(false)
   const [showChargeHelp, setShowChargeHelp] = useState(false)
+  const [showFreshnessHelp, setShowFreshnessHelp] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -93,7 +96,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
           <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
         </div>
         <div className="flex items-center gap-2">
-          <TsbBadge tsb={sportOverviews.all.tsb} />
+          <TsbBadge tsb={sportOverviews.all.tsb} onClick={() => setShowFreshnessHelp(true)} />
           <button
             onClick={() => setShowModal(true)}
             className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
@@ -232,6 +235,12 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
           title={L.blocks.status}
           body={L.help.status}
           onClose={() => setShowChargeHelp(false)}
+        />
+      )}
+      {showFreshnessHelp && (
+        <FreshnessHelpSheet
+          currentId={kpiStatusFreshness(Math.round(sportOverviews.all.tsb)).id}
+          onClose={() => setShowFreshnessHelp(false)}
         />
       )}
     </div>
