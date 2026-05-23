@@ -167,7 +167,7 @@ Le web app et le backend mobile partagent le même `client_id=228003` mais ont d
 
 - Web app local → `localhost`
 - App mobile → `excess-deceiver-throwback.ngrok-free.dev`
-- Vercel prod → `trail-cockpit.vercel.app`
+- Vercel prod → `trailcockpit.run`
 
 Commandes :
 ```

@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Where to work
 
-The active codebase is the **Next.js web app in `web/`** (PWA, deployed to https://trail-cockpit.vercel.app). Default to working there unless Franck explicitly asks for Android.
+The active codebase is the **Next.js web app in `web/`** (PWA, deployed to https://trailcockpit.run). Default to working there unless Franck explicitly asks for Android.
 
 Legacy / not the active focus:
-- `app/`, `gradle/`, `build.gradle.kts`, `settings.gradle.kts` — original Android (Kotlin + Jetpack Compose) app being migrated away from.
+- `app/`, `gradle/`, `build.gradle.kts`,push git `settings.gradle.kts` — original Android (Kotlin + Jetpack Compose) app being migrated away from.
 - `backend/strava-oauth/` — Node.js OAuth proxy that served the Android app.
 - The Expo/React Native `package.json` at the repo root is leftover scaffolding; ignore it.
 

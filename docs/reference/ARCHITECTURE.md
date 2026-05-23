@@ -6,7 +6,7 @@
 
 ## Vue d'ensemble
 
-Trail Cockpit est une **PWA Next.js** déployée sur Vercel ([trail-cockpit.vercel.app](https://trail-cockpit.vercel.app)), connectée à Supabase pour la persistance et à Strava pour l'ingestion d'activités. L'ancien client Android Kotlin/Jetpack Compose est legacy (voir section dédiée en bas).
+Trail Cockpit est une **PWA Next.js** déployée sur Vercel ([trailcockpit.run](https://trailcockpit.run)), connectée à Supabase pour la persistance et à Strava pour l'ingestion d'activités. L'ancien client Android Kotlin/Jetpack Compose est legacy (voir section dédiée en bas).
 
 ### Stack
 

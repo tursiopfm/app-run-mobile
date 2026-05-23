@@ -217,7 +217,7 @@ backend/strava-oauth/server.js
 ## Web App — Trail Cockpit (Next.js 14) — état 2026-05-09
 
 ```text
-https://trail-cockpit.vercel.app
+https://trailcockpit.run
   -> /login        → Supabase Auth (email/password)
   -> /signup       → création compte + profil auto
   -> /auth/reset   → reset mot de passe
