@@ -60,8 +60,8 @@ function haversineDistance(a: LatLng, b: LatLng): number {
   return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x))
 }
 
-function computeKmMarkers(positions: LatLng[]): Array<{ km: number; pos: LatLng }> {
-  const markers: Array<{ km: number; pos: LatLng }> = []
+function computeKmMarkers(positions: LatLng[]): Array<{ km: number; pos: LatLng; idx: number }> {
+  const markers: Array<{ km: number; pos: LatLng; idx: number }> = []
   let dist = 0
   let nextKm = 1
   for (let i = 1; i < positions.length; i++) {
@@ -76,6 +76,7 @@ function computeKmMarkers(positions: LatLng[]): Array<{ km: number; pos: LatLng 
           positions[i - 1][0] + t * (positions[i][0] - positions[i - 1][0]),
           positions[i - 1][1] + t * (positions[i][1] - positions[i - 1][1]),
         ],
+        idx: i,
       })
       nextKm++
     }
@@ -83,17 +84,25 @@ function computeKmMarkers(positions: LatLng[]): Array<{ km: number; pos: LatLng 
   return markers
 }
 
-function KmMarkers({ positions }: { positions: LatLng[] }) {
+function KmMarkers({ positions, maxIdx }: { positions: LatLng[]; maxIdx: number }) {
   const markers = useMemo(() => computeKmMarkers(positions), [positions])
   return (
     <>
-      {markers.map(({ km, pos }) => (
+      {markers.filter(m => m.idx <= maxIdx).map(({ km, pos }) => (
         <CircleMarker key={km} center={pos} radius={6}
           pathOptions={{ color: '#fff', weight: 2, fillColor: '#e8651a', fillOpacity: 1 }}>
           <Tooltip permanent direction="top" offset={[0, -9]} className="km-tooltip">{km}</Tooltip>
         </CircleMarker>
       ))}
     </>
+  )
+}
+
+function IconPlay() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <polygon points="7 4 20 12 7 20 7 4" />
+    </svg>
   )
 }
 
@@ -125,10 +134,47 @@ export function ActivityMap({ encodedPolyline, expanded = false }: { encodedPoly
     [encodedPolyline]
   )
 
+  const totalDistanceKm = useMemo(() => {
+    let d = 0
+    for (let i = 1; i < positions.length; i++) d += haversineDistance(positions[i - 1], positions[i])
+    return d / 1000
+  }, [positions])
+
+  const [animIndex, setAnimIndex] = useState(0)
+  const [animating, setAnimating] = useState(true)
+  const [animKey, setAnimKey] = useState(0)
+
+  useEffect(() => {
+    if (positions.length < 2) {
+      setAnimating(false)
+      return
+    }
+    setAnimIndex(0)
+    setAnimating(true)
+    // ~0.4 s par km, borné entre 3 s et 10 s
+    const duration = Math.max(3000, Math.min(10000, totalDistanceKm * 400))
+    const startTime = performance.now()
+    let raf = 0
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - startTime) / duration)
+      const idx = Math.floor(t * (positions.length - 1))
+      setAnimIndex(idx)
+      if (t < 1) {
+        raf = requestAnimationFrame(tick)
+      } else {
+        setAnimating(false)
+      }
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [positions, totalDistanceKm, animKey])
+
   if (positions.length === 0) return <ActivityMapPlaceholder />
 
   const start = positions[0]
   const end = positions.length > 1 ? positions[positions.length - 1] : undefined
+  const drawn = animating ? positions.slice(0, animIndex + 1) : positions
+  const head = animating && animIndex > 0 ? positions[animIndex] : undefined
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -150,18 +196,50 @@ export function ActivityMap({ encodedPolyline, expanded = false }: { encodedPoly
         )}
         {layer === 'relief' && <TileLayer key="relief" url={TOPO_URL} />}
 
-        <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 28, opacity: 0.08 }} />
-        <Polyline positions={positions} pathOptions={{ color: '#ff8c42', weight: 14, opacity: 0.22 }} />
-        <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 6, opacity: 0.55 }} />
-        <Polyline positions={positions} pathOptions={{ color: '#e8651a', weight: 3, opacity: 1 }} />
+        <Polyline positions={drawn} pathOptions={{ color: '#e8651a', weight: 28, opacity: 0.08 }} />
+        <Polyline positions={drawn} pathOptions={{ color: '#ff8c42', weight: 14, opacity: 0.22 }} />
+        <Polyline positions={drawn} pathOptions={{ color: '#e8651a', weight: 6, opacity: 0.55 }} />
+        <Polyline positions={drawn} pathOptions={{ color: '#e8651a', weight: 3, opacity: 1 }} />
         <CircleMarker center={start} radius={7} pathOptions={{ color: '#fff', weight: 2, fillColor: '#4caf50', fillOpacity: 1 }} />
-        {end && (
+        {!animating && end && (
           <CircleMarker center={end} radius={7} pathOptions={{ color: '#fff', weight: 2, fillColor: '#e8651a', fillOpacity: 1 }} />
         )}
-        {expanded && <KmMarkers positions={positions} />}
+        {head && (
+          <CircleMarker center={head} radius={6} pathOptions={{ color: '#fff', weight: 2, fillColor: '#ffba6a', fillOpacity: 1 }} />
+        )}
+        {expanded && <KmMarkers positions={positions} maxIdx={animating ? animIndex : positions.length} />}
         <FitBounds positions={positions} />
         <MapResizer expanded={expanded} positions={positions} />
       </MapContainer>
+
+      {/* Bouton replay — apparaît après la 1ʳᵉ lecture */}
+      {!animating && positions.length > 1 && (
+        <button
+          onClick={() => setAnimKey(k => k + 1)}
+          style={{
+            position: 'absolute',
+            bottom: expanded ? 72 : 14,
+            right: 58,
+            zIndex: 1000,
+            width: 38,
+            height: 38,
+            borderRadius: '50%',
+            background: 'rgba(15,15,15,0.82)',
+            border: '1.5px solid rgba(255,255,255,0.2)',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            backdropFilter: 'blur(6px)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.45)',
+            padding: 0,
+          }}
+          title="Rejouer l'animation"
+        >
+          <IconPlay />
+        </button>
+      )}
 
       {/* Bouton de changement de vue — bas droite */}
       <button
