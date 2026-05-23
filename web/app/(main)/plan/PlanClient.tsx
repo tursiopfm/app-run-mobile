@@ -43,7 +43,7 @@ import { estimateCharge } from '@/lib/training/charge'
 import type { PlannedSession, Race, SessionTemplate, TrainingPlan } from '@/types/plan'
 import { seedMockDataIfEmpty } from '@/lib/plan/mock-data'
 
-const DEFAULT_ORDER = ['mode', 'objectif', 'resume-semaine', 'structure', 'calendrier-mois', 'semaine-bibliotheque', 'charge']
+const DEFAULT_ORDER = ['objectif', 'resume-semaine', 'structure', 'calendrier-mois', 'semaine-bibliotheque', 'charge']
 
 function makeId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -132,12 +132,6 @@ export default function PlanClient() {
 
   const blocks: BlockDef[] = [
     {
-      id: 'mode',
-      label: 'Mode',
-      emoji: '🧭',
-      render: () => <ModeToggleBlock />,
-    },
-    {
       id: 'objectif',
       label: 'Objectif course',
       emoji: '🎯',
@@ -193,7 +187,8 @@ export default function PlanClient() {
   ]
 
   return (
-    <div className="px-3 py-3 max-w-lg mx-auto">
+    <div className="px-3 py-3 max-w-lg mx-auto space-y-2">
+      <ModeToggleBlock />
       <BlockGrid
         storageKey="plan"
         defaultOrder={DEFAULT_ORDER}

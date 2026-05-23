@@ -232,12 +232,11 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
       }
     >
       <div className="flex items-center gap-2 mb-3">
-        <button
-          type="button"
+        <NavButton
+          label="<"
+          ariaLabel="Semaine précédente"
           onClick={() => gotoOffsetWeeks(-1)}
-          className="px-2 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] hover:border-trail-primary"
-          aria-label="Semaine précédente"
-        >←</button>
+        />
         <span className="text-[12px] text-trail-muted flex-1 text-center">
           du {formatDM(weekDays[0])} au {formatDM(weekEndISO)}
         </span>
@@ -263,12 +262,11 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
         >
           En cours
         </button>
-        <button
-          type="button"
+        <NavButton
+          label=">"
+          ariaLabel="Semaine suivante"
           onClick={() => gotoOffsetWeeks(1)}
-          className="px-2 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] hover:border-trail-primary"
-          aria-label="Semaine suivante"
-        >→</button>
+        />
       </div>
 
       {/* ── Body : 7 colonnes ───────────────────────────────────────────── */}
@@ -321,6 +319,35 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
 }
 
 // ─── Sous-composants ────────────────────────────────────────────────────────
+function NavButton({
+  label, ariaLabel, onClick,
+}: { label: string; ariaLabel: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      style={{
+        width: 40,
+        height: 40,
+        flexShrink: 0,
+        borderRadius: 10,
+        backgroundColor: colors.surface,
+        border: `1px solid ${colors.border}`,
+        color: colors.text,
+        fontSize: 18,
+        fontWeight: 900,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
 function Pill({ bg, color, label }: { bg: string; color: string; label: string }) {
   return (
     <span
