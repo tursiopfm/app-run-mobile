@@ -302,6 +302,19 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
             <h3 className="text-[16px] font-bold text-trail-text mb-4">
               Objectifs {SPORT_CONFIG[editSport].label} {SPORT_CONFIG[editSport].emoji}
             </h3>
+            {planWeekly && (editSport === 'run' || editSport === 'all') && (
+              <button
+                type="button"
+                onClick={() => setDraft((g) => ({
+                  ...g,
+                  weekKm:    planWeekly.km,
+                  weekDPlus: planWeekly.dPlus,
+                }))}
+                className="w-full mb-4 text-[13px] font-semibold px-3 py-2 rounded-[8px] border border-trail-border bg-trail-surface text-trail-text hover:bg-trail-card transition-colors"
+              >
+                ↻ Charger depuis le plan ({Math.round(planWeekly.km)} km · {Math.round(planWeekly.dPlus)} m D+)
+              </button>
+            )}
             <div className="space-y-4">
               <GoalField
                 label="Km semaine"
