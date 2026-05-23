@@ -309,7 +309,7 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
         <MetricTile
           label="Planifié"
           main={`${fmt1(planned.km)} km`}
-          sub={`${plannedSessionsCount} séances`}
+          sub={`${Math.round(planned.dPlus)} m D+`}
           color={colors.seriesBlue}
         />
         <MetricTile
