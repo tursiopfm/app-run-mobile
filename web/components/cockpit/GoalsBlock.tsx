@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { GoalProgressRow } from '@/components/ui/GoalProgressRow'
 import { SportSettingsModal } from './SportSettingsModal'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import type { SportOverview } from '@/lib/data/dashboard'
+import { getCurrentPlan } from '@/lib/plan/storage'
+import { resolveWeeklyTarget } from '@/lib/training/phases'
 
 const SETTINGS_KEY = 'cockpit_goals_settings'
 const TARGETS_KEY  = 'cockpit_goals_targets'
@@ -22,11 +24,28 @@ const DEFAULT_GOALS: Record<SportKey, Goals> = {
 type Settings = { visible: SportKey[]; default: SportKey }
 const DEFAULT_SETTINGS: Settings = { visible: ['run', 'ride', 'swim', 'all'], default: 'run' }
 
+// La cible hebdo running issue du plan d'entraînement (phase courante de la
+// semaine en cours) sert de défaut pour les sports run/all. Une édition manuelle
+// stocke un override en localStorage et reprend la priorité.
+function toISO(d: Date): string {
+  const y = d.getUTCFullYear()
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(d.getUTCDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+function startOfISOWeekUTC(d: Date): Date {
+  const utc = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
+  const dow = utc.getUTCDay() || 7
+  if (dow !== 1) utc.setUTCDate(utc.getUTCDate() - (dow - 1))
+  return utc
+}
+
 type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
 export function GoalsBlock({ sportOverviews, onHide }: Props) {
   const [settings,   setSettings]   = useState<Settings>(DEFAULT_SETTINGS)
-  const [targets,    setTargets]    = useState<Record<SportKey, Goals>>(DEFAULT_GOALS)
+  const [targets,    setTargets]    = useState<Partial<Record<SportKey, Partial<Goals>>>>({})
+  const [planWeekly, setPlanWeekly] = useState<{ km: number; dPlus: number } | null>(null)
   const [activeIdx,  setActiveIdx]  = useState(0)
   const [showConfig, setShowConfig] = useState(false)
   const [editSport,  setEditSport]  = useState<SportKey | null>(null)
@@ -40,9 +59,9 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
       const parsed: Settings = s
         ? { ...DEFAULT_SETTINGS, ...(JSON.parse(s) as Partial<Settings>) }
         : DEFAULT_SETTINGS
-      const parsedTargets: Record<SportKey, Goals> = t
-        ? { ...DEFAULT_GOALS, ...(JSON.parse(t) as Partial<Record<SportKey, Goals>>) }
-        : DEFAULT_GOALS
+      const parsedTargets: Partial<Record<SportKey, Partial<Goals>>> = t
+        ? (JSON.parse(t) as Partial<Record<SportKey, Partial<Goals>>>)
+        : {}
       setSettings(parsed)
       setTargets(parsedTargets)
       const initIdx = Math.max(0, parsed.visible.indexOf(parsed.default))
@@ -55,6 +74,37 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
       }
     } catch {}
   }, [])
+
+  // Charge la cible hebdo issue du plan d'entraînement pour la semaine en cours.
+  // Sert de valeur par défaut pour run/all quand le user n'a pas posé d'override.
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const plan = await getCurrentPlan()
+        if (cancelled || !plan) return
+        const now = new Date()
+        const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+        const weekStartISO = toISO(startOfISOWeekUTC(todayUTC))
+        const phase = plan.phases.find(p => p.startDate <= weekStartISO && weekStartISO <= p.endDate)
+        if (!phase) return
+        const t = resolveWeeklyTarget(phase, weekStartISO)
+        if (!cancelled) setPlanWeekly({ km: t.km, dPlus: t.dPlus })
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  const effectiveGoals = useCallback((sport: SportKey): Goals => {
+    const user = targets[sport] ?? {}
+    const def = DEFAULT_GOALS[sport]
+    const isRunLike = sport === 'run' || sport === 'all'
+    return {
+      weekKm:    user.weekKm    ?? (isRunLike ? planWeekly?.km    : undefined) ?? def.weekKm,
+      weekDPlus: user.weekDPlus ?? (isRunLike ? planWeekly?.dPlus : undefined) ?? def.weekDPlus,
+      yearKm:    user.yearKm    ?? def.yearKm,
+    }
+  }, [targets, planWeekly])
 
   function handleScroll() {
     const el = scrollRef.current
@@ -82,15 +132,34 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
   }
 
   function openEdit(sport: SportKey) {
-    setDraft({ ...DEFAULT_GOALS[sport], ...targets[sport] })
+    setDraft(effectiveGoals(sport))
     setEditSport(sport)
   }
 
   function saveEdit() {
     if (!editSport) return
-    const next = { ...targets, [editSport]: draft }
-    localStorage.setItem(TARGETS_KEY, JSON.stringify(next))
-    setTargets(next)
+    const sport = editSport
+    const isRunLike = sport === 'run' || sport === 'all'
+    const fallbackKm    = (isRunLike ? planWeekly?.km    : undefined) ?? DEFAULT_GOALS[sport].weekKm
+    const fallbackDPlus = (isRunLike ? planWeekly?.dPlus : undefined) ?? DEFAULT_GOALS[sport].weekDPlus
+    const fallbackYear  = DEFAULT_GOALS[sport].yearKm
+
+    // On ne sauve un override que pour les champs qui diffèrent du fallback
+    // (plan pour run/all, sinon DEFAULT_GOALS). Si user retape la valeur du
+    // plan, on retire l'override et l'affichage suit à nouveau le plan.
+    const next: Partial<Goals> = {}
+    if (draft.weekKm    !== fallbackKm)    next.weekKm    = draft.weekKm
+    if (draft.weekDPlus !== fallbackDPlus) next.weekDPlus = draft.weekDPlus
+    if (draft.yearKm    !== fallbackYear)  next.yearKm    = draft.yearKm
+
+    const nextTargets: Partial<Record<SportKey, Partial<Goals>>> = { ...targets }
+    if (Object.keys(next).length === 0) {
+      delete nextTargets[sport]
+    } else {
+      nextTargets[sport] = next
+    }
+    localStorage.setItem(TARGETS_KEY, JSON.stringify(nextTargets))
+    setTargets(nextTargets)
     setEditSport(null)
   }
 
@@ -108,7 +177,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
           {visibleSports.map((sport) => {
             const cfg = SPORT_CONFIG[sport]
             const sov = sportOverviews[sport]
-            const tgt = { ...DEFAULT_GOALS[sport], ...targets[sport] }
+            const tgt = effectiveGoals(sport)
             return (
               <div
                 key={sport}
