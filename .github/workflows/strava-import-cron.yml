@@ -18,7 +18,7 @@ jobs:
         run: |
           response=$(curl -sS -w "\n%{http_code}" -X GET \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            https://trail-cockpit.vercel.app/api/cron/strava-import)
+            https://trailcockpit.run/api/cron/strava-import)
           body=$(echo "$response" | sed '$d')
           status=$(echo "$response" | tail -n1)
           echo "HTTP $status"
