@@ -344,13 +344,6 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
           unit="m"
           color={colors.seriesBlue}
         />
-        <ProgressLine
-          label="Charge"
-          current={actual.load}
-          target={targets.load}
-          unit="pts"
-          color={colors.seriesYellow}
-        />
       </div>
 
       {!loaded && (
