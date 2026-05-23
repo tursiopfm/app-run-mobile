@@ -11,6 +11,7 @@ export type RaceMarker = {
 
 const COLLISION_THRESHOLD_PERCENT = 8   // 2 markers à < 8% d'écart sur la même lane → collision
 const MAX_LANE = 3                       // au-delà, log warn et on accepte la superposition visuelle
+const DEFAULT_LANE = 0                   // toutes les courses démarrent en lane 0 (collées à la barre) ; on n'escalade qu'en cas de collision
 
 function parseISODate(iso: string): number {
   const [y, m, d] = iso.split('-').map(Number)
@@ -27,25 +28,23 @@ export function computeRaceMarkers(
   const totalMs = endMs - startMs
   if (totalMs <= 0) return []
 
-  // 1. Filtrer + calculer leftPercent + lane initiale.
+  // 1. Filtrer + calculer leftPercent. Toutes les courses démarrent en lane 0.
   const inWindow: RaceMarker[] = races
     .filter(r => r.date >= macroStart && r.date <= macroEnd)
     .map(race => {
       const raceMs = parseISODate(race.date)
       const leftPercent = ((raceMs - startMs) / totalMs) * 100
-      const lane = race.priority === 'A' ? 0 : 1
-      return { race, leftPercent, lane }
+      return { race, leftPercent, lane: DEFAULT_LANE }
     })
     .sort((a, b) => a.leftPercent - b.leftPercent)
 
-  // 2. Détection collisions intra-lane : balayage gauche → droite, pousse en lane fantôme.
-  // Lane 0 réservée aux A, lane 1 aux B/C. En collision, on saute directement en
-  // lane fantôme (>= 2) pour éviter qu'un A colle visuellement à un B/C.
+  // 2. Détection collisions intra-lane : balayage gauche → droite. Sur collision,
+  // on escalade d'UNE lane (lane+1). Cela garde toutes les bulles non-en-conflit
+  // collées à la barre (lane 0) et n'étage que ce qui se chevauche réellement.
   const lastByLane = new Map<number, number>()
 
   for (const marker of inWindow) {
-    const baseLane = marker.lane
-    let lane = baseLane
+    let lane = marker.lane
     while (lane <= MAX_LANE) {
       const last = lastByLane.get(lane)
       if (last === undefined || marker.leftPercent - last >= COLLISION_THRESHOLD_PERCENT) {
@@ -53,8 +52,7 @@ export function computeRaceMarkers(
         lastByLane.set(lane, marker.leftPercent)
         break
       }
-      // Première escalade : saute directement en lane fantôme (>= 2), peu importe baseLane.
-      lane = lane < 2 ? 2 : lane + 1
+      lane = lane + 1
     }
     if (lane > MAX_LANE) {
       // eslint-disable-next-line no-console

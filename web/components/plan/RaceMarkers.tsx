@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Flag, Trophy } from 'lucide-react'
 import type { Race } from '@/types/plan'
 import { computeRaceMarkers, type RaceMarker } from '@/lib/training/race-stacking'
 
@@ -16,6 +17,18 @@ const PRIORITY_COLOR: Record<Race['priority'], string> = {
   C: 'var(--trail-muted)',
 }
 
+// Hauteur d'un "étage" vertical occupé par une bulle empilée (collisions).
+// = hauteur d'une carte (42) + 4px de gap entre bulles superposées.
+const LANE_STEP = 46
+
+// Décalage vertical entre la barre et le haut de la zone bulle (= ticks mt-1 + ticks
+// text height ≈ 4 + 15, sans gap supplémentaire car bubble row passe en mt-0).
+const OVERLAP_TO_BAR = 19
+
+// Partie visible du connecteur sous la zone ticks (lane 0). Plus c'est petit, plus la
+// bulle colle à la barre. 4px = juste assez pour que le trait soit lisible.
+const BASE_CONNECTOR = 4
+
 function formatShortDate(iso: string): string {
   if (!iso || iso.length < 10) return iso
   return `${iso.slice(8, 10)}/${iso.slice(5, 7)}`
@@ -28,16 +41,30 @@ export function RaceMarkers({ races, macroStart, macroEnd }: Props) {
   if (markers.length === 0) return null
 
   const maxLane = markers.reduce((acc, m) => Math.max(acc, m.lane), 0)
-  const rowHeight = 42 + maxLane * 28
+  // Hauteur du bas = connecteur le plus long (BASE + lane*step) + hauteur exacte de la carte la plus haute (≈ 42px).
+  const bubbleRowHeight = BASE_CONNECTOR + maxLane * LANE_STEP + 42
   const openRace = openRaceId ? markers.find(m => m.race.id === openRaceId)?.race : null
 
   return (
     <>
-      <div className="relative mt-3" style={{ height: 1, background: 'var(--trail-border)' }} aria-hidden />
-      <div className="relative mt-2" style={{ height: rowHeight }}>
+      {/* === ZONE PIN (au-dessus de la barre) === */}
+      {/* Positionnée absolument dans le pt-9 (36px) que StructurePrepaBlock ajoute au-dessus de la barre.
+          Hauteur = chip 28 + petit connecteur 8px qui touche la barre. */}
+      <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{ height: 36 }}>
         {markers.map(m => (
-          <RaceMarkerNode
-            key={m.race.id}
+          <RacePinAbove
+            key={`pin-${m.race.id}`}
+            marker={m}
+            onTap={() => setOpenRaceId(m.race.id)}
+          />
+        ))}
+      </div>
+
+      {/* === ZONE BULLE (en dessous de la barre + ticks) — mt-0 pour coller au max === */}
+      <div className="relative" style={{ height: bubbleRowHeight }}>
+        {markers.map(m => (
+          <RaceBubbleBelow
+            key={`bubble-${m.race.id}`}
             marker={m}
             onTap={() => setOpenRaceId(m.race.id)}
           />
@@ -51,74 +78,128 @@ export function RaceMarkers({ races, macroStart, macroEnd }: Props) {
   )
 }
 
-function RaceMarkerNode({ marker, onTap }: { marker: RaceMarker; onTap: () => void }) {
-  const { race, leftPercent, lane } = marker
-  const top = lane * 28
+// === Pin au-dessus de la barre — chip 28×28 + petit trait connectant à la barre ===
+function RacePinAbove({ marker, onTap }: { marker: RaceMarker; onTap: () => void }) {
+  const { race, leftPercent } = marker
   const color = PRIORITY_COLOR[race.priority]
+  const isA = race.priority === 'A'
+  const isMainGoal = isA && race.isMain
 
-  if (race.priority === 'A') {
-    return (
-      <button
-        type="button"
-        onClick={onTap}
-        className="absolute flex flex-col items-center"
-        style={{ left: `${leftPercent}%`, top, transform: 'translateX(-50%)' }}
-        aria-label={`Course ${race.name}, priorité A`}
-      >
-        <span className="text-[11px] font-bold text-[color:var(--trail-text)] mb-0.5 whitespace-nowrap">{race.name}</span>
-        <span
-          className="flex items-center justify-center w-7 h-7 rounded-md text-white"
-          style={{ background: color, boxShadow: `0 0 0 2px var(--trail-card), 0 0 8px ${color}80` }}
-        >🏁</span>
-        <span className="text-[9px] font-bold mt-0.5 whitespace-nowrap" style={{ color }}>
-          A · {formatShortDate(race.date)}
-        </span>
-      </button>
-    )
-  }
+  // Tous les chips sont à la même taille (28×28) avec icône size=14 — seule la couleur change.
+  const textColor = isA ? 'text-white' : race.priority === 'B' ? 'text-black' : 'text-white'
 
-  if (race.priority === 'B') {
-    return (
-      <button
-        type="button"
-        onClick={onTap}
-        className="absolute flex flex-col items-center"
-        style={{ left: `${leftPercent}%`, top, transform: 'translateX(-50%)' }}
-        aria-label={`Course ${race.name}, priorité B`}
-      >
-        <span className="text-[10px] font-semibold text-[color:var(--trail-text)] mb-0.5 whitespace-nowrap">{race.name}</span>
-        <span
-          className="flex items-center justify-center w-5 h-5 rounded-md"
-          style={{ background: color, boxShadow: '0 0 0 2px var(--trail-card)' }}
-        >
-          <span className="text-[10px] text-black">⚑</span>
-        </span>
-        <span className="text-[9px] font-semibold mt-0.5 whitespace-nowrap" style={{ color }}>
-          B · {formatShortDate(race.date)}
-        </span>
-      </button>
-    )
-  }
-
-  // C
   return (
     <button
       type="button"
       onClick={onTap}
-      className="absolute flex flex-col items-center"
-      style={{ left: `${leftPercent}%`, top, transform: 'translateX(-50%)' }}
-      aria-label={`Course ${race.name}, priorité C`}
+      className="absolute pointer-events-auto flex flex-col items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--trail-primary)] rounded-[8px]"
+      style={{ left: `${leftPercent}%`, bottom: 0, transform: 'translateX(-50%)' }}
+      aria-label={`Course ${race.name}, ${formatShortDate(race.date)}`}
+      title={race.name}
     >
-      <span className="text-[9px] text-[color:var(--trail-muted)] mb-0.5 whitespace-nowrap">{race.name}</span>
+      {/* Chip uniforme 28×28 avec icône taille 14 */}
       <span
-        className="flex items-center justify-center w-2.5 h-2.5 rounded-full"
-        style={{ background: color, boxShadow: '0 0 0 2px var(--trail-card)' }}
+        className={`flex items-center justify-center w-7 h-7 rounded-[8px] ${textColor}`}
+        style={{ background: color, boxShadow: `0 2px 6px rgba(0,0,0,0.4), 0 0 0 1.5px var(--trail-card)` }}
+        aria-hidden
+      >
+        {isMainGoal ? <Trophy size={14} strokeWidth={2.5} /> : <Flag size={14} strokeWidth={2.5} />}
+      </span>
+      {/* Petit trait vertical entre le chip et la barre, même style que le connecteur des bulles */}
+      <span
+        className="block"
+        style={{
+          width: isA ? 1.5 : 1,
+          height: 8,
+          background: color,
+          opacity: isA ? 0.75 : 0.5,
+          borderRadius: 1,
+        }}
         aria-hidden
       />
-      <span className="text-[8px] mt-0.5 whitespace-nowrap" style={{ color }}>
-        C · {formatShortDate(race.date)}
-      </span>
     </button>
+  )
+}
+
+// === Bulle en dessous de la barre — connecteur depuis la barre + carte résumé ===
+function RaceBubbleBelow({ marker, onTap }: { marker: RaceMarker; onTap: () => void }) {
+  const { race, leftPercent, lane } = marker
+  const color = PRIORITY_COLOR[race.priority]
+  const isA = race.priority === 'A'
+  const isB = race.priority === 'B'
+
+  // Connecteur plus long si la bulle est sur une lane plus basse (évite la collision avec une bulle au-dessus).
+  const connectorHeight = BASE_CONNECTOR + lane * LANE_STEP
+
+  // Recadrage : leftPercent=0 → tx=0 (à gauche), leftPercent=100 → tx=-100 (à droite).
+  // Garantit mathématiquement zéro débordement tant que bulle.width ≤ container.width.
+  const cardTranslateXPct = -leftPercent
+
+  // Variantes visuelles selon priorité (bordure + style du nom). Mêmes infos pour tous.
+  const cardBorder = isA
+    ? `1.5px solid ${color}`
+    : isB
+      ? `1px solid ${color}`
+      : `1px solid var(--trail-border)`
+  const cardBoxShadow = isA
+    ? `0 2px 8px rgba(0,0,0,0.35), 0 0 0 1px ${color}33`
+    : isB
+      ? `0 1px 4px rgba(0,0,0,0.25)`
+      : undefined
+  const nameClass = isA
+    ? 'font-bold text-[color:var(--trail-text)]'
+    : isB
+      ? 'font-semibold text-[color:var(--trail-text)]'
+      : 'text-[color:var(--trail-muted)]'
+
+  return (
+    <>
+      {/* Trait vertical solide qui PART DE LA BARRE (top négatif via OVERLAP_TO_BAR) jusqu'à la bulle */}
+      <span
+        className="absolute block pointer-events-none"
+        style={{
+          left: `${leftPercent}%`,
+          top: -OVERLAP_TO_BAR,
+          transform: 'translateX(-50%)',
+          width: isA ? 1.5 : 1,
+          height: connectorHeight + OVERLAP_TO_BAR,
+          background: color,
+          opacity: isA ? 0.75 : 0.5,
+          borderRadius: 1,
+        }}
+        aria-hidden
+      />
+
+      {/* Carte cliquable — uniforme A/B/C, compact (text-[10/9/8]px + px-1.5 py-1) */}
+      <button
+        type="button"
+        onClick={onTap}
+        className="absolute focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--trail-primary)] rounded-[8px]"
+        style={{
+          left: `${leftPercent}%`,
+          top: connectorHeight,
+          transform: `translateX(${cardTranslateXPct}%)`,
+        }}
+        aria-label={`Course ${race.name}, ${formatShortDate(race.date)}`}
+      >
+        <div
+          className="flex flex-col items-start leading-tight px-1.5 py-1 rounded-[8px] bg-[color:var(--trail-card)]"
+          style={{ border: cardBorder, boxShadow: cardBoxShadow }}
+        >
+          <span className={`text-[10px] ${nameClass} whitespace-nowrap`}>
+            {race.name}
+          </span>
+          <span className="text-[9px] font-semibold tabular-nums whitespace-nowrap" style={{ color }}>
+            {formatShortDate(race.date)}
+          </span>
+          {race.distance > 0 && (
+            <span className="text-[8px] text-[color:var(--trail-muted)] tabular-nums whitespace-nowrap">
+              {race.distance}km · {race.elevation}m D+
+            </span>
+          )}
+        </div>
+      </button>
+    </>
   )
 }
 

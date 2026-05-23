@@ -51,26 +51,24 @@ describe('computeRaceMarkers', () => {
     expect(result.every(m => m.lane === 0)).toBe(true)
   })
 
-  it('2 courses A proches (< 8% écart) → 2e pousse en lane fantôme', () => {
+  it('2 courses A proches (< 8% écart) → 2e escalade d\'une lane', () => {
     const r1 = makeRace({ id: 'r1', date: '2026-06-15', priority: 'A' })   // ~50%
     const r2 = makeRace({ id: 'r2', date: '2026-06-22', priority: 'A' })   // ~54%, écart ~4.6%
     const result = computeRaceMarkers([r1, r2], macroStart, macroEnd)
     expect(result).toHaveLength(2)
     const lanes = result.map(m => m.lane).sort()
     expect(lanes[0]).toBe(0)
-    expect(lanes[1]).toBeGreaterThanOrEqual(2)  // poussée en lane fantôme (>= 2)
+    expect(lanes[1]).toBe(1)  // escalade simple à la lane suivante
   })
 
-  it('mix 1 A + 2 B + 1 C éloignées → A lane 0, B/C lane 1', () => {
+  it('mix 1 A + 2 B + 1 C éloignées → toutes en lane 0 (pas de collision)', () => {
     const a = makeRace({ id: 'a', date: '2026-08-15', priority: 'A', isMain: true })
     const b1 = makeRace({ id: 'b1', date: '2026-05-01', priority: 'B' })
     const b2 = makeRace({ id: 'b2', date: '2026-06-15', priority: 'B' })
     const c = makeRace({ id: 'c', date: '2026-07-15', priority: 'C' })
     const result = computeRaceMarkers([a, b1, b2, c], macroStart, macroEnd)
     expect(result).toHaveLength(4)
-    expect(result.find(m => m.race.id === 'a')!.lane).toBe(0)
-    expect(result.find(m => m.race.id === 'b1')!.lane).toBe(1)
-    expect(result.find(m => m.race.id === 'b2')!.lane).toBe(1)
-    expect(result.find(m => m.race.id === 'c')!.lane).toBe(1)
+    // Toutes les courses sont assez espacées → toutes collées à la barre (lane 0).
+    expect(result.every(m => m.lane === 0)).toBe(true)
   })
 })

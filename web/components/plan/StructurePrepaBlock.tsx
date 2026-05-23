@@ -261,11 +261,16 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
       helpBody="Découpe le macrocycle en mésocycles : foncier, développement, spécifique, affûtage, récupération."
       rightSlot={
         <>
-          <span className="text-[12px] text-[color:var(--trail-muted)]">{td.totalWeeks} sem</span>
+          <span
+            className="inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-semibold bg-[color:var(--trail-surface)] text-[color:var(--trail-muted)] border border-[color:var(--trail-border)] tracking-wide"
+            aria-label={`Durée totale ${td.totalWeeks} semaines`}
+          >
+            {td.totalWeeks} sem
+          </span>
           <button
             type="button"
             onClick={() => openEditor()}
-            className="inline-flex items-center justify-center w-7 h-7 rounded-[6px] text-[color:var(--trail-primary)] hover:bg-[color:var(--trail-surface)] ml-2"
+            className="inline-flex items-center justify-center w-7 h-7 rounded-[6px] text-[color:var(--trail-primary)] hover:bg-[color:var(--trail-surface)] ml-1"
             aria-label="Éditer les cycles"
           >
             <SquarePen size={16} aria-hidden />
@@ -273,14 +278,17 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
         </>
       }
     >
-      <div className="relative">
+      <div className="relative pt-9">
         {/* Barre des segments */}
         <div className="flex w-full rounded-[10px] overflow-hidden relative" style={{ height: 48 }} aria-label="Cycles du plan">
-          {td.segments.map(({ phase, weeks }) => {
+          {td.segments.map(({ phase, weeks }, idx) => {
             const def = PHASE_DEFINITIONS[phase.type]
             const isExpanded = expandedId === phase.id
             const ratio = weeks / td.totalWeeks
             const showLabel = ratio >= 0.12
+            // Séparateur noir si le segment précédent a la même couleur (sinon on ne distinguerait pas la frontière).
+            const prevDef = idx > 0 ? PHASE_DEFINITIONS[td.segments[idx - 1].phase.type] : null
+            const needsSeparator = prevDef !== null && prevDef.color === def.color
             return (
               <button
                 key={phase.id}
@@ -292,17 +300,19 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
                   backgroundColor: def.color,
                   opacity: isExpanded ? 1 : 0.92,
                   minWidth: 0,
+                  borderLeft: needsSeparator ? '2px solid #000' : undefined,
                 }}
                 aria-label={`Cycle ${phase.label}, ${weeks} semaines`}
                 aria-expanded={isExpanded}
+                title={`${def.label} · ${weeks}sem${phase.focus ? ` · ${phase.focus}` : ''}`}
               >
                 {showLabel && (
                   <>
-                    <span className="truncate px-1" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.55)' }}>
+                    <span className="block w-full text-center truncate px-1" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.55)' }}>
                       {def.label} · {weeks}sem
                     </span>
                     {phase.focus && (
-                      <span className="text-[9px] opacity-90 truncate px-1" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.55)' }}>
+                      <span className="block w-full text-center text-[9px] opacity-90 truncate px-1" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.55)' }}>
                         {phase.focus}
                       </span>
                     )}
