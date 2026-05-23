@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Mail, Tag, LifeBuoy, ChevronRight } from 'lucide-react'
 
 const APP_VERSION = '0.1.0'
-const CONTACT_EMAIL = 'franck.meri@gmail.com'
+const CONTACT_EMAIL = 'support@trailcockpit.run'
 
 export function HelpAboutSection() {
   return (

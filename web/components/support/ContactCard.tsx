@@ -1,6 +1,6 @@
 import { Mail } from 'lucide-react'
 
-const CONTACT_EMAIL = 'franck.meri@gmail.com'
+const CONTACT_EMAIL = 'support@trailcockpit.run'
 
 export function ContactCard() {
   return (

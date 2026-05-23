@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 }
 
 const UPDATED_AT = '11 mai 2026'
-const CONTACT_EMAIL = 'franck.meri@gmail.com'
+const CONTACT_EMAIL = 'support@trailcockpit.run'
 
 export default function ConditionsUtilisationPage() {
   return (
