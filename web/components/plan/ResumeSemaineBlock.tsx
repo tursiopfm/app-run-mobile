@@ -246,18 +246,6 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
       title="Résumé semaine"
       helpTitle="Résumé semaine"
       helpBody="Comparaison objectif vs prévu vs restant sur la semaine sélectionnée."
-      rightSlot={
-        <span
-          className="ml-2 flex-shrink-0 rounded-full px-2 py-[3px] text-[11px] font-bold whitespace-nowrap"
-          style={{
-            backgroundColor: `${colors.chargeOrange}26`,
-            color: colors.chargeOrange,
-            border: `1px solid ${colors.chargeOrange}4D`,
-          }}
-        >
-          {plannedSessionsCount} séances
-        </span>
-      }
     >
       <p className="text-[12px] text-trail-muted">
         S{weekNumber} — {formatDM(weekStartISO)} au {formatDM(weekEndISO)} — {objectiveLabel}

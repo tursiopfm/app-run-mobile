@@ -7,12 +7,20 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Flag, SquarePen, Trophy } from 'lucide-react'
 import type { Race, RaceType } from '@/types/plan'
 import { getRaces } from '@/lib/plan/storage'
 import { colors } from '@/lib/design/colors'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { RaceEditorModal } from './RaceEditorModal'
 import { RaceCardSkeleton } from './RaceCardSkeleton'
+
+// Couleurs priorité — identiques à RaceMarkers pour cohérence visuelle avec la timeline « Structure de prépa ».
+const PRIORITY_COLOR: Record<Race['priority'], string> = {
+  A: 'var(--trail-primary)',
+  B: '#EAB308',
+  C: 'var(--trail-muted)',
+}
 
 type Props = {
   onChange?: () => void
@@ -144,6 +152,16 @@ export function ObjectifCourseBlock({ onChange }: Props) {
       title="Objectif course"
       helpTitle="Ton objectif"
       helpBody="Définis la course principale qui structure ta prépa. Tu peux ajouter d'autres courses secondaires en saison."
+      rightSlot={
+        <button
+          type="button"
+          onClick={openCreate}
+          className="inline-flex items-center justify-center w-7 h-7 rounded-[6px] text-[color:var(--trail-primary)] hover:bg-[color:var(--trail-surface)]"
+          aria-label="Ajouter une nouvelle course"
+        >
+          <SquarePen size={16} aria-hidden />
+        </button>
+      }
     >
       {/* Course principale : grande carte */}
       {mainRace && (
@@ -162,17 +180,6 @@ export function ObjectifCourseBlock({ onChange }: Props) {
           ))}
         </div>
       )}
-
-      {/* CTA nouvelle course */}
-      <button
-        type="button"
-        onClick={openCreate}
-        className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-[10px] border border-dashed border-trail-border text-trail-muted hover:border-trail-primary hover:text-trail-primary transition-colors text-[13px] font-semibold"
-        aria-label="Ajouter une nouvelle course"
-      >
-        <span className="text-[16px] leading-none">+</span>
-        <span>Nouvelle course</span>
-      </button>
 
       <RaceEditorModal
         race={editing}
@@ -196,33 +203,35 @@ function MainRaceCard({ race, onSelect }: { race: Race; onSelect: () => void }) 
       className="block w-full text-left rounded-[10px] hover:bg-trail-surface/30 transition-colors -mx-1 px-1"
       aria-label={`Ouvrir le détail de la course ${race.name}`}
     >
-      <h3
-        className="text-[24px] leading-tight text-trail-text"
-        style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-      >
-        {race.name}
-      </h3>
-
-      <div className="mt-3">
+      {/* Header compact : nom de la course + compteur J-XX sur la même ligne */}
+      <div className="flex items-start justify-between gap-3">
+        <h3
+          className="text-[22px] leading-tight text-trail-text min-w-0 flex-1 truncate"
+          style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+          title={race.name}
+        >
+          {race.name}
+        </h3>
         {isPast ? (
-          <p className="text-[14px] text-trail-muted">Course passée</p>
+          <span className="text-[12px] text-trail-muted whitespace-nowrap flex-shrink-0 mt-1">Course passée</span>
         ) : (
-          <div className="flex items-baseline gap-2">
+          <div className="flex flex-col items-end leading-none flex-shrink-0">
             <span
-              className="text-[32px] leading-none text-trail-primary"
+              className="text-[28px] leading-none text-trail-text"
               style={{ fontFamily: "'Bebas Neue', sans-serif" }}
               aria-label={`J moins ${daysLeft} jours`}
             >
               J-{daysLeft}
             </span>
-            <span className="text-[13px] text-trail-muted">
+            <span className="text-[10px] text-trail-muted mt-0.5 whitespace-nowrap">
               {daysLeft === 0 ? "c'est aujourd'hui" : daysLeft === 1 ? 'demain' : 'jours restants'}
             </span>
           </div>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2 mt-3">
+      {/* Pills row — pas de chip Trophy sur la course principale (le card lui-même fait office de marqueur) */}
+      <div className="flex flex-wrap items-center gap-2 mt-2">
         <Pill bg={`${colors.chargeOrange}26`} color={colors.chargeOrange} label={`${race.distance} km`} />
         <Pill bg={`${colors.seriesBlue}26`} color={colors.seriesBlue} label={`${race.elevation} m D+`} />
         <Pill bg="var(--trail-surface)" color="var(--trail-text)" label={typeLabel} />
@@ -233,12 +242,6 @@ function MainRaceCard({ race, onSelect }: { race: Race; onSelect: () => void }) 
             label={`📍 ${race.location}`}
           />
         )}
-        <span
-          className="px-[10px] py-[4px] rounded-full text-[11px] font-bold whitespace-nowrap"
-          style={{ backgroundColor: `${colors.chargeOrange}26`, color: colors.chargeOrange }}
-        >
-          Principale
-        </span>
       </div>
     </button>
   )
@@ -252,9 +255,11 @@ function CompactRaceCard({ race, onSelect }: { race: Race; onSelect: () => void 
     <button
       type="button"
       onClick={onSelect}
-      className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border hover:border-trail-primary transition-colors text-left"
+      className="w-full flex items-center gap-2 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border hover:border-trail-primary transition-colors text-left"
       aria-label={`Ouvrir le détail de la course ${race.name}`}
     >
+      {/* Chip priorité — Trophy si isMain, Flag (couleur priorité) sinon */}
+      <RacePriorityChip race={race} size={24} />
       <div className="flex items-center gap-2 min-w-0 flex-1">
         <span
           className="text-[13px] font-semibold text-trail-text truncate"
@@ -264,7 +269,7 @@ function CompactRaceCard({ race, onSelect }: { race: Race; onSelect: () => void 
         </span>
         {!isPast && (
           <span
-            className="text-[14px] leading-none text-trail-primary flex-shrink-0"
+            className="text-[14px] leading-none text-trail-text flex-shrink-0"
             style={{ fontFamily: "'Bebas Neue', sans-serif" }}
             aria-label={`J moins ${daysLeft} jours`}
           >
@@ -278,15 +283,31 @@ function CompactRaceCard({ race, onSelect }: { race: Race; onSelect: () => void 
           · {race.distance} km
         </span>
       </div>
-      {race.isMain && (
-        <span
-          className="px-2 py-[2px] rounded-full text-[10px] font-bold whitespace-nowrap flex-shrink-0"
-          style={{ backgroundColor: `${colors.chargeOrange}26`, color: colors.chargeOrange }}
-        >
-          Principale
-        </span>
-      )}
     </button>
+  )
+}
+
+// Chip uniforme (Trophy pour la course objectif principale, Flag sinon) — mêmes couleurs
+// et même style que les pins de RaceMarkers, pour que le bloc « Objectif course » soit
+// visuellement cohérent avec le bloc « Structure de prépa ».
+function RacePriorityChip({ race, size = 28 }: { race: Race; size?: number }) {
+  const isMainGoal = race.priority === 'A' && race.isMain
+  const color = PRIORITY_COLOR[race.priority]
+  const isB = race.priority === 'B'
+  const iconSize = Math.round(size * 0.5)
+  return (
+    <span
+      className={`flex items-center justify-center rounded-[8px] flex-shrink-0 ${isB ? 'text-black' : 'text-white'}`}
+      style={{
+        width: size,
+        height: size,
+        background: color,
+        boxShadow: '0 2px 6px rgba(0,0,0,0.4), 0 0 0 1.5px var(--trail-card)',
+      }}
+      aria-label={isMainGoal ? 'Course objectif principale' : `Course priorité ${race.priority}`}
+    >
+      {isMainGoal ? <Trophy size={iconSize} strokeWidth={2.5} /> : <Flag size={iconSize} strokeWidth={2.5} />}
+    </span>
   )
 }
 

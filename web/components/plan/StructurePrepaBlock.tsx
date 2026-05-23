@@ -260,22 +260,14 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
       helpTitle="Cycles de prépa"
       helpBody="Découpe le macrocycle en mésocycles : foncier, développement, spécifique, affûtage, récupération."
       rightSlot={
-        <>
-          <span
-            className="inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-semibold bg-[color:var(--trail-surface)] text-[color:var(--trail-muted)] border border-[color:var(--trail-border)] tracking-wide"
-            aria-label={`Durée totale ${td.totalWeeks} semaines`}
-          >
-            {td.totalWeeks} sem
-          </span>
-          <button
-            type="button"
-            onClick={() => openEditor()}
-            className="inline-flex items-center justify-center w-7 h-7 rounded-[6px] text-[color:var(--trail-primary)] hover:bg-[color:var(--trail-surface)] ml-1"
-            aria-label="Éditer les cycles"
-          >
-            <SquarePen size={16} aria-hidden />
-          </button>
-        </>
+        <button
+          type="button"
+          onClick={() => openEditor()}
+          className="inline-flex items-center justify-center w-7 h-7 rounded-[6px] text-[color:var(--trail-primary)] hover:bg-[color:var(--trail-surface)]"
+          aria-label="Éditer les cycles"
+        >
+          <SquarePen size={16} aria-hidden />
+        </button>
       }
     >
       <div className="relative pt-9">
