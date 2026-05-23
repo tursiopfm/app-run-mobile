@@ -3,7 +3,7 @@
 // (erreur PostgreSQL 42P01 "undefined_table"), on retombe sur localStorage.
 // Pas de sync Supabase ↔ localStorage : on utilise l'un ou l'autre.
 
-import { createClient } from '@/lib/database/supabase-client'
+import { getAuthedClient } from './supabase-auth-cache'
 // Note : import regenerateWeeks retiré — le module mesocycle-weeks est supprimé.
 import type {
   Phase,
@@ -43,23 +43,6 @@ function writeLS<T>(key: string, value: T): void {
     window.localStorage.setItem(key, JSON.stringify(value))
   } catch {
     // quota dépassé / mode privé : on ignore silencieusement.
-  }
-}
-
-// ─── Helpers Supabase ───────────────────────────────────────────────────────
-type SupabaseLike = ReturnType<typeof createClient>
-
-// Renvoie le client + l'athleteId si auth, sinon null (→ fallback LS).
-async function getAuthedClient(): Promise<{ supabase: SupabaseLike; athleteId: string } | null> {
-  if (typeof window === 'undefined') return null
-  try {
-    const supabase = createClient()
-    const { data } = await supabase.auth.getUser()
-    const athleteId = data.user?.id
-    if (!athleteId) return null
-    return { supabase, athleteId }
-  } catch {
-    return null
   }
 }
 
@@ -357,27 +340,48 @@ function templateToRow(t: SessionTemplate, athleteId: string): TemplateRow {
   }
 }
 
+// ─── Cache module-level (TTL court) ─────────────────────────────────────────
+// Mutualise les lectures concurrentes :
+//   - React StrictMode (dev) double-monte → useEffect × 2 ;
+//   - 4 blocs Plan appellent les mêmes getters en parallèle au mount.
+// Sans cache, on voit le contenu apparaître en 2 temps. Invalidation explicite
+// dans les mutations correspondantes pour rester cohérent.
+const READ_TTL_MS = 10_000
+let cachedRaces: { promise: Promise<Race[]>; expiresAt: number } | null = null
+let cachedMacros: { promise: Promise<TrainingPlan[]>; expiresAt: number } | null = null
+const cachedSessions = new Map<string, { promise: Promise<PlannedSession[]>; expiresAt: number }>()
+
+function invalidateRacesCache(): void { cachedRaces = null }
+function invalidateMacrosCache(): void { cachedMacros = null }
+function invalidateSessionsCache(): void { cachedSessions.clear() }
+
 // ─── API publique : Race ────────────────────────────────────────────────────
 
 // Liste TOUTES les races de l'athlète, triées par date asc.
 // Fallback LS : on retourne un array contenant l'éventuelle race historique
 // stockée en single-slot (KEY_RACE) + les races multiples (KEY_RACES).
 export async function getRaces(): Promise<Race[]> {
-  const ctx = await getAuthedClient()
-  if (ctx) {
-    const { data, error } = await ctx.supabase
-      .from('races')
-      .select('*')
-      .eq('athlete_id', ctx.athleteId)
-      .order('date', { ascending: true })
-    if (!error && data) {
-      return (data as RaceRow[]).map(raceFromRow)
+  const now = Date.now()
+  if (cachedRaces && cachedRaces.expiresAt > now) return cachedRaces.promise
+  const promise = (async (): Promise<Race[]> => {
+    const ctx = await getAuthedClient()
+    if (ctx) {
+      const { data, error } = await ctx.supabase
+        .from('races')
+        .select('*')
+        .eq('athlete_id', ctx.athleteId)
+        .order('date', { ascending: true })
+      if (!error && data) {
+        return (data as RaceRow[]).map(raceFromRow)
+      }
+      if (error && !isMissingTableError(error)) {
+        // Erreur réelle : on continue vers LS.
+      }
     }
-    if (error && !isMissingTableError(error)) {
-      // Erreur réelle : on continue vers LS.
-    }
-  }
-  return readRacesFromLS()
+    return readRacesFromLS()
+  })()
+  cachedRaces = { promise, expiresAt: now + READ_TTL_MS }
+  return promise
 }
 
 // La race principale : prochaine course principale par date (la plus proche dans le futur).
@@ -402,6 +406,7 @@ export async function getRace(): Promise<Race | null> {
 }
 
 export async function saveRace(race: Race): Promise<void> {
+  invalidateRacesCache()
   const ctx = await getAuthedClient()
   if (ctx) {
     const row = raceToRow(race, ctx.athleteId)
@@ -428,6 +433,7 @@ export async function saveRace(race: Race): Promise<void> {
 }
 
 export async function deleteRace(id: string): Promise<void> {
+  invalidateRacesCache()
   const ctx = await getAuthedClient()
   if (ctx) {
     const { error } = await ctx.supabase.from('races').delete().eq('id', id)
@@ -540,36 +546,42 @@ export function pickActiveMacrocycle(
  * Fallback LS si Supabase indisponible.
  */
 export async function getAllMacrocycles(): Promise<TrainingPlan[]> {
-  const ctx = await getAuthedClient()
-  if (ctx) {
-    const { data: planRows, error: plansErr } = await ctx.supabase
-      .from('training_plans')
-      .select('*')
-      .eq('athlete_id', ctx.athleteId)
-      .order('start_date', { ascending: false })
-    if (plansErr && !isMissingTableError(plansErr)) {
-      const ls = readLS<TrainingPlan | null>(KEY_PLAN, null)
-      return ls ? [ls] : []
-    }
-    if (planRows && planRows.length > 0) {
-      const planIds = (planRows as PlanRow[]).map(p => p.id)
-      const { data: phaseRows } = await ctx.supabase
-        .from('phases')
+  const now = Date.now()
+  if (cachedMacros && cachedMacros.expiresAt > now) return cachedMacros.promise
+  const promise = (async (): Promise<TrainingPlan[]> => {
+    const ctx = await getAuthedClient()
+    if (ctx) {
+      const { data: planRows, error: plansErr } = await ctx.supabase
+        .from('training_plans')
         .select('*')
-        .in('plan_id', planIds)
-        .order('position', { ascending: true })
-      const phasesByPlan = new Map<string, PhaseRow[]>()
-      for (const pr of (phaseRows ?? []) as PhaseRow[]) {
-        if (!phasesByPlan.has(pr.plan_id)) phasesByPlan.set(pr.plan_id, [])
-        phasesByPlan.get(pr.plan_id)!.push(pr)
+        .eq('athlete_id', ctx.athleteId)
+        .order('start_date', { ascending: false })
+      if (plansErr && !isMissingTableError(plansErr)) {
+        const ls = readLS<TrainingPlan | null>(KEY_PLAN, null)
+        return ls ? [ls] : []
       }
-      return (planRows as PlanRow[]).map(p => planFromRows(p, phasesByPlan.get(p.id) ?? []))
+      if (planRows && planRows.length > 0) {
+        const planIds = (planRows as PlanRow[]).map(p => p.id)
+        const { data: phaseRows } = await ctx.supabase
+          .from('phases')
+          .select('*')
+          .in('plan_id', planIds)
+          .order('position', { ascending: true })
+        const phasesByPlan = new Map<string, PhaseRow[]>()
+        for (const pr of (phaseRows ?? []) as PhaseRow[]) {
+          if (!phasesByPlan.has(pr.plan_id)) phasesByPlan.set(pr.plan_id, [])
+          phasesByPlan.get(pr.plan_id)!.push(pr)
+        }
+        return (planRows as PlanRow[]).map(p => planFromRows(p, phasesByPlan.get(p.id) ?? []))
+      }
+      if (!plansErr) return []
     }
-    if (!plansErr) return []
-  }
-  // Fallback LS : on a au mieux 1 plan stocké.
-  const lsPlan = readLS<TrainingPlan | null>(KEY_PLAN, null)
-  return lsPlan ? [lsPlan] : []
+    // Fallback LS : on a au mieux 1 plan stocké.
+    const lsPlan = readLS<TrainingPlan | null>(KEY_PLAN, null)
+    return lsPlan ? [lsPlan] : []
+  })()
+  cachedMacros = { promise, expiresAt: now + READ_TTL_MS }
+  return promise
 }
 
 /**
@@ -585,6 +597,7 @@ export async function getCurrentPlan(): Promise<TrainingPlan | null> {
 }
 
 export async function saveCurrentPlan(plan: TrainingPlan): Promise<void> {
+  invalidateMacrosCache()
   const ctx = await getAuthedClient()
   if (ctx) {
     const planRow = planToRow(plan, ctx.athleteId)
@@ -640,27 +653,36 @@ export async function getPlannedSessions(
   fromDate: string,
   toDate: string,
 ): Promise<PlannedSession[]> {
-  const ctx = await getAuthedClient()
-  if (ctx) {
-    const { data, error } = await ctx.supabase
-      .from('planned_sessions')
-      .select('*')
-      .eq('athlete_id', ctx.athleteId)
-      .gte('date', fromDate)
-      .lte('date', toDate)
-      .order('date', { ascending: true })
-    if (!error && data) {
-      return (data as SessionRow[]).map(sessionFromRow)
+  const key = `${fromDate}|${toDate}`
+  const now = Date.now()
+  const hit = cachedSessions.get(key)
+  if (hit && hit.expiresAt > now) return hit.promise
+  const promise = (async (): Promise<PlannedSession[]> => {
+    const ctx = await getAuthedClient()
+    if (ctx) {
+      const { data, error } = await ctx.supabase
+        .from('planned_sessions')
+        .select('*')
+        .eq('athlete_id', ctx.athleteId)
+        .gte('date', fromDate)
+        .lte('date', toDate)
+        .order('date', { ascending: true })
+      if (!error && data) {
+        return (data as SessionRow[]).map(sessionFromRow)
+      }
+      if (error && !isMissingTableError(error)) {
+        // Erreur réelle : on continue vers LS.
+      }
     }
-    if (error && !isMissingTableError(error)) {
-      // Erreur réelle : on continue vers LS.
-    }
-  }
-  const all = readLS<PlannedSession[]>(KEY_SESSIONS, [])
-  return all.filter(s => s.date >= fromDate && s.date <= toDate)
+    const all = readLS<PlannedSession[]>(KEY_SESSIONS, [])
+    return all.filter(s => s.date >= fromDate && s.date <= toDate)
+  })()
+  cachedSessions.set(key, { promise, expiresAt: now + READ_TTL_MS })
+  return promise
 }
 
 export async function savePlannedSession(session: PlannedSession): Promise<void> {
+  invalidateSessionsCache()
   const ctx = await getAuthedClient()
   if (ctx) {
     const row = sessionToRow(session, ctx.athleteId)
@@ -680,6 +702,7 @@ export async function savePlannedSession(session: PlannedSession): Promise<void>
 }
 
 export async function deletePlannedSession(id: string): Promise<void> {
+  invalidateSessionsCache()
   const ctx = await getAuthedClient()
   if (ctx) {
     const { error } = await ctx.supabase.from('planned_sessions').delete().eq('id', id)
@@ -715,6 +738,7 @@ export async function countPlannedSessionsByType(typeSlug: string): Promise<numb
 // Supprime toutes les séances planifiées d'un type donné. Utilisé par le flux
 // "supprimer un type custom" après confirmation explicite de l'user.
 export async function deletePlannedSessionsByType(typeSlug: string): Promise<void> {
+  invalidateSessionsCache()
   const ctx = await getAuthedClient()
   if (ctx) {
     const { error } = await ctx.supabase

@@ -63,10 +63,12 @@ export default function PlanClient() {
   const [races, setRaces] = useState<Race[]>([])
 
   // Seed mock en dev (no-op en prod sauf flag NEXT_PUBLIC_PLAN_MOCK=1).
+  // On ne bump qu'en cas d'écriture effective : sinon chaque bloc fetcherait
+  // une 2e fois après son fetch au mount (= chargement visible en 2 temps).
   useEffect(() => {
     void (async () => {
-      await seedMockDataIfEmpty()
-      bumpReload()
+      const didSeed = await seedMockDataIfEmpty()
+      if (didSeed) bumpReload()
     })()
   }, [bumpReload])
 

@@ -1,7 +1,7 @@
 // Persistance des types d'activité et préférences user.
 // Pattern miroir de web/lib/plan/storage.ts : Supabase d'abord, fallback LS.
 
-import { createClient } from '@/lib/database/supabase-client'
+import { getAuthedClient } from './supabase-auth-cache'
 import type { IntensityLevel } from '@/types/plan'
 import type { ActivityType, UserActivityPref } from '@/types/activity-types'
 
@@ -47,20 +47,6 @@ function writeLS<T>(key: string, value: T): void {
 }
 
 // ─── Helpers Supabase ──────────────────────────────────────────────────────
-type SupabaseLike = ReturnType<typeof createClient>
-
-async function getAuthedClient(): Promise<{ supabase: SupabaseLike; athleteId: string } | null> {
-  if (typeof window === 'undefined') return null
-  try {
-    const supabase = createClient()
-    const { data } = await supabase.auth.getUser()
-    const athleteId = data.user?.id
-    if (!athleteId) return null
-    return { supabase, athleteId }
-  } catch {
-    return null
-  }
-}
 
 function isMissingTableError(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false
@@ -106,42 +92,70 @@ function prefFromRow(r: PrefRow): UserActivityPref {
 
 // ─── API publique ──────────────────────────────────────────────────────────
 
+// Cache module-level pour mutualiser les lectures concurrentes : 5 instances
+// de useActivityTypes() s'instancient en même temps sur l'onglet Plan, qui
+// sinon déclenchent chacune 2 requêtes Supabase identiques. TTL court pour
+// rester réactif aux mutations ; invalidation explicite côté mutations.
+const TYPES_READ_TTL_MS = 15_000
+let cachedTypes: { promise: Promise<ActivityType[]>; expiresAt: number } | null = null
+let cachedPrefs: { promise: Promise<UserActivityPref[]>; expiresAt: number } | null = null
+
+function invalidateTypesCache(): void {
+  cachedTypes = null
+}
+function invalidatePrefsCache(): void {
+  cachedPrefs = null
+}
+
 // Liste TOUS les types accessibles (système + customs de l'user).
 export async function getActivityTypes(): Promise<ActivityType[]> {
-  const ctx = await getAuthedClient()
-  if (ctx) {
-    const { data, error } = await ctx.supabase
-      .from('activity_types')
-      .select('*')
-      .or(`athlete_id.is.null,athlete_id.eq.${ctx.athleteId}`)
-      .order('is_system', { ascending: false })
-      .order('label', { ascending: true })
-    if (!error && data) return (data as ActivityTypeRow[]).map(activityTypeFromRow)
-    if (error && !isMissingTableError(error)) {
-      console.warn('[activity-types] supabase failed:', error.message)
+  const now = Date.now()
+  if (cachedTypes && cachedTypes.expiresAt > now) return cachedTypes.promise
+  const promise = (async (): Promise<ActivityType[]> => {
+    const ctx = await getAuthedClient()
+    if (ctx) {
+      const { data, error } = await ctx.supabase
+        .from('activity_types')
+        .select('*')
+        .or(`athlete_id.is.null,athlete_id.eq.${ctx.athleteId}`)
+        .order('is_system', { ascending: false })
+        .order('label', { ascending: true })
+      if (!error && data) return (data as ActivityTypeRow[]).map(activityTypeFromRow)
+      if (error && !isMissingTableError(error)) {
+        console.warn('[activity-types] supabase failed:', error.message)
+      }
     }
-  }
-  // Fallback LS : système + custom local
-  const custom = readLS<ActivityType[]>(KEY_TYPES_CUSTOM, [])
-  return [...SYSTEM_TYPES, ...custom]
+    // Fallback LS : système + custom local
+    const custom = readLS<ActivityType[]>(KEY_TYPES_CUSTOM, [])
+    return [...SYSTEM_TYPES, ...custom]
+  })()
+  cachedTypes = { promise, expiresAt: now + TYPES_READ_TTL_MS }
+  return promise
 }
 
 export async function getUserActivityPrefs(): Promise<UserActivityPref[]> {
-  const ctx = await getAuthedClient()
-  if (ctx) {
-    const { data, error } = await ctx.supabase
-      .from('user_activity_prefs')
-      .select('*')
-      .eq('athlete_id', ctx.athleteId)
-    if (!error && data) return (data as PrefRow[]).map(prefFromRow)
-    if (error && !isMissingTableError(error)) {
-      console.warn('[activity-types] supabase failed:', error.message)
+  const now = Date.now()
+  if (cachedPrefs && cachedPrefs.expiresAt > now) return cachedPrefs.promise
+  const promise = (async (): Promise<UserActivityPref[]> => {
+    const ctx = await getAuthedClient()
+    if (ctx) {
+      const { data, error } = await ctx.supabase
+        .from('user_activity_prefs')
+        .select('*')
+        .eq('athlete_id', ctx.athleteId)
+      if (!error && data) return (data as PrefRow[]).map(prefFromRow)
+      if (error && !isMissingTableError(error)) {
+        console.warn('[activity-types] supabase failed:', error.message)
+      }
     }
-  }
-  return readLS<UserActivityPref[]>(KEY_PREFS, [])
+    return readLS<UserActivityPref[]>(KEY_PREFS, [])
+  })()
+  cachedPrefs = { promise, expiresAt: now + TYPES_READ_TTL_MS }
+  return promise
 }
 
 export async function upsertUserActivityPrefs(prefs: UserActivityPref[]): Promise<void> {
+  invalidatePrefsCache()
   const ctx = await getAuthedClient()
   if (ctx) {
     const rows = prefs.map(p => ({
@@ -167,6 +181,7 @@ export async function createCustomActivityType(input: {
   defaultIntensity: IntensityLevel
   category?: ActivityType['category']
 }): Promise<ActivityType> {
+  invalidateTypesCache()
   const ctx = await getAuthedClient()
   if (ctx) {
     const row = {
@@ -200,6 +215,7 @@ export async function createCustomActivityType(input: {
 export async function renameCustomActivityType(id: string, newLabel: string): Promise<void> {
   const label = newLabel.trim()
   if (!label) throw new Error('Label vide')
+  invalidateTypesCache()
   const ctx = await getAuthedClient()
   if (ctx) {
     const { error } = await ctx.supabase
@@ -218,6 +234,7 @@ export async function renameCustomActivityType(id: string, newLabel: string): Pr
 }
 
 export async function deleteCustomActivityType(id: string): Promise<void> {
+  invalidateTypesCache()
   const ctx = await getAuthedClient()
   if (ctx) {
     const { error } = await ctx.supabase

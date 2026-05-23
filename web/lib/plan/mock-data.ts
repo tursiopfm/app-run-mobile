@@ -142,20 +142,28 @@ function isMockEnabled(): boolean {
  * - No-op en prod (sauf flag NEXT_PUBLIC_PLAN_MOCK=1).
  * - N'écrase JAMAIS des données existantes.
  * - Tente Supabase via les helpers de storage ; fallback localStorage géré nativement.
+ *
+ * Retourne `true` si au moins une écriture a eu lieu — permet à l'appelant
+ * d'éviter un reload inutile quand le seed est un no-op (cas prod ou dev avec
+ * données déjà présentes), qui sinon provoque un 2e fetch en cascade de tous
+ * les blocs Plan juste après le 1er fetch au mount.
  */
-export async function seedMockDataIfEmpty(): Promise<void> {
-  if (!isMockEnabled()) return
-  if (typeof window === 'undefined') return
+export async function seedMockDataIfEmpty(): Promise<boolean> {
+  if (!isMockEnabled()) return false
+  if (typeof window === 'undefined') return false
 
+  let didSeed = false
   try {
     const existingRace = await getRace()
     if (!existingRace) {
       await saveRace(MOCK_RACE)
+      didSeed = true
     }
 
     const existingPlan = await getCurrentPlan()
     if (!existingPlan) {
       await saveCurrentPlan(MOCK_PLAN)
+      didSeed = true
     }
 
     if (MOCK_PLANNED_SESSIONS.length > 0) {
@@ -166,10 +174,12 @@ export async function seedMockDataIfEmpty(): Promise<void> {
         for (const s of MOCK_PLANNED_SESSIONS) {
           await savePlannedSession(s)
         }
+        didSeed = true
       }
     }
   } catch (err) {
     // Mock = nice-to-have ; on n'interrompt pas le rendu si le seed plante.
     console.warn('[plan mock] seed failed:', err)
   }
+  return didSeed
 }
