@@ -185,8 +185,13 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
     setPhases(prev => prev.map(p => {
       if (p.id !== id) return p
       // Relabel auto seulement si l'utilisateur n'a pas customisé le nom.
-      const auto = p.label.startsWith('Cycle ') || p.label.startsWith('Phase ')
-      return { ...p, type, label: auto ? `Cycle ${def.label}` : p.label }
+      const autoLabel = p.label.startsWith('Cycle ') || p.label.startsWith('Phase ')
+      return {
+        ...p,
+        type,
+        label: autoLabel ? `Cycle ${def.label}` : p.label,
+        description: def.description,
+      }
     }))
   }
 
