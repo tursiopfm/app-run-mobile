@@ -6,7 +6,13 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import type { PlannedSession, TrainingPlan, Phase } from '@/types/plan'
-import { getCurrentPlan, getPlannedSessions } from '@/lib/plan/storage'
+import {
+  getCurrentPlan,
+  getPlannedSessions,
+  peekMacros,
+  peekSessions,
+  pickActiveMacrocycle,
+} from '@/lib/plan/storage'
 import { colors } from '@/lib/design/colors'
 import { BlockCard } from '@/components/blocks/BlockCard'
 
@@ -86,9 +92,31 @@ type ChargePlanifieeBlockProps = {
 }
 
 export function ChargePlanifieeBlock({ reloadKey = 0 }: ChargePlanifieeBlockProps = {}) {
-  const [buckets, setBuckets] = useState<WeekBucket[]>([])
-  const [target, setTarget]   = useState<number | null>(null)
-  const [loaded, setLoaded]   = useState(false)
+  // Lazy-init depuis le snapshot LS (visite précédente) — supprime le flash.
+  // On reconstruit les buckets directement depuis le snapshot pour rendre
+  // synchronement avec les barres déjà remplies.
+  const initial = useMemo(() => {
+    const now = new Date()
+    const skeleton = buildWeekBuckets(now)
+    const fromISO = skeleton[0].week.startISO
+    const toISO_  = skeleton[skeleton.length - 1].week.endISO
+    const sessions = peekSessions(fromISO, toISO_)
+    const macros = peekMacros()
+    if (sessions === null || macros === null) return null
+    const buckets = skeleton.map(({ week }) => {
+      const sum = sessions
+        .filter(s => s.date >= week.startISO && s.date <= week.endISO)
+        .reduce((acc, s) => acc + (s.estimatedCharge || 0), 0)
+      return { ...week, charge: sum }
+    })
+    const nowISODate = toISO(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())))
+    const phase = findCurrentPhase(pickActiveMacrocycle(macros, nowISODate), nowISODate)
+    return { buckets, target: phase?.weeklyChargeTarget ?? null }
+  }, [])
+
+  const [buckets, setBuckets] = useState<WeekBucket[]>(initial?.buckets ?? [])
+  const [target, setTarget]   = useState<number | null>(initial?.target ?? null)
+  const [loaded, setLoaded]   = useState(initial !== null)
 
   useEffect(() => {
     let cancelled = false

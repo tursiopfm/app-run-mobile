@@ -92,19 +92,54 @@ function prefFromRow(r: PrefRow): UserActivityPref {
 
 // ─── API publique ──────────────────────────────────────────────────────────
 
-// Cache module-level pour mutualiser les lectures concurrentes : 5 instances
-// de useActivityTypes() s'instancient en même temps sur l'onglet Plan, qui
-// sinon déclenchent chacune 2 requêtes Supabase identiques. TTL court pour
-// rester réactif aux mutations ; invalidation explicite côté mutations.
+// Cache module-level + persistance LS (SWR) pour les lectures.
+//   - Mémoire (TTL 15 s) : mutualise les 5 instances concurrentes de
+//     useActivityTypes() ;
+//   - LS (TTL 5 min) : hydraté au load du module, exposé via peek*() pour
+//     que les blocs rendent synchronement avec les data de la visite
+//     précédente — sans flash.
 const TYPES_READ_TTL_MS = 15_000
+const TYPES_PERSIST_TTL_MS = 5 * 60_000
+
+const KEY_CACHE_TYPES = 'tc:plan:cache:activity_types:v1'
+const KEY_CACHE_PREFS = 'tc:plan:cache:user_activity_prefs:v1'
+
+let snapshotTypes: ActivityType[] | null = null
+let snapshotPrefs: UserActivityPref[] | null = null
+
 let cachedTypes: { promise: Promise<ActivityType[]>; expiresAt: number } | null = null
 let cachedPrefs: { promise: Promise<UserActivityPref[]>; expiresAt: number } | null = null
 
+type PersistedCache<T> = { data: T; savedAt: number }
+
+function persistCache<T>(key: string, data: T): void {
+  writeLS<PersistedCache<T>>(key, { data, savedAt: Date.now() })
+}
+
+function hydrateCache<T>(key: string): T | null {
+  const raw = readLS<PersistedCache<T> | null>(key, null)
+  if (!raw || typeof raw !== 'object') return null
+  if (Date.now() - raw.savedAt > TYPES_PERSIST_TTL_MS) return null
+  return raw.data
+}
+
+if (typeof window !== 'undefined') {
+  snapshotTypes = hydrateCache<ActivityType[]>(KEY_CACHE_TYPES)
+  snapshotPrefs = hydrateCache<UserActivityPref[]>(KEY_CACHE_PREFS)
+}
+
+export function peekActivityTypes(): ActivityType[] | null { return snapshotTypes }
+export function peekUserActivityPrefs(): UserActivityPref[] | null { return snapshotPrefs }
+
 function invalidateTypesCache(): void {
   cachedTypes = null
+  snapshotTypes = null
+  writeLS<PersistedCache<ActivityType[]> | null>(KEY_CACHE_TYPES, null)
 }
 function invalidatePrefsCache(): void {
   cachedPrefs = null
+  snapshotPrefs = null
+  writeLS<PersistedCache<UserActivityPref[]> | null>(KEY_CACHE_PREFS, null)
 }
 
 // Liste TOUS les types accessibles (système + customs de l'user).
@@ -112,6 +147,11 @@ export async function getActivityTypes(): Promise<ActivityType[]> {
   const now = Date.now()
   if (cachedTypes && cachedTypes.expiresAt > now) return cachedTypes.promise
   const promise = (async (): Promise<ActivityType[]> => {
+    const persist = (list: ActivityType[]): ActivityType[] => {
+      snapshotTypes = list
+      persistCache(KEY_CACHE_TYPES, list)
+      return list
+    }
     const ctx = await getAuthedClient()
     if (ctx) {
       const { data, error } = await ctx.supabase
@@ -120,14 +160,14 @@ export async function getActivityTypes(): Promise<ActivityType[]> {
         .or(`athlete_id.is.null,athlete_id.eq.${ctx.athleteId}`)
         .order('is_system', { ascending: false })
         .order('label', { ascending: true })
-      if (!error && data) return (data as ActivityTypeRow[]).map(activityTypeFromRow)
+      if (!error && data) return persist((data as ActivityTypeRow[]).map(activityTypeFromRow))
       if (error && !isMissingTableError(error)) {
         console.warn('[activity-types] supabase failed:', error.message)
       }
     }
     // Fallback LS : système + custom local
     const custom = readLS<ActivityType[]>(KEY_TYPES_CUSTOM, [])
-    return [...SYSTEM_TYPES, ...custom]
+    return persist([...SYSTEM_TYPES, ...custom])
   })()
   cachedTypes = { promise, expiresAt: now + TYPES_READ_TTL_MS }
   return promise
@@ -137,18 +177,23 @@ export async function getUserActivityPrefs(): Promise<UserActivityPref[]> {
   const now = Date.now()
   if (cachedPrefs && cachedPrefs.expiresAt > now) return cachedPrefs.promise
   const promise = (async (): Promise<UserActivityPref[]> => {
+    const persist = (list: UserActivityPref[]): UserActivityPref[] => {
+      snapshotPrefs = list
+      persistCache(KEY_CACHE_PREFS, list)
+      return list
+    }
     const ctx = await getAuthedClient()
     if (ctx) {
       const { data, error } = await ctx.supabase
         .from('user_activity_prefs')
         .select('*')
         .eq('athlete_id', ctx.athleteId)
-      if (!error && data) return (data as PrefRow[]).map(prefFromRow)
+      if (!error && data) return persist((data as PrefRow[]).map(prefFromRow))
       if (error && !isMissingTableError(error)) {
         console.warn('[activity-types] supabase failed:', error.message)
       }
     }
-    return readLS<UserActivityPref[]>(KEY_PREFS, [])
+    return persist(readLS<UserActivityPref[]>(KEY_PREFS, []))
   })()
   cachedPrefs = { promise, expiresAt: now + TYPES_READ_TTL_MS }
   return promise

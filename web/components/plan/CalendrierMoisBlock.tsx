@@ -6,11 +6,13 @@
 // indépendants côté V3).
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { getPlannedSessions } from '@/lib/plan/storage'
+import { getPlannedSessions, peekSessions } from '@/lib/plan/storage'
 import type { PlannedSession } from '@/types/plan'
 import { colors } from '@/lib/design/colors'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { DayDetailPanel } from './DayDetailPanel'
+import { resolveSessionMeta } from '@/lib/plan/session-meta'
+import { useActivityTypes } from '@/lib/plan/use-activity-types'
 
 // ─── Helpers date (UTC) ──────────────────────────────────────────────────────
 function toISO(d: Date): string {
@@ -71,8 +73,7 @@ export function CalendrierMoisBlock({ reloadKey = 0, onSessionsChanged }: Calend
   )
   const [selectedDateISO, setSelectedDateISO] = useState<string>(todayISO)
   const [openDayISO, setOpenDayISO] = useState<string | null>(null)
-  const [sessions, setSessions] = useState<PlannedSession[]>([])
-  const [loaded, setLoaded] = useState(false)
+  const { types } = useActivityTypes()
 
   // Fenêtre de fetch : 1er jour de la grille - 7j → dernier + 7j (sécurité).
   const fetchRange = useMemo(() => {
@@ -81,6 +82,11 @@ export function CalendrierMoisBlock({ reloadKey = 0, onSessionsChanged }: Calend
     const to = toISO(addDays(gridStart, 6 * 7 + 7))   // 6 rangées + buffer
     return { from, to }
   }, [visibleMonth])
+
+  // Lazy-init depuis le snapshot LS (visite précédente) — supprime le flash.
+  const initialSessions = peekSessions(fetchRange.from, fetchRange.to)
+  const [sessions, setSessions] = useState<PlannedSession[]>(initialSessions ?? [])
+  const [loaded, setLoaded] = useState(initialSessions !== null)
 
   useEffect(() => {
     let cancelled = false
@@ -93,15 +99,16 @@ export function CalendrierMoisBlock({ reloadKey = 0, onSessionsChanged }: Calend
     return () => { cancelled = true }
   }, [fetchRange.from, fetchRange.to, reloadKey])
 
-  // Index session count par date ISO.
-  const sessionsByDay = useMemo<Record<string, number>>(() => {
-    const map: Record<string, number> = {}
+  // Index couleurs (par type d'activité) par date ISO.
+  const sessionsByDay = useMemo<Record<string, string[]>>(() => {
+    const map: Record<string, string[]> = {}
     for (const s of sessions) {
       if (!s.title) continue
-      map[s.date] = (map[s.date] ?? 0) + 1
+      const color = resolveSessionMeta(s.type, types).color
+      ;(map[s.date] ??= []).push(color)
     }
     return map
-  }, [sessions])
+  }, [sessions, types])
 
   // Grille 6×7.
   const rows = useMemo(() => {
@@ -114,7 +121,7 @@ export function CalendrierMoisBlock({ reloadKey = 0, onSessionsChanged }: Calend
           iso,
           dayNum: date.getUTCDate(),
           inMonth: date.getUTCMonth() === visibleMonth.getUTCMonth(),
-          plannedCount: sessionsByDay[iso] ?? 0,
+          dotColors: sessionsByDay[iso] ?? [],
         }
       }),
     )
@@ -179,7 +186,7 @@ export function CalendrierMoisBlock({ reloadKey = 0, onSessionsChanged }: Calend
                 inMonth={cell.inMonth}
                 isToday={cell.iso === todayISO}
                 isSelected={cell.iso === selectedDateISO}
-                plannedCount={cell.plannedCount}
+                dotColors={cell.dotColors}
                 onClick={() => handleSelectDate(cell.iso)}
               />
             ))}
@@ -205,16 +212,17 @@ export function CalendrierMoisBlock({ reloadKey = 0, onSessionsChanged }: Calend
 
 // ─── Sous-composants ─────────────────────────────────────────────────────────
 function CalendarDayCell({
-  iso, dayNum, inMonth, isToday, isSelected, plannedCount, onClick,
+  iso, dayNum, inMonth, isToday, isSelected, dotColors, onClick,
 }: {
   iso: string
   dayNum: number
   inMonth: boolean
   isToday: boolean
   isSelected: boolean
-  plannedCount: number
+  dotColors: string[]
   onClick: () => void
 }) {
+  const plannedCount = dotColors.length
   const borderColor = isSelected
     ? colors.chargeOrange
     : isToday
@@ -255,14 +263,14 @@ function CalendarDayCell({
       <span style={{ fontSize: 11, fontWeight: 700, color: textColor }}>{dayNum}</span>
       {plannedCount > 0 && (
         <div style={{ display: 'flex', gap: 3, marginTop: 4, alignItems: 'center' }}>
-          {Array.from({ length: Math.min(plannedCount, 3) }).map((_, i) => (
+          {dotColors.slice(0, 3).map((c, i) => (
             <div
               key={i}
               style={{
                 width: 5,
                 height: 5,
                 borderRadius: '50%',
-                backgroundColor: colors.chargeOrange,
+                backgroundColor: c,
               }}
             />
           ))}

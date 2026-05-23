@@ -18,6 +18,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   getCurrentPlan,
   getPlannedSessions,
+  peekMacros,
+  peekSessions,
+  pickActiveMacrocycle,
 } from '@/lib/plan/storage'
 import type { Phase, PlannedSession, TrainingPlan } from '@/types/plan'
 import { resolveWeeklyTarget } from '@/lib/training/phases'
@@ -86,6 +89,40 @@ function findCurrentPhase(plan: TrainingPlan | null, anchorISO: string): Phase |
   return plan.phases.find(p => p.startDate <= anchorISO && anchorISO <= p.endDate) ?? null
 }
 
+// ─── Cache LS pour /api/activities/week-totals (par semaine) ─────────────────
+// Le fetch HTTP vers cet endpoint n'est pas dans les caches storage Supabase.
+// Sans persistance, les tuiles « Réalisé » et « Restant » (dérivé) flashent à
+// 0 à chaque mount avant que la requête HTTP résolve. Même pattern SWR que
+// les autres snapshots : init synchrone depuis LS, revalide en background.
+type WeekTotals = { km: number; dPlus: number; load: number }
+const WEEK_TOTALS_TTL_MS = 5 * 60_000
+const KEY_WEEK_TOTALS = 'tc:plan:cache:week_totals:v1'
+
+function readWeekTotalsCache(): Record<string, { data: WeekTotals; savedAt: number }> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = window.localStorage.getItem(KEY_WEEK_TOTALS)
+    return raw ? JSON.parse(raw) : {}
+  } catch { return {} }
+}
+
+function peekWeekTotals(weekStartISO: string): WeekTotals | null {
+  const all = readWeekTotalsCache()
+  const hit = all[weekStartISO]
+  if (!hit) return null
+  if (Date.now() - hit.savedAt > WEEK_TOTALS_TTL_MS) return null
+  return hit.data
+}
+
+function persistWeekTotals(weekStartISO: string, data: WeekTotals): void {
+  if (typeof window === 'undefined') return
+  try {
+    const all = readWeekTotalsCache()
+    all[weekStartISO] = { data, savedAt: Date.now() }
+    window.localStorage.setItem(KEY_WEEK_TOTALS, JSON.stringify(all))
+  } catch { /* quota / mode privé */ }
+}
+
 // ─── Props ───────────────────────────────────────────────────────────────────
 type ResumeSemaineBlockProps = {
   /**
@@ -105,10 +142,6 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
   }, [])
   const [selectedDateISO, setSelectedDateISO] = useState<string>(todayISO)
 
-  const [plan, setPlan] = useState<TrainingPlan | null>(null)
-  const [sessions, setSessions] = useState<PlannedSession[]>([])
-  const [loaded, setLoaded] = useState(false)
-
   // Catalogue de types (builtin + custom user) pour résoudre la catégorie
   // running de chaque séance — y compris les types custom catégorisés 'run'.
   const { types } = useActivityTypes()
@@ -122,6 +155,17 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
     () => toISO(addDays(parseISO(weekStartISO), 6)),
     [weekStartISO],
   )
+
+  // Lazy-init depuis le snapshot LS (visite précédente) — supprime le flash.
+  // Le plan se dérive du snapshot via pickActiveMacrocycle pour rester cohérent
+  // avec ce que retourne getCurrentPlan().
+  const initialMacros = peekMacros()
+  const initialSessions = peekSessions(weekStartISO, weekEndISO)
+  const [plan, setPlan] = useState<TrainingPlan | null>(
+    initialMacros ? pickActiveMacrocycle(initialMacros, weekStartISO) : null,
+  )
+  const [sessions, setSessions] = useState<PlannedSession[]>(initialSessions ?? [])
+  const [loaded, setLoaded] = useState(initialSessions !== null && initialMacros !== null)
 
   // Reload avec garde anti-race.
   useEffect(() => {
@@ -179,11 +223,17 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
   // Réalisé (running uniquement) : fetché depuis /api/activities/week-totals
   // sur le range [lundi, lundi+7[. Re-fetch quand on change de semaine ou
   // après une opération qui peut altérer les activités (reloadKey).
-  const [actual, setActual] = useState<{ km: number; dPlus: number; load: number }>(
-    { km: 0, dPlus: 0, load: 0 },
+  // Lazy-init depuis le cache LS pour rendre synchronement les tuiles
+  // « Réalisé » et « Restant » (dérivé d'`actual`) — pas de flash à 0.
+  const [actual, setActual] = useState<WeekTotals>(
+    () => peekWeekTotals(weekStartISO) ?? { km: 0, dPlus: 0, load: 0 },
   )
   useEffect(() => {
     let cancelled = false
+    // Si on change de semaine, repartir du cache de cette nouvelle semaine
+    // pour éviter d'afficher les totaux de la précédente le temps du fetch.
+    const cached = peekWeekTotals(weekStartISO)
+    if (cached) setActual(cached)
     const toExclusiveISO = toISO(addDays(parseISO(weekStartISO), 7))
     void (async () => {
       try {
@@ -194,7 +244,9 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
         if (!res.ok) return
         const data = await res.json() as { km: number; dPlus: number; ces: number }
         if (cancelled) return
-        setActual({ km: data.km ?? 0, dPlus: data.dPlus ?? 0, load: data.ces ?? 0 })
+        const totals: WeekTotals = { km: data.km ?? 0, dPlus: data.dPlus ?? 0, load: data.ces ?? 0 }
+        setActual(totals)
+        persistWeekTotals(weekStartISO, totals)
       } catch {
         if (!cancelled) setActual({ km: 0, dPlus: 0, load: 0 })
       }

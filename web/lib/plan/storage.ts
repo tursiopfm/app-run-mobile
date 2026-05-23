@@ -340,20 +340,86 @@ function templateToRow(t: SessionTemplate, athleteId: string): TemplateRow {
   }
 }
 
-// ─── Cache module-level (TTL court) ─────────────────────────────────────────
-// Mutualise les lectures concurrentes :
-//   - React StrictMode (dev) double-monte → useEffect × 2 ;
-//   - 4 blocs Plan appellent les mêmes getters en parallèle au mount.
-// Sans cache, on voit le contenu apparaître en 2 temps. Invalidation explicite
-// dans les mutations correspondantes pour rester cohérent.
+// ─── Cache module-level + persistance LS (SWR) ─────────────────────────────
+// Mutualise les lectures concurrentes (React StrictMode, blocs parallèles) ET
+// hydrate depuis localStorage au load du module pour que les blocs puissent
+// rendre synchronement avec les data de la visite précédente — sans flash.
+//
+// TTL côté mémoire (10 s) reste court pour la cohérence intra-session.
+// TTL côté LS (5 min) sert d'optimisation cross-mount : on accepte du stale
+// transitoire qui sera revalidé en background par les useEffect des blocs.
+
 const READ_TTL_MS = 10_000
+const PERSIST_TTL_MS = 5 * 60_000
+
+const KEY_CACHE_RACES = 'tc:plan:cache:races:v1'
+const KEY_CACHE_MACROS = 'tc:plan:cache:macros:v1'
+const KEY_CACHE_SESSIONS = 'tc:plan:cache:sessions:v1'
+
+// Snapshot synchrone exposé aux blocs via peekRaces/peekMacros/peekSessions.
+// Hydraté depuis localStorage au load du module, mis à jour à chaque fetch
+// réussi. C'est ce qui permet le 1er render synchrone avec data.
+let snapshotRaces: Race[] | null = null
+let snapshotMacros: TrainingPlan[] | null = null
+const snapshotSessions = new Map<string, PlannedSession[]>()
+
 let cachedRaces: { promise: Promise<Race[]>; expiresAt: number } | null = null
 let cachedMacros: { promise: Promise<TrainingPlan[]>; expiresAt: number } | null = null
 const cachedSessions = new Map<string, { promise: Promise<PlannedSession[]>; expiresAt: number }>()
 
-function invalidateRacesCache(): void { cachedRaces = null }
-function invalidateMacrosCache(): void { cachedMacros = null }
-function invalidateSessionsCache(): void { cachedSessions.clear() }
+type PersistedCache<T> = { data: T; savedAt: number }
+
+function persistLS<T>(key: string, data: T): void {
+  writeLS<PersistedCache<T>>(key, { data, savedAt: Date.now() })
+}
+
+function hydrateLS<T>(key: string): T | null {
+  const raw = readLS<PersistedCache<T> | null>(key, null)
+  if (!raw || typeof raw !== 'object') return null
+  if (Date.now() - raw.savedAt > PERSIST_TTL_MS) return null
+  return raw.data
+}
+
+// Hydratation initiale (sync) — exécutée au load du module côté client.
+// Doit tourner avant le 1er render des blocs pour que peekX() retourne data.
+if (typeof window !== 'undefined') {
+  snapshotRaces = hydrateLS<Race[]>(KEY_CACHE_RACES)
+  snapshotMacros = hydrateLS<TrainingPlan[]>(KEY_CACHE_MACROS)
+  const sess = hydrateLS<Record<string, PlannedSession[]>>(KEY_CACHE_SESSIONS)
+  if (sess) {
+    for (const [k, v] of Object.entries(sess)) snapshotSessions.set(k, v)
+  }
+}
+
+function persistSessionsSnapshot(): void {
+  // Sérialisation du Map en plain object pour LS.
+  const obj: Record<string, PlannedSession[]> = {}
+  snapshotSessions.forEach((v, k) => { obj[k] = v })
+  persistLS(KEY_CACHE_SESSIONS, obj)
+}
+
+// Helpers sync pour les blocs : retournent la dernière valeur connue ou null.
+export function peekRaces(): Race[] | null { return snapshotRaces }
+export function peekMacros(): TrainingPlan[] | null { return snapshotMacros }
+export function peekSessions(from: string, to: string): PlannedSession[] | null {
+  return snapshotSessions.get(`${from}|${to}`) ?? null
+}
+
+function invalidateRacesCache(): void {
+  cachedRaces = null
+  snapshotRaces = null
+  writeLS<PersistedCache<Race[]> | null>(KEY_CACHE_RACES, null)
+}
+function invalidateMacrosCache(): void {
+  cachedMacros = null
+  snapshotMacros = null
+  writeLS<PersistedCache<TrainingPlan[]> | null>(KEY_CACHE_MACROS, null)
+}
+function invalidateSessionsCache(): void {
+  cachedSessions.clear()
+  snapshotSessions.clear()
+  writeLS<PersistedCache<Record<string, PlannedSession[]>> | null>(KEY_CACHE_SESSIONS, null)
+}
 
 // ─── API publique : Race ────────────────────────────────────────────────────
 
@@ -372,13 +438,19 @@ export async function getRaces(): Promise<Race[]> {
         .eq('athlete_id', ctx.athleteId)
         .order('date', { ascending: true })
       if (!error && data) {
-        return (data as RaceRow[]).map(raceFromRow)
+        const list = (data as RaceRow[]).map(raceFromRow)
+        snapshotRaces = list
+        persistLS(KEY_CACHE_RACES, list)
+        return list
       }
       if (error && !isMissingTableError(error)) {
         // Erreur réelle : on continue vers LS.
       }
     }
-    return readRacesFromLS()
+    const list = readRacesFromLS()
+    snapshotRaces = list
+    persistLS(KEY_CACHE_RACES, list)
+    return list
   })()
   cachedRaces = { promise, expiresAt: now + READ_TTL_MS }
   return promise
@@ -549,6 +621,11 @@ export async function getAllMacrocycles(): Promise<TrainingPlan[]> {
   const now = Date.now()
   if (cachedMacros && cachedMacros.expiresAt > now) return cachedMacros.promise
   const promise = (async (): Promise<TrainingPlan[]> => {
+    const persist = (list: TrainingPlan[]): TrainingPlan[] => {
+      snapshotMacros = list
+      persistLS(KEY_CACHE_MACROS, list)
+      return list
+    }
     const ctx = await getAuthedClient()
     if (ctx) {
       const { data: planRows, error: plansErr } = await ctx.supabase
@@ -558,7 +635,7 @@ export async function getAllMacrocycles(): Promise<TrainingPlan[]> {
         .order('start_date', { ascending: false })
       if (plansErr && !isMissingTableError(plansErr)) {
         const ls = readLS<TrainingPlan | null>(KEY_PLAN, null)
-        return ls ? [ls] : []
+        return persist(ls ? [ls] : [])
       }
       if (planRows && planRows.length > 0) {
         const planIds = (planRows as PlanRow[]).map(p => p.id)
@@ -572,13 +649,13 @@ export async function getAllMacrocycles(): Promise<TrainingPlan[]> {
           if (!phasesByPlan.has(pr.plan_id)) phasesByPlan.set(pr.plan_id, [])
           phasesByPlan.get(pr.plan_id)!.push(pr)
         }
-        return (planRows as PlanRow[]).map(p => planFromRows(p, phasesByPlan.get(p.id) ?? []))
+        return persist((planRows as PlanRow[]).map(p => planFromRows(p, phasesByPlan.get(p.id) ?? [])))
       }
-      if (!plansErr) return []
+      if (!plansErr) return persist([])
     }
     // Fallback LS : on a au mieux 1 plan stocké.
     const lsPlan = readLS<TrainingPlan | null>(KEY_PLAN, null)
-    return lsPlan ? [lsPlan] : []
+    return persist(lsPlan ? [lsPlan] : [])
   })()
   cachedMacros = { promise, expiresAt: now + READ_TTL_MS }
   return promise
@@ -658,6 +735,11 @@ export async function getPlannedSessions(
   const hit = cachedSessions.get(key)
   if (hit && hit.expiresAt > now) return hit.promise
   const promise = (async (): Promise<PlannedSession[]> => {
+    const persist = (list: PlannedSession[]): PlannedSession[] => {
+      snapshotSessions.set(key, list)
+      persistSessionsSnapshot()
+      return list
+    }
     const ctx = await getAuthedClient()
     if (ctx) {
       const { data, error } = await ctx.supabase
@@ -668,14 +750,14 @@ export async function getPlannedSessions(
         .lte('date', toDate)
         .order('date', { ascending: true })
       if (!error && data) {
-        return (data as SessionRow[]).map(sessionFromRow)
+        return persist((data as SessionRow[]).map(sessionFromRow))
       }
       if (error && !isMissingTableError(error)) {
         // Erreur réelle : on continue vers LS.
       }
     }
     const all = readLS<PlannedSession[]>(KEY_SESSIONS, [])
-    return all.filter(s => s.date >= fromDate && s.date <= toDate)
+    return persist(all.filter(s => s.date >= fromDate && s.date <= toDate))
   })()
   cachedSessions.set(key, { promise, expiresAt: now + READ_TTL_MS })
   return promise

@@ -11,6 +11,9 @@ import {
   getPlannedSessions,
   savePlannedSession,
   getCurrentPlan,
+  peekMacros,
+  peekSessions,
+  pickActiveMacrocycle,
 } from '@/lib/plan/storage'
 import {
   matchSessionsToActivities,
@@ -79,9 +82,18 @@ type VueSemaineBlockProps = {
 export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
   // Init = lundi de la semaine courante (UTC).
   const [weekStartISO, setWeekStartISO] = useState<string>(() => toISO(startOfISOWeek(new Date())))
-  const [sessions, setSessions] = useState<PlannedSession[]>([])
-  const [plan, setPlan] = useState<TrainingPlan | null>(null)
-  const [loaded, setLoaded] = useState(false)
+
+  // Lazy-init depuis le snapshot LS (visite précédente) — supprime le flash.
+  // Range identique à celui calculé par weekDays[0] et weekEndISO ci-dessous,
+  // mais on doit le construire ici avant les useState.
+  const initialWeekEndISO = toISO(addDays(parseISO(weekStartISO), 6))
+  const initialSessions = peekSessions(weekStartISO, initialWeekEndISO)
+  const initialMacros = peekMacros()
+  const [sessions, setSessions] = useState<PlannedSession[]>(initialSessions ?? [])
+  const [plan, setPlan] = useState<TrainingPlan | null>(
+    initialMacros ? pickActiveMacrocycle(initialMacros, weekStartISO) : null,
+  )
+  const [loaded, setLoaded] = useState(initialSessions !== null && initialMacros !== null)
   const [weekActivities, setWeekActivities] = useState<MatchableActivity[]>([])
   // Paires (sessionId|activityId) que l'user a explicitement déliées.
   // Lu depuis LS, mis à jour quand on délie depuis la modal.

@@ -6,8 +6,9 @@ import { GoalProgressRow } from '@/components/ui/GoalProgressRow'
 import { SportSettingsModal } from './SportSettingsModal'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import type { SportOverview } from '@/lib/data/dashboard'
-import { getCurrentPlan } from '@/lib/plan/storage'
+import { getCurrentPlan, peekMacros, pickActiveMacrocycle } from '@/lib/plan/storage'
 import { resolveWeeklyTarget } from '@/lib/training/phases'
+import { readSportSettings } from '@/lib/design/sport-settings'
 
 const SETTINGS_KEY = 'cockpit_goals_settings'
 const TARGETS_KEY  = 'cockpit_goals_targets'
@@ -42,41 +43,59 @@ function startOfISOWeekUTC(d: Date): Date {
 
 type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
+// Helpers de lecture sync depuis LS — réutilisés au lazy init des useState
+// et dans l'effet de sync visuel (scrollLeft) post-mount.
+function readTargets(): Partial<Record<SportKey, Partial<Goals>>> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const t = window.localStorage.getItem(TARGETS_KEY)
+    return t ? (JSON.parse(t) as Partial<Record<SportKey, Partial<Goals>>>) : {}
+  } catch { return {} }
+}
+
+// Cible hebdo running issue du snapshot LS du plan (visite précédente).
+// Évite le flash sur les sports run/all quand l'user n'a pas d'override : la
+// valeur est dispo dès le 1er render, le useEffect revalide en background.
+function computePlanWeeklyFromSnapshot(): { km: number; dPlus: number } | null {
+  const macros = peekMacros()
+  if (!macros) return null
+  const now = new Date()
+  const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+  const weekStartISO = toISO(startOfISOWeekUTC(todayUTC))
+  const plan = pickActiveMacrocycle(macros, weekStartISO)
+  if (!plan) return null
+  const phase = plan.phases.find(p => p.startDate <= weekStartISO && weekStartISO <= p.endDate)
+  if (!phase) return null
+  const t = resolveWeeklyTarget(phase, weekStartISO)
+  return { km: t.km, dPlus: t.dPlus }
+}
+
 export function GoalsBlock({ sportOverviews, onHide }: Props) {
-  const [settings,   setSettings]   = useState<Settings>(DEFAULT_SETTINGS)
-  const [targets,    setTargets]    = useState<Partial<Record<SportKey, Partial<Goals>>>>({})
-  const [planWeekly, setPlanWeekly] = useState<{ km: number; dPlus: number } | null>(null)
-  const [activeIdx,  setActiveIdx]  = useState(0)
+  // Lazy-init depuis LS — settings, targets et planWeekly disponibles dès
+  // le 1er render. Aucun flash entre defaults et préférences user.
+  const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(SETTINGS_KEY, DEFAULT_SETTINGS))
+  const [targets,    setTargets]    = useState<Partial<Record<SportKey, Partial<Goals>>>>(() => readTargets())
+  const [planWeekly, setPlanWeekly] = useState<{ km: number; dPlus: number } | null>(() => computePlanWeeklyFromSnapshot())
+  const [activeIdx,  setActiveIdx]  = useState(() => {
+    const s = readSportSettings(SETTINGS_KEY, DEFAULT_SETTINGS)
+    return Math.max(0, s.visible.indexOf(s.default))
+  })
   const [showConfig, setShowConfig] = useState(false)
   const [editSport,  setEditSport]  = useState<SportKey | null>(null)
   const [draft,      setDraft]      = useState<Goals>(DEFAULT_GOALS.run)
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  // Sync visuel du scroll horizontal après le 1er paint (DOM dispo).
   useEffect(() => {
-    try {
-      const s = localStorage.getItem(SETTINGS_KEY)
-      const t = localStorage.getItem(TARGETS_KEY)
-      const parsed: Settings = s
-        ? { ...DEFAULT_SETTINGS, ...(JSON.parse(s) as Partial<Settings>) }
-        : DEFAULT_SETTINGS
-      const parsedTargets: Partial<Record<SportKey, Partial<Goals>>> = t
-        ? (JSON.parse(t) as Partial<Record<SportKey, Partial<Goals>>>)
-        : {}
-      setSettings(parsed)
-      setTargets(parsedTargets)
-      const initIdx = Math.max(0, parsed.visible.indexOf(parsed.default))
-      if (initIdx > 0) {
-        setActiveIdx(initIdx)
-        requestAnimationFrame(() => {
-          const el = scrollRef.current
-          if (el) el.scrollLeft = initIdx * el.clientWidth
-        })
-      }
-    } catch {}
+    if (activeIdx > 0) {
+      const el = scrollRef.current
+      if (el) el.scrollLeft = activeIdx * el.clientWidth
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Charge la cible hebdo issue du plan d'entraînement pour la semaine en cours.
-  // Sert de valeur par défaut pour run/all quand le user n'a pas posé d'override.
+  // Revalide la cible hebdo en background contre Supabase (cas où le snapshot
+  // LS est obsolète — ex. plan modifié sur un autre device).
   useEffect(() => {
     let cancelled = false
     void (async () => {

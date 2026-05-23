@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Flag, SquarePen, Trophy } from 'lucide-react'
 import type { Race, RaceType } from '@/types/plan'
-import { getRaces } from '@/lib/plan/storage'
+import { getRaces, peekRaces } from '@/lib/plan/storage'
 import { colors } from '@/lib/design/colors'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { RaceEditorModal } from './RaceEditorModal'
@@ -51,8 +51,11 @@ function formatShortDate(iso: string): string {
 }
 
 export function ObjectifCourseBlock({ onChange }: Props) {
-  const [races, setRaces] = useState<Race[]>([])
-  const [loaded, setLoaded] = useState(false)
+  // Lazy-init depuis le snapshot LS (visite précédente) pour rendre
+  // synchronement avec les data — pas de flash skeleton sur visites répétées.
+  const initial = peekRaces()
+  const [races, setRaces] = useState<Race[]>(initial ?? [])
+  const [loaded, setLoaded] = useState(initial !== null)
   const [modalOpen, setModalOpen] = useState(false)
   // race en édition (null = création).
   const [editing, setEditing] = useState<Race | null>(null)

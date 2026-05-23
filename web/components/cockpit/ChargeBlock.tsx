@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { SportOverview } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
+import { readSportSettings } from '@/lib/design/sport-settings'
 import { CompactMetricCard } from '@/components/ui/CompactMetricCard'
 import { SportSettingsModal } from './SportSettingsModal'
 import { colors } from '@/lib/design/colors'
@@ -16,26 +17,22 @@ const STORAGE_KEY = 'cockpit_charge_settings'
 type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
 export function ChargeBlock({ sportOverviews, onHide }: Props) {
-  const [settings,   setSettings]   = useState<Settings>(DEFAULT_SETTINGS)
-  const [currentIdx, setCurrentIdx] = useState(0)
+  // Lazy-init depuis LS pour rendre directement avec les préférences user.
+  const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
+  const [currentIdx, setCurrentIdx] = useState(() => {
+    const s = readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS)
+    return Math.max(0, s.visible.indexOf(s.default))
+  })
   const [showModal,  setShowModal]  = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  // Sync visuel du scroll horizontal après le 1er paint (DOM dispo).
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (!stored) return
-    try {
-      const merged: Settings = { ...DEFAULT_SETTINGS, ...JSON.parse(stored) }
-      setSettings(merged)
-      const idx = merged.visible.indexOf(merged.default)
-      if (idx > 0) {
-        setCurrentIdx(idx)
-        requestAnimationFrame(() => {
-          const el = scrollRef.current
-          if (el) el.scrollLeft = idx * el.clientWidth
-        })
-      }
-    } catch { /* ignore malformed localStorage */ }
+    if (currentIdx > 0) {
+      const el = scrollRef.current
+      if (el) el.scrollLeft = currentIdx * el.clientWidth
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const visibleSports = settings.visible.filter((k) => k in sportOverviews)

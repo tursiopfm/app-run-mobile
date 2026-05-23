@@ -8,6 +8,8 @@ import {
   createCustomActivityType,
   deleteCustomActivityType,
   renameCustomActivityType,
+  peekActivityTypes,
+  peekUserActivityPrefs,
 } from '@/lib/plan/activity-types-storage'
 import { applyActivityPrefs, type OrderedActivityType } from '@/lib/plan/apply-activity-prefs'
 import type { ActivityType, UserActivityPref } from '@/types/activity-types'
@@ -42,9 +44,14 @@ export interface UseActivityTypesResult {
 }
 
 export function useActivityTypes(): UseActivityTypesResult {
-  const [loading, setLoading] = useState(true)
-  const [types, setTypes] = useState<ActivityType[]>([])
-  const [prefs, setPrefs] = useState<UserActivityPref[]>([])
+  // Lazy-init depuis le snapshot LS (visite précédente) — supprime le flash
+  // sur les composants qui dépendent des labels/couleurs de type d'activité
+  // (VueSemaine, ResumeSemaine, CalendrierMois, Bibliotheque, DayDetailPanel).
+  const initialTypes = peekActivityTypes()
+  const initialPrefs = peekUserActivityPrefs()
+  const [loading, setLoading] = useState(initialTypes === null)
+  const [types, setTypes] = useState<ActivityType[]>(initialTypes ?? [])
+  const [prefs, setPrefs] = useState<UserActivityPref[]>(initialPrefs ?? [])
 
   const refresh = useCallback(async () => {
     setLoading(true)

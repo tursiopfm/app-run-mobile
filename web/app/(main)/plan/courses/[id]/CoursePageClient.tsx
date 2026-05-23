@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Race } from '@/types/plan'
-import { getRaces, deleteRace } from '@/lib/plan/storage'
+import { getRaces, deleteRace, peekRaces } from '@/lib/plan/storage'
 import { RaceEditorModal } from '@/components/plan/RaceEditorModal'
 import { EditButton } from '@/components/plan/EditButton'
 import { colors } from '@/lib/design/colors'
@@ -20,8 +20,12 @@ function formatLongDate(iso: string): string {
 
 export function CoursePageClient({ raceId }: { raceId: string }) {
   const router = useRouter()
-  const [race, setRace] = useState<Race | null>(null)
-  const [loaded, setLoaded] = useState(false)
+  // Lazy-init depuis le snapshot LS (visite précédente) — supprime le flash.
+  const initial = peekRaces()
+  const [race, setRace] = useState<Race | null>(
+    initial ? initial.find(r => r.id === raceId) ?? null : null,
+  )
+  const [loaded, setLoaded] = useState(initial !== null)
   const [editorOpen, setEditorOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
 

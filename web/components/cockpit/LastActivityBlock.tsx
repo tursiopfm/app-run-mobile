@@ -6,6 +6,7 @@ import { ActivityCard, type ActivityRow } from '@/components/ui/ActivityCard'
 import { EditActivityModal } from '@/components/ui/EditActivityModal'
 import { SportSettingsModal } from './SportSettingsModal'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
+import { readSportSettings } from '@/lib/design/sport-settings'
 import { calculateHrZones, type HrZone, type HrZoneMethod } from '@/lib/health/hr-zones'
 import { colors } from '@/lib/design/colors'
 
@@ -27,45 +28,49 @@ type Props = {
   onHide?:        () => void
 }
 
+// Calcule les zones FC sync depuis localStorage — réutilisé pour le lazy init.
+function computeHrZones(profile: AthleteHrProfile): HrZone[] {
+  if (!profile) return []
+  try {
+    const method = (typeof window !== 'undefined'
+      ? (localStorage.getItem('tc_hr_zone_method') ?? 'pct_max')
+      : 'pct_max') as HrZoneMethod
+    return calculateHrZones({
+      method,
+      maxHr:              profile.max_hr,
+      restingHr:          profile.resting_hr,
+      aerobicThresholdHr: profile.aerobic_threshold_hr,
+      thresholdHr:        profile.threshold_hr,
+      birthYear:          profile.birth_year,
+    }).zones
+  } catch { return [] }
+}
+
 export function LastActivityBlock({ latestPerSport, athleteProfile, onHide }: Props) {
   const router = useRouter()
-  const [settings,   setSettings]   = useState<Settings>(DEFAULT_SETTINGS)
-  const [currentIdx, setCurrentIdx] = useState(0)
+  // Lazy-init depuis LS : settings, sport actif et zones FC dispos au 1er render.
+  const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
+  const [currentIdx, setCurrentIdx] = useState(() => {
+    const s = readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS)
+    return Math.max(0, s.visible.indexOf(s.default))
+  })
   const [showModal,  setShowModal]  = useState(false)
   const [editing,    setEditing]    = useState<ActivityRow | null>(null)
-  const [hrZones,    setHrZones]    = useState<HrZone[]>([])
+  const [hrZones,    setHrZones]    = useState<HrZone[]>(() => computeHrZones(athleteProfile))
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (!stored) return
-    try {
-      const merged: Settings = { ...DEFAULT_SETTINGS, ...JSON.parse(stored) }
-      setSettings(merged)
-      const idx = merged.visible.indexOf(merged.default)
-      if (idx > 0) {
-        setCurrentIdx(idx)
-        requestAnimationFrame(() => {
-          const el = scrollRef.current
-          if (el) el.scrollLeft = idx * el.clientWidth
-        })
-      }
-    } catch { /* ignore malformed localStorage */ }
+    if (currentIdx > 0) {
+      const el = scrollRef.current
+      if (el) el.scrollLeft = currentIdx * el.clientWidth
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Recalcule les zones si le profil change (rare — la page Cockpit reçoit le
+  // profile en props server-side, donc stable durant la session).
   useEffect(() => {
-    if (!athleteProfile) return
-    try {
-      const method = (localStorage.getItem('tc_hr_zone_method') ?? 'pct_max') as HrZoneMethod
-      setHrZones(calculateHrZones({
-        method,
-        maxHr:              athleteProfile.max_hr,
-        restingHr:          athleteProfile.resting_hr,
-        aerobicThresholdHr: athleteProfile.aerobic_threshold_hr,
-        thresholdHr:        athleteProfile.threshold_hr,
-        birthYear:          athleteProfile.birth_year,
-      }).zones)
-    } catch {}
+    setHrZones(computeHrZones(athleteProfile))
   }, [athleteProfile])
 
   const visibleSports = settings.visible.filter((k) => k in latestPerSport)
