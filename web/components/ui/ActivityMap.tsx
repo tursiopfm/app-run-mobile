@@ -196,10 +196,7 @@ export function ActivityMap({ encodedPolyline, expanded = false }: { encodedPoly
         )}
         {layer === 'relief' && <TileLayer key="relief" url={TOPO_URL} />}
 
-        <Polyline positions={drawn} pathOptions={{ color: '#e8651a', weight: 28, opacity: 0.08 }} />
-        <Polyline positions={drawn} pathOptions={{ color: '#ff8c42', weight: 14, opacity: 0.22 }} />
-        <Polyline positions={drawn} pathOptions={{ color: '#e8651a', weight: 6, opacity: 0.55 }} />
-        <Polyline positions={drawn} pathOptions={{ color: '#e8651a', weight: 3, opacity: 1 }} />
+        <Polyline positions={drawn} pathOptions={{ color: '#e8651a', weight: 4, opacity: 1, lineCap: 'round', lineJoin: 'round' }} />
         <CircleMarker center={start} radius={7} pathOptions={{ color: '#fff', weight: 2, fillColor: '#4caf50', fillOpacity: 1 }} />
         {!animating && end && (
           <CircleMarker center={end} radius={7} pathOptions={{ color: '#fff', weight: 2, fillColor: '#e8651a', fillOpacity: 1 }} />
