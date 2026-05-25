@@ -5,6 +5,7 @@
 // passe par PlanSessionsDndProvider qui doit envelopper ce bloc + BibliothèqueSeancesBlock.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import type { PlannedSession, TrainingPlan } from '@/types/plan'
 import {
@@ -14,6 +15,7 @@ import {
   peekMacros,
   peekSessions,
   pickActiveMacrocycle,
+  isRaceMirrorSession,
 } from '@/lib/plan/storage'
 import {
   matchSessionsToActivities,
@@ -80,6 +82,7 @@ type VueSemaineBlockProps = {
 }
 
 export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
+  const router = useRouter()
   // Init = lundi de la semaine courante (UTC).
   const [weekStartISO, setWeekStartISO] = useState<string>(() => toISO(startOfISOWeek(new Date())))
 
@@ -250,6 +253,12 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
   }
 
   function openEdit(session: PlannedSession) {
+    // Une session miroir de course n'est pas éditable ici : la donnée canonique
+    // vit dans la table races, accessible via /plan/courses/<id>.
+    if (isRaceMirrorSession(session)) {
+      router.push(`/plan/courses/${session.id}`)
+      return
+    }
     setEditingSession(session)
     setEditorInitialDate(undefined)
     setEditorOpen(true)
@@ -263,6 +272,10 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
       const targetMonday = toISO(addDays(parseISO(weekStartISO), 7))
       const delta = parseISO(targetMonday).getTime() - parseISO(weekStartISO).getTime()
       for (const s of sessions) {
+        // Ne pas dupliquer les miroirs de course : ils sont créés par saveRace,
+        // pas par l'utilisateur. Dupliquer créerait une fausse séance "course"
+        // sur la semaine suivante sans Race associée.
+        if (isRaceMirrorSession(s)) continue
         const newDate = toISO(new Date(parseISO(s.date).getTime() + delta))
         const copy: PlannedSession = {
           ...s,
@@ -490,6 +503,7 @@ function DayColumn({
             key={s.id}
             session={s}
             done={matchMap.has(s.id)}
+            isRaceMirror={isRaceMirrorSession(s)}
             onClick={() => onSessionClick(s)}
           />
         ))}
@@ -507,38 +521,68 @@ function DayColumn({
 }
 
 function DraggableSessionCard({
-  session, done, onClick,
+  session, done, isRaceMirror, onClick,
 }: {
   session: PlannedSession
   done: boolean
+  isRaceMirror: boolean
   onClick: () => void
 }) {
+  // Miroir de course : non-draggable (la donnée canonique vit dans la table
+  // races, modifier la date doit passer par /plan/courses/<id>). On instancie
+  // quand même useDraggable pour respecter les règles des hooks, mais on
+  // n'attache pas les listeners.
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `session-${session.id}`,
     data: { type: 'planned-session', sessionId: session.id, title: session.title },
+    disabled: isRaceMirror,
   })
   const intensityColor = INTENSITY_LEVEL_COLORS[session.intensity]
+  // Surcharge visuelle pour le miroir : bordure orange primary + bg légèrement
+  // teinté pour signaler "c'est ta course objectif".
+  const cardBorderColor = isRaceMirror ? 'var(--trail-primary)' : intensityColor
+  const cardBg = isRaceMirror ? 'color-mix(in oklab, var(--trail-primary) 10%, var(--trail-card))' : undefined
 
   return (
     <div
       ref={setNodeRef}
-      {...attributes}
-      {...listeners}
+      {...(isRaceMirror ? {} : attributes)}
+      {...(isRaceMirror ? {} : listeners)}
       // pan-y : laisse le scroll vertical natif passer sur la séance, sinon
       // toucher une carte = scroll bloqué. Le drag s'active quand même via le
       // long-press TouchSensor (250 ms immobile).
       style={{
         opacity: isDragging ? 0.4 : 1,
         touchAction: 'pan-y',
-        borderColor: intensityColor,
+        borderColor: cardBorderColor,
+        background: cardBg,
       }}
       className="relative rounded-[6px] bg-trail-card border p-1 cursor-pointer"
       onClick={onClick}
       role="button"
       tabIndex={0}
-      aria-label={`Éditer la séance ${session.title}${done ? ' (réalisée)' : ''} (intensité ${session.intensity} sur 5, glisser pour déplacer)`}
+      aria-label={isRaceMirror
+        ? `Ouvrir le détail de la course ${session.title}`
+        : `Éditer la séance ${session.title}${done ? ' (réalisée)' : ''} (intensité ${session.intensity} sur 5, glisser pour déplacer)`}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
     >
+      {isRaceMirror && (
+        <span
+          aria-hidden="true"
+          className="absolute -top-1 -left-1 flex items-center justify-center rounded-full leading-none"
+          style={{
+            backgroundColor: 'var(--trail-primary)',
+            color: '#fff',
+            width: 14,
+            height: 14,
+            fontSize: 9,
+            boxShadow: '0 0 0 1.5px var(--trail-card)',
+          }}
+          title="Course objectif"
+        >
+          🏆
+        </span>
+      )}
       {done && (
         <span
           aria-hidden="true"

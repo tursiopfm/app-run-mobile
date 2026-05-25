@@ -17,6 +17,39 @@ import type {
   TrainingPlan,
   TrainingZone,
 } from '@/types/plan'
+import { estimateCharge } from '@/lib/training/charge'
+
+// Marqueur stocké dans PlannedSession.templateId pour distinguer un "miroir
+// course" (créé automatiquement à partir d'une Race) d'une séance normale.
+// Permet à l'UI de rediriger le clic vers /plan/courses/<id> au lieu d'ouvrir
+// l'éditeur standard, et de bloquer le DnD sur ces sessions.
+export const RACE_MIRROR_TEMPLATE_ID = 'race-mirror'
+
+export function isRaceMirrorSession(s: { templateId?: string | null }): boolean {
+  return s.templateId === RACE_MIRROR_TEMPLATE_ID
+}
+
+// Construit la PlannedSession miroir d'une course : même id que la Race
+// (UUID), type 'course', intensité 5, durée estimée à 6 min/km running.
+// L'id partagé permet de retrouver la session miroir directement via race.id
+// lors d'un update/delete sans avoir à scanner.
+function raceToMirrorSession(race: Race): PlannedSession {
+  const duration = race.distance > 0 ? Math.round(race.distance * 6) : 0
+  return {
+    id: race.id,
+    planId: '',
+    date: race.date,
+    type: 'course',
+    title: race.name,
+    duration,
+    distance: race.distance,
+    elevation: race.elevation,
+    intensity: 5,
+    estimatedCharge: estimateCharge(duration, 5, race.elevation),
+    status: 'planned',
+    templateId: RACE_MIRROR_TEMPLATE_ID,
+  }
+}
 
 // ─── Clés localStorage (versionnées) ────────────────────────────────────────
 const KEY_RACE = 'tc:plan:race:v1'
@@ -480,11 +513,13 @@ export async function getRace(): Promise<Race | null> {
 export async function saveRace(race: Race): Promise<void> {
   invalidateRacesCache()
   const ctx = await getAuthedClient()
+  let saved = false
   if (ctx) {
     const row = raceToRow(race, ctx.athleteId)
     const { error } = await ctx.supabase.from('races').upsert(row, { onConflict: 'id' })
-    if (!error) return
-    if (isMissingColumnError(error)) {
+    if (!error) {
+      saved = true
+    } else if (isMissingColumnError(error)) {
       // Migration 022 pas encore appliquée → la colonne `priority` n'existe pas.
       // Retry sans elle plutôt que de fallback LS (qui ferait disparaître la
       // race côté serveur).
@@ -492,16 +527,61 @@ export async function saveRace(race: Race): Promise<void> {
       const { error: retryErr } = await ctx.supabase
         .from('races')
         .upsert(legacyRow, { onConflict: 'id' })
-      if (!retryErr) return
-      console.warn('[plan storage] supabase retry failed, falling back to LS:', retryErr.message)
+      if (!retryErr) {
+        saved = true
+      } else {
+        console.warn('[plan storage] supabase retry failed, falling back to LS:', retryErr.message)
+      }
     } else if (!isMissingTableError(error)) {
       console.warn('[plan storage] supabase failed, falling back to LS:', error.message)
     }
   }
-  // Fallback LS.
-  const all = readRacesFromLS()
-  const next = mergeRace(all, race)
-  writeRacesToLS(next)
+  if (!saved) {
+    // Fallback LS.
+    const all = readRacesFromLS()
+    const next = mergeRace(all, race)
+    writeRacesToLS(next)
+  }
+  // Miroir PlannedSession (type 'course') : la course apparaît automatiquement
+  // dans VueSemaine + CalendrierMois. id partagé avec la Race pour retrouver
+  // facilement le miroir lors d'un update/delete.
+  await savePlannedSession(raceToMirrorSession(race))
+}
+
+/**
+ * Backfill : crée un PlannedSession miroir pour chaque Race qui n'en a pas
+ * encore (cas des courses créées avant l'introduction de la mirror-sync).
+ * Retourne le nombre de miroirs créés (utile pour décider d'un reload).
+ * Idempotent : à appeler une seule fois par mount.
+ */
+export async function ensureRaceMirrors(): Promise<number> {
+  const races = await getRaces()
+  if (races.length === 0) return 0
+  const ids = races.map(r => r.id)
+  const existingIds = new Set<string>()
+  const ctx = await getAuthedClient()
+  if (ctx) {
+    const { data, error } = await ctx.supabase
+      .from('planned_sessions')
+      .select('id')
+      .in('id', ids)
+    if (!error && data) {
+      for (const r of data as { id: string }[]) existingIds.add(r.id)
+    } else {
+      const all = readLS<PlannedSession[]>(KEY_SESSIONS, [])
+      for (const s of all) if (ids.includes(s.id)) existingIds.add(s.id)
+    }
+  } else {
+    const all = readLS<PlannedSession[]>(KEY_SESSIONS, [])
+    for (const s of all) if (ids.includes(s.id)) existingIds.add(s.id)
+  }
+  let added = 0
+  for (const race of races) {
+    if (existingIds.has(race.id)) continue
+    await savePlannedSession(raceToMirrorSession(race))
+    added++
+  }
+  return added
 }
 
 export async function deleteRace(id: string): Promise<void> {
@@ -511,6 +591,7 @@ export async function deleteRace(id: string): Promise<void> {
     const { error } = await ctx.supabase.from('races').delete().eq('id', id)
     if (!error) {
       removeRaceFromLS(id)
+      await deletePlannedSession(id)
       return
     }
     if (!isMissingTableError(error)) {
@@ -518,6 +599,7 @@ export async function deleteRace(id: string): Promise<void> {
     }
   }
   removeRaceFromLS(id)
+  await deletePlannedSession(id)
 }
 
 // ─── Helpers LS pour la liste de races ──────────────────────────────────────

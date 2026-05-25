@@ -34,6 +34,7 @@ import { CalendrierMoisBlock } from '@/components/plan/CalendrierMoisBlock'
 import { PlanSessionsDndProvider } from '@/components/plan/PlanSessionsDndProvider'
 import {
   deletePlannedSession,
+  ensureRaceMirrors,
   getCurrentPlan,
   getPlannedSessions,
   getRaces,
@@ -68,7 +69,11 @@ export default function PlanClient() {
   useEffect(() => {
     void (async () => {
       const didSeed = await seedMockDataIfEmpty()
-      if (didSeed) bumpReload()
+      // Backfill : crée un PlannedSession miroir pour chaque Race existante qui
+      // n'en a pas encore (cas des courses définies avant l'intro de la sync).
+      // Idempotent — pas besoin de flag, c'est skip si tous les miroirs existent.
+      const mirrored = await ensureRaceMirrors()
+      if (didSeed || mirrored > 0) bumpReload()
     })()
   }, [bumpReload])
 

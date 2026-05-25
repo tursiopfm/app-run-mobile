@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import type { PlannedSession } from '@/types/plan'
-import { getPlannedSessions } from '@/lib/plan/storage'
+import { getPlannedSessions, isRaceMirrorSession } from '@/lib/plan/storage'
 import { resolveSessionMeta } from '@/lib/plan/session-meta'
 import { useActivityTypes } from '@/lib/plan/use-activity-types'
 import { SessionEditorModal } from './SessionEditorModal'
@@ -26,6 +27,7 @@ type Props = {
 }
 
 export function DayDetailPanel({ dateISO, onClose, reloadKey, onSessionsChanged }: Props) {
+  const router = useRouter()
   const [sessions, setSessions] = useState<PlannedSession[]>([])
   const [loaded, setLoaded] = useState(false)
   const [editorOpen, setEditorOpen] = useState(false)
@@ -42,6 +44,12 @@ export function DayDetailPanel({ dateISO, onClose, reloadKey, onSessionsChanged 
   }, [dateISO, reloadKey])
 
   function openEdit(s: PlannedSession) {
+    // Miroir de course : la donnée vit dans races, on redirige vers le détail
+    // course plutôt que d'ouvrir l'éditeur de séance standard.
+    if (isRaceMirrorSession(s)) {
+      router.push(`/plan/courses/${s.id}`)
+      return
+    }
     setEditingSession(s)
     setEditorOpen(true)
   }
