@@ -56,8 +56,8 @@ export function CockpitKpiTile({
       {/* Subline */}
       <div className="text-[12px] text-trail-muted leading-tight truncate">{subline}</div>
 
-      {/* 4px gap */}
-      <div className="h-[4px]" />
+      {/* 4px gap (mt-auto pour plaquer la BarStrip en bas quand la tuile est étirée par la grid) */}
+      <div className="mt-auto h-[4px]" />
 
       {/* BarStrip */}
       <BarStrip values={barValues} labels={barLabels} color={barColor} />
