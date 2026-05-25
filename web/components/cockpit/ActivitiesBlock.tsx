@@ -21,11 +21,12 @@ function normalize(arr: number[]): number[] {
   return arr.map((v) => v / max)
 }
 
-// Format compact pour labels D+ : >=1000 → "1,5K" (comma décimal FR) pour éviter le débord
-// sur les barres voisines dans la mini-tuile.
+// Format compact pour labels D+ mensuels : 12 barres dans une demi-tuile = colonnes
+// très étroites, donc on arrondit au millier sans décimale (>=1000 → "2K", "9K").
+// Le total précis reste affiché en gros au-dessus.
 function formatDPlusLabel(v: number): string {
   if (v <= 0) return ''
-  if (v >= 1000) return `${(v / 1000).toFixed(1).replace('.', ',')}K`
+  if (v >= 1000) return `${Math.round(v / 1000)}K`
   return `${Math.round(v)}`
 }
 
