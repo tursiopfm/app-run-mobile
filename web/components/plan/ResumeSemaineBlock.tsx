@@ -144,10 +144,7 @@ const TILE_EXPLANATIONS: Record<TileKey, ReactNode> = {
   ),
   restant: (
     <>
-      Ce qu&apos;il te reste à courir pour atteindre l&apos;<strong className="text-trail-text">objectif</strong> (pas le planifié).{' '}
-      <code className="px-[4px] py-[1px] rounded-[3px] bg-trail-surface text-trail-text text-[11px]">
-        max(0, objectif − réalisé)
-      </code>
+      Ce qu&apos;il te reste à courir pour atteindre l&apos;objectif (Restant = Objectif − Réalisé).
     </>
   ),
 }
@@ -388,46 +385,65 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
         </button>
       </div>
 
-      {/* ── 4 tuiles métriques : Objectif / Planifié / Réalisé / Restant ── */}
-      <div ref={tilesContainerRef} className="flex gap-2 mt-[14px] relative">
-        <MetricTile
-          tileKey="objectif"
-          label="Objectif"
-          main={`${fmt1(targets.km)} km`}
-          sub={`${Math.round(targets.dPlus)} m D+`}
-          color={colors.chargeOrange}
-          open={openTile === 'objectif'}
-          onToggle={toggleTile}
-        />
-        {plannedSessionsCount > 0 && (
+      {/* ── 4 tuiles métriques + popover pleine largeur ─────────────────── */}
+      <div ref={tilesContainerRef} className="mt-[14px]">
+        <div className="flex gap-2">
           <MetricTile
-            tileKey="planifie"
-            label="Planifié"
-            main={`${fmt1(planned.km)} km`}
-            sub={`${Math.round(planned.dPlus)} m D+`}
-            color={colors.seriesBlue}
-            open={openTile === 'planifie'}
+            tileKey="objectif"
+            label="Objectif"
+            main={`${fmt1(targets.km)} km`}
+            sub={`${Math.round(targets.dPlus)} m D+`}
+            color={colors.chargeOrange}
+            open={openTile === 'objectif'}
             onToggle={toggleTile}
           />
+          {plannedSessionsCount > 0 && (
+            <MetricTile
+              tileKey="planifie"
+              label="Planifié"
+              main={`${fmt1(planned.km)} km`}
+              sub={`${Math.round(planned.dPlus)} m D+`}
+              color={colors.seriesBlue}
+              open={openTile === 'planifie'}
+              onToggle={toggleTile}
+            />
+          )}
+          <MetricTile
+            tileKey="realise"
+            label="Réalisé"
+            main={`${fmt1(actual.km)} km`}
+            sub={`${Math.round(actual.dPlus)} m D+`}
+            color={colors.greenOk}
+            open={openTile === 'realise'}
+            onToggle={toggleTile}
+          />
+          <MetricTile
+            tileKey="restant"
+            label="Restant"
+            main={`${fmt1(remaining.km)} km`}
+            sub={`${Math.round(remaining.dPlus)} m D+`}
+            color={colors.seriesYellow}
+            open={openTile === 'restant'}
+            onToggle={toggleTile}
+          />
+        </div>
+        {openTile && (
+          <TilePopover
+            tileKey={openTile}
+            color={
+              openTile === 'objectif' ? colors.chargeOrange
+              : openTile === 'planifie' ? colors.seriesBlue
+              : openTile === 'realise'  ? colors.greenOk
+              :                            colors.seriesYellow
+            }
+            label={
+              openTile === 'objectif' ? 'Objectif'
+              : openTile === 'planifie' ? 'Planifié'
+              : openTile === 'realise'  ? 'Réalisé'
+              :                            'Restant'
+            }
+          />
         )}
-        <MetricTile
-          tileKey="realise"
-          label="Réalisé"
-          main={`${fmt1(actual.km)} km`}
-          sub={`${Math.round(actual.dPlus)} m D+`}
-          color={colors.greenOk}
-          open={openTile === 'realise'}
-          onToggle={toggleTile}
-        />
-        <MetricTile
-          tileKey="restant"
-          label="Restant"
-          main={`${fmt1(remaining.km)} km`}
-          sub={`${Math.round(remaining.dPlus)} m D+`}
-          color={colors.seriesYellow}
-          open={openTile === 'restant'}
-          onToggle={toggleTile}
-        />
       </div>
 
       {/* ── 3 progress bars : Réalisé vs Objectif ───────────────────────── */}
@@ -503,46 +519,49 @@ function MetricTile({
   const mainValue = firstSpace > 0 ? main.slice(0, firstSpace) : main
   const mainUnit  = firstSpace > 0 ? main.slice(firstSpace + 1) : ''
   return (
-    <div className="flex-1 min-w-0 relative">
-      <button
-        type="button"
-        onClick={() => onToggle(tileKey)}
-        aria-expanded={open}
-        aria-label={`Explication ${label}`}
-        className="w-full text-left rounded-[10px] px-[6px] py-[8px] cursor-pointer"
-        style={{
-          backgroundColor: colors.surface,
-          border: `1px solid ${open ? color : colors.border}`,
-        }}
-      >
-        <p className="text-[11px] text-trail-muted">{label}</p>
-        <p className="mt-[2px] flex items-baseline gap-[2px] min-w-0">
-          <span className="text-[18px] font-bold leading-none truncate" style={{ color }}>{mainValue}</span>
-          {mainUnit && (
-            <span className="text-[11px] text-trail-muted leading-none flex-shrink-0">{mainUnit}</span>
-          )}
-        </p>
-        <p className="text-[11px] text-trail-muted mt-[2px] truncate">{sub}</p>
-      </button>
-      {open && (
-        <div
-          role="tooltip"
-          className="absolute left-0 right-0 top-full mt-[6px] z-20 rounded-[10px] p-[10px] shadow-lg"
-          style={{
-            backgroundColor: colors.cardBg,
-            border: `1px solid ${color}`,
-            // Largeur min pour rester lisible quand la tuile est étroite (mobile).
-            minWidth: 180,
-          }}
-        >
-          <p className="text-[12px] font-semibold text-trail-text mb-[4px]" style={{ color }}>
-            {label}
-          </p>
-          <p className="text-[12px] text-trail-muted leading-[17px]">
-            {TILE_EXPLANATIONS[tileKey]}
-          </p>
-        </div>
-      )}
+    <button
+      type="button"
+      onClick={() => onToggle(tileKey)}
+      aria-expanded={open}
+      aria-label={`Explication ${label}`}
+      className="flex-1 min-w-0 text-left rounded-[10px] px-[6px] py-[8px] cursor-pointer"
+      style={{
+        backgroundColor: colors.surface,
+        border: `1px solid ${open ? color : colors.border}`,
+      }}
+    >
+      <p className="text-[11px] text-trail-muted">{label}</p>
+      <p className="mt-[2px] flex items-baseline gap-[2px] min-w-0">
+        <span className="text-[18px] font-bold leading-none truncate" style={{ color }}>{mainValue}</span>
+        {mainUnit && (
+          <span className="text-[11px] text-trail-muted leading-none flex-shrink-0">{mainUnit}</span>
+        )}
+      </p>
+      <p className="text-[11px] text-trail-muted mt-[2px] truncate">{sub}</p>
+    </button>
+  )
+}
+
+// Popover affiché sous la rangée de tuiles, pleine largeur du bloc. Évite le
+// débordement horizontal (Restant) et le chevauchement avec le bloc suivant.
+function TilePopover({
+  tileKey, color, label,
+}: { tileKey: TileKey; color: string; label: string }) {
+  return (
+    <div
+      role="tooltip"
+      className="mt-[6px] rounded-[10px] p-[10px]"
+      style={{
+        backgroundColor: colors.cardBg,
+        border: `1px solid ${color}`,
+      }}
+    >
+      <p className="text-[12px] font-semibold mb-[4px]" style={{ color }}>
+        {label}
+      </p>
+      <p className="text-[12px] text-trail-muted leading-[17px]">
+        {TILE_EXPLANATIONS[tileKey]}
+      </p>
     </div>
   )
 }
