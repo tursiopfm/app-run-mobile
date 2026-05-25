@@ -14,7 +14,7 @@
 // uniquement = Run + TrailRun, même règle d'overrides manual_* que le bloc
 // Objectifs du Cockpit — lib/data/dashboard.buildSportOverview).
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   getCurrentPlan,
   getPlannedSessions,
@@ -121,6 +121,35 @@ function persistWeekTotals(weekStartISO: string, data: WeekTotals): void {
     all[weekStartISO] = { data, savedAt: Date.now() }
     window.localStorage.setItem(KEY_WEEK_TOTALS, JSON.stringify(all))
   } catch { /* quota / mode privé */ }
+}
+
+// ─── Textes explicatifs des mini-tuiles ──────────────────────────────────────
+type TileKey = 'objectif' | 'planifie' | 'realise' | 'restant'
+const TILE_EXPLANATIONS: Record<TileKey, ReactNode> = {
+  objectif: (
+    <>
+      Cible hebdomadaire de la phase courante d&apos;entrainement.
+      <br />
+      Source : ton plan d&apos;entraînement.
+    </>
+  ),
+  planifie: (
+    <>
+      Somme des séances running planifiées cette semaine (km et D+).
+      N&apos;inclut pas vélo/natation/renfo.
+    </>
+  ),
+  realise: (
+    <>Activités running réalisées depuis le début de la semaine (km et D+).</>
+  ),
+  restant: (
+    <>
+      Ce qu&apos;il te reste à courir pour atteindre l&apos;<strong className="text-trail-text">objectif</strong> (pas le planifié).{' '}
+      <code className="px-[4px] py-[1px] rounded-[3px] bg-trail-surface text-trail-text text-[11px]">
+        max(0, objectif − réalisé)
+      </code>
+    </>
+  ),
 }
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -254,13 +283,13 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
     return () => { cancelled = true }
   }, [weekStartISO, reloadKey])
 
-  // Restant = ce qui reste à exécuter de la planif. Si on a déjà dépassé la
-  // planif (actual > planned), restant = 0 (pas de valeur négative).
+  // Restant = ce qu'il reste pour atteindre l'OBJECTIF de la phase (pas le
+  // planifié). Si déjà dépassé (actual > targets), restant = 0 (pas de négatif).
   const remaining = useMemo(() => ({
-    km:    Math.max(0, planned.km    - actual.km),
-    dPlus: Math.max(0, planned.dPlus - actual.dPlus),
-    load:  Math.max(0, planned.load  - actual.load),
-  }), [planned, actual])
+    km:    Math.max(0, targets.km    - actual.km),
+    dPlus: Math.max(0, targets.dPlus - actual.dPlus),
+    load:  Math.max(0, targets.load  - actual.load),
+  }), [targets, actual])
 
   const weekNumber = useMemo(() => isoWeek(parseISO(weekStartISO)), [weekStartISO])
 
@@ -281,6 +310,38 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
   const gotoToday = useCallback(() => {
     setSelectedDateISO(todayISO)
   }, [todayISO])
+
+  // ─── Popover par mini-tuile ─────────────────────────────────────────────────
+  // Une seule tuile ouverte à la fois. Fermeture au clic extérieur ou Escape.
+  const [openTile, setOpenTile] = useState<TileKey | null>(null)
+  const tilesContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!openTile) return
+    function handlePointer(e: MouseEvent | TouchEvent) {
+      if (
+        tilesContainerRef.current &&
+        !tilesContainerRef.current.contains(e.target as Node)
+      ) {
+        setOpenTile(null)
+      }
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpenTile(null)
+    }
+    document.addEventListener('mousedown', handlePointer)
+    document.addEventListener('touchstart', handlePointer)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handlePointer)
+      document.removeEventListener('touchstart', handlePointer)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [openTile])
+
+  const toggleTile = useCallback((key: TileKey) => {
+    setOpenTile(prev => (prev === key ? null : key))
+  }, [])
 
   return (
     <BlockCard
@@ -328,32 +389,44 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
       </div>
 
       {/* ── 4 tuiles métriques : Objectif / Planifié / Réalisé / Restant ── */}
-      <div className="flex gap-2 mt-[14px]">
+      <div ref={tilesContainerRef} className="flex gap-2 mt-[14px] relative">
         <MetricTile
+          tileKey="objectif"
           label="Objectif"
           main={`${fmt1(targets.km)} km`}
           sub={`${Math.round(targets.dPlus)} m D+`}
           color={colors.chargeOrange}
+          open={openTile === 'objectif'}
+          onToggle={toggleTile}
         />
         {plannedSessionsCount > 0 && (
           <MetricTile
+            tileKey="planifie"
             label="Planifié"
             main={`${fmt1(planned.km)} km`}
             sub={`${Math.round(planned.dPlus)} m D+`}
             color={colors.seriesBlue}
+            open={openTile === 'planifie'}
+            onToggle={toggleTile}
           />
         )}
         <MetricTile
+          tileKey="realise"
           label="Réalisé"
           main={`${fmt1(actual.km)} km`}
           sub={`${Math.round(actual.dPlus)} m D+`}
           color={colors.greenOk}
+          open={openTile === 'realise'}
+          onToggle={toggleTile}
         />
         <MetricTile
+          tileKey="restant"
           label="Restant"
           main={`${fmt1(remaining.km)} km`}
           sub={`${Math.round(remaining.dPlus)} m D+`}
           color={colors.seriesYellow}
+          open={openTile === 'restant'}
+          onToggle={toggleTile}
         />
       </div>
 
@@ -413,8 +486,16 @@ function NavButton({
 }
 
 function MetricTile({
-  label, main, sub, color,
-}: { label: string; main: string; sub: string; color: string }) {
+  tileKey, label, main, sub, color, open, onToggle,
+}: {
+  tileKey: TileKey
+  label: string
+  main: string
+  sub: string
+  color: string
+  open: boolean
+  onToggle: (key: TileKey) => void
+}) {
   // Sépare valeur et unité (ex: "80.0 km" → "80.0" + "km") pour rendre l'unité
   // dans une typo plus petite, garantir qu'elle n'est jamais coupée par le truncate,
   // et économiser de la largeur sur les tuiles étroites en mobile.
@@ -422,18 +503,46 @@ function MetricTile({
   const mainValue = firstSpace > 0 ? main.slice(0, firstSpace) : main
   const mainUnit  = firstSpace > 0 ? main.slice(firstSpace + 1) : ''
   return (
-    <div
-      className="flex-1 min-w-0 rounded-[10px] px-[6px] py-[8px]"
-      style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}
-    >
-      <p className="text-[11px] text-trail-muted">{label}</p>
-      <p className="mt-[2px] flex items-baseline gap-[2px] min-w-0">
-        <span className="text-[18px] font-bold leading-none truncate" style={{ color }}>{mainValue}</span>
-        {mainUnit && (
-          <span className="text-[11px] text-trail-muted leading-none flex-shrink-0">{mainUnit}</span>
-        )}
-      </p>
-      <p className="text-[11px] text-trail-muted mt-[2px] truncate">{sub}</p>
+    <div className="flex-1 min-w-0 relative">
+      <button
+        type="button"
+        onClick={() => onToggle(tileKey)}
+        aria-expanded={open}
+        aria-label={`Explication ${label}`}
+        className="w-full text-left rounded-[10px] px-[6px] py-[8px] cursor-pointer"
+        style={{
+          backgroundColor: colors.surface,
+          border: `1px solid ${open ? color : colors.border}`,
+        }}
+      >
+        <p className="text-[11px] text-trail-muted">{label}</p>
+        <p className="mt-[2px] flex items-baseline gap-[2px] min-w-0">
+          <span className="text-[18px] font-bold leading-none truncate" style={{ color }}>{mainValue}</span>
+          {mainUnit && (
+            <span className="text-[11px] text-trail-muted leading-none flex-shrink-0">{mainUnit}</span>
+          )}
+        </p>
+        <p className="text-[11px] text-trail-muted mt-[2px] truncate">{sub}</p>
+      </button>
+      {open && (
+        <div
+          role="tooltip"
+          className="absolute left-0 right-0 top-full mt-[6px] z-20 rounded-[10px] p-[10px] shadow-lg"
+          style={{
+            backgroundColor: colors.cardBg,
+            border: `1px solid ${color}`,
+            // Largeur min pour rester lisible quand la tuile est étroite (mobile).
+            minWidth: 180,
+          }}
+        >
+          <p className="text-[12px] font-semibold text-trail-text mb-[4px]" style={{ color }}>
+            {label}
+          </p>
+          <p className="text-[12px] text-trail-muted leading-[17px]">
+            {TILE_EXPLANATIONS[tileKey]}
+          </p>
+        </div>
+      )}
     </div>
   )
 }
