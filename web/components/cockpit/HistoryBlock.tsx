@@ -378,7 +378,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
         ref={scrollRef}
         onScroll={handleScroll}
         className="flex overflow-x-auto [&::-webkit-scrollbar]:hidden"
-        style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}
+        style={{ scrollSnapType: 'x proximity', scrollbarWidth: 'none' }}
       >
         {visibleSports.map((sportKey) => {
           const scfg = SPORT_CONFIG[sportKey]

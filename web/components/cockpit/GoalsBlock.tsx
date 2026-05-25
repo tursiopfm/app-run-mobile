@@ -191,7 +191,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
           ref={scrollRef}
           onScroll={handleScroll}
           className="flex overflow-x-auto"
-          style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}
+          style={{ scrollSnapType: 'x proximity', scrollbarWidth: 'none' }}
         >
           {visibleSports.map((sport) => {
             const cfg = SPORT_CONFIG[sport]
