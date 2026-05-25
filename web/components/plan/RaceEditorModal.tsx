@@ -151,8 +151,10 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
                 inputMode="decimal"
                 step="0.1"
                 min={0}
-                value={Number.isFinite(draft.distance) ? draft.distance : 0}
+                value={draft.distance ? draft.distance : ''}
+                placeholder="0"
                 onChange={(e) => setDraft({ ...draft, distance: Number(e.target.value) || 0 })}
+                onFocus={(e) => e.currentTarget.select()}
                 className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
               />
             </Field>
@@ -163,8 +165,10 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
                 inputMode="numeric"
                 step="1"
                 min={0}
-                value={Number.isFinite(draft.elevation) ? draft.elevation : 0}
+                value={draft.elevation ? draft.elevation : ''}
+                placeholder="0"
                 onChange={(e) => setDraft({ ...draft, elevation: Number(e.target.value) || 0 })}
+                onFocus={(e) => e.currentTarget.select()}
                 className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
               />
             </Field>
