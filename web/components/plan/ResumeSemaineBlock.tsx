@@ -135,8 +135,9 @@ const TILE_EXPLANATIONS: Record<TileKey, ReactNode> = {
   ),
   planifie: (
     <>
-      Somme des séances running planifiées cette semaine (km et D+).
-      N&apos;inclut pas vélo/natation/renfo.
+      Somme des séances running planifiées cette semaine (km + D+). N&apos;inclut pas vélo/natation/renfo.
+      <br />
+      Source : séances du calendrier d&apos;entrainement (hebdomadaire ou mensuel).
     </>
   ),
   realise: (
