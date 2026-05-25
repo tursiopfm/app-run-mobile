@@ -23,8 +23,8 @@ type Props = {
   athleteProfile: AthleteHrProfile
 }
 
-const DEFAULT_ORDER = ['activities', 'lastActivity', 'goals', 'weekly', 'charge', 'history', 'cumul', 'intensity', 'week', 'weekActivities']
-const DEFAULT_HIDDEN = ['charge']
+const DEFAULT_ORDER = ['activities', 'charge', 'lastActivity', 'goals', 'weekly', 'history', 'cumul', 'intensity', 'week', 'weekActivities']
+const DEFAULT_HIDDEN: string[] = []
 
 function BlockWithHide({ children }: { children: (onHide: () => void) => React.ReactNode }) {
   const { hideSelf } = useBlockContext()

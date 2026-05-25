@@ -41,6 +41,7 @@ export type SportOverview = {
   dailyLabels: string[]
   ytdKm: number
   ytdDPlus: number
+  ytdSessions: number
   monthlyKm: number[]
   monthlyDPlus: number[]
   atl: number
@@ -283,6 +284,7 @@ function buildSportOverview(
   const ytdActs = acts.filter((a) => new Date(a.start_time) >= janFirst)
   const ytdKm    = Math.round(ytdActs.reduce((s, a) => s + ((a.manual_distance_m       ?? a.distance_m)       ?? 0) / 1000, 0) * 10) / 10
   const ytdDPlus = Math.round(ytdActs.reduce((s, a) => s +  ((a.manual_elevation_gain_m ?? a.elevation_gain_m) ?? 0),         0))
+  const ytdSessions = ytdActs.length
   const monthlyKm   = Array(12).fill(0) as number[]
   const monthlyDPlus = Array(12).fill(0) as number[]
   for (const a of ytdActs) {
@@ -399,6 +401,7 @@ function buildSportOverview(
     dailyLabels,
     ytdKm,
     ytdDPlus,
+    ytdSessions,
     monthlyKm,
     monthlyDPlus,
     atl: latest.atl,
