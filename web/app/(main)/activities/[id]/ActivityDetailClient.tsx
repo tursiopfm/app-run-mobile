@@ -310,7 +310,7 @@ export function ActivityDetailClient({
       {/* Map section */}
       <div style={{
         position: 'relative',
-        height: mapExpanded ? 'calc(100svh - 80px)' : 307,
+        height: mapExpanded ? 'calc(100svh - 80px - env(safe-area-inset-bottom))' : 307,
         transition: 'height 0.3s ease',
         overflow: 'hidden',
         isolation: 'isolate',
