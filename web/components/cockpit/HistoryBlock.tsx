@@ -1,11 +1,12 @@
 // web/components/cockpit/HistoryBlock.tsx
 'use client'
 
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import type { SportOverview, DailyHistoryEntry } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import { readSportSettings } from '@/lib/design/sport-settings'
 import { SportSettingsModal } from './SportSettingsModal'
+import { SportsCarousel } from './SportsCarousel'
 import { colors } from '@/lib/design/colors'
 
 type Settings = { visible: SportKey[]; default: SportKey }
@@ -250,18 +251,6 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
   const [showModal,  setShowModal]  = useState(false)
   const [period,     setPeriod]     = useState<Period>('week')
   const [offset,     setOffset]     = useState(0)
-  const scrollRef = useRef<HTMLDivElement>(null)
-
-  // Sync visuel du scroll horizontal vers la slide active après le 1er paint
-  // (scrollLeft ne peut pas être posé en init sync, le DOM n'existe pas encore).
-  useEffect(() => {
-    if (currentIdx > 0) {
-      const el = scrollRef.current
-      if (el) el.scrollLeft = currentIdx * el.clientWidth
-    }
-    // intentionnellement vide : on ne resync que sur le mount initial.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const visibleSports = settings.visible.filter((k) => k in sportOverviews)
   const safeIdx = Math.min(currentIdx, Math.max(0, visibleSports.length - 1))
@@ -284,29 +273,12 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
   const cfg = SPORT_CONFIG[activeSport]
   const activeView = sportViews[activeSport]
 
-  function handleScroll() {
-    const el = scrollRef.current
-    if (!el || el.clientWidth === 0) return
-    setCurrentIdx(Math.min(Math.round(el.scrollLeft / el.clientWidth), visibleSports.length - 1))
-  }
-
-  function scrollTo(idx: number) {
-    const el = scrollRef.current
-    if (el) el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' })
-    setCurrentIdx(idx)
-  }
-
   function handleSave(visible: SportKey[], defaultKey: SportKey) {
     const next: Settings = { visible, default: defaultKey }
     setSettings(next)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
     setShowModal(false)
-    const newIdx = Math.max(0, visible.indexOf(defaultKey))
-    setCurrentIdx(newIdx)
-    requestAnimationFrame(() => {
-      const el = scrollRef.current
-      if (el) el.scrollLeft = newIdx * el.clientWidth
-    })
+    setCurrentIdx(Math.max(0, visible.indexOf(defaultKey)))
   }
 
   return (
@@ -374,77 +346,74 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
       </div>
 
       {/* Carousel — one panel per sport, computed via sportViews */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex overflow-x-auto [&::-webkit-scrollbar]:hidden"
-        style={{ scrollSnapType: 'x proximity', scrollbarWidth: 'none' }}
-      >
-        {visibleSports.map((sportKey) => {
+      <SportsCarousel
+        idx={safeIdx}
+        onIdxChange={setCurrentIdx}
+        slides={visibleSports.map((sportKey) => {
           const scfg = SPORT_CONFIG[sportKey]
           const view = sportViews[sportKey]
           const durLabel = fmtDuration(view.totalKm, view.totalDPlus)
-          return (
-            <div
-              key={sportKey}
-              style={{ flexShrink: 0, width: '100%', scrollSnapAlign: 'start' }}
-            >
-              <div
-                className="flex gap-[5px]"
-                style={{ overflowX: period === 'year' ? 'auto' : 'visible' }}
-              >
-                {view.pills.length > 0 ? (
-                  view.pills.map((pill, i) => (
-                    <HistoryPill
-                      key={i}
-                      label={pill.label}
-                      km={pill.km}
-                      dPlus={pill.dPlus}
-                      flex={period !== 'year'}
-                      color={scfg.color}
-                    />
-                  ))
-                ) : (
-                  <div className="flex-1 text-center text-[12px] text-trail-muted py-3">
-                    Aucune donnée
-                  </div>
-                )}
-              </div>
+          return {
+            key: sportKey,
+            node: (
+              <>
+                <div
+                  className="flex gap-[5px]"
+                  style={{ overflowX: period === 'year' ? 'auto' : 'visible' }}
+                >
+                  {view.pills.length > 0 ? (
+                    view.pills.map((pill, i) => (
+                      <HistoryPill
+                        key={i}
+                        label={pill.label}
+                        km={pill.km}
+                        dPlus={pill.dPlus}
+                        flex={period !== 'year'}
+                        color={scfg.color}
+                      />
+                    ))
+                  ) : (
+                    <div className="flex-1 text-center text-[12px] text-trail-muted py-3">
+                      Aucune donnée
+                    </div>
+                  )}
+                </div>
 
-              {/* Summary row — Total / D+ / Durée */}
-              <div
-                className="flex justify-around items-center mt-[8px] pt-[8px]"
-                style={{ borderTop: `1px solid ${colors.border}` }}
-              >
-                <div className="flex flex-col items-center gap-[1px]">
-                  <span style={{ fontSize: 13, fontWeight: 800, color: scfg.color }}>
-                    {view.totalKm > 0
-                      ? (view.totalKm < 10 ? view.totalKm.toFixed(1) : Math.round(view.totalKm))
-                      : '—'}
-                    {view.totalKm > 0 && (
-                      <span style={{ fontSize: 9, fontWeight: 400, color: colors.subtleText }}> km</span>
-                    )}
-                  </span>
-                  <span style={{ fontSize: 9, color: colors.subtleText }}>Total</span>
+                {/* Summary row — Total / D+ / Durée */}
+                <div
+                  className="flex justify-around items-center mt-[8px] pt-[8px]"
+                  style={{ borderTop: `1px solid ${colors.border}` }}
+                >
+                  <div className="flex flex-col items-center gap-[1px]">
+                    <span style={{ fontSize: 13, fontWeight: 800, color: scfg.color }}>
+                      {view.totalKm > 0
+                        ? (view.totalKm < 10 ? view.totalKm.toFixed(1) : Math.round(view.totalKm))
+                        : '—'}
+                      {view.totalKm > 0 && (
+                        <span style={{ fontSize: 9, fontWeight: 400, color: colors.subtleText }}> km</span>
+                      )}
+                    </span>
+                    <span style={{ fontSize: 9, color: colors.subtleText }}>Total</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-[1px]">
+                    <span style={{ fontSize: 13, fontWeight: 800, color: '#4db6f0' }}>
+                      {view.totalDPlus > 0 ? `${view.totalDPlus}` : '—'}
+                      {view.totalDPlus > 0 && (
+                        <span style={{ fontSize: 9, fontWeight: 400, color: colors.subtleText }}> m</span>
+                      )}
+                    </span>
+                    <span style={{ fontSize: 9, color: colors.subtleText }}>D+</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-[1px]">
+                    <span style={{ fontSize: 13, fontWeight: 800, color: '#4caf50' }}>{durLabel}</span>
+                    <span style={{ fontSize: 9, color: colors.subtleText }}>Durée</span>
+                  </div>
                 </div>
-                <div className="flex flex-col items-center gap-[1px]">
-                  <span style={{ fontSize: 13, fontWeight: 800, color: '#4db6f0' }}>
-                    {view.totalDPlus > 0 ? `${view.totalDPlus}` : '—'}
-                    {view.totalDPlus > 0 && (
-                      <span style={{ fontSize: 9, fontWeight: 400, color: colors.subtleText }}> m</span>
-                    )}
-                  </span>
-                  <span style={{ fontSize: 9, color: colors.subtleText }}>D+</span>
-                </div>
-                <div className="flex flex-col items-center gap-[1px]">
-                  <span style={{ fontSize: 13, fontWeight: 800, color: '#4caf50' }}>{durLabel}</span>
-                  <span style={{ fontSize: 9, color: colors.subtleText }}>Durée</span>
-                </div>
-              </div>
-            </div>
-          )
+              </>
+            ),
+          }
         })}
-      </div>
+      />
 
       {/* Dots */}
       {visibleSports.length > 1 && (
@@ -452,7 +421,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
           {visibleSports.map((sportKey, i) => (
             <button
               key={sportKey}
-              onClick={() => scrollTo(i)}
+              onClick={() => setCurrentIdx(i)}
               aria-label={`Sport ${i + 1}`}
               className={`w-[6px] h-[6px] rounded-full transition-colors ${
                 i === safeIdx ? 'bg-trail-text' : 'bg-trail-border'

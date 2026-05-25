@@ -1,7 +1,7 @@
 // web/components/cockpit/ActivitiesBlock.tsx
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import type { SportOverview } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import { readSportSettings } from '@/lib/design/sport-settings'
@@ -9,6 +9,7 @@ import { CockpitKpiTile } from '@/components/ui/CockpitKpiTile'
 import { TsbBadge } from '@/components/ui/TsbBadge'
 import { FreshnessHelpSheet } from '@/components/ui/FreshnessHelpSheet'
 import { SportSettingsModal } from './SportSettingsModal'
+import { SportsCarousel } from './SportsCarousel'
 import { colors } from '@/lib/design/colors'
 import { kpiStatusFreshness } from '@/lib/analytics/charge-kpi-status'
 
@@ -41,16 +42,6 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
   })
   const [showModal,   setShowModal]   = useState(false)
   const [showFreshnessHelp, setShowFreshnessHelp] = useState(false)
-  const scrollRef = useRef<HTMLDivElement>(null)
-
-  // Sync visuel du scroll horizontal après le 1er paint (DOM dispo).
-  useEffect(() => {
-    if (currentIdx > 0) {
-      const el = scrollRef.current
-      if (el) el.scrollLeft = currentIdx * el.clientWidth
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const visibleSports = settings.visible.filter((k) => k in sportOverviews)
   if (visibleSports.length === 0) return null
@@ -58,29 +49,12 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
   const activeSport = visibleSports[safeIdx]
   const cfg = SPORT_CONFIG[activeSport]
 
-  function handleScroll() {
-    const el = scrollRef.current
-    if (!el || el.clientWidth === 0) return
-    setCurrentIdx(Math.min(Math.round(el.scrollLeft / el.clientWidth), visibleSports.length - 1))
-  }
-
-  function scrollTo(idx: number) {
-    const el = scrollRef.current
-    if (el) el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' })
-    setCurrentIdx(idx)
-  }
-
   function handleSave(visible: SportKey[], defaultKey: SportKey) {
     const next: Settings = { visible, default: defaultKey }
     setSettings(next)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
     setShowModal(false)
-    const newIdx = Math.max(0, visible.indexOf(defaultKey))
-    setCurrentIdx(newIdx)
-    requestAnimationFrame(() => {
-      const el = scrollRef.current
-      if (el) el.scrollLeft = newIdx * el.clientWidth
-    })
+    setCurrentIdx(Math.max(0, visible.indexOf(defaultKey)))
   }
 
   return (
@@ -104,13 +78,10 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
       </div>
 
       {/* Carousel */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex overflow-x-auto [&::-webkit-scrollbar]:hidden"
-        style={{ scrollSnapType: 'x proximity', scrollbarWidth: 'none' }}
-      >
-        {visibleSports.map((sportKey) => {
+      <SportsCarousel
+        idx={safeIdx}
+        onIdxChange={setCurrentIdx}
+        slides={visibleSports.map((sportKey) => {
           const scfg = SPORT_CONFIG[sportKey]
           const sov  = sportOverviews[sportKey]
           const kmNorm   = normalize(sov.dailyKm)
@@ -122,64 +93,64 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
           const mdpNorm  = normalize(sov.monthlyDPlus)
           const mdpLabels = sov.monthlyDPlus.map(formatDPlusLabel)
 
-          return (
-            <div
-              key={sportKey}
-              style={{ flexShrink: 0, width: '100%', scrollSnapAlign: 'start' }}
-            >
-              <div className="grid grid-cols-2 gap-[6px]">
-                <CockpitKpiTile
-                  title="Km semaine"
-                  subline={`${sov.weekSessions} séance${sov.weekSessions !== 1 ? 's' : ''}`}
-                  barValues={kmNorm} barLabels={kmLabels} barColor={scfg.color}
-                >
-                  <div className="flex items-baseline gap-[3px]">
-                    <span className="text-[21px] font-black leading-none text-trail-text">{sov.weekKm}</span>
-                    <span className="text-[14px] text-trail-muted">km</span>
-                  </div>
-                </CockpitKpiTile>
+          return {
+            key: sportKey,
+            node: (
+              <>
+                <div className="grid grid-cols-2 gap-[6px]">
+                  <CockpitKpiTile
+                    title="Km semaine"
+                    subline={`${sov.weekSessions} séance${sov.weekSessions !== 1 ? 's' : ''}`}
+                    barValues={kmNorm} barLabels={kmLabels} barColor={scfg.color}
+                  >
+                    <div className="flex items-baseline gap-[3px]">
+                      <span className="text-[21px] font-black leading-none text-trail-text">{sov.weekKm}</span>
+                      <span className="text-[14px] text-trail-muted">km</span>
+                    </div>
+                  </CockpitKpiTile>
 
-                <CockpitKpiTile
-                  title="D+ semaine"
-                  subline="Dénivelé positif"
-                  barValues={dpNorm} barLabels={dpLabels} barColor={colors.seriesBlue}
-                >
-                  <div className="flex items-baseline gap-[3px]">
-                    <span className="text-[21px] font-black leading-none text-trail-text">{sov.weekDPlus}</span>
-                    <span className="text-[14px] text-trail-muted">m</span>
-                  </div>
-                </CockpitKpiTile>
-              </div>
+                  <CockpitKpiTile
+                    title="D+ semaine"
+                    subline="Dénivelé positif"
+                    barValues={dpNorm} barLabels={dpLabels} barColor={colors.seriesBlue}
+                  >
+                    <div className="flex items-baseline gap-[3px]">
+                      <span className="text-[21px] font-black leading-none text-trail-text">{sov.weekDPlus}</span>
+                      <span className="text-[14px] text-trail-muted">m</span>
+                    </div>
+                  </CockpitKpiTile>
+                </div>
 
-              <div className="h-[6px]" />
+                <div className="h-[6px]" />
 
-              <div className="grid grid-cols-2 gap-[6px]">
-                <CockpitKpiTile
-                  title="Km année"
-                  subline={`${sov.ytdSessions} séance${sov.ytdSessions !== 1 ? 's' : ''}`}
-                  barValues={mNorm} barLabels={mLabels} barColor={scfg.color}
-                >
-                  <div className="flex items-baseline gap-[3px]">
-                    <span className="text-[18px] font-black leading-none text-trail-text">{sov.ytdKm}</span>
-                    <span className="text-[14px] text-trail-muted">km</span>
-                  </div>
-                </CockpitKpiTile>
+                <div className="grid grid-cols-2 gap-[6px]">
+                  <CockpitKpiTile
+                    title="Km année"
+                    subline={`${sov.ytdSessions} séance${sov.ytdSessions !== 1 ? 's' : ''}`}
+                    barValues={mNorm} barLabels={mLabels} barColor={scfg.color}
+                  >
+                    <div className="flex items-baseline gap-[3px]">
+                      <span className="text-[18px] font-black leading-none text-trail-text">{sov.ytdKm}</span>
+                      <span className="text-[14px] text-trail-muted">km</span>
+                    </div>
+                  </CockpitKpiTile>
 
-                <CockpitKpiTile
-                  title="D+ année"
-                  subline="Dénivelé positif"
-                  barValues={mdpNorm} barLabels={mdpLabels} barColor={colors.seriesBlue}
-                >
-                  <div className="flex items-baseline gap-[3px]">
-                    <span className="text-[18px] font-black leading-none text-trail-text">{sov.ytdDPlus.toLocaleString('fr-FR')}</span>
-                    <span className="text-[14px] text-trail-muted">m</span>
-                  </div>
-                </CockpitKpiTile>
-              </div>
-            </div>
-          )
+                  <CockpitKpiTile
+                    title="D+ année"
+                    subline="Dénivelé positif"
+                    barValues={mdpNorm} barLabels={mdpLabels} barColor={colors.seriesBlue}
+                  >
+                    <div className="flex items-baseline gap-[3px]">
+                      <span className="text-[18px] font-black leading-none text-trail-text">{sov.ytdDPlus.toLocaleString('fr-FR')}</span>
+                      <span className="text-[14px] text-trail-muted">m</span>
+                    </div>
+                  </CockpitKpiTile>
+                </div>
+              </>
+            ),
+          }
         })}
-      </div>
+      />
 
       {/* Dots */}
       {visibleSports.length > 1 && (
@@ -187,7 +158,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
           {visibleSports.map((sportKey, i) => (
             <button
               key={sportKey}
-              onClick={() => scrollTo(i)}
+              onClick={() => setCurrentIdx(i)}
               aria-label={`Sport ${i + 1}`}
               className={`w-[6px] h-[6px] rounded-full transition-colors ${
                 i === safeIdx ? 'bg-trail-text' : 'bg-trail-border'

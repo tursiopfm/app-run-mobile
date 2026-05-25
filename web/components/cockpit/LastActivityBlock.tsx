@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ActivityCard, type ActivityRow } from '@/components/ui/ActivityCard'
 import { EditActivityModal } from '@/components/ui/EditActivityModal'
 import { SportSettingsModal } from './SportSettingsModal'
+import { SportsCarousel } from './SportsCarousel'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import { readSportSettings } from '@/lib/design/sport-settings'
 import { calculateHrZones, type HrZone, type HrZoneMethod } from '@/lib/health/hr-zones'
@@ -57,15 +58,6 @@ export function LastActivityBlock({ latestPerSport, athleteProfile, onHide }: Pr
   const [showModal,  setShowModal]  = useState(false)
   const [editing,    setEditing]    = useState<ActivityRow | null>(null)
   const [hrZones,    setHrZones]    = useState<HrZone[]>(() => computeHrZones(athleteProfile))
-  const scrollRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (currentIdx > 0) {
-      const el = scrollRef.current
-      if (el) el.scrollLeft = currentIdx * el.clientWidth
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // Recalcule les zones si le profil change (rare — la page Cockpit reçoit le
   // profile en props server-side, donc stable durant la session).
@@ -80,29 +72,12 @@ export function LastActivityBlock({ latestPerSport, athleteProfile, onHide }: Pr
   const cfg = SPORT_CONFIG[activeSport]
   const activeActivity = latestPerSport[activeSport]
 
-  function handleScroll() {
-    const el = scrollRef.current
-    if (!el || el.clientWidth === 0) return
-    setCurrentIdx(Math.min(Math.round(el.scrollLeft / el.clientWidth), visibleSports.length - 1))
-  }
-
-  function scrollTo(idx: number) {
-    const el = scrollRef.current
-    if (el) el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' })
-    setCurrentIdx(idx)
-  }
-
   function handleSave(visible: SportKey[], defaultKey: SportKey) {
     const next: Settings = { visible, default: defaultKey }
     setSettings(next)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
     setShowModal(false)
-    const newIdx = Math.max(0, visible.indexOf(defaultKey))
-    setCurrentIdx(newIdx)
-    requestAnimationFrame(() => {
-      const el = scrollRef.current
-      if (el) el.scrollLeft = newIdx * el.clientWidth
-    })
+    setCurrentIdx(Math.max(0, visible.indexOf(defaultKey)))
   }
 
   return (
@@ -135,42 +110,35 @@ export function LastActivityBlock({ latestPerSport, athleteProfile, onHide }: Pr
         </div>
       </div>
 
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex overflow-x-auto [&::-webkit-scrollbar]:hidden"
-        style={{ scrollSnapType: 'x proximity', scrollbarWidth: 'none' }}
-      >
-        {visibleSports.map((sportKey) => {
+      <SportsCarousel
+        idx={safeIdx}
+        onIdxChange={setCurrentIdx}
+        slides={visibleSports.map((sportKey) => {
           const act = latestPerSport[sportKey]
-          return (
-            <div
-              key={sportKey}
-              style={{ flexShrink: 0, width: '100%', scrollSnapAlign: 'start' }}
-            >
-              {act ? (
-                <ActivityCard
-                  activity={act}
-                  hrZones={hrZones}
-                  embedded
-                  onClick={() => router.push(`/activities/${act.id}`)}
-                />
-              ) : (
-                <p className="text-[13px] py-2" style={{ color: colors.subtleText }}>
-                  Aucune activité {SPORT_CONFIG[sportKey].label.toLowerCase()}.
-                </p>
-              )}
-            </div>
-          )
+          return {
+            key: sportKey,
+            node: act ? (
+              <ActivityCard
+                activity={act}
+                hrZones={hrZones}
+                embedded
+                onClick={() => router.push(`/activities/${act.id}`)}
+              />
+            ) : (
+              <p className="text-[13px] py-2" style={{ color: colors.subtleText }}>
+                Aucune activité {SPORT_CONFIG[sportKey].label.toLowerCase()}.
+              </p>
+            ),
+          }
         })}
-      </div>
+      />
 
       {visibleSports.length > 1 && (
         <div className="flex justify-center gap-[6px] mt-[8px]">
           {visibleSports.map((sportKey, i) => (
             <button
               key={sportKey}
-              onClick={() => scrollTo(i)}
+              onClick={() => setCurrentIdx(i)}
               aria-label={`Sport ${i + 1}`}
               className={`w-[6px] h-[6px] rounded-full transition-colors ${
                 i === safeIdx ? 'bg-trail-text' : 'bg-trail-border'

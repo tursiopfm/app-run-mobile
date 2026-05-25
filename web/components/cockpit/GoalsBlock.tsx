@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { GoalProgressRow } from '@/components/ui/GoalProgressRow'
 import { SportSettingsModal } from './SportSettingsModal'
+import { SportsCarousel } from './SportsCarousel'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import type { SportOverview } from '@/lib/data/dashboard'
 import { getCurrentPlan, peekMacros, pickActiveMacrocycle } from '@/lib/plan/storage'
@@ -83,16 +84,6 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
   const [showConfig, setShowConfig] = useState(false)
   const [editSport,  setEditSport]  = useState<SportKey | null>(null)
   const [draft,      setDraft]      = useState<Goals>(DEFAULT_GOALS.run)
-  const scrollRef = useRef<HTMLDivElement>(null)
-
-  // Sync visuel du scroll horizontal après le 1er paint (DOM dispo).
-  useEffect(() => {
-    if (activeIdx > 0) {
-      const el = scrollRef.current
-      if (el) el.scrollLeft = activeIdx * el.clientWidth
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // Revalide la cible hebdo en background contre Supabase (cas où le snapshot
   // LS est obsolète — ex. plan modifié sur un autre device).
@@ -125,29 +116,12 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
     }
   }, [targets, planWeekly])
 
-  function handleScroll() {
-    const el = scrollRef.current
-    if (!el) return
-    setActiveIdx(Math.round(el.scrollLeft / el.clientWidth))
-  }
-
-  function scrollTo(idx: number) {
-    const el = scrollRef.current
-    if (el) el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' })
-    setActiveIdx(idx)
-  }
-
   function saveSettings(visible: SportKey[], def: SportKey) {
     const s: Settings = { visible, default: def }
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(s))
     setSettings(s)
     setShowConfig(false)
-    const newIdx = Math.max(0, visible.indexOf(def))
-    setActiveIdx(newIdx)
-    requestAnimationFrame(() => {
-      const el = scrollRef.current
-      if (el) el.scrollLeft = newIdx * el.clientWidth
-    })
+    setActiveIdx(Math.max(0, visible.indexOf(def)))
   }
 
   function openEdit(sport: SportKey) {
@@ -187,101 +161,97 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
   return (
     <>
       <div className="rounded-[12px] bg-trail-card border border-trail-border overflow-hidden">
-        <div
-          ref={scrollRef}
-          onScroll={handleScroll}
-          className="flex overflow-x-auto"
-          style={{ scrollSnapType: 'x proximity', scrollbarWidth: 'none' }}
-        >
-          {visibleSports.map((sport) => {
+        <SportsCarousel
+          idx={activeIdx}
+          onIdxChange={setActiveIdx}
+          slides={visibleSports.map((sport) => {
             const cfg = SPORT_CONFIG[sport]
             const sov = sportOverviews[sport]
             const tgt = effectiveGoals(sport)
-            return (
-              <div
-                key={sport}
-                className="min-w-full p-[10px]"
-                style={{ scrollSnapAlign: 'start' }}
-              >
-                <div className="flex items-center justify-between mb-[10px]">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[15px] font-semibold text-trail-muted">Objectifs —</span>
-                    <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>
-                      {cfg.label}
-                    </span>
+            return {
+              key: sport,
+              node: (
+                <div className="p-[10px]">
+                  <div className="flex items-center justify-between mb-[10px]">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[15px] font-semibold text-trail-muted">Objectifs —</span>
+                      <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>
+                        {cfg.label}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openEdit(sport)}
+                        className="text-trail-muted hover:text-trail-text transition-colors p-0.5"
+                        aria-label="Modifier les objectifs"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setShowConfig(true)}
+                        className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
+                        aria-label="Paramètres"
+                      >
+                        ⋮
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => openEdit(sport)}
-                      className="text-trail-muted hover:text-trail-text transition-colors p-0.5"
-                      aria-label="Modifier les objectifs"
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => setShowConfig(true)}
-                      className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
-                      aria-label="Paramètres"
-                    >
-                      ⋮
-                    </button>
-                  </div>
-                </div>
 
-                <div className="space-y-[10px]">
-                  <GoalProgressRow
-                    label="Km semaine"
-                    current={sov.weekKm}
-                    target={tgt.weekKm}
-                    unit="km"
-                    color="#FF6B35"
-                  />
-                  {sport !== 'swim' && (
+                  <div className="space-y-[10px]">
                     <GoalProgressRow
-                      label="D+ semaine"
-                      current={sov.weekDPlus}
-                      target={tgt.weekDPlus}
-                      unit="m"
-                      color="#38BDF8"
+                      label="Km semaine"
+                      current={sov.weekKm}
+                      target={tgt.weekKm}
+                      unit="km"
+                      color="#FF6B35"
                     />
-                  )}
-                  {(() => {
-                    const now = new Date()
-                    const start = new Date(now.getFullYear(), 0, 1)
-                    const dayOfYear = Math.ceil((now.getTime() - start.getTime()) / 86400000)
-                    const expectedKm = (tgt.yearKm * dayOfYear) / 365
-                    const diff = sov.ytdKm - expectedKm
-                    const diffLabel = `${diff >= 0 ? '+' : ''}${Math.round(diff)} km vs objectif`
-                    return (
-                      <div>
-                        <GoalProgressRow
-                          label="Km année"
-                          current={sov.ytdKm}
-                          target={tgt.yearKm}
-                          unit="km"
-                          color="#4ADE80"
-                        />
-                        <p className="text-[12px] text-right mt-[3px]" style={{ color: diff >= 0 ? '#4ADE80' : '#ef4444' }}>
-                          {diffLabel}
-                        </p>
-                      </div>
-                    )
-                  })()}
+                    {sport !== 'swim' && (
+                      <GoalProgressRow
+                        label="D+ semaine"
+                        current={sov.weekDPlus}
+                        target={tgt.weekDPlus}
+                        unit="m"
+                        color="#38BDF8"
+                      />
+                    )}
+                    {(() => {
+                      const now = new Date()
+                      const start = new Date(now.getFullYear(), 0, 1)
+                      const dayOfYear = Math.ceil((now.getTime() - start.getTime()) / 86400000)
+                      const expectedKm = (tgt.yearKm * dayOfYear) / 365
+                      const diff = sov.ytdKm - expectedKm
+                      const diffLabel = `${diff >= 0 ? '+' : ''}${Math.round(diff)} km vs objectif`
+                      return (
+                        <div>
+                          <GoalProgressRow
+                            label="Km année"
+                            current={sov.ytdKm}
+                            target={tgt.yearKm}
+                            unit="km"
+                            color="#4ADE80"
+                          />
+                          <p className="text-[12px] text-right mt-[3px]" style={{ color: diff >= 0 ? '#4ADE80' : '#ef4444' }}>
+                            {diffLabel}
+                          </p>
+                        </div>
+                      )
+                    })()}
+                  </div>
                 </div>
-              </div>
-            )
+              ),
+            }
           })}
-        </div>
+        />
 
         {visibleSports.length > 1 && (
           <div className="flex justify-center gap-1.5 pb-2">
             {visibleSports.map((sport, i) => (
               <button
                 key={sport}
-                onClick={() => scrollTo(i)}
+                onClick={() => setActiveIdx(i)}
                 className="rounded-full transition-all"
                 style={{
                   width:           i === activeIdx ? 16 : 6,

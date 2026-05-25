@@ -1,13 +1,14 @@
 // web/components/cockpit/CumulBlock.tsx
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import type { SportOverview } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import { readSportSettings } from '@/lib/design/sport-settings'
 import { colors } from '@/lib/design/colors'
 import { CockpitCumulChart } from '@/components/charts/CockpitCumulChart'
 import { SportSettingsModal } from './SportSettingsModal'
+import { SportsCarousel } from './SportsCarousel'
 import { YearRangeSelector } from './YearRangeSelector'
 
 type Settings = { visible: SportKey[]; default: SportKey; yearWindow: number }
@@ -30,33 +31,12 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
   })
   const [showModal,  setShowModal]  = useState(false)
   const [period,     setPeriod]     = useState<Period>('month')
-  const scrollRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (currentIdx > 0) {
-      const el = scrollRef.current
-      if (el) el.scrollLeft = currentIdx * el.clientWidth
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const visibleSports = settings.visible.filter((k) => k in sportOverviews)
   if (visibleSports.length === 0) return null
   const safeIdx = Math.min(currentIdx, visibleSports.length - 1)
   const activeSport = visibleSports[safeIdx]
   const cfg = SPORT_CONFIG[activeSport]
-
-  function handleScroll() {
-    const el = scrollRef.current
-    if (!el || el.clientWidth === 0) return
-    setCurrentIdx(Math.min(Math.round(el.scrollLeft / el.clientWidth), visibleSports.length - 1))
-  }
-
-  function scrollTo(idx: number) {
-    const el = scrollRef.current
-    if (el) el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' })
-    setCurrentIdx(idx)
-  }
 
   function persist(next: Settings) {
     setSettings(next)
@@ -66,12 +46,7 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
   function handleSave(visible: SportKey[], defaultKey: SportKey) {
     persist({ ...settings, visible, default: defaultKey })
     setShowModal(false)
-    const newIdx = Math.max(0, visible.indexOf(defaultKey))
-    setCurrentIdx(newIdx)
-    requestAnimationFrame(() => {
-      const el = scrollRef.current
-      if (el) el.scrollLeft = newIdx * el.clientWidth
-    })
+    setCurrentIdx(Math.max(0, visible.indexOf(defaultKey)))
   }
 
   function handleYearWindow(n: number) {
@@ -117,13 +92,10 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
       </div>
 
       {/* Carousel */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex overflow-x-auto [&::-webkit-scrollbar]:hidden"
-        style={{ scrollSnapType: 'x proximity', scrollbarWidth: 'none' }}
-      >
-        {visibleSports.map((sportKey) => {
+      <SportsCarousel
+        idx={safeIdx}
+        onIdxChange={setCurrentIdx}
+        slides={visibleSports.map((sportKey) => {
           const sov = sportOverviews[sportKey]
           const fullSeries = period === 'month' ? sov.cumulMonths : sov.cumulYears
           const series =
@@ -131,24 +103,24 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
               ? fullSeries.slice(-Math.max(1, settings.yearWindow))
               : fullSeries
 
-          return (
-            <div
-              key={sportKey}
-              style={{ flexShrink: 0, width: '100%', scrollSnapAlign: 'start' }}
-            >
-              <CockpitCumulChart months={series} height={220} mode={period} />
-              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
-                {series.map((m) => (
-                  <span key={m.label} className="flex items-center gap-1 text-[11px] text-trail-muted">
-                    <span className="inline-block w-3 h-[3px] rounded-full" style={{ backgroundColor: m.color }} />
-                    {m.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )
+          return {
+            key: sportKey,
+            node: (
+              <>
+                <CockpitCumulChart months={series} height={220} mode={period} />
+                <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                  {series.map((m) => (
+                    <span key={m.label} className="flex items-center gap-1 text-[11px] text-trail-muted">
+                      <span className="inline-block w-3 h-[3px] rounded-full" style={{ backgroundColor: m.color }} />
+                      {m.label}
+                    </span>
+                  ))}
+                </div>
+              </>
+            ),
+          }
         })}
-      </div>
+      />
 
       {/* Year-range selector (active sport only, year mode only) */}
       {period === 'year' && sportOverviews[activeSport].cumulYears.length > 1 && (
@@ -165,7 +137,7 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
           {visibleSports.map((sportKey, i) => (
             <button
               key={sportKey}
-              onClick={() => scrollTo(i)}
+              onClick={() => setCurrentIdx(i)}
               aria-label={`Sport ${i + 1}`}
               className={`w-[6px] h-[6px] rounded-full transition-colors ${
                 i === safeIdx ? 'bg-trail-text' : 'bg-trail-border'

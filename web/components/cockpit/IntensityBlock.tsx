@@ -1,12 +1,13 @@
 // web/components/cockpit/IntensityBlock.tsx
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import type { SportOverview } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import { readSportSettings } from '@/lib/design/sport-settings'
 import { CockpitPieChart, type PieSlice } from '@/components/charts/CockpitPieChart'
 import { SportSettingsModal } from './SportSettingsModal'
+import { SportsCarousel } from './SportsCarousel'
 import { SESSION_TYPE_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
 import { TypeIcon, UnknownTypeIcon } from '@/components/activity/indicatorIcons'
 
@@ -25,15 +26,6 @@ export function IntensityBlock({ sportOverviews, onHide }: Props) {
     return Math.max(0, s.visible.indexOf(s.default))
   })
   const [showModal,  setShowModal]  = useState(false)
-  const scrollRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (currentIdx > 0) {
-      const el = scrollRef.current
-      if (el) el.scrollLeft = currentIdx * el.clientWidth
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const visibleSports = settings.visible.filter((k) => k in sportOverviews)
   if (visibleSports.length === 0) return null
@@ -41,29 +33,12 @@ export function IntensityBlock({ sportOverviews, onHide }: Props) {
   const activeSport = visibleSports[safeIdx]
   const cfg = SPORT_CONFIG[activeSport]
 
-  function handleScroll() {
-    const el = scrollRef.current
-    if (!el || el.clientWidth === 0) return
-    setCurrentIdx(Math.min(Math.round(el.scrollLeft / el.clientWidth), visibleSports.length - 1))
-  }
-
-  function scrollTo(idx: number) {
-    const el = scrollRef.current
-    if (el) el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' })
-    setCurrentIdx(idx)
-  }
-
   function handleSave(visible: SportKey[], defaultKey: SportKey) {
     const next: Settings = { visible, default: defaultKey }
     setSettings(next)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
     setShowModal(false)
-    const newIdx = Math.max(0, visible.indexOf(defaultKey))
-    setCurrentIdx(newIdx)
-    requestAnimationFrame(() => {
-      const el = scrollRef.current
-      if (el) el.scrollLeft = newIdx * el.clientWidth
-    })
+    setCurrentIdx(Math.max(0, visible.indexOf(defaultKey)))
   }
 
   return (
@@ -84,13 +59,10 @@ export function IntensityBlock({ sportOverviews, onHide }: Props) {
       </div>
 
       {/* Carousel */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex overflow-x-auto [&::-webkit-scrollbar]:hidden"
-        style={{ scrollSnapType: 'x proximity', scrollbarWidth: 'none' }}
-      >
-        {visibleSports.map((sportKey) => {
+      <SportsCarousel
+        idx={safeIdx}
+        onIdxChange={setCurrentIdx}
+        slides={visibleSports.map((sportKey) => {
           const sov = sportOverviews[sportKey]
           const pieData: PieSlice[] = sov.workoutTypeBreakdown.map((s) => ({
             label: s.type === null ? 'Non défini' : SESSION_TYPE_LABELS[s.type],
@@ -99,16 +71,12 @@ export function IntensityBlock({ sportOverviews, onHide }: Props) {
             icon:  s.type === null ? <UnknownTypeIcon size={18} /> : <TypeIcon type={s.type} size={18} />,
           }))
 
-          return (
-            <div
-              key={sportKey}
-              style={{ flexShrink: 0, width: '100%', scrollSnapAlign: 'start' }}
-            >
-              <CockpitPieChart data={pieData} />
-            </div>
-          )
+          return {
+            key: sportKey,
+            node: <CockpitPieChart data={pieData} />,
+          }
         })}
-      </div>
+      />
 
       {/* Dots */}
       {visibleSports.length > 1 && (
@@ -116,7 +84,7 @@ export function IntensityBlock({ sportOverviews, onHide }: Props) {
           {visibleSports.map((sportKey, i) => (
             <button
               key={sportKey}
-              onClick={() => scrollTo(i)}
+              onClick={() => setCurrentIdx(i)}
               aria-label={`Sport ${i + 1}`}
               className={`w-[6px] h-[6px] rounded-full transition-colors ${
                 i === safeIdx ? 'bg-trail-text' : 'bg-trail-border'
