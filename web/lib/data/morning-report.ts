@@ -35,13 +35,13 @@ export async function getMorningReportData(userId: string): Promise<MorningRepor
     supabase
       .from('activities')
       .select('id, sport_type, name, start_time, distance_m, moving_time_sec, elevation_gain_m, avg_hr, ces')
-      .eq('athlete_id', userId)
+      .eq('user_id', userId)
       .order('start_time', { ascending: false })
       .limit(1),
     supabase
       .from('activities')
       .select('distance_m, elevation_gain_m, manual_distance_m, manual_elevation_gain_m')
-      .eq('athlete_id', userId)
+      .eq('user_id', userId)
       .gte('start_time', startOfMonthISO),
   ])
 
