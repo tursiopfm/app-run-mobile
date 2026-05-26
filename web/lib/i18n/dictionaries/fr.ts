@@ -302,7 +302,7 @@ export type Dict = {
     dateLabel: string; paceLabel: string; durationLabel: string; distanceLabel: string; dPlusLabel: string
     allOption: string; allMascAria: string
     placeholderKm: string; placeholderHms: string; placeholderM: string; placeholderPace: string
-    speedLabel: string; cesShortLabel: string
+    speedLabel: string; cesShortLabel: string; tileEffort: string
     historyLoadingHint: string; historyLoading: string
     connectStravaImport: string; noActivityMatch: string
 
@@ -1616,6 +1616,7 @@ export const fr: Dict = {
     placeholderPace:        'mm:ss',
     speedLabel:             'Vitesse',
     cesShortLabel:          'CES',
+    tileEffort:             'Effort',
     historyLoadingHint:     ' (historique en cours de chargement…)',
     historyLoading:         "Chargement de l'historique complet…",
     connectStravaImport:    'Connecte Strava dans Réglages pour importer tes activités.',

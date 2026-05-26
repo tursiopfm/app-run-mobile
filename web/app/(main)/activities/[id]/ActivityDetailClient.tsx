@@ -290,17 +290,17 @@ export function ActivityDetailClient({
   let paceValue: string
   let paceUnit: string
   if (RUN_TYPES.has(effectiveSport)) {
-    paceLabel = 'Allure'
+    paceLabel = A.paceLabel
     paceValue = avgPaceSec > 0 ? fmtPaceSec(avgPaceSec) : '—'
     paceUnit  = '/km'
   } else if (RIDE_TYPES.has(effectiveSport)) {
-    paceLabel = 'Vitesse'
+    paceLabel = A.speedLabel
     paceValue = dist && movingTime && movingTime > 0
       ? ((dist / 1000) / (movingTime / 3600)).toFixed(1)
       : '—'
     paceUnit = 'km/h'
   } else {
-    paceLabel = 'Effort'
+    paceLabel = A.tileEffort
     paceValue = a.ces != null ? Math.round(a.ces).toString() : '—'
     paceUnit  = ''
   }

@@ -709,6 +709,7 @@ export const en: Dict = {
     placeholderPace:        'mm:ss',
     speedLabel:             'Speed',
     cesShortLabel:          'CES',
+    tileEffort:             'Effort',
     historyLoadingHint:     ' (loading history…)',
     historyLoading:         'Loading full history…',
     connectStravaImport:    'Connect Strava in Settings to import your activities.',

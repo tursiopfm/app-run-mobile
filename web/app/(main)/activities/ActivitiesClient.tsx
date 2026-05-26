@@ -254,9 +254,9 @@ function FilterRow({
     <div>
       <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{label}</p>
       <div className="flex items-center gap-2">
-        <span className="text-[11px] text-trail-muted w-4 flex-shrink-0">{L.fromLabel}</span>
+        <span className="text-[11px] text-trail-muted shrink-0 mr-1">{L.fromLabel}</span>
         {left}
-        <span className="text-[11px] text-trail-muted flex-shrink-0">{L.toLabel}</span>
+        <span className="text-[11px] text-trail-muted shrink-0 mx-1">{L.toLabel}</span>
         {right}
         <SortButtons field={sortField} activeField={activeField} activeDir={activeDir} onSort={onSort} />
       </div>
@@ -555,7 +555,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
           <div>
             <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{L.dateLabel}</p>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-trail-muted w-4 flex-shrink-0">{L.fromLabel}</span>
+              <span className="text-[11px] text-trail-muted shrink-0 mr-1">{L.fromLabel}</span>
               <input
                 type="date"
                 value={state.dateFrom}
@@ -563,7 +563,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
                 className={dateInputCls}
                 style={si}
               />
-              <span className="text-[11px] text-trail-muted flex-shrink-0">{L.toLabel}</span>
+              <span className="text-[11px] text-trail-muted shrink-0 mx-1">{L.toLabel}</span>
               <input
                 type="date"
                 value={state.dateTo}
