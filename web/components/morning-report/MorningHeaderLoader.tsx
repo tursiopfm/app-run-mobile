@@ -23,7 +23,7 @@ function weekIndex(startDateISO: string, endDateISO: string, todayDateISO: strin
   return { idx, total }
 }
 
-export function MorningHeaderLoader() {
+export function MorningHeaderLoader({ firstName }: { firstName: string | null }) {
   const [race, setRace] = useState<Race | null>(null)
   const [macro, setMacro] = useState<TrainingPlan | null>(null)
 
@@ -47,6 +47,7 @@ export function MorningHeaderLoader() {
   return (
     <MorningHeader
       date={new Date()}
+      firstName={firstName}
       raceName={race?.name}
       daysToRace={daysToRace != null && daysToRace >= 0 ? daysToRace : null}
       weekIndex={week?.idx ?? null}

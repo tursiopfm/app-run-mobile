@@ -3,9 +3,9 @@
 import type { WeatherResponse } from '@/lib/weather/open-meteo'
 
 type Props =
-  | { status: 'loading' }
-  | { status: 'error' }
-  | { status: 'ready'; data: WeatherResponse }
+  | { status: 'loading'; locationLabel?: string | null }
+  | { status: 'error'; locationLabel?: string | null }
+  | { status: 'ready'; data: WeatherResponse; locationLabel?: string | null }
 
 function weatherEmoji(code: number): string {
   if (code === 0) return '☀️'
@@ -67,6 +67,9 @@ export function WeatherCurrentBlock(props: Props) {
               <p className="text-[28px] leading-none text-trail-text" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{c.tempC}°</p>
               <p className="text-[11px] text-trail-muted">/{c.feelsLikeC}°</p>
             </div>
+            {props.locationLabel && (
+              <p className="text-[10px] mt-0.5 text-trail-muted truncate">{props.locationLabel}</p>
+            )}
             <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-3 text-[11px] text-trail-text">
               <div><span className="text-trail-muted">💨</span> {c.windKmh} km/h</div>
               <div><span className="text-trail-muted">💧</span> {c.precipPct}%</div>

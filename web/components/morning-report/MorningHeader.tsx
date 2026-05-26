@@ -2,6 +2,7 @@
 
 type Props = {
   date:        Date
+  firstName?:  string | null
   raceName?:   string
   daysToRace?: number | null
   weekIndex?:  number | null
@@ -15,8 +16,9 @@ function formatDate(d: Date): string {
   return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`
 }
 
-export function MorningHeader({ date, raceName, daysToRace, weekIndex, totalWeeks }: Props) {
+export function MorningHeader({ date, firstName, raceName, daysToRace, weekIndex, totalWeeks }: Props) {
   const dateLabel = formatDate(date)
+  const greeting = firstName ? `Bonjour ${firstName}` : 'Bonjour'
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       <div className="flex items-end justify-between">
@@ -26,7 +28,7 @@ export function MorningHeader({ date, raceName, daysToRace, weekIndex, totalWeek
             className="text-[26px] leading-none mt-1 text-trail-text"
             style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.02em' }}
           >
-            Bonjour
+            {greeting}
           </h1>
         </div>
         {raceName && daysToRace != null && (

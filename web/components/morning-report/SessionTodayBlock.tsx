@@ -1,14 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { getPlannedSessions } from '@/lib/plan/storage'
-import type { PlannedSession } from '@/types/plan'
+import type { MorningTodaySession } from '@/lib/data/morning-report'
 import { SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
-
-function todayISO(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 const EXTRA_PLAN_LABELS: Record<string, string> = {
   recuperation: 'Récupération',
@@ -23,18 +16,12 @@ function labelForType(type: string): string {
       ?? type
 }
 
-export function SessionTodayBlock() {
-  const [session, setSession] = useState<PlannedSession | null | undefined>(undefined)
+function formatDuration(min: number): string {
+  if (min <= 0) return '—'
+  return min >= 60 ? `${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}` : `${min} min`
+}
 
-  useEffect(() => {
-    const today = todayISO()
-    let cancelled = false
-    getPlannedSessions(today, today)
-      .then(list => { if (!cancelled) setSession(list[0] ?? null) })
-      .catch(() => { if (!cancelled) setSession(null) })
-    return () => { cancelled = true }
-  }, [])
-
+export function SessionTodayBlock({ session }: { session: MorningTodaySession }) {
   if (session && session.type === 'repos') {
     return (
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
@@ -66,8 +53,7 @@ export function SessionTodayBlock() {
       <div className="flex items-center justify-between mb-[6px]">
         <h3 className="text-[15px] font-semibold text-trail-muted">Séance du jour</h3>
       </div>
-      {session === undefined && <p className="text-[12px] text-trail-muted">Chargement…</p>}
-      {session === null && <p className="text-[12px] text-trail-muted">Pas de séance prévue aujourd&apos;hui.</p>}
+      {!session && <p className="text-[12px] text-trail-muted">Pas de séance prévue aujourd&apos;hui.</p>}
       {session && (
         <>
           <h2
@@ -78,7 +64,7 @@ export function SessionTodayBlock() {
           </h2>
           <p className="text-[12px] text-trail-muted mt-1">{labelForType(session.type)}</p>
           <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-trail-border">
-            <Kpi label="Durée"    value={`${session.duration}'`} />
+            <Kpi label="Durée"    value={formatDuration(session.duration)} />
             <Kpi label="Distance" value={session.distance ? `${session.distance} km` : '—'} />
             <Kpi label="D+"       value={session.elevation ? `${session.elevation} m` : '—'} />
           </div>
