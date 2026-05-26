@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Plan — Picker ajout séance (bottom-sheet)</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0F0E;
+    --surface: #111A18;
+    --card: #162420;
+    --border: #1E3530;
+    --text: #E2ECE9;
+    --muted: #8BA8A3;
+    --primary: #FF6B35;
+    --blue: #38BDF8;
+    --green: #4ADE80;
+    --yellow: #FBBF24;
+    --purple: #8B5CF6;
+    --red: #F87171;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #1a1a1a;
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    color: var(--text);
+    padding: 40px 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 40px;
+  }
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; letter-spacing: 2px;
+    color: var(--text); margin: 0 0 8px;
+  }
+  .legend {
+    text-align: center; color: #999; font-size: 13px; max-width: 720px;
+    margin-bottom: 12px;
+  }
+  .scene {
+    display: flex; gap: 32px; align-items: flex-start;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .scene-label {
+    color: #ccc; font-size: 12px; text-align: center;
+    margin-bottom: 12px; font-weight: 600; letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  /* ─── Phone frame ────────────────────────────────────────────── */
+  .phone {
+    width: 390px; height: 780px;
+    background: var(--bg);
+    border-radius: 36px;
+    border: 8px solid #2a2a2a;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 30px 60px rgba(0,0,0,.5);
+  }
+  /* ─── Plan tab background (week view dimmed) ─────────────────── */
+  .bg-week {
+    padding: 16px 12px 0;
+    opacity: 0.35; pointer-events: none;
+  }
+  .bg-week .week-hdr {
+    color: var(--muted); font-size: 11px; margin-bottom: 8px;
+  }
+  .bg-week .week-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+  }
+  .bg-week .day {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-height: 100px;
+    padding: 4px;
+    font-size: 9px;
+    color: var(--muted);
+    text-align: center;
+  }
+  .bg-week .day.active {
+    border-color: var(--primary);
+  }
+  .bg-week .day .num { font-family: 'Bebas Neue'; font-size: 14px; color: var(--text); }
+  .bg-week .day .sess {
+    margin-top: 4px;
+    background: var(--card);
+    border: 1px solid var(--blue);
+    border-radius: 4px;
+    padding: 2px;
+    font-size: 8px;
+    color: var(--text);
+    text-align: left;
+  }
+  .scrim {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(2px);
+  }
+  /* ─── Bottom-sheet ───────────────────────────────────────────── */
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    height: 78%;
+    background: var(--surface);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    box-shadow: 0 -10px 30px rgba(0,0,0,.5);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .sheet .grabber {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 8px auto 4px;
+    flex-shrink: 0;
+  }
+  .sheet-hdr {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .sheet-hdr .title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1px;
+    color: var(--text);
+  }
+  .sheet-hdr .date {
+    font-size: 11px; color: var(--muted); margin-top: 2px;
+  }
+  .sheet-hdr .close {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .sheet-body {
+    flex: 1; overflow-y: auto;
+    padding: 14px 16px 24px;
+  }
+  /* ─── Big create CTA ─────────────────────────────────────────── */
+  .cta-create {
+    width: 100%;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255,107,53,.25);
+  }
+  .cta-create .plus {
+    font-size: 18px; line-height: 1;
+  }
+  /* ─── Divider with label ─────────────────────────────────────── */
+  .divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 18px 0 12px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+  /* ─── Search ─────────────────────────────────────────────────── */
+  .search {
+    position: relative;
+    margin-bottom: 10px;
+  }
+  .search input {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px 10px 36px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .search input::placeholder { color: var(--muted); }
+  .search .icon {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 14px;
+  }
+  /* ─── Filter pills ───────────────────────────────────────────── */
+  .pills {
+    display: flex; gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin: 0 -4px 12px;
+    padding-left: 4px;
+    scrollbar-width: none;
+  }
+  .pills::-webkit-scrollbar { display: none; }
+  .pill {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .pill.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+  /* ─── Template grid ──────────────────────────────────────────── */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .tpl {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+    position: relative;
+    transition: border-color .15s;
+  }
+  .tpl:hover {
+    border-color: var(--primary);
+  }
+  .tpl .type-label {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .tpl .ttl {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px; letter-spacing: 0.5px;
+    color: var(--text); line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .tpl .meta {
+    font-size: 10px; color: var(--muted);
+    display: flex; gap: 8px;
+  }
+  .tpl .int-bar {
+    display: flex; gap: 2px; margin-top: 8px;
+  }
+  .tpl .int-bar span {
+    width: 8px; height: 8px; border-radius: 2px;
+    background: var(--border);
+  }
+  .tpl.int-1 .int-bar span:nth-child(-n+1),
+  .tpl.int-2 .int-bar span:nth-child(-n+2),
+  .tpl.int-3 .int-bar span:nth-child(-n+3),
+  .tpl.int-4 .int-bar span:nth-child(-n+4),
+  .tpl.int-5 .int-bar span:nth-child(-n+5) { background: var(--lvl); }
+  .tpl.int-1 { --lvl: var(--green); }
+  .tpl.int-2 { --lvl: var(--blue); }
+  .tpl.int-3 { --lvl: var(--yellow); }
+  .tpl.int-4 { --lvl: #FB923C; }
+  .tpl.int-5 { --lvl: var(--red); }
+
+  /* type-color accents */
+  .tpl.t-fr  { --tc: var(--red); }
+  .tpl.t-se  { --tc: var(--yellow); }
+  .tpl.t-co  { --tc: var(--purple); }
+  .tpl.t-sl  { --tc: var(--blue); }
+  .tpl.t-fo  { --tc: var(--green); }
+  .tpl .type-label { color: var(--tc); }
+
+  /* ── Scene B (created) ────────────────────────────────────── */
+  .editor-modal {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,.5);
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .editor-card {
+    width: 100%;
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6);
+  }
+  .editor-card .hdr {
+    background: var(--card);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .editor-card .hdr .ttl {
+    font-family: 'Bebas Neue'; font-size: 16px; letter-spacing: 1px;
+  }
+  .editor-card .body { padding: 14px 16px; }
+  .editor-card .row { margin-bottom: 12px; }
+  .editor-card .lbl {
+    font-size: 10px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.5px; font-weight: 700; margin-bottom: 4px;
+  }
+  .editor-card .val {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; font-size: 13px;
+  }
+  .editor-card .val.prefilled {
+    border-color: var(--primary); background: rgba(255,107,53,.08);
+  }
+  .editor-card .row.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .editor-card .actions {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 8px; justify-content: flex-end;
+  }
+  .btn {
+    padding: 8px 14px; border-radius: 8px; font-size: 13px;
+    font-weight: 600; cursor: pointer; border: 1px solid var(--border);
+    background: var(--card); color: var(--text);
+  }
+  .btn.primary {
+    background: var(--primary); border-color: var(--primary); color: #fff;
+  }
+  .prefill-note {
+    background: rgba(255,107,53,.1);
+    border: 1px dashed var(--primary);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 11px;
+    color: var(--primary);
+    margin-bottom: 14px;
+    display: flex; gap: 6px;
+  }
+  .annot {
+    text-align: center; font-size: 12px; color: #888;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+  <div>
+    <h1>Picker d'ajout de séance — bottom-sheet</h1>
+    <p class="legend">
+      Flow proposé : tap sur <code>+</code> dans une journée → <strong>bottom-sheet picker</strong> (scène A) →
+      sélection d'un template → <strong>SessionEditorModal pré-rempli</strong> (scène B). Le bouton orange en
+      haut du picker court-circuite vers l'éditeur vierge.
+    </p>
+  </div>
+
+  <div class="scene">
+    <!-- ═══ Scene A : Picker ═══ -->
+    <div>
+      <div class="scene-label">① Picker ouvert depuis le « + » du mardi</div>
+      <div class="phone">
+        <!-- background plan view -->
+        <div class="bg-week">
+          <div class="week-hdr">Semaine 12 → 18 mai</div>
+          <div class="week-grid">
+            <div class="day"><div class="num">12</div></div>
+            <div class="day active"><div class="num">13</div><div class="sess">Footing</div></div>
+            <div class="day"><div class="num">14</div></div>
+            <div class="day"><div class="num">15</div><div class="sess">VMA</div></div>
+            <div class="day"><div class="num">16</div></div>
+            <div class="day"><div class="num">17</div><div class="sess">SL</div></div>
+            <div class="day"><div class="num">18</div></div>
+          </div>
+        </div>
+        <div class="scrim"></div>
+
+        <div class="sheet">
+          <div class="grabber"></div>
+          <div class="sheet-hdr">
+            <div>
+              <div class="title">AJOUTER UNE SÉANCE</div>
+              <div class="date">Mardi 13 mai 2026</div>
+            </div>
+            <div class="close">✕</div>
+          </div>
+
+          <div class="sheet-body">
+            <button class="cta-create">
+              <span class="plus">＋</span> Créer une nouvelle séance
+            </button>
+
+            <div class="divider">Ou choisir dans la bibliothèque</div>
+
+            <div class="search">
+              <span class="icon">🔍</span>
+              <input placeholder="Rechercher une séance…" />
+            </div>
+
+            <div class="pills">
+              <div class="pill active">Tous</div>
+              <div class="pill">Fractionné</div>
+              <div class="pill">Seuil</div>
+              <div class="pill">Côtes</div>
+              <div class="pill">Sortie longue</div>
+              <div class="pill">Footing</div>
+            </div>
+
+            <div class="grid">
+              <div class="tpl t-fr int-5">
+                <div class="type-label">Fractionné</div>
+                <div class="ttl">VMA 10×400m</div>
+                <div class="meta"><span>45 min</span><span>8 km</span></div>
+                <div class="int-bar"><span></span><span></span><span></span><span></span><span></span></div>
+              </div>
+              <div class="tpl t-se int-4">
+                <div class="type-label">Seuil</div>
+                <div class="ttl">2×20' seuil</div>
+                <div class="meta"><span>60 min</span><span>12 km</span></div>
+                <div class="int-bar"><span></span><span></span><span></span><span></span><span></span></div>
+              </div>
+              <div class="tpl t-co int-4">
+                <div class="type-label">Côtes</div>
+                <div class="ttl">8×1' côtes</div>
+                <div class="meta"><span>50 min</span><span>9 km</span><span>180 m D+</span></div>
+                <div class="int-bar"><span></span><span></span><span></span><span></span><span></span></div>
+              </div>
+              <div class="tpl t-sl int-2">
+                <div class="type-label">Sortie longue</div>
+                <div class="ttl">SL 20 km</div>
+                <div class="meta"><span>2h00</span><span>20 km</span></div>
+                <div class="int-bar"><span></span><span></span><span></span><span></span><span></span></div>
+              </div>
+              <div class="tpl t-fo int-1">
+                <div class="type-label">Footing</div>
+                <div class="ttl">Footing 45'</div>
+                <div class="meta"><span>45 min</span><span>8 km</span></div>
+                <div class="int-bar"><span></span><span></span><span></span><span></span><span></span></div>
+              </div>
+              <div class="tpl t-se int-3">
+                <div class="type-label">Seuil</div>
+                <div class="ttl">Tempo 30'</div>
+                <div class="meta"><span>50 min</span><span>10 km</span></div>
+                <div class="int-bar"><span></span><span></span><span></span><span></span><span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="annot">Scrollable verticalement · pills scrollables horizontalement</div>
+    </div>
+
+    <!-- ═══ Scene B : Editor prefilled (real SessionEditorModal layout) ═══ -->
+    <div>
+      <div class="scene-label">② Après tap sur « VMA 10×400m »</div>
+      <div class="phone">
+        <div class="editor-sheet">
+          <div class="grabber"></div>
+          <div class="ed-title">Créer une séance</div>
+
+          <div class="prefill-note compact">
+            <span>✨</span> Pré-rempli depuis <strong>VMA 10×400m</strong>
+          </div>
+
+          <div class="tabs">
+            <button class="tab active">Général</button>
+            <button class="tab">Structure</button>
+            <button class="tab">Notes</button>
+          </div>
+
+          <div class="ed-body">
+            <div class="field">
+              <label>Titre <span class="req">*</span></label>
+              <input class="input prefilled" value="VMA 10×400m" />
+            </div>
+
+            <div class="field-row">
+              <div class="field grow">
+                <label>Type</label>
+                <select class="input prefilled">
+                  <option>Fractionné</option>
+                </select>
+              </div>
+              <div class="field type-pill-wrap">
+                <label>&nbsp;</label>
+                <span class="type-pill" style="--tp: var(--red)">● Fractionné</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Date <span class="req">*</span></label>
+              <div class="input date-input">
+                13/05/2026
+                <span class="date-icon">📅</span>
+              </div>
+            </div>
+
+            <div class="field-row three">
+              <div class="field">
+                <label>Durée</label>
+                <input class="input prefilled" value="0:45" />
+              </div>
+              <div class="field">
+                <label>Distance (km)</label>
+                <input class="input prefilled" value="8" />
+              </div>
+              <div class="field">
+                <label>D+ (m)</label>
+                <input class="input" value="" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Intensité — Très intense</label>
+              <div class="slider">
+                <div class="slider-track">
+                  <div class="slider-fill" style="width: 100%; background: var(--red)"></div>
+                </div>
+                <div class="slider-thumb" style="left: calc(100% - 8px); background: var(--red)"></div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Charge estimée (TSS)</label>
+              <input class="input prefilled" value="78" />
+            </div>
+          </div>
+
+          <div class="ed-actions">
+            <button class="link-btn">Annuler</button>
+            <button class="primary-btn">Enregistrer</button>
+          </div>
+        </div>
+      </div>
+      <div class="annot">Champs surlignés = pré-remplis depuis le template, tout reste éditable</div>
+    </div>
+  </div>
+
+  <!-- ─── Row 2 : alt scenarios ───────────────────────────────── -->
+  <div class="scene">
+    <!-- ═══ Scene C : Filtre Fractionné actif ═══ -->
+    <div>
+      <div class="scene-label">③ Picker avec filtre « Fractionné » actif</div>
+      <div class="phone">
+        <div class="bg-week">
+          <div class="week-hdr">Semaine 12 → 18 mai</div>
+          <div class="week-grid">
+            <div class="day"><div class="num">12</div></div>
+            <div class="day active"><div class="num">13</div></div>
+            <div class="day"><div class="num">14</div></div>
+            <div class="day"><div class="num">15</div></div>
+            <div class="day"><div class="num">16</div></div>
+            <div class="day"><div class="num">17</div></div>
+            <div class="day"><div class="num">18</div></div>
+          </div>
+        </div>
+        <div class="scrim"></div>
+
+        <div class="sheet">
+          <div class="grabber"></div>
+          <div class="sheet-hdr">
+            <div>
+              <div class="title">AJOUTER UNE SÉANCE</div>
+              <div class="date">Mardi 13 mai 2026</div>
+            </div>
+            <div class="close">✕</div>
+          </div>
+
+          <div class="sheet-body">
+            <button class="cta-create">
+              <span class="plus">＋</span> Créer une nouvelle séance
+            </button>
+
+            <div class="divider">Ou choisir dans la bibliothèque</div>
+
+            <div class="search">
+              <span class="icon">🔍</span>
+              <input placeholder="Rechercher une séance…" />
+            </div>
+
+            <div class="pills">
+              <div class="pill">Tous</div>
+              <div class="pill active" style="background: var(--red); border-color: var(--red)">Fractionné</div>
+              <div class="pill">Seuil</div>
+              <div class="pill">Côtes</div>
+              <div class="pill">Sortie longue</div>
+              <div class="pill">Footing</div>
+            </div>
+
+            <div class="grid">
+              <div class="tpl t-fr int-5">
+                <div class="type-label">Fractionné</div>
+                <div class="ttl">VMA 10×400m</div>
+                <div class="meta"><span>45 min</span><span>8 km</span></div>
+                <div class="int-bar"><span></span><span></span><span></span><span></span><span></span></div>
+              </div>
+              <div class="tpl t-fr int-5">
+                <div class="type-label">Fractionné</div>
+                <div class="ttl">30/30 ×12</div>
+                <div class="meta"><span>40 min</span><span>7 km</span></div>
+                <div class="int-bar"><span></span><span></span><span></span><span></span><span></span></div>
+              </div>
+              <div class="tpl t-fr int-4">
+                <div class="type-label">Fractionné</div>
+                <div class="ttl">6×800m</div>
+                <div class="meta"><span>55 min</span><span>10 km</span></div>
+                <div class="int-bar"><span></span><span></span><span></span><span></span><span></span></div>
+              </div>
+              <div class="tpl t-fr int-4">
+                <div class="type-label">Fractionné</div>
+                <div class="ttl">Pyramide 200-400-600-400-200</div>
+                <div class="meta"><span>50 min</span><span>9 km</span></div>
+                <div class="int-bar"><span></span><span></span><span></span><span></span><span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="annot">Pill active prend la couleur du type · grille filtrée en live · scroll vertical conserve tout</div>
+    </div>
+
+    <!-- ═══ Scene D : Création vierge via CTA orange ═══ -->
+    <div>
+      <div class="scene-label">④ Après tap sur « Créer une nouvelle séance »</div>
+      <div class="phone">
+        <div class="editor-sheet">
+          <div class="grabber"></div>
+          <div class="ed-title">Créer une séance</div>
+
+          <!-- Pas de bandeau orange : flux vierge -->
+
+          <div class="tabs">
+            <button class="tab active">Général</button>
+            <button class="tab">Structure</button>
+            <button class="tab">Notes</button>
+          </div>
+
+          <div class="ed-body">
+            <div class="field">
+              <label>Titre <span class="req">*</span></label>
+              <input class="input" placeholder="Ex : SL 2h vallonnée" />
+            </div>
+
+            <div class="field-row">
+              <div class="field grow">
+                <label>Type</label>
+                <select class="input">
+                  <option>Sortie longue</option>
+                </select>
+              </div>
+              <div class="field type-pill-wrap">
+                <label>&nbsp;</label>
+                <span class="type-pill" style="--tp: var(--blue)">● Sortie Longue</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Date <span class="req">*</span></label>
+              <div class="input date-input">
+                13/05/2026
+                <span class="date-icon">📅</span>
+              </div>
+            </div>
+
+            <div class="field-row three">
+              <div class="field">
+                <label>Durée</label>
+                <input class="input" value="1:00" />
+              </div>
+              <div class="field">
+                <label>Distance (km)</label>
+                <input class="input" value="" />
+              </div>
+              <div class="field">
+                <label>D+ (m)</label>
+                <input class="input" value="" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Intensité — Endurance</label>
+              <div class="slider">
+                <div class="slider-track">
+                  <div class="slider-fill" style="width: 30%; background: var(--green)"></div>
+                </div>
+                <div class="slider-thumb" style="left: calc(30% - 8px); background: var(--green)"></div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Charge estimée (TSS)</label>
+              <input class="input" value="0" />
+            </div>
+          </div>
+
+          <div class="ed-actions">
+            <button class="link-btn">Annuler</button>
+            <button class="primary-btn" style="opacity:.5">Enregistrer</button>
+          </div>
+        </div>
+      </div>
+      <div class="annot">Aucun bandeau pré-remplissage · valeurs par défaut Sortie Longue · Enregistrer désactivé tant que Titre vide</div>
+    </div>
+  </div>
+
+  <style>
+    /* Editor sheet styling — matches real SessionEditorModal */
+    .editor-sheet {
+      position: absolute; left: 0; right: 0; bottom: 0; top: 0;
+      background: var(--surface);
+      display: flex; flex-direction: column;
+      padding: 0 16px;
+      overflow: hidden;
+    }
+    .editor-sheet .grabber {
+      width: 40px; height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 8px auto 10px;
+      flex-shrink: 0;
+    }
+    .editor-sheet .ed-title {
+      font-size: 18px; font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .prefill-note.compact {
+      background: rgba(255,107,53,.1);
+      border: 1px dashed var(--primary);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11px;
+      color: var(--primary);
+      margin-bottom: 14px;
+      display: flex; gap: 6px; align-items: center;
+    }
+    .tabs {
+      display: flex; gap: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+    .tab {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+    .tab.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .ed-body {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      min-width: 0;
+    }
+    .ed-body::-webkit-scrollbar { width: 0; }
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block;
+      font-size: 12px; color: var(--text);
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .field .req { color: var(--red); }
+    .input {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 10px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    .input.prefilled {
+      border-color: var(--primary);
+      background: rgba(255,107,53,.06);
+    }
+    .input.date-input {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .date-icon { color: var(--blue); font-size: 14px; }
+    .field-row {
+      display: grid; gap: 8px;
+      grid-template-columns: 1fr auto;
+      margin-bottom: 12px;
+    }
+    .field-row.three {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    .field-row .field { margin-bottom: 0; }
+    .field.grow { min-width: 0; }
+    .type-pill-wrap label { visibility: hidden; }
+    .type-pill {
+      display: inline-flex; align-items: center;
+      padding: 9px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      color: var(--tp);
+      white-space: nowrap;
+    }
+    .slider {
+      position: relative; height: 24px;
+      display: flex; align-items: center;
+    }
+    .slider-track {
+      width: 100%; height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .slider-fill {
+      height: 100%;
+    }
+    .slider-thumb {
+      position: absolute;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      top: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,.3);
+    }
+    .ed-actions {
+      display: flex; justify-content: flex-end; align-items: center;
+      gap: 16px;
+      padding: 12px 0 18px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .link-btn {
+      background: none; border: none;
+      color: var(--muted);
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      padding: 8px 4px;
+    }
+    .primary-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 22px;
+      font-size: 13px; font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</body>
+</html>
