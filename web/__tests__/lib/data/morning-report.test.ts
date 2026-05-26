@@ -147,9 +147,9 @@ describe('getMorningReportData', () => {
       lastActivity: { id: 'a1', sport_type: 'Run', name: 'EF', start_time: '2026-05-25T17:00:00Z',
                       distance_m: 12000, moving_time_sec: 4500, elevation_gain_m: 85, avg_hr: 142, ces: 58 },
       monthRows: [
-        { distance_m: 10000, elevation_gain_m: 200, manual_distance_m: null, manual_elevation_gain_m: null },
-        { distance_m: 8000,  elevation_gain_m: 150, manual_distance_m: null, manual_elevation_gain_m: null },
-        { distance_m: 15000, elevation_gain_m: 450, manual_distance_m: null, manual_elevation_gain_m: null },
+        { sport_type: 'Run', manual_sport_type: null, distance_m: 10000, elevation_gain_m: 200, manual_distance_m: null, manual_elevation_gain_m: null },
+        { sport_type: 'Run', manual_sport_type: null, distance_m: 8000, elevation_gain_m: 150, manual_distance_m: null, manual_elevation_gain_m: null },
+        { sport_type: 'TrailRun', manual_sport_type: null, distance_m: 15000, elevation_gain_m: 450, manual_distance_m: null, manual_elevation_gain_m: null },
       ],
     }))
 
@@ -162,8 +162,8 @@ describe('getMorningReportData', () => {
     // Today's day-of-week is needed for assertions, but we just check totals here
     mockCreateClient.mockResolvedValue(makeClient({
       weekRows: [
-        { start_time: '2026-05-25T07:00:00Z', distance_m: 5000,  elevation_gain_m: 50,  manual_distance_m: null, manual_elevation_gain_m: null },
-        { start_time: '2026-05-26T07:00:00Z', distance_m: 10000, elevation_gain_m: 100, manual_distance_m: null, manual_elevation_gain_m: null },
+        { sport_type: 'Run', manual_sport_type: null, start_time: '2026-05-25T07:00:00Z', distance_m: 5000,  elevation_gain_m: 50,  manual_distance_m: null, manual_elevation_gain_m: null },
+        { sport_type: 'TrailRun', manual_sport_type: null, start_time: '2026-05-26T07:00:00Z', distance_m: 10000, elevation_gain_m: 100, manual_distance_m: null, manual_elevation_gain_m: null },
       ],
     }))
 
@@ -174,6 +174,44 @@ describe('getMorningReportData', () => {
     expect(data.weekVolume.byDay.reduce((a, b) => a + b, 0)).toBeCloseTo(15, 1)
     expect(data.weekVolume.todayIdx).toBeGreaterThanOrEqual(0)
     expect(data.weekVolume.todayIdx).toBeLessThanOrEqual(6)
+  })
+
+  it('filtre les activités non-run (Ride/Swim) des agrégats km/D+', async () => {
+    mockCreateClient.mockResolvedValue(makeClient({
+      monthRows: [
+        { sport_type: 'Run',      manual_sport_type: null, distance_m: 10000, elevation_gain_m: 100, manual_distance_m: null, manual_elevation_gain_m: null },
+        { sport_type: 'Ride',     manual_sport_type: null, distance_m: 30000, elevation_gain_m: 300, manual_distance_m: null, manual_elevation_gain_m: null },
+        { sport_type: 'Swim',     manual_sport_type: null, distance_m: 1000,  elevation_gain_m: 0,   manual_distance_m: null, manual_elevation_gain_m: null },
+        { sport_type: 'TrailRun', manual_sport_type: null, distance_m: 12000, elevation_gain_m: 400, manual_distance_m: null, manual_elevation_gain_m: null },
+      ],
+      weekRows: [
+        { sport_type: 'Ride',     manual_sport_type: null, start_time: '2026-05-25T07:00:00Z', distance_m: 20000, elevation_gain_m: 200, manual_distance_m: null, manual_elevation_gain_m: null },
+        { sport_type: 'Run',      manual_sport_type: null, start_time: '2026-05-26T07:00:00Z', distance_m: 5000,  elevation_gain_m: 50,  manual_distance_m: null, manual_elevation_gain_m: null },
+      ],
+    }))
+
+    const data = await getMorningReportData('user-123')
+    // Mois : 10 (Run) + 12 (TrailRun) = 22 km, 100 + 400 = 500 m D+
+    expect(data.monthlyVolume.km).toBe(22)
+    expect(data.monthlyVolume.dPlus).toBe(500)
+    // Semaine : 5 km (Run) uniquement, 50 m D+
+    expect(data.weekVolume.km).toBe(5)
+    expect(data.weekVolume.dPlus).toBe(50)
+  })
+
+  it('respecte manual_sport_type quand défini (Workout retag en Run)', async () => {
+    mockCreateClient.mockResolvedValue(makeClient({
+      monthRows: [
+        // sport_type=Workout (non-run), mais retaggé Run manuellement → inclus
+        { sport_type: 'Workout', manual_sport_type: 'Run', distance_m: 8000, elevation_gain_m: 80, manual_distance_m: null, manual_elevation_gain_m: null },
+        // sport_type=Run mais retaggé Ride → exclu
+        { sport_type: 'Run', manual_sport_type: 'Ride', distance_m: 15000, elevation_gain_m: 0, manual_distance_m: null, manual_elevation_gain_m: null },
+      ],
+    }))
+
+    const data = await getMorningReportData('user-123')
+    expect(data.monthlyVolume.km).toBe(8)
+    expect(data.monthlyVolume.dPlus).toBe(80)
   })
 
   it('retourne todaySession quand une séance est planifiée pour aujourd\'hui', async () => {

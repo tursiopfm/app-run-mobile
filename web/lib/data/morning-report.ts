@@ -97,12 +97,12 @@ export async function getMorningReportData(userId: string): Promise<MorningRepor
       .limit(1),
     supabase
       .from('activities')
-      .select('distance_m, elevation_gain_m, manual_distance_m, manual_elevation_gain_m')
+      .select('sport_type, manual_sport_type, distance_m, elevation_gain_m, manual_distance_m, manual_elevation_gain_m')
       .eq('user_id', userId)
       .gte('start_time', startOfMonthISO),
     supabase
       .from('activities')
-      .select('start_time, distance_m, elevation_gain_m, manual_distance_m, manual_elevation_gain_m')
+      .select('sport_type, manual_sport_type, start_time, distance_m, elevation_gain_m, manual_distance_m, manual_elevation_gain_m')
       .eq('user_id', userId)
       .gte('start_time', startOfWeekISO),
     supabase
@@ -136,6 +136,8 @@ export async function getMorningReportData(userId: string): Promise<MorningRepor
   } : null
 
   type AggRow = {
+    sport_type: string
+    manual_sport_type: string | null
     distance_m: number | null
     elevation_gain_m: number | null
     manual_distance_m: number | null
@@ -143,7 +145,12 @@ export async function getMorningReportData(userId: string): Promise<MorningRepor
   }
   type WeekRow = AggRow & { start_time: string }
 
-  const monthRows = (monthRes.data ?? []) as AggRow[]
+  const RUN_SPORT_TYPES = new Set(['Run', 'TrailRun'])
+  function isRun(r: { sport_type: string; manual_sport_type: string | null }): boolean {
+    return RUN_SPORT_TYPES.has(r.manual_sport_type ?? r.sport_type)
+  }
+
+  const monthRows = ((monthRes.data ?? []) as AggRow[]).filter(isRun)
   const monthAgg = monthRows.reduce(
     (acc, r) => {
       const dist  = r.manual_distance_m       ?? r.distance_m       ?? 0
@@ -157,7 +164,7 @@ export async function getMorningReportData(userId: string): Promise<MorningRepor
     dPlus: Math.round(monthAgg.dPlus),
   }
 
-  const weekRows = (weekRes.data ?? []) as WeekRow[]
+  const weekRows = ((weekRes.data ?? []) as WeekRow[]).filter(isRun)
   const byDay = [0, 0, 0, 0, 0, 0, 0]
   let weekKmAcc = 0
   let weekDPlusAcc = 0
