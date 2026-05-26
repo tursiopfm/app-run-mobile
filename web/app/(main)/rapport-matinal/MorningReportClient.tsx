@@ -7,8 +7,11 @@ import { MorningHeaderLoader } from '@/components/morning-report/MorningHeaderLo
 import { SessionTodayBlock } from '@/components/morning-report/SessionTodayBlock'
 import { FormStatusBlock } from '@/components/morning-report/FormStatusBlock'
 import { FitnessFatigue10dChart } from '@/components/morning-report/FitnessFatigue10dChart'
+import { useUserLocation } from '@/lib/hooks/useUserLocation'
+import { useWeather } from '@/lib/hooks/useWeather'
 import { WeatherCurrentBlock } from '@/components/morning-report/WeatherCurrentBlock'
 import { WeatherDayBlock } from '@/components/morning-report/WeatherDayBlock'
+import { BestWindowBlock } from '@/components/morning-report/BestWindowBlock'
 import { MonthlyVolumeBlock } from '@/components/morning-report/MonthlyVolumeBlock'
 import { CoachAiBlock } from '@/components/morning-report/CoachAiBlock'
 import { YesterdayBlock } from '@/components/morning-report/YesterdayBlock'
@@ -21,6 +24,13 @@ function todayISO(): string {
 export function MorningReportClient({ data }: { data: MorningReportData }) {
   const today = todayISO()
   const { markSeen } = useMorningReportSeen(today)
+  const coords = useUserLocation()
+  const weather = useWeather(coords)
+
+  const weatherProps =
+    weather.status === 'ready' ? { status: 'ready' as const, data: weather.data } :
+    weather.status === 'error' ? { status: 'error' as const } :
+    { status: 'loading' as const }
 
   useEffect(() => { markSeen() }, [markSeen])
 
@@ -33,9 +43,10 @@ export function MorningReportClient({ data }: { data: MorningReportData }) {
       <FormStatusBlock payload={all} />
       <FitnessFatigue10dChart dailyMetrics={all.dailyMetrics} />
       <div className="grid grid-cols-2 gap-2.5">
-        <WeatherCurrentBlock />
-        <WeatherDayBlock />
+        <WeatherCurrentBlock {...weatherProps} />
+        <WeatherDayBlock     {...weatherProps} />
       </div>
+      <BestWindowBlock {...weatherProps} />
       <MonthlyVolumeBlock km={data.monthlyVolume.km} dPlus={data.monthlyVolume.dPlus} />
       <CoachAiBlock />
       <YesterdayBlock act={data.lastActivity} />
