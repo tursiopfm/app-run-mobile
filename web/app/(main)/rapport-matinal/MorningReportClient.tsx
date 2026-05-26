@@ -36,7 +36,7 @@ export function MorningReportClient({ data }: { data: MorningReportData }) {
         <WeatherCurrentBlock />
         <WeatherDayBlock />
       </div>
-      <MonthlyVolumeBlock km={0} dPlus={0} />
+      <MonthlyVolumeBlock km={data.monthlyVolume.km} dPlus={data.monthlyVolume.dPlus} />
       <CoachAiBlock />
       <YesterdayBlock act={data.lastActivity} />
     </div>
