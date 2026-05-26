@@ -21,9 +21,13 @@ export type BestWindow = {
   avgScore:  number
 }
 
+function hourFromISO(iso: string): number {
+  return parseInt(iso.slice(11, 13), 10)
+}
+
 export function computeBestWindow(hourly: WeatherHourly[]): BestWindow | null {
   if (hourly.length === 0) return null
-  const scores = hourly.map(h => ({ hour: new Date(h.time).getUTCHours(), score: scoreHour(h) }))
+  const scores = hourly.map(h => ({ hour: hourFromISO(h.time), score: scoreHour(h) }))
 
   let bestStart = -1, bestEnd = -1, bestLen = 0, bestAvg = 0
   let curStart = -1, curSum = 0, curLen = 0
