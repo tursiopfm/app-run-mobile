@@ -124,9 +124,10 @@ function draftFromTemplate(tpl: SessionTemplate, initialDate: string | undefined
     elevation: tpl.defaultElevation,
     intensity: tpl.defaultIntensity,
     estimatedCharge: estimateCharge(tpl.defaultDuration, tpl.defaultIntensity, tpl.defaultElevation),
-    zones: undefined,
+    zones: tpl.defaultZones,
     notes: undefined,
     status: 'planned',
+    templateId: tpl.id,
   }
 }
 
@@ -317,7 +318,6 @@ export function SessionEditorModal({
             }}
             role="status"
           >
-            <span aria-hidden>✨</span>
             <span className="text-[12px] font-semibold">
               {L.addPrefillBanner(L.sessionTemplates[prefillTemplate.id]?.title ?? prefillTemplate.title)}
             </span>
