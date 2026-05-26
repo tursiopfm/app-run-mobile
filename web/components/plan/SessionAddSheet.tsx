@@ -182,6 +182,7 @@ export function SessionAddSheet({ open, dateISO, onClose, onPickTemplate, onCrea
                   types={types}
                   isCustom={customIds.has(t.id)}
                   mode="pick"
+                  ariaLabel={L.addPickAria(L.sessionTemplates[t.id]?.title ?? t.title)}
                   onClick={() => onPickTemplate(t)}
                   onDelete={() => {}}
                 />

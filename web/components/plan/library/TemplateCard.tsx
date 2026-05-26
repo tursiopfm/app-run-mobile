@@ -11,12 +11,13 @@ import type { Dict } from '@/lib/i18n/dictionaries/fr'
 type Mode = 'drag' | 'pick'
 
 export function TemplateCard({
-  template, types, isCustom, mode, onClick, onDelete,
+  template, types, isCustom, mode, ariaLabel, onClick, onDelete,
 }: {
   template: SessionTemplate
   types: ActivityType[]
   isCustom: boolean
   mode: Mode
+  ariaLabel?: string
   onClick: () => void
   onDelete: () => void
 }) {
@@ -41,7 +42,7 @@ export function TemplateCard({
       onClick={onClick}
       role="button"
       tabIndex={0}
-      aria-label={L.libTemplateCardAria(L.sessionTemplates[template.id]?.title ?? template.title)}
+      aria-label={ariaLabel ?? L.libTemplateCardAria(L.sessionTemplates[template.id]?.title ?? template.title)}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
     >
       {mode === 'drag' && (

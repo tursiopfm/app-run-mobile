@@ -65,8 +65,8 @@ describe('<SessionAddSheet>', () => {
 
   it('clic sur un template appelle onPickTemplate avec ce template', async () => {
     render(wrap(<SessionAddSheet {...baseProps} />))
-    // TemplateCard uses libTemplateCardAria: (title) => `Template ${title} — cliquer pour éditer...`
-    const card = await screen.findByLabelText(/Template VMA 10×400m/i)
+    // SessionAddSheet picker uses addPickAria: (title) => `Choisir le template ${title}`
+    const card = await screen.findByLabelText(/Choisir le template VMA 10×400m/i)
     fireEvent.click(card)
     expect(baseProps.onPickTemplate).toHaveBeenCalledWith(expect.objectContaining({ id: 'sys-vma' }))
   })
