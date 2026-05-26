@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
-import type { PlannedSession, TrainingPlan } from '@/types/plan'
+import type { PlannedSession, SessionTemplate, TrainingPlan } from '@/types/plan'
 import {
   getPlannedSessions,
   savePlannedSession,
@@ -29,6 +29,7 @@ import { formatDurationHHmm } from '@/lib/training/duration'
 import { useActivityTypes } from '@/lib/plan/use-activity-types'
 import { resolveSessionMeta } from '@/lib/plan/session-meta'
 import { SessionEditorModal } from './SessionEditorModal'
+import { SessionAddSheet } from './SessionAddSheet'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { useT } from '@/lib/i18n/I18nProvider'
 import type { Dict } from '@/lib/i18n/dictionaries/fr'
@@ -108,6 +109,12 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingSession, setEditingSession] = useState<PlannedSession | null>(null)
   const [editorInitialDate, setEditorInitialDate] = useState<string | undefined>(undefined)
+
+  // Picker d'ajout : ouvert d'abord, redirige soit vers création vierge,
+  // soit vers éditeur pré-rempli depuis un template.
+  const [addSheetOpen, setAddSheetOpen] = useState(false)
+  const [addSheetDate, setAddSheetDate] = useState<string>('')
+  const [prefillTemplate, setPrefillTemplate] = useState<SessionTemplate | null>(null)
 
   const [duplicating, setDuplicating] = useState(false)
 
@@ -247,8 +254,23 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
   }
 
   function openCreate(dateISO: string) {
+    setAddSheetDate(dateISO)
+    setAddSheetOpen(true)
+  }
+
+  function handlePickTemplate(t: SessionTemplate) {
+    setAddSheetOpen(false)
     setEditingSession(null)
-    setEditorInitialDate(dateISO)
+    setEditorInitialDate(addSheetDate)
+    setPrefillTemplate(t)
+    setEditorOpen(true)
+  }
+
+  function handleCreateBlank() {
+    setAddSheetOpen(false)
+    setEditingSession(null)
+    setEditorInitialDate(addSheetDate)
+    setPrefillTemplate(null)
     setEditorOpen(true)
   }
 
@@ -403,8 +425,16 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
           for (const aid of activityIds) addUnlinkedPair(sessionId, aid)
           setUnlinkedTick(t => t + 1)
         }}
-        onClose={() => setEditorOpen(false)}
+        prefillTemplate={prefillTemplate}
+        onClose={() => { setEditorOpen(false); setPrefillTemplate(null) }}
         onSaved={() => { void reload() }}
+      />
+      <SessionAddSheet
+        open={addSheetOpen}
+        dateISO={addSheetDate}
+        onClose={() => setAddSheetOpen(false)}
+        onPickTemplate={handlePickTemplate}
+        onCreateBlank={handleCreateBlank}
       />
     </BlockCard>
   )
