@@ -129,9 +129,8 @@ export function SessionAddSheet({ open, dateISO, onClose, onPickTemplate, onCrea
           <button
             type="button"
             onClick={onCreateBlank}
-            className="w-full py-3 rounded-[12px] bg-trail-primary text-white text-[14px] font-bold flex items-center justify-center gap-2 hover:opacity-90"
+            className="w-full py-3 rounded-[12px] bg-trail-primary text-white text-[14px] font-bold flex items-center justify-center hover:opacity-90"
           >
-            <span className="text-[18px] leading-none">+</span>
             {L.addCreateBtn}
           </button>
 
