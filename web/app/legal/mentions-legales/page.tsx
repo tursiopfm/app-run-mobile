@@ -6,40 +6,35 @@ import {
   LegalList,
   LegalTodo,
 } from '@/components/legal/LegalPageShell'
+import { getServerT } from '@/lib/i18n/server'
 
-export const metadata: Metadata = {
-  title: 'Mentions légales — Trail Cockpit',
-  description:
-    'Mentions légales de l’application Trail Cockpit : éditeur, contact, hébergeur et propriété intellectuelle.',
-}
-
-const UPDATED_AT = '11 mai 2026'
 const CONTACT_EMAIL = 'contact@trailcockpit.run'
 
+export async function generateMetadata(): Promise<Metadata> {
+  const M = getServerT().legal.mentions
+  return {
+    title:       M.metaTitle,
+    description: M.pageDescription,
+  }
+}
+
 export default function MentionsLegalesPage() {
+  const t = getServerT()
+  const M = t.legal.mentions
   return (
     <LegalPageShell
-      eyebrow="Réglementaire"
-      title="Mentions légales"
-      description="Informations légales relatives à l’application Trail cockpit."
-      updatedAt={UPDATED_AT}
+      eyebrow={t.legal.eyebrow}
+      title={M.pageTitle}
+      description={M.pageDescription}
+      updatedAt={t.legal.updatedAtValue}
     >
-      <LegalSection title="Éditeur de l’application">
-        <LegalParagraph>
-          L’application Trail cockpit est éditée à titre individuel par Franck Meri.
-        </LegalParagraph>
-        <LegalTodo>
-          {/* TODO: compléter avec la forme juridique (auto-entrepreneur, société, etc.), le SIRET et l’adresse professionnelle complète. */}
-          Information à compléter : forme juridique, SIRET, adresse postale du
-          responsable de la publication.
-        </LegalTodo>
+      <LegalSection title={M.sectionEditor}>
+        <LegalParagraph>{M.editorParagraph}</LegalParagraph>
+        <LegalTodo>{M.editorTodo}</LegalTodo>
       </LegalSection>
 
-      <LegalSection title="Contact">
-        <LegalParagraph>
-          Pour toute question relative à l’application, à son fonctionnement ou
-          à ses contenus, vous pouvez écrire à :
-        </LegalParagraph>
+      <LegalSection title={M.sectionContact}>
+        <LegalParagraph>{M.contactPrompt}</LegalParagraph>
         <LegalParagraph>
           <a
             href={`mailto:${CONTACT_EMAIL}?subject=Trail%20cockpit%20%E2%80%94%20Mentions%20l%C3%A9gales`}
@@ -50,19 +45,16 @@ export default function MentionsLegalesPage() {
         </LegalParagraph>
       </LegalSection>
 
-      <LegalSection title="Hébergement">
-        <LegalParagraph>
-          L’application Trail cockpit est hébergée par :
-        </LegalParagraph>
+      <LegalSection title={M.sectionHosting}>
+        <LegalParagraph>{M.hostingIntro}</LegalParagraph>
         <LegalList
           items={[
             <>
-              <strong className="text-trail-text">Vercel Inc.</strong> —
-              hébergeur principal de l’application web et de l’API.
+              <strong className="text-trail-text">{M.vercelLabel}</strong> {M.vercelDesc}
               <br />
-              440 N Barranca Ave #4133, Covina, CA 91723, États-Unis.
+              {M.vercelAddress}
               <br />
-              Site :{' '}
+              {M.vercelSiteLabel}{' '}
               <a
                 href="https://vercel.com"
                 target="_blank"
@@ -73,13 +65,11 @@ export default function MentionsLegalesPage() {
               </a>
             </>,
             <>
-              <strong className="text-trail-text">Supabase Inc.</strong> —
-              hébergeur de la base de données et du service
-              d’authentification.
+              <strong className="text-trail-text">{M.supabaseLabel}</strong> {M.supabaseDesc}
               <br />
-              970 Toa Payoh North #07-04, Singapour 318992.
+              {M.supabaseAddress}
               <br />
-              Site :{' '}
+              {M.supabaseSiteLabel}{' '}
               <a
                 href="https://supabase.com"
                 target="_blank"
@@ -93,72 +83,25 @@ export default function MentionsLegalesPage() {
         />
       </LegalSection>
 
-      <LegalSection title="Objet de l’application">
-        <LegalParagraph>
-          Trail cockpit est une application de suivi, d’analyse et d’aide à
-          l’entraînement sportif. L’application permet notamment de suivre des
-          activités sportives, d’analyser des statistiques, de suivre la charge
-          d’entraînement et, selon les fonctionnalités activées, d’utiliser
-          des données provenant de services tiers comme Strava, Garmin, Suunto,
-          Polar ou autres services compatibles.
-        </LegalParagraph>
-        <LegalParagraph>
-          L’application n’est pas un dispositif médical et ne remplace pas
-          l’avis d’un médecin, d’un kinésithérapeute, d’un entraîneur diplômé
-          ou de tout autre professionnel qualifié.
-        </LegalParagraph>
+      <LegalSection title={M.sectionPurpose}>
+        <LegalParagraph>{M.purposeP1}</LegalParagraph>
+        <LegalParagraph>{M.purposeP2}</LegalParagraph>
       </LegalSection>
 
-      <LegalSection title="Propriété intellectuelle">
-        <LegalParagraph>
-          L’ensemble des éléments composant l’application Trail cockpit (nom,
-          logo, interface, textes, graphismes, code source, algorithmes
-          d’analyse) est protégé par le droit d’auteur et, le cas échéant,
-          par le droit des marques. Toute reproduction, représentation,
-          modification ou exploitation, totale ou partielle, sans autorisation
-          écrite préalable de l’éditeur est interdite.
-        </LegalParagraph>
-        <LegalParagraph>
-          Les marques et logos de services tiers cités dans l’application
-          (notamment Strava) restent la propriété exclusive de leurs
-          détenteurs respectifs.
-        </LegalParagraph>
+      <LegalSection title={M.sectionIp}>
+        <LegalParagraph>{M.ipP1}</LegalParagraph>
+        <LegalParagraph>{M.ipP2}</LegalParagraph>
       </LegalSection>
 
-      <LegalSection title="Services tiers">
-        <LegalParagraph>
-          Trail cockpit peut s’interfacer avec différents services tiers afin
-          de synchroniser les données sportives de l’utilisateur, notamment :
-        </LegalParagraph>
-        <LegalList
-          items={[
-            'Strava — synchronisation des activités via l’API officielle Strava.',
-            'D’autres services compatibles peuvent être ajoutés ultérieurement (Garmin, Suunto, Polar, etc.).',
-          ]}
-        />
-        <LegalParagraph>
-          L’utilisation de ces services tiers reste soumise à leurs propres
-          conditions d’utilisation et politiques de confidentialité.
-          L’utilisateur est seul responsable de l’acceptation de ces
-          conditions.
-        </LegalParagraph>
+      <LegalSection title={M.sectionThirdParty}>
+        <LegalParagraph>{M.thirdPartyIntro}</LegalParagraph>
+        <LegalList items={[M.thirdPartyItem1, M.thirdPartyItem2]} />
+        <LegalParagraph>{M.thirdPartyOutro}</LegalParagraph>
       </LegalSection>
 
-      <LegalSection title="Limitation de responsabilité">
-        <LegalParagraph>
-          L’éditeur met tout en œuvre pour fournir une application fiable et
-          des analyses pertinentes. Toutefois, les informations, analyses et
-          recommandations fournies par Trail cockpit le sont à titre purement
-          indicatif et ne sauraient engager la responsabilité de l’éditeur
-          quant aux décisions sportives ou de santé prises par l’utilisateur.
-        </LegalParagraph>
-        <LegalParagraph>
-          L’éditeur ne peut être tenu responsable des indisponibilités
-          techniques, interruptions de service, erreurs ou pertes de données
-          provenant des services tiers connectés à l’application, ni des
-          dommages directs ou indirects pouvant résulter de l’usage ou de
-          l’impossibilité d’usage de l’application.
-        </LegalParagraph>
+      <LegalSection title={M.sectionLiability}>
+        <LegalParagraph>{M.liabilityP1}</LegalParagraph>
+        <LegalParagraph>{M.liabilityP2}</LegalParagraph>
       </LegalSection>
     </LegalPageShell>
   )

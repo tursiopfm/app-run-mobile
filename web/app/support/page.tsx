@@ -15,24 +15,15 @@ import {
 } from 'lucide-react'
 import { ContactCard } from '@/components/support/ContactCard'
 import type { Metadata } from 'next'
+import { getServerT } from '@/lib/i18n/server'
 
-export const metadata: Metadata = {
-  title: 'Support — Trail Cockpit',
-  description:
-    'Support et informations pour les utilisateurs de Trail Cockpit connectés à Strava.',
+export async function generateMetadata(): Promise<Metadata> {
+  const S = getServerT().support
+  return {
+    title:       `${S.title} — Trail Cockpit`,
+    description: S.description,
+  }
 }
-
-type Feature = {
-  icon: typeof Activity
-  label: string
-}
-
-const FEATURES: Feature[] = [
-  { icon: Activity,   label: 'Synchronisation des activités Strava' },
-  { icon: BarChart3,  label: 'Tableaux de bord de charge d’entraînement' },
-  { icon: LineChart,  label: 'Analyse personnalisée des performances' },
-  { icon: Footprints, label: 'Suivi des activités running, trail et vélo' },
-]
 
 function SectionHeader({
   icon: Icon,
@@ -78,61 +69,62 @@ function AboutRow({ label, value }: { label: string; value: string }) {
 }
 
 export default function SupportPage() {
+  const S = getServerT().support
+  const features = [
+    { icon: Activity,   label: S.featStravaSync },
+    { icon: BarChart3,  label: S.featDashboards },
+    { icon: LineChart,  label: S.featAnalysis },
+    { icon: Footprints, label: S.featTracking },
+  ]
   return (
     <div className="min-h-screen bg-trail-bg">
       <div className="px-3 py-3 pb-10 space-y-4 max-w-lg mx-auto">
 
-        {/* ── Back link (only useful when navigated from within the app) ── */}
         <div className="pt-[2px]">
           <Link
             href="/settings"
             className="inline-flex items-center gap-[6px] text-[12px] text-trail-muted hover:text-trail-text transition-colors"
           >
             <ArrowLeft size={14} />
-            Retour aux réglages
+            {S.backToSettings}
           </Link>
         </div>
 
-        {/* ── Page hero ── */}
         <header className="px-1">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-trail-primary">
-            Support
+            {S.eyebrow}
           </p>
           <h1 className="text-[22px] font-black text-trail-text leading-tight mt-[2px]">
-            Trail Cockpit Support
+            {S.title}
           </h1>
           <p className="text-[12px] text-trail-muted leading-[16px] mt-[6px] max-w-[400px]">
-            Support et informations pour les utilisateurs de Trail Cockpit connectés à Strava.
+            {S.description}
           </p>
         </header>
 
-        {/* ── Contact ── */}
         <section>
           <SectionHeader
             icon={LifeBuoy}
-            title="Contact"
-            subtitle="Une question, un bug, une suggestion ?"
+            title={S.contactTitle}
+            subtitle={S.contactSubtitle}
           />
           <SectionCard>
             <ContactCard />
             <p className="text-[11px] text-trail-muted leading-[16px] px-1">
-              Nous répondons généralement sous 48 h ouvrées. Merci d’indiquer
-              ton compte Strava (prénom + nom) si la demande concerne la
-              synchronisation de tes activités.
+              {S.contactNote}
             </p>
           </SectionCard>
         </section>
 
-        {/* ── Fonctionnalités ── */}
         <section>
           <SectionHeader
             icon={BarChart3}
-            title="Fonctionnalités"
-            subtitle="Ce que Trail Cockpit fait avec tes données"
+            title={S.featuresTitle}
+            subtitle={S.featuresSubtitle}
           />
           <SectionCard>
             <ul className="space-y-[6px]">
-              {FEATURES.map(({ icon: Icon, label }) => (
+              {features.map(({ icon: Icon, label }) => (
                 <li
                   key={label}
                   className="flex items-center gap-3 px-3 py-[10px] rounded-[10px] bg-trail-surface"
@@ -147,12 +139,11 @@ export default function SupportPage() {
           </SectionCard>
         </section>
 
-        {/* ── Connexion Strava ── */}
         <section>
           <SectionHeader
             icon={Bike}
-            title="Connexion Strava"
-            subtitle="Comment ton compte Strava est utilisé"
+            title={S.stravaTitle}
+            subtitle={S.stravaSubtitle}
           />
           <SectionCard>
             <div className="rounded-[10px] bg-trail-surface px-3 py-[12px] space-y-[10px]">
@@ -162,22 +153,20 @@ export default function SupportPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-trail-muted">
-                    Authentification
+                    {S.stravaAuthLabel}
                   </p>
-                  <p className="text-[13px] text-trail-text">Strava OAuth sécurisé</p>
+                  <p className="text-[13px] text-trail-text">{S.stravaAuthValue}</p>
                 </div>
               </div>
               <p className="text-[12px] text-trail-text leading-[18px] px-1">
-                Les utilisateurs se connectent de manière sécurisée via Strava
-                OAuth. Les utilisateurs peuvent déconnecter leur compte Strava à
-                tout moment depuis les réglages de l’application.
+                {S.stravaBody}
               </p>
               <Link
                 href="/settings"
                 className="flex items-center gap-3 px-3 py-[10px] rounded-[10px] bg-trail-card border border-trail-border hover:bg-trail-border/30 transition-colors"
               >
                 <p className="flex-1 text-[12px] font-semibold text-trail-text">
-                  Gérer la connexion Strava
+                  {S.stravaManage}
                 </p>
                 <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
               </Link>
@@ -185,12 +174,11 @@ export default function SupportPage() {
           </SectionCard>
         </section>
 
-        {/* ── Réglementaire ── */}
         <section>
           <SectionHeader
             icon={Scale}
-            title="Réglementaire"
-            subtitle="Mentions légales, confidentialité et conditions"
+            title={S.legalTitle}
+            subtitle={S.legalSubtitle}
           />
           <SectionCard>
             <div className="rounded-[10px] bg-trail-surface divide-y divide-trail-border">
@@ -201,7 +189,7 @@ export default function SupportPage() {
                 <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
                   <FileText size={13} className="text-trail-primary" />
                 </div>
-                <p className="flex-1 text-[13px] text-trail-text">Mentions légales</p>
+                <p className="flex-1 text-[13px] text-trail-text">{S.legalMentions}</p>
                 <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
               </Link>
               <Link
@@ -211,7 +199,7 @@ export default function SupportPage() {
                 <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
                   <ShieldCheck size={13} className="text-trail-primary" />
                 </div>
-                <p className="flex-1 text-[13px] text-trail-text">Politique de confidentialité</p>
+                <p className="flex-1 text-[13px] text-trail-text">{S.legalPrivacy}</p>
                 <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
               </Link>
               <Link
@@ -221,60 +209,48 @@ export default function SupportPage() {
                 <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
                   <Scale size={13} className="text-trail-primary" />
                 </div>
-                <p className="flex-1 text-[13px] text-trail-text">Conditions d’utilisation</p>
+                <p className="flex-1 text-[13px] text-trail-text">{S.legalTerms}</p>
                 <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
               </Link>
             </div>
             <p className="text-[11px] text-trail-muted leading-[16px] px-1">
-              Trail Cockpit stocke uniquement les données nécessaires à
-              l’analyse de tes activités (activités Strava, profil athlète,
-              préférences d’interface). Tu peux demander la suppression de
-              l’ensemble de tes données via la section Contact.
+              {S.legalNote}
             </p>
           </SectionCard>
         </section>
 
-        {/* ── À propos ── */}
         <section>
           <SectionHeader
             icon={Info}
-            title="À propos"
-            subtitle="L’application Trail Cockpit"
+            title={S.aboutTitle}
+            subtitle={S.aboutSubtitle}
           />
           <SectionCard>
             <div className="space-y-[6px]">
-              <AboutRow label="Nom de l’application" value="Trail Cockpit" />
-              <AboutRow
-                label="Type"
-                value="Tableau de bord sportif et compagnon d’entraînement"
-              />
-              <AboutRow label="Plateformes" value="Web · PWA (iOS, Android, desktop)" />
-              <AboutRow label="Intégration" value="Compatible avec Strava" />
+              <AboutRow label={S.aboutNameLabel}        value={S.aboutNameValue} />
+              <AboutRow label={S.aboutTypeLabel}        value={S.aboutTypeValue} />
+              <AboutRow label={S.aboutPlatformsLabel}   value={S.aboutPlatformsValue} />
+              <AboutRow label={S.aboutIntegrationLabel} value={S.aboutIntegrationValue} />
             </div>
           </SectionCard>
         </section>
 
-        {/* ── Mention Strava (compliance) ── */}
         <section className="px-1 pt-2">
           <div className="rounded-[10px] bg-trail-surface border border-trail-border px-3 py-[12px] space-y-[6px]">
             <div className="flex items-center gap-2">
               <Activity size={12} className="text-[#FC4C02] flex-shrink-0" />
               <p className="text-[11px] font-bold uppercase tracking-wider text-trail-text">
-                Powered by Strava
+                {S.poweredByStrava}
               </p>
             </div>
             <p className="text-[11px] text-trail-muted leading-[16px]">
-              Trail Cockpit est une application indépendante. Elle utilise l’API
-              Strava pour synchroniser tes activités mais n’est ni développée,
-              ni sponsorisée, ni affiliée à Strava. Strava et le logo Strava
-              sont des marques déposées de Strava, Inc.
+              {S.stravaCompliance}
             </p>
           </div>
         </section>
 
-        {/* ── Footer signature ── */}
         <p className="text-center text-[10px] text-trail-muted/70 tracking-wider uppercase pt-2">
-          Trail Cockpit · Conçu pour les coureurs de trail
+          {S.footerSignature}
         </p>
 
       </div>

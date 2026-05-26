@@ -1702,4 +1702,247 @@ export const en: Dict = {
     bannerSub:      'Quick access from your home screen',
     installBtn:     'Install',
   },
+
+  support: {
+    backToSettings:       'Back to Settings',
+    eyebrow:              'Support',
+    title:                'Trail Cockpit Help & Support',
+    description:          'Support and information for Trail Cockpit users connected to Strava.',
+
+    contactTitle:         'Contact',
+    contactSubtitle:      'A question, a bug, a suggestion?',
+    contactSendEmail:     'Send an email',
+    contactNote:          'We usually reply within 48 business hours. Please include your Strava account (first + last name) if your request is about activity sync.',
+
+    featuresTitle:        'Features',
+    featuresSubtitle:     'What Trail Cockpit does with your data',
+    featStravaSync:       'Strava activity sync',
+    featDashboards:       'Training-load dashboards',
+    featAnalysis:         'Personalised performance analysis',
+    featTracking:         'Running, trail, and cycling activity tracking',
+
+    stravaTitle:          'Strava connection',
+    stravaSubtitle:       'How your Strava account is used',
+    stravaAuthLabel:      'Authentication',
+    stravaAuthValue:      'Secure Strava OAuth',
+    stravaBody:           'Users sign in securely via Strava OAuth. Users can disconnect their Strava account at any time from the app settings.',
+    stravaManage:         'Manage Strava connection',
+
+    legalTitle:           'Regulatory',
+    legalSubtitle:        'Legal notice, privacy, and terms',
+    legalMentions:        'Legal notice',
+    legalPrivacy:         'Privacy policy',
+    legalTerms:           'Terms of service',
+    legalNote:            'Trail Cockpit stores only the data required to analyse your activities (Strava activities, athlete profile, UI preferences). You can request the deletion of all your data via the Contact section.',
+
+    aboutTitle:           'About',
+    aboutSubtitle:        'The Trail Cockpit application',
+    aboutNameLabel:       'App name',
+    aboutNameValue:       'Trail Cockpit',
+    aboutTypeLabel:       'Type',
+    aboutTypeValue:       'Sport dashboard and training companion',
+    aboutPlatformsLabel:  'Platforms',
+    aboutPlatformsValue:  'Web · PWA (iOS, Android, desktop)',
+    aboutIntegrationLabel:'Integration',
+    aboutIntegrationValue:'Compatible with Strava',
+
+    poweredByStrava:      'Powered by Strava',
+    stravaCompliance:     'Trail Cockpit is an independent application. It uses the Strava API to sync your activities but is not developed, sponsored, or affiliated with Strava. Strava and the Strava logo are registered trademarks of Strava, Inc.',
+
+    footerSignature:      'Trail Cockpit · Built for trail runners',
+  },
+
+  legal: {
+    eyebrow:              'Regulatory',
+    backToSupport:        'Back to Help & Support',
+    updatedAt:            'Last updated',
+    updatedAtValue:       'May 11, 2026',
+    documentFooter:       'Trail Cockpit · Legal document',
+
+    mentions: {
+      metaTitle:          'Legal notice — Trail Cockpit',
+      pageTitle:          'Legal notice',
+      pageDescription:    'Legal information about the Trail Cockpit application.',
+
+      sectionEditor:      'Publisher',
+      editorParagraph:    'The Trail Cockpit application is published as an individual by Franck Meri.',
+      editorTodo:         'To be completed: legal form, business registration number, postal address of the publication manager.',
+
+      sectionContact:     'Contact',
+      contactPrompt:      'For any question about the application, how it works, or its contents, you can write to:',
+
+      sectionHosting:     'Hosting',
+      hostingIntro:       'The Trail Cockpit application is hosted by:',
+      vercelLabel:        'Vercel Inc.',
+      vercelDesc:         '— primary host of the web application and API.',
+      vercelAddress:      '440 N Barranca Ave #4133, Covina, CA 91723, United States.',
+      vercelSiteLabel:    'Site:',
+      supabaseLabel:      'Supabase Inc.',
+      supabaseDesc:       '— host of the database and authentication service.',
+      supabaseAddress:    '970 Toa Payoh North #07-04, Singapore 318992.',
+      supabaseSiteLabel:  'Site:',
+
+      sectionPurpose:     'Purpose of the application',
+      purposeP1:          'Trail Cockpit is an application for tracking, analysing, and supporting sports training. It allows users to track sports activities, analyse statistics, monitor training load and, depending on the features enabled, use data from third-party services such as Strava, Garmin, Suunto, Polar, or other compatible services.',
+      purposeP2:          'The application is not a medical device and does not replace the advice of a doctor, physiotherapist, certified coach, or any other qualified professional.',
+
+      sectionIp:          'Intellectual property',
+      ipP1:               'All the elements that make up the Trail Cockpit application (name, logo, UI, texts, graphics, source code, analysis algorithms) are protected by copyright and, where applicable, trademark law. Any reproduction, representation, modification, or exploitation, in whole or in part, without prior written consent of the publisher is prohibited.',
+      ipP2:               'Trademarks and logos of third-party services cited in the application (in particular Strava) remain the exclusive property of their respective owners.',
+
+      sectionThirdParty:  'Third-party services',
+      thirdPartyIntro:    'Trail Cockpit may interface with various third-party services to synchronise the user’s sports data, in particular:',
+      thirdPartyItem1:    'Strava — activity sync via the official Strava API.',
+      thirdPartyItem2:    'Other compatible services may be added later (Garmin, Suunto, Polar, etc.).',
+      thirdPartyOutro:    'The use of these third-party services remains subject to their own terms of service and privacy policies. The user is solely responsible for accepting those terms.',
+
+      sectionLiability:   'Limitation of liability',
+      liabilityP1:        'The publisher does everything possible to provide a reliable application and relevant analyses. However, the information, analyses, and recommendations provided by Trail Cockpit are for informational purposes only and cannot engage the publisher’s liability regarding the sports or health decisions made by the user.',
+      liabilityP2:        'The publisher cannot be held liable for technical unavailabilities, service interruptions, errors, or data losses originating from third-party services connected to the application, nor for direct or indirect damages that may result from the use or impossibility of use of the application.',
+    },
+
+    privacy: {
+      metaTitle:          'Privacy policy — Trail Cockpit',
+      pageTitle:          'Privacy policy',
+      pageDescription:    'How Trail Cockpit collects, uses, and protects your personal data.',
+
+      sectionController:  'Data controller',
+      controllerP1:       'The data controller for the personal data collected via the Trail Cockpit application is Franck Meri, publisher of the application.',
+      controllerPrompt:   'For any request regarding your personal data, you can write to:',
+
+      sectionCollected:   'Data collected',
+      collectedP:         'Trail Cockpit collects only the data necessary to operate its services. The categories of data below may be processed depending on the features used.',
+
+      sectionAccount:     'Account data',
+      accountItem1:       'Email address used to create the account.',
+      accountItem2:       'Unique internal user identifier.',
+      accountItem3:       'UI preferences (theme, units, time zone, etc.).',
+
+      sectionSports:      'Sports data',
+      sportsP:            'Trail Cockpit may process sports data such as distance, duration, pace, speed, elevation, heart rate, power, cadence, training load, fatigue, recovery, personal records, and training history.',
+
+      sectionGps:         'GPS or geolocation data',
+      gpsItem1:           'GPS traces associated with synchronised activities (route, kilometre points, elevation).',
+      gpsItem2:           'Derived data: segments, speeds, paces per section.',
+      gpsP:               'No real-time geolocation is performed by the application. The positions processed come solely from activities already recorded by the connected third-party services.',
+
+      sectionThirdParty:  'Data from third-party services',
+      thirdPartyP1:       'When the user connects a third-party service (e.g. Strava), Trail Cockpit receives the data the user has agreed to share during the OAuth authorisation: athlete profile, activities, and related statistics.',
+      thirdPartyP2:       'The user can revoke this access at any time from their Strava account settings or from Trail Cockpit settings.',
+
+      sectionAi:          'AI assistant or coaching data',
+      aiP1:               'When the user uses AI assistant or coaching features, the items provided (questions, goals, feelings, training data sent for analysis) may be processed to produce the requested recommendations.',
+      aiP2:               'These data may be transmitted to AI model providers solely to answer the user’s request. They are not used for advertising purposes.',
+
+      sectionPurposes:    'Processing purposes',
+      purpose1:           'Enable the creation and management of the user account.',
+      purpose2:           'Synchronise and display sports activities.',
+      purpose3:           'Compute training load, fatigue, capacity, and freshness indicators.',
+      purpose4:           'Provide analyses, statistics, and training recommendations.',
+      purpose5:           'Ensure the technical security of the service (fraud prevention, abuse prevention).',
+      purpose6:           'Respond to support requests and legal obligations.',
+
+      sectionLegalBasis:  'Legal basis',
+      basis1:             'Performance of the contract between the user and the publisher (provision of the service).',
+      basis2:             'User consent, in particular for the connection to third-party services and the processing of sensitive data.',
+      basis3:             'Legitimate interest of the publisher for the security and improvement of the service.',
+      basis4:             'Compliance with applicable legal obligations.',
+
+      sectionSensitive:   'Sensitive or health-related data',
+      sensitiveP1:        'Some data, such as heart rate, fatigue, recovery, pain, injuries, or fitness-state information, may reveal information about the user’s physical condition. They must therefore be processed with particular care.',
+      sensitiveP2:        'These data are never transferred to third parties for commercial purposes and are only used in the context of features explicitly enabled by the user.',
+
+      sectionRecipients:  'Data recipients',
+      recipient1:         'The publisher of the application, strictly within what is necessary to operate the service.',
+      recipient2:         'Technical sub-processors (host, database, authentication provider, AI provider where applicable), bound by confidentiality and security commitments.',
+      recipient3:         'Third-party services explicitly connected by the user to their account (e.g. Strava).',
+      recipientsOutro:    'No data is sold to third parties for advertising purposes.',
+
+      sectionRetention:   'Retention periods',
+      retention1:         'Account data: kept as long as the account is active.',
+      retention2:         'Sports data: kept as long as the account is active, to enable historical analysis of the practice.',
+      retention3:         'Technical and security logs: kept for a limited period required for the security of the service.',
+      retention4:         'After account deletion, personal data is deleted or anonymised as soon as possible, subject to legal retention obligations.',
+
+      sectionSecurity:    'Security',
+      securityP:          'The publisher implements reasonable technical and organisational measures to protect the data against loss, unauthorised access, alteration, or disclosure: connection encryption (HTTPS), secure authentication, restricted access to the data, regular backups.',
+
+      sectionRights:      'User rights',
+      rightsIntro:        'In accordance with applicable personal-data regulations, the user has the following rights:',
+      right1:             'Right of access to their data.',
+      right2:             'Right to rectification of inaccurate data.',
+      right3:             'Right to erasure ("right to be forgotten").',
+      right4:             'Right to restriction of processing.',
+      right5:             'Right to data portability.',
+      right6:             'Right to object to processing on legitimate grounds.',
+      right7:             'Right to withdraw consent at any time.',
+      right8:             'Right to lodge a complaint with a competent supervisory authority (in France, the CNIL).',
+      rightsPrompt:       'The user can request access to, rectification of, or deletion of their data by writing to:',
+
+      sectionDelete:      'Account deletion',
+      deletePrompt:       'The user may, at any time, request the deletion of their account and all associated personal data by sending an email to',
+      deleteOutro:        '. Deletion is carried out as soon as possible.',
+
+      sectionContact:     'GDPR contact',
+      contactPrompt:      'For any question regarding this privacy policy or the processing of your personal data, you can write to:',
+    },
+
+    terms: {
+      metaTitle:          'Terms of service — Trail Cockpit',
+      pageTitle:          'Terms of service',
+      pageDescription:    'Usage rules applicable to the Trail Cockpit application.',
+
+      sectionPurpose:     'Purpose of the application',
+      purposeP1:          'Trail Cockpit provides information, analyses, and recommendations for guidance only. The user remains responsible for their training choices and sports practice.',
+      purposeP2:          'The application does not provide a medical diagnosis, does not prescribe treatment, and does not replace a health professional or a qualified coach.',
+
+      sectionAccount:     'Account creation',
+      accountP1:          'Access to Trail Cockpit features requires the creation of an account. The user agrees to provide accurate information when registering and to keep it up to date.',
+      accountP2:          'The user is solely responsible for the confidentiality of their login credentials and for any use made of their account. Any suspicious use must be reported to the publisher without delay.',
+
+      sectionThirdParty:  'Connection to third-party services',
+      thirdPartyP1:       'The user may connect Trail Cockpit to third-party services (e.g. Strava) to synchronise their sports activities. This connection is performed via the authorisation protocols offered by these services (OAuth) and remains revocable at any time.',
+      thirdPartyP2:       'The user acknowledges that the use of these third-party services is governed by their own general terms and privacy policies, and that they accept those terms upon connection.',
+
+      sectionAccuracy:    'Data accuracy',
+      accuracyP1:         'The analyses produced by Trail Cockpit rely on the quality and accuracy of the data provided by the user or by the connected third-party services. Incomplete, erroneous, or miscalibrated data (e.g. an incorrect maximum heart rate) may lead to inaccurate results.',
+      accuracyP2:         'The user is encouraged to regularly verify their profile settings and to report any anomaly.',
+
+      sectionAi:          'AI assistant and recommendations',
+      aiP1:               'When the application provides recommendations generated by an intelligent assistant, these are produced automatically from the available data. They constitute neither medical advice nor a personalised training plan established by a certified professional.',
+      aiP2:               'The user always retains the final decision on whether or not to apply these recommendations.',
+
+      sectionMedical:     'No medical service',
+      medicalP1:          'Trail Cockpit is not a medical device. The application does not allow establishing a diagnosis, prescribing treatment, evaluating medical fitness for sports practice, nor replacing medical follow-up.',
+      medicalP2:          'In case of pain, injury, abnormal fatigue, discomfort, or doubt about their ability to practice a sports activity, the user must consult a health professional.',
+
+      sectionResponsibility: 'User responsibility',
+      resp1:              'Adapt their training to their fitness state, their experience, and their environment.',
+      resp2:              'Comply with safety rules applicable to their sport discipline and their location.',
+      resp3:              'Verify that their physical condition and equipment are compatible with the planned effort.',
+      resp4:              'Stop the activity in case of pain, injury, or unusual symptom and consult a health professional.',
+
+      sectionAvailability:'Service availability',
+      availabilityP1:     'The publisher strives to ensure the availability and reliability of the application but cannot guarantee a total absence of interruption, bug, or delay, in particular during maintenance, technical incidents, or unavailability of connected third-party services (Strava, host, etc.).',
+      availabilityP2:     'The publisher reserves the right to evolve, suspend, or interrupt all or part of the features, in particular for technical, regulatory, or security reasons.',
+
+      sectionIp:          'Intellectual property',
+      ipP1:               'All the elements that make up the Trail Cockpit application (name, logo, UI, texts, graphics, source code, analysis algorithms) are protected. Any unauthorised reproduction, representation, or exploitation is prohibited.',
+      ipP2:               'The user retains ownership of their own sports data. They grant the publisher, strictly within the scope of operating the service, the right to process them for the purposes described in the privacy policy.',
+
+      sectionData:        'Personal data',
+      dataP:              'The processing of the user’s personal data is described in detail in the application’s privacy policy, accessible from the "Regulatory" section of the settings.',
+
+      sectionDelete:      'Account deletion',
+      deletePrompt:       'The user may, at any time, request the deletion of their account and all associated personal data by sending an email to',
+      deleteOutro:        '.',
+
+      sectionChanges:     'Changes to the terms',
+      changesP1:          'The publisher may update these terms of service, in particular to reflect regulatory, technical, or functional developments. The date of the last update appears at the top of this document.',
+      changesP2:          'In case of substantial change, the user will be informed by a reasonable means (in-app notification or email). Continued use of the service after an update constitutes acceptance of the new terms.',
+
+      sectionLaw:         'Applicable law',
+      lawP:               'These terms of service are subject to French law. In case of dispute, and failing amicable resolution, the French courts shall have jurisdiction, subject to mandatory provisions applicable to consumers.',
+    },
+  },
 }

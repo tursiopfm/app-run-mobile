@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { getServerT } from '@/lib/i18n/server'
 
 type LegalPageShellProps = {
   eyebrow: string
@@ -17,17 +18,18 @@ export function LegalPageShell({
   updatedAt,
   children,
 }: LegalPageShellProps) {
+  const L = getServerT().legal
   return (
     <div className="min-h-screen bg-trail-bg">
       <div className="px-3 py-3 pb-10 space-y-4 max-w-lg mx-auto">
 
         <div className="pt-[2px]">
           <Link
-            href="/settings"
+            href="/support"
             className="inline-flex items-center gap-[6px] text-[12px] text-trail-muted hover:text-trail-text transition-colors"
           >
             <ArrowLeft size={14} />
-            Retour à l’aide & support
+            {L.backToSupport}
           </Link>
         </div>
 
@@ -44,14 +46,14 @@ export function LegalPageShell({
             </p>
           ) : null}
           <p className="text-[10px] font-semibold uppercase tracking-wider text-trail-muted/70 mt-[8px]">
-            Dernière mise à jour : {updatedAt}
+            {L.updatedAt} : {updatedAt}
           </p>
         </header>
 
         <div className="space-y-3">{children}</div>
 
         <p className="text-center text-[10px] text-trail-muted/70 tracking-wider uppercase pt-2">
-          Trail Cockpit · Document légal
+          {L.documentFooter}
         </p>
       </div>
     </div>

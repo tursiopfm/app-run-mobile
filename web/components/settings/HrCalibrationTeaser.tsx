@@ -16,9 +16,10 @@ export function HrCalibrationTeaser({ method, maxHr, thresholdHr }: Props) {
   const L = useT().settings
   const isConfigured = method != null
   const meta = isConfigured ? getMethodMeta(method) : null
+  const methodDict = method ? L.hrMethods[method] : null
 
   const bits: string[] = []
-  if (meta) bits.push(meta.label)
+  if (methodDict) bits.push(methodDict.label)
   if (maxHr)       bits.push(`${L.hrMaxLabel} ${maxHr}`)
   if (thresholdHr) bits.push(`${L.hrThresholdLabel} ${thresholdHr}`)
   const subtitle = isConfigured
@@ -38,12 +39,12 @@ export function HrCalibrationTeaser({ method, maxHr, thresholdHr }: Props) {
           <p className="text-[13px] font-semibold text-trail-text">
             {L.hrCalibrationTitle}
           </p>
-          {meta && (
+          {meta && methodDict && (
             <span
               className="text-[9px] font-bold uppercase tracking-wider px-[6px] py-[1px] rounded-[4px]"
               style={{ backgroundColor: meta.badgeBg, color: meta.color }}
             >
-              {meta.badge}
+              {methodDict.badge}
             </span>
           )}
         </div>
