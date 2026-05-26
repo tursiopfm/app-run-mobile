@@ -29,7 +29,7 @@ export function BestWindowBlock(props: Props) {
     return (
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
         <div className="flex items-center justify-between mb-[6px]">
-          <h3 className="text-[11px] font-semibold text-trail-muted uppercase tracking-[0.08em]">Meilleur créneau aujourd'hui</h3>
+          <h3 className="text-[11px] font-semibold text-trail-muted uppercase tracking-[0.08em]">Meilleur créneau aujourd&apos;hui</h3>
         </div>
         <p className="text-[11px] text-trail-muted">
           {props.status === 'loading' ? 'Calcul du meilleur créneau…' : 'Indisponible.'}
@@ -58,7 +58,7 @@ export function BestWindowBlock(props: Props) {
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       <div className="flex items-center justify-between mb-[6px]">
         <h3 className="text-[11px] font-semibold text-trail-muted uppercase tracking-[0.08em]">
-          Meilleur créneau aujourd'hui
+          Meilleur créneau aujourd&apos;hui
         </h3>
       </div>
       <div className="flex gap-[3px] h-6 items-end">
@@ -90,7 +90,7 @@ export function BestWindowBlock(props: Props) {
             optimal · score moyen {best.avgScore}/100
           </>
         ) : (
-          <span className="text-trail-muted">Pas de créneau optimal aujourd'hui — conditions difficiles.</span>
+          <span className="text-trail-muted">Pas de créneau optimal aujourd&apos;hui — conditions difficiles.</span>
         )}
       </p>
     </div>
