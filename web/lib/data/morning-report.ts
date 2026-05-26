@@ -41,45 +41,69 @@ export type MorningReportData = {
   generatedAt:    string
 }
 
-function startOfMonthLocal(): Date {
-  const d = new Date()
-  d.setDate(1)
-  d.setHours(0, 0, 0, 0)
-  return d
+// ─── Timezone helpers ───
+// Toutes les notions "aujourd'hui", "ce mois", "cette semaine" sont calculées
+// dans la timezone de l'utilisateur (par défaut Europe/Paris).
+// Vercel tourne en UTC ; sans ce calcul, "aujourd'hui" serait le jour UTC,
+// pas le jour local de l'athlète — bug entre 00:00 et ~02:00 heure de Paris.
+
+const DEFAULT_TZ = 'Europe/Paris'
+
+function tzOffsetMs(timeZone: string, when: Date): number {
+  // Renvoie l'offset (en ms) entre UTC et `timeZone` à l'instant `when`.
+  // Astuce : on formate `when` en string locale dans les deux tz puis on
+  // re-parse — la différence reflète l'offset, indépendamment de la tz du host.
+  const utcStr = when.toLocaleString('en-US', { timeZone: 'UTC' })
+  const tzStr  = when.toLocaleString('en-US', { timeZone })
+  return new Date(tzStr).getTime() - new Date(utcStr).getTime()
 }
 
-function startOfWeekLocal(): Date {
-  // Monday-based ISO week start
-  const d = new Date()
-  const dow = d.getDay()                       // 0 = Sun
-  const daysSinceMonday = dow === 0 ? 6 : dow - 1
-  d.setDate(d.getDate() - daysSinceMonday)
-  d.setHours(0, 0, 0, 0)
-  return d
+type TzDate = { y: number; m: number; d: number; dow: number; ymd: string }
+
+function tzShifted(timeZone: string, when: Date): TzDate {
+  // Renvoie les composantes Y/M/D/dow du moment `when` vu dans `timeZone`.
+  const offset = tzOffsetMs(timeZone, when)
+  const t = new Date(when.getTime() + offset)
+  const y = t.getUTCFullYear()
+  const m = t.getUTCMonth() + 1
+  const d = t.getUTCDate()
+  const dow = t.getUTCDay()
+  const ymd = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+  return { y, m, d, dow, ymd }
 }
 
-function startOfTodayLocal(): Date {
-  const d = new Date()
-  d.setHours(0, 0, 0, 0)
-  return d
-}
-
-function todayDateOnly(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+function startOfTzDayISO(timeZone: string, year: number, month: number, day: number): string {
+  // Instant UTC correspondant à 00:00 local dans `timeZone` à la date donnée.
+  // Probe à midi UTC pour éviter les bords de transition DST.
+  const probe = new Date(Date.UTC(year, month - 1, day, 12, 0, 0))
+  const offset = tzOffsetMs(timeZone, probe)
+  return new Date(Date.UTC(year, month - 1, day) - offset).toISOString()
 }
 
 function dowToMondayIdx(dow: number): number {
   return dow === 0 ? 6 : dow - 1
 }
 
-export async function getMorningReportData(userId: string): Promise<MorningReportData> {
+export async function getMorningReportData(
+  userId:   string,
+  timeZone: string = DEFAULT_TZ,
+): Promise<MorningReportData> {
   const supabase = await createClient()
 
-  const startOfMonthISO = startOfMonthLocal().toISOString()
-  const startOfWeekISO  = startOfWeekLocal().toISOString()
-  const startOfTodayISO = startOfTodayLocal().toISOString()
-  const today           = todayDateOnly()
+  const now    = new Date()
+  const today  = tzShifted(timeZone, now)
+  const startOfTodayISO = startOfTzDayISO(timeZone, today.y, today.m, today.d)
+  const startOfMonthISO = startOfTzDayISO(timeZone, today.y, today.m, 1)
+
+  const daysSinceMonday = dowToMondayIdx(today.dow)
+  const mondayMs        = Date.UTC(today.y, today.m - 1, today.d) - daysSinceMonday * 86400000
+  const monday          = new Date(mondayMs)
+  const startOfWeekISO  = startOfTzDayISO(
+    timeZone,
+    monday.getUTCFullYear(),
+    monday.getUTCMonth() + 1,
+    monday.getUTCDate(),
+  )
 
   const [charge, profileRes, lastActRes, monthRes, weekRes, todaySessionRes] = await Promise.all([
     getChargePageData(userId),
@@ -109,7 +133,7 @@ export async function getMorningReportData(userId: string): Promise<MorningRepor
       .from('planned_sessions')
       .select('type, title, duration_min, distance_km, elevation_m, status, created_at')
       .eq('athlete_id', userId)
-      .eq('date', today)
+      .eq('date', today.ymd)
       .order('created_at', { ascending: true })
       .limit(1),
   ])
@@ -171,7 +195,8 @@ export async function getMorningReportData(userId: string): Promise<MorningRepor
   for (const r of weekRows) {
     const dist  = r.manual_distance_m       ?? r.distance_m       ?? 0
     const dPlus = r.manual_elevation_gain_m ?? r.elevation_gain_m ?? 0
-    const dayIdx = dowToMondayIdx(new Date(r.start_time).getDay())
+    const activityTz = tzShifted(timeZone, new Date(r.start_time))
+    const dayIdx = dowToMondayIdx(activityTz.dow)
     byDay[dayIdx] += dist / 1000
     weekKmAcc += dist / 1000
     weekDPlusAcc += dPlus
@@ -180,7 +205,7 @@ export async function getMorningReportData(userId: string): Promise<MorningRepor
     km:    Math.round(weekKmAcc),
     dPlus: Math.round(weekDPlusAcc),
     byDay: byDay.map(v => Math.round(v * 10) / 10),
-    todayIdx: dowToMondayIdx(new Date().getDay()),
+    todayIdx: dowToMondayIdx(today.dow),
   }
 
   const sessRow = todaySessionRes.data?.[0]
