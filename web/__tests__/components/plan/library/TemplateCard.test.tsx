@@ -12,7 +12,7 @@ const TPL: SessionTemplate = {
 
 function wrap(ui: React.ReactElement) {
   return (
-    <I18nProvider initialLocale="fr">
+    <I18nProvider initialLang="fr">
       <DndContext>{ui}</DndContext>
     </I18nProvider>
   )
