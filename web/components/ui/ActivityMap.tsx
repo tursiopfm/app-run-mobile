@@ -271,9 +271,10 @@ export function ActivityMap({ encodedPolyline, expanded = false }: { encodedPoly
 }
 
 export function ActivityMapPlaceholder() {
+  const L = useT().activities
   return (
     <div style={{ width: '100%', height: '100%', background: '#e8eaed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <span style={{ color: '#9aa0ac', fontSize: '13px' }}>Carte non disponible</span>
+      <span style={{ color: '#9aa0ac', fontSize: '13px' }}>{L.mapUnavailable}</span>
     </div>
   )
 }

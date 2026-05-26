@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import type { SportOverview } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
+import { sportLabel } from '@/lib/design/sports-i18n'
 import { readSportSettings } from '@/lib/design/sport-settings'
 import { CockpitKpiTile } from '@/components/ui/CockpitKpiTile'
 import { TsbBadge } from '@/components/ui/TsbBadge'
@@ -62,7 +63,7 @@ export function ChargeBlock({ sportOverviews, onHide }: Props) {
       <div className="flex items-center justify-between mb-[6px]">
         <div className="flex items-center gap-1">
           <span className="text-[15px] font-semibold text-trail-muted">{C.headerCharge}</span>
-          <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
+          <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{sportLabel(activeSport, t)}</span>
         </div>
         <div className="flex items-center gap-2">
           <TsbBadge tsb={activeSov.tsb} onClick={() => setShowFreshnessHelp(true)} />

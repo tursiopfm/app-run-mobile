@@ -298,12 +298,12 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
                 }}
                 aria-label={L.structureCycleAria(phase.label, weeks)}
                 aria-expanded={isExpanded}
-                title={`${def.label} · ${weeks}${L.structureWeeksSuffix}${phase.focus ? ` · ${phase.focus}` : ''}`}
+                title={`${L.phaseTypes[phase.type]} · ${weeks}${L.structureWeeksSuffix}${phase.focus ? ` · ${phase.focus}` : ''}`}
               >
                 {showLabel && (
                   <>
                     <span className="block w-full text-center truncate px-1" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.55)' }}>
-                      {L.structureCycleLabel(def.label, weeks)}
+                      {L.structureCycleLabel(L.phaseTypes[phase.type], weeks)}
                     </span>
                     {phase.focus && (
                       <span className="block w-full text-center text-[9px] opacity-90 truncate px-1" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.55)' }}>

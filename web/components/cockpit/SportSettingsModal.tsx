@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { SPORT_CONFIG, type SportKey } from '@/lib/design/sports'
+import { sportLabel } from '@/lib/design/sports-i18n'
 import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
@@ -17,7 +18,8 @@ type Props = {
 }
 
 export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave, onClose, onHide }: Props) {
-  const L = useT().cockpit.modal
+  const t = useT()
+  const L = t.cockpit.modal
   const [localVisible, setLocalVisible] = useState<SportKey[]>(visible)
   const [localDefault, setLocalDefault] = useState<SportKey>(defaultKey)
 
@@ -56,7 +58,7 @@ export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave
                   className="w-4 h-4"
                 />
                 <span className="text-[15px]">{cfg.emoji}</span>
-                <span className="text-[14px] text-trail-text">{cfg.label}</span>
+                <span className="text-[14px] text-trail-text">{sportLabel(key, t)}</span>
               </label>
             )
           })}
@@ -84,7 +86,7 @@ export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave
                   className="w-4 h-4"
                 />
                 <span className="text-[15px]">{cfg.emoji}</span>
-                <span className="text-[14px] text-trail-text">{cfg.label}</span>
+                <span className="text-[14px] text-trail-text">{sportLabel(key, t)}</span>
               </label>
             )
           })}

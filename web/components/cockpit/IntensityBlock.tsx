@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import type { SportOverview } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
+import { sportLabel } from '@/lib/design/sports-i18n'
 import { readSportSettings } from '@/lib/design/sport-settings'
 import { CockpitPieChart, type PieSlice } from '@/components/charts/CockpitPieChart'
 import { SportSettingsModal } from './SportSettingsModal'
@@ -21,7 +22,8 @@ const UNDEFINED_COLOR = '#6B7280'
 type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
 export function IntensityBlock({ sportOverviews, onHide }: Props) {
-  const L = useT().cockpit
+  const t = useT()
+  const L = t.cockpit
   const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
   const [currentIdx, setCurrentIdx] = useState(() => {
     const s = readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS)
@@ -49,7 +51,7 @@ export function IntensityBlock({ sportOverviews, onHide }: Props) {
       <div className="flex items-center justify-between mb-[6px]">
         <div className="flex items-center gap-1">
           <span className="text-[15px] font-semibold text-trail-muted">{L.headerIntensityBlock}</span>
-          <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
+          <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{sportLabel(activeSport, t)}</span>
         </div>
         <button
           onClick={() => setShowModal(true)}

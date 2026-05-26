@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { colors } from '@/lib/design/colors'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
+import { sportShortLabel } from '@/lib/design/sports-i18n'
 import { type SportOverview } from '@/lib/data/dashboard'
 import { useT } from '@/lib/i18n/I18nProvider'
 
@@ -21,7 +22,8 @@ function fmtDuration(totalSec: number): string {
 }
 
 export function WeekBlock({ sportOverviews, allSessions }: Props) {
-  const L = useT().cockpit
+  const t = useT()
+  const L = t.cockpit
   const [activeSport, setActiveSport] = useState<SportKey>('run')
 
   const sessions = activeSport === 'all'
@@ -65,7 +67,7 @@ export function WeekBlock({ sportOverviews, allSessions }: Props) {
                   border:          `1px solid ${isActive ? scfg.color : colors.border}`,
                 }}
               >
-                {scfg.shortLabel}
+                {sportShortLabel(sport, t)}
               </button>
             )
           })}

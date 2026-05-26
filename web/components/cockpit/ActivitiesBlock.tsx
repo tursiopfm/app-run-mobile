@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import type { SportOverview } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
+import { sportLabel } from '@/lib/design/sports-i18n'
 import { readSportSettings } from '@/lib/design/sport-settings'
 import { CockpitKpiTile } from '@/components/ui/CockpitKpiTile'
 import { TsbBadge } from '@/components/ui/TsbBadge'
@@ -35,7 +36,8 @@ function formatDPlusLabel(v: number): string {
 type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
 export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
-  const L = useT().cockpit
+  const t = useT()
+  const L = t.cockpit
   // Lazy-init depuis LS — pas de flash entre default et préférences user.
   const [settings,    setSettings]    = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
   const [currentIdx,  setCurrentIdx]  = useState(() => {
@@ -65,7 +67,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
       <div className="flex items-center justify-between mb-[6px]">
         <div className="flex items-center gap-1">
           <span className="text-[15px] font-semibold text-trail-muted">{L.headerActivities}</span>
-          <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
+          <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{sportLabel(activeSport, t)}</span>
         </div>
         <div className="flex items-center gap-2">
           <TsbBadge tsb={sportOverviews.all.tsb} onClick={() => setShowFreshnessHelp(true)} />

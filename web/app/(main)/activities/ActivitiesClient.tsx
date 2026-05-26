@@ -871,7 +871,7 @@ export default function ActivitiesClient({
               <path d="M16.5 16.5L21 21" stroke={hasActiveSearch ? colors.chargeOrange : colors.subtleText} strokeWidth="2" strokeLinecap="round" />
             </svg>
             <span className="text-[14px]" style={{ color: hasActiveSearch ? colors.chargeOrange : colors.subtleText }}>
-              Rechercher
+              {L_main.headerSearch}
             </span>
           </button>
 

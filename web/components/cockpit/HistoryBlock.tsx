@@ -4,6 +4,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import type { SportOverview, DailyHistoryEntry } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
+import { sportLabel } from '@/lib/design/sports-i18n'
 import { readSportSettings } from '@/lib/design/sport-settings'
 import { SportSettingsModal } from './SportSettingsModal'
 import { SportsCarousel } from './SportsCarousel'
@@ -242,7 +243,8 @@ function HistoryPill({
 // ── HistoryBlock ──────────────────────────────────────────────────────────
 
 export function HistoryBlock({ sportOverviews, onHide }: Props) {
-  const L = useT().cockpit
+  const t = useT()
+  const L = t.cockpit
   const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
   const [currentIdx, setCurrentIdx] = useState(() => {
     const s = readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS)
@@ -287,7 +289,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
       <div className="flex items-center justify-between mb-[10px]">
         <div className="flex items-center gap-1.5">
           <span className="text-[15px] font-semibold text-trail-muted">{L.headerHistory}</span>
-          <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
+          <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{sportLabel(activeSport, t)}</span>
         </div>
         <div className="flex items-center gap-2">
           {/* Period tabs */}

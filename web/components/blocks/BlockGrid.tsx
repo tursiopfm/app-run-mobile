@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, startTransition, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { useT } from '@/lib/i18n/I18nProvider'
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent, type DragStartEvent, DragOverlay,
@@ -126,12 +127,13 @@ function AddBlockPanel({
   onRestore: (id: string) => void
   onClose: () => void
 }) {
+  const addBlockLabel = useT().cockpit.addBlock
   if (typeof document === 'undefined') return null
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
       <div className="bg-trail-card border border-trail-border rounded-t-[20px] w-full max-w-lg p-5 pb-8" onClick={(e) => e.stopPropagation()}>
         <div className="w-10 h-1 rounded-full bg-trail-border mx-auto mb-4" />
-        <h2 className="text-[16px] font-semibold text-trail-text mb-4">Ajouter un bloc</h2>
+        <h2 className="text-[16px] font-semibold text-trail-text mb-4">{addBlockLabel}</h2>
         <div className="space-y-2">
           {hiddenBlocks.map((b) => (
             <button
@@ -151,7 +153,9 @@ function AddBlockPanel({
   )
 }
 
-export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajouter un bloc', defaultHidden = [] }: Props) {
+export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultHidden = [] }: Props) {
+  const t = useT()
+  const resolvedAddLabel = addLabel ?? t.cockpit.addBlock
   const orderStorage  = `${storageKey}_block_order`
   const hiddenStorage = `${storageKey}_hidden_blocks`
 
@@ -275,7 +279,7 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel = 'Ajoute
           className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-[12px] border border-dashed border-trail-border text-trail-muted hover:border-trail-primary hover:text-trail-primary transition-colors"
         >
           <span className="text-[20px] leading-none">+</span>
-          <span className="text-[14px] font-semibold">{addLabel}</span>
+          <span className="text-[14px] font-semibold">{resolvedAddLabel}</span>
         </button>
       )}
       {showAdd && (

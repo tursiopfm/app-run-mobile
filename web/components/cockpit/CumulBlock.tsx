@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import type { SportOverview } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
+import { sportLabel } from '@/lib/design/sports-i18n'
 import { readSportSettings } from '@/lib/design/sport-settings'
 import { colors } from '@/lib/design/colors'
 import { CockpitCumulChart } from '@/components/charts/CockpitCumulChart'
@@ -25,7 +26,8 @@ type Period = 'month' | 'year'
 type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
 export function CumulBlock({ sportOverviews, onHide }: Props) {
-  const L = useT().cockpit
+  const t = useT()
+  const L = t.cockpit
   const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
   const [currentIdx, setCurrentIdx] = useState(() => {
     const s = readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS)
@@ -63,7 +65,7 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
           <span className="text-[15px] font-semibold text-trail-muted">
             {L.cumulHeader(period)}
           </span>
-          <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
+          <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{sportLabel(activeSport, t)}</span>
         </div>
         <div className="flex items-center gap-2">
           {/* Period tabs */}

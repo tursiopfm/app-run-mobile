@@ -1,5 +1,8 @@
+'use client'
+
 import { splitPaceSec, splitColor, fmtPaceSec } from '@/lib/activities/detail'
 import type { StravaSplit } from '@/lib/activities/detail'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 export function ActivitySplits({
   splits,
@@ -8,6 +11,7 @@ export function ActivitySplits({
   splits: StravaSplit[]
   avgPaceSec: number
 }) {
+  const L = useT().activities
   if (!splits.length) return null
 
   const paces = splits.map(s => splitPaceSec(s))
@@ -19,10 +23,10 @@ export function ActivitySplits({
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {/* Header: segment count + best split */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <span style={{ fontSize: 12, color: '#6b7a96' }}>{splits.length} segments</span>
+        <span style={{ fontSize: 12, color: '#6b7a96' }}>{splits.length} {L.splitsCount}</span>
         {minPace !== null && (
           <span style={{ fontSize: 12, fontWeight: 700, color: splitColor(minPace, avgPaceSec) }}>
-            ★ Meilleur {fmtPaceSec(minPace)}
+            {L.splitsBest(fmtPaceSec(minPace))}
           </span>
         )}
       </div>

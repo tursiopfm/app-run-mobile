@@ -44,10 +44,10 @@ export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {/* Summary line */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <span style={{ fontSize: 12, color: 'var(--trail-muted)' }}>{laps.length} blocs</span>
+        <span style={{ fontSize: 12, color: 'var(--trail-muted)' }}>{laps.length} {L.fracBlocksCount}</span>
         {hasFastLaps && (
           <span style={{ fontSize: 12, fontWeight: 700, color: '#e8651a' }}>
-            {fastSplits.size} bloc{fastSplits.size > 1 ? 's' : ''} rapide{fastSplits.size > 1 ? 's' : ''} détecté{fastSplits.size > 1 ? 's' : ''}
+            {L.fracFastDetected(fastSplits.size)}
           </span>
         )}
       </div>
@@ -60,7 +60,7 @@ export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
         borderBottom: '1px solid var(--trail-border)',
         marginBottom: 2,
       }}>
-        {['#', 'Distance', 'Temps', 'Allure', 'D+'].map(h => (
+        {['#', L.fracColDistance, L.fracColTime, L.fracColPace, L.fracColElevation].map(h => (
           <span key={h} style={{
             fontSize: 11, fontWeight: 700,
             color: 'var(--trail-muted)',
@@ -121,7 +121,7 @@ export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
                   width: 'fit-content',
                   letterSpacing: '0.4px',
                 }}>
-                  RAPIDE
+                  {L.fracFastBadge}
                 </span>
               )}
             </div>

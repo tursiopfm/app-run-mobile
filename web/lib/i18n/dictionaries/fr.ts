@@ -15,7 +15,8 @@ export type Dict = {
   sports: {
     run: string; trailRun: string; bike: string; virtualRide: string; ebikeRide: string;
     swim: string; walk: string; hike: string; weightTraining: string;
-    abbr: { run: string; bike: string; swim: string }
+    all: string
+    abbr: { run: string; bike: string; swim: string; all: string }
   }
   sportLabel: Record<string, string>
   units: Record<'km' | 'm' | 'kmh' | 'perKm' | 'bpm' | 'watts' | 'kg' | 'pct' | 'pctFcMax' | 'ces' | 'hours', string>
@@ -242,6 +243,16 @@ export type Dict = {
     sessionTypeUndefinedAria: string
     sessionTypeAria: (label: string) => string
     mapReplay: string
+    mapUnavailable: string
+    splitsBest: (pace: string) => string
+    splitsCount: string
+    fracBlocksCount: string
+    fracFastDetected: (n: number) => string
+    fracColDistance: string
+    fracColTime: string
+    fracColPace: string
+    fracColElevation: string
+    fracFastBadge: string
 
     popupClose: string; popupCloseAria: string
     popupChargeTitle: string; popupChargeIntro: string
@@ -632,6 +643,7 @@ export type Dict = {
     typesPrefsDeleteConfirm: string
 
     phaseTypes: Record<'foncier' | 'developpement' | 'specifique' | 'affutage' | 'recuperation', string>
+    sessionTemplates: Record<string, { title: string; description: string }>
     phaseEditorTitle: string
     phaseEditorAutoGen: string
     phaseEditorAutoGenAria: string
@@ -878,10 +890,12 @@ export const fr: Dict = {
     walk:           'Marche',
     hike:           'Rando',
     weightTraining: 'Muscu',
+    all:            'Toutes',
     abbr: {
       run:  'RUN',
       bike: 'BIKE',
       swim: 'SWIM',
+      all:  'ALL',
     },
   },
 
@@ -1453,6 +1467,16 @@ export const fr: Dict = {
     sessionTypeUndefinedAria: 'Type de séance non défini',
     sessionTypeAria:          (label: string) => `Type de séance : ${label}`,
     mapReplay:                "Rejouer l'animation",
+    mapUnavailable:           'Carte non disponible',
+    splitsBest:               (pace: string) => `★ Meilleur ${pace}`,
+    splitsCount:              'segments',
+    fracBlocksCount:          'blocs',
+    fracFastDetected:         (n: number) => `${n} bloc${n > 1 ? 's' : ''} rapide${n > 1 ? 's' : ''} détecté${n > 1 ? 's' : ''}`,
+    fracColDistance:          'Distance',
+    fracColTime:              'Temps',
+    fracColPace:              'Allure',
+    fracColElevation:         'D+',
+    fracFastBadge:            'RAPIDE',
 
     // Popups
     popupClose:          'Fermer',
@@ -2296,6 +2320,37 @@ export const fr: Dict = {
       affutage:      'Affûtage',
       recuperation:  'Récupération',
     },
+
+    sessionTemplates: {
+      'sl-1h30':           { title: 'SL 1h30 vallonnée',       description: 'Endurance fondamentale sur terrain vallonné. Allure conversationnelle.' },
+      'sl-2h-progressive': { title: 'SL 2h progressive',       description: 'Sortie longue avec dernière demi-heure en allure soutenue.' },
+      'sl-3h-spe':         { title: 'SL 3h spécifique',        description: 'Sortie longue avec relances en côte pour simuler le format course.' },
+      'fr-6x500':          { title: '6×500m VMA',              description: '6×500m R=1min15 trot. Allure 95–100% VMA.' },
+      'fr-10x400':         { title: '10×400m VMA',             description: '10×400m R=1min trot. Allure VMA.' },
+      'fr-3x6min':         { title: '3×6min allure 5km',       description: '3×6min R=2min30. Allure 5km / 92–95% VMA.' },
+      'se-3x10':           { title: '3×10min Seuil',           description: '3×10min allure seuil R=2min trot.' },
+      'se-2x20':           { title: '2×20min Seuil',           description: '2×20min allure seuil R=3min trot. Séance clé.' },
+      'te-40min':          { title: 'Tempo 40min',             description: '40min continu allure tempo / seuil bas.' },
+      'co-10x30s':         { title: '10×30s côtes',            description: '10×30s côte raide à fond, récup descente trot.' },
+      'co-6x2min':         { title: '6×2min côtes longues',    description: '6×2min côte modérée allure seuil, descente trot.' },
+      'co-bosses-natu':    { title: 'Sortie bosses 1h30',      description: 'Parcours naturel à bosses, relances libres.' },
+      'cr-cible':          { title: 'Course objectif',         description: 'Course cible. Distance, D+ et durée à personnaliser.' },
+      'cr-prep':           { title: 'Course de prépa',         description: 'Course intermédiaire en mode test grandeur nature.' },
+      'rt-aller':          { title: 'Runtaf aller (30min)',    description: 'Trajet domicile-travail à pied, endurance.' },
+      'rt-double':         { title: 'Runtaf A/R (1h)',         description: 'Trajet aller + retour à pied.' },
+      'vt-1h':             { title: 'Velotaf 1h',              description: 'Trajet vélo modéré, récupération active.' },
+      'ft-30':             { title: 'Footing 30min',           description: 'Footing facile, Z2.' },
+      'ft-45':             { title: 'Footing 45min',           description: 'Footing endurance Z2.' },
+      'ft-1h':             { title: 'Footing 1h',              description: 'Footing aérobie 1h plat ou légèrement vallonné.' },
+      'velo-1h30-eb':      { title: 'Vélo 1h30 endurance',     description: 'Sortie vélo en endurance fondamentale.' },
+      'velo-2h-vallonne':  { title: 'Vélo 2h vallonnée',       description: 'Vélo avec parcours vallonné, allure soutenue.' },
+      'nat-45min-endurance': { title: 'Natation 45min continue', description: 'Crawl continu en endurance, récupération active.' },
+      'nat-1h-fract':      { title: 'Natation 1h fractionnée', description: '16×50m allure soutenue R=15s. Renforcement cardio.' },
+      'renfo-30min-trail': { title: 'Renfo trail 30min',       description: 'Gainage + spécifique pieds-chevilles-quadri pour trail.' },
+      'renfo-45min-complet': { title: 'Renfo complet 45min',   description: 'Circuit complet : gainage, squats, fentes, pompes.' },
+      'muscu-jambes':      { title: 'Muscu jambes',            description: 'Squat, presse, fentes, mollets. Charges modérées, séries longues.' },
+      'muscu-haut-corps':  { title: 'Muscu haut du corps',     description: 'Pectoraux, dos, épaules, biceps, triceps. Travail complémentaire.' },
+    },
     phaseEditorTitle:                  'Éditer les cycles',
     phaseEditorAutoGen:                '🪄 Auto-générer',
     phaseEditorAutoGenAria:            'Auto-générer les cycles depuis ma course',
@@ -2542,11 +2597,11 @@ export const fr: Dict = {
 
   // --- HR zones ---
   hrZones: {
-    z1Name:       'Endurance de base',
-    z2Name:       'Endurance active',
-    z3Name:       'Seuil',
-    z4Name:       'VO₂max / Intervalles',
-    z5Name:       'Intensité max',
+    z1Name:       'Récupération',
+    z2Name:       'Endurance fondamentale',
+    z3Name:       'Endurance active',
+    z4Name:       'Seuil',
+    z5Name:       'Très intense',
     optimalRange: 'Plage optimale',
   },
 

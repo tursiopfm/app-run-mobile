@@ -16,7 +16,9 @@ type Props = {
 }
 
 export function HrZonesDisplay({ method: methodProp, maxHr, restingHr, aerobicThresholdHr, thresholdHr, birthYear: birthYearProp, customZones }: Props) {
-  const L = useT().settings
+  const t = useT()
+  const L = t.settings
+  const ZONE_NAMES_DICT = [t.hrZones.z1Name, t.hrZones.z2Name, t.hrZones.z3Name, t.hrZones.z4Name, t.hrZones.z5Name]
   const METHOD_LABELS = L.hrMethodLabels
   const [methodLocal,    setMethodLocal]    = useState<HrZoneMethod>('seuils')
   const [birthYearLocal, setBirthYearLocal] = useState<number | null>(null)
@@ -75,7 +77,7 @@ export function HrZonesDisplay({ method: methodProp, maxHr, restingHr, aerobicTh
           >
             <div className="rounded-full flex-shrink-0" style={{ width: 8, height: 8, backgroundColor: z.color }} />
             <span className="text-[12px] flex-1" style={{ color: colors.subtleText }}>
-              Z{z.zone} — {z.name}
+              Z{z.zone} — {ZONE_NAMES_DICT[z.zone - 1] ?? z.name}
             </span>
             <span className="text-[12px] font-bold" style={{ color: z.color }}>
               {z.min == null ? `≤ ${z.max}` : `${z.min} – ${z.max}`}

@@ -6,6 +6,7 @@ import { GoalProgressRow } from '@/components/ui/GoalProgressRow'
 import { SportSettingsModal } from './SportSettingsModal'
 import { SportsCarousel } from './SportsCarousel'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
+import { sportLabel } from '@/lib/design/sports-i18n'
 import type { SportOverview } from '@/lib/data/dashboard'
 import { getCurrentPlan, peekMacros, pickActiveMacrocycle } from '@/lib/plan/storage'
 import { resolveWeeklyTarget } from '@/lib/training/phases'
@@ -73,7 +74,8 @@ function computePlanWeeklyFromSnapshot(): { km: number; dPlus: number } | null {
 }
 
 export function GoalsBlock({ sportOverviews, onHide }: Props) {
-  const L = useT().cockpit
+  const t = useT()
+  const L = t.cockpit
   const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(SETTINGS_KEY, DEFAULT_SETTINGS))
   const [targets,    setTargets]    = useState<Partial<Record<SportKey, Partial<Goals>>>>(() => readTargets())
   const [planWeekly, setPlanWeekly] = useState<{ km: number; dPlus: number } | null>(() => computePlanWeeklyFromSnapshot())
@@ -176,7 +178,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                     <div className="flex items-center gap-1.5">
                       <span className="text-[15px] font-semibold text-trail-muted">{L.headerGoals}</span>
                       <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>
-                        {cfg.label}
+                        {sportLabel(sport, t)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -260,7 +262,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                     ? SPORT_CONFIG[visibleSports[activeIdx]].color
                     : 'rgba(255,255,255,0.25)',
                 }}
-                aria-label={SPORT_CONFIG[sport].label}
+                aria-label={sportLabel(sport, t)}
               />
             ))}
           </div>
@@ -289,7 +291,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-[16px] font-bold text-trail-text mb-4">
-              {L.goalEdit.titleFor(SPORT_CONFIG[editSport].label, SPORT_CONFIG[editSport].emoji)}
+              {L.goalEdit.titleFor(sportLabel(editSport, t), SPORT_CONFIG[editSport].emoji)}
             </h3>
             {planWeekly && (editSport === 'run' || editSport === 'all') && (
               <button

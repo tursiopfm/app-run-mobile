@@ -7,6 +7,7 @@ import { EditActivityModal } from '@/components/ui/EditActivityModal'
 import { SportSettingsModal } from './SportSettingsModal'
 import { SportsCarousel } from './SportsCarousel'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
+import { sportLabel } from '@/lib/design/sports-i18n'
 import { readSportSettings } from '@/lib/design/sport-settings'
 import { calculateHrZones, type HrZone, type HrZoneMethod } from '@/lib/health/hr-zones'
 import { colors } from '@/lib/design/colors'
@@ -50,7 +51,8 @@ function computeHrZones(profile: AthleteHrProfile): HrZone[] {
 
 export function LastActivityBlock({ latestPerSport, athleteProfile, onHide }: Props) {
   const router = useRouter()
-  const L = useT().cockpit
+  const t = useT()
+  const L = t.cockpit
   const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
   const [currentIdx, setCurrentIdx] = useState(() => {
     const s = readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS)
@@ -86,7 +88,7 @@ export function LastActivityBlock({ latestPerSport, athleteProfile, onHide }: Pr
       <div className="flex items-center justify-between mb-[8px]">
         <div className="flex items-center gap-1">
           <span className="text-[15px] font-semibold text-trail-muted">{L.headerLastActivity}</span>
-          <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
+          <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{sportLabel(activeSport, t)}</span>
         </div>
         <div className="flex items-center gap-2">
           {activeActivity && (
@@ -127,7 +129,7 @@ export function LastActivityBlock({ latestPerSport, athleteProfile, onHide }: Pr
               />
             ) : (
               <p className="text-[13px] py-2" style={{ color: colors.subtleText }}>
-                {L.noActivityFor(SPORT_CONFIG[sportKey].label)}
+                {L.noActivityFor(sportLabel(sportKey, t))}
               </p>
             ),
           }

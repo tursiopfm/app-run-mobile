@@ -112,8 +112,9 @@ export function BibliothequeSeancesBlock() {
 
   function requestDelete(template: SessionTemplate) {
     const isCustomTpl = customIds.has(template.id)
+    const displayTitle = L.sessionTemplates[template.id]?.title ?? template.title
     setPendingConfirm({
-      title: L.libDeleteTitle(template.title),
+      title: L.libDeleteTitle(displayTitle),
       message: isCustomTpl ? L.libDeleteMsgCustom : L.libDeleteMsgSystem,
       confirmLabel: L.libDeleteConfirm,
       destructive: true,
@@ -478,7 +479,7 @@ function TemplateCard({
       onClick={onClick}
       role="button"
       tabIndex={0}
-      aria-label={L.libTemplateCardAria(template.title)}
+      aria-label={L.libTemplateCardAria(L.sessionTemplates[template.id]?.title ?? template.title)}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
     >
       <button
@@ -488,7 +489,7 @@ function TemplateCard({
           onDelete()
         }}
         onPointerDown={(e) => e.stopPropagation()}
-        aria-label={L.libTemplateDeleteAria(template.title)}
+        aria-label={L.libTemplateDeleteAria(L.sessionTemplates[template.id]?.title ?? template.title)}
         className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-trail-card border border-trail-border text-trail-muted hover:text-trail-danger hover:border-trail-danger text-[11px] leading-none z-10"
       >
         ✕
@@ -500,7 +501,7 @@ function TemplateCard({
         className="mt-1 text-[14px] text-trail-text leading-tight"
         style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.02em' }}
       >
-        {template.title}
+        {L.sessionTemplates[template.id]?.title ?? template.title}
       </h4>
       <div className="mt-1 flex flex-wrap gap-x-2 gap-y-[2px] text-[10px] text-trail-muted">
         {template.defaultDuration > 0 && <span>{template.defaultDuration} min</span>}
