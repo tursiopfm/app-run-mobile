@@ -1,6 +1,6 @@
 # Spec — Picker d'ajout de séance (Plan tab)
 
-> **Status:** Spec validée — implémentation pas encore commencée
+> **Status: Implémenté** · 2026-05-26 · Code: web/components/plan/SessionAddSheet.tsx, web/components/plan/library/
 > **Périmètre :** onglet Plan uniquement. Pas de migration SQL, pas de changement data model.
 
 ## Goal
