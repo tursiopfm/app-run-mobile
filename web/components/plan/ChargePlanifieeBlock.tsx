@@ -15,6 +15,7 @@ import {
 } from '@/lib/plan/storage'
 import { colors } from '@/lib/design/colors'
 import { BlockCard } from '@/components/blocks/BlockCard'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type WeekBucket = {
   label:    string
@@ -92,9 +93,7 @@ type ChargePlanifieeBlockProps = {
 }
 
 export function ChargePlanifieeBlock({ reloadKey = 0 }: ChargePlanifieeBlockProps = {}) {
-  // Lazy-init depuis le snapshot LS (visite précédente) — supprime le flash.
-  // On reconstruit les buckets directement depuis le snapshot pour rendre
-  // synchronement avec les barres déjà remplies.
+  const L = useT().plan
   const initial = useMemo(() => {
     const now = new Date()
     const skeleton = buildWeekBuckets(now)
@@ -183,16 +182,16 @@ export function ChargePlanifieeBlock({ reloadKey = 0 }: ChargePlanifieeBlockProp
 
   return (
     <BlockCard
-      title="Charge planifiée"
-      helpTitle="Charge planifiée"
-      helpBody="Cumul de la charge estimée des séances planifiées sur 4 semaines (W-1 à W+2). Ligne pointillée = cible hebdo de la phase courante."
+      title={L.chargePlanTitle}
+      helpTitle={L.chargePlanTitle}
+      helpBody={L.chargePlanHelpFull}
       rightSlot={overshoot ? (
         <span
           className="px-[8px] py-[3px] rounded-full text-[10px] font-semibold whitespace-nowrap"
           style={{ backgroundColor: `${colors.seriesYellow}26`, color: colors.seriesYellow }}
-          aria-label="Écart supérieur à 20% par rapport à la cible"
+          aria-label={L.chargePlanOvershootAria}
         >
-          Écart &gt;20% / cible
+          {L.chargePlanOvershootBadge}
         </span>
       ) : undefined}
     >
@@ -201,7 +200,7 @@ export function ChargePlanifieeBlock({ reloadKey = 0 }: ChargePlanifieeBlockProp
         width="100%"
         height={VB_H}
         role="img"
-        aria-label="Charge planifiée sur 4 semaines"
+        aria-label={L.chargePlanSvgAria}
         style={{ overflow: 'visible' }}
       >
         {/* Ligne pointillée cible */}
@@ -225,7 +224,7 @@ export function ChargePlanifieeBlock({ reloadKey = 0 }: ChargePlanifieeBlockProp
               fill={colors.subtleText as string}
               style={{ fontWeight: 600 }}
             >
-              cible {target}
+              {L.chargePlanTargetLbl(target!)}
             </text>
           </>
         )}

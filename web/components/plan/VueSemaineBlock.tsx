@@ -30,6 +30,8 @@ import { useActivityTypes } from '@/lib/plan/use-activity-types'
 import { resolveSessionMeta } from '@/lib/plan/session-meta'
 import { SessionEditorModal } from './SessionEditorModal'
 import { BlockCard } from '@/components/blocks/BlockCard'
+import { useT } from '@/lib/i18n/I18nProvider'
+import type { Dict } from '@/lib/i18n/dictionaries/fr'
 
 // ─── Helpers date (semaine ISO, lundi → dimanche, UTC) ───────────────────────
 function toISO(d: Date): string {
@@ -69,8 +71,6 @@ function makeId(): string {
   return `session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
-const DAY_LABELS = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM']
-
 // ─── Composant principal ────────────────────────────────────────────────────
 type VueSemaineBlockProps = {
   /**
@@ -83,7 +83,7 @@ type VueSemaineBlockProps = {
 
 export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
   const router = useRouter()
-  // Init = lundi de la semaine courante (UTC).
+  const L = useT().plan
   const [weekStartISO, setWeekStartISO] = useState<string>(() => toISO(startOfISOWeek(new Date())))
 
   // Lazy-init depuis le snapshot LS (visite précédente) — supprime le flash.
@@ -292,17 +292,17 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
     }
   }
 
-  const titleLabel = weekInPlan ? `Semaine ${weekInPlan.x} / ${weekInPlan.y}` : 'Semaine'
+  const titleLabel = weekInPlan ? L.weekTitleWithIdx(weekInPlan.x, weekInPlan.y) : L.weekTitle
 
   return (
     <BlockCard
       title={titleLabel}
-      helpTitle="Semaine"
-      helpBody="Calendrier de la semaine sélectionnée. Glisse-dépose des templates depuis la bibliothèque pour planifier une séance."
+      helpTitle={L.weekTitle}
+      helpBody={L.weekHelpExt}
       rightSlot={
         <div className="flex items-center gap-1 flex-wrap">
-          <Pill bg={`${colors.seriesOrange}26`} color={colors.seriesOrange} label={`${Math.round(totals.distance)} km`} />
-          <Pill bg={`${colors.seriesBlue}26`}   color={colors.seriesBlue}   label={`${Math.round(totals.elevation)} m D+`} />
+          <Pill bg={`${colors.seriesOrange}26`} color={colors.seriesOrange} label={`${Math.round(totals.distance)} ${L.weekKmShort}`} />
+          <Pill bg={`${colors.seriesBlue}26`}   color={colors.seriesBlue}   label={`${Math.round(totals.elevation)} ${L.mDPlus}`} />
           <Pill bg={`${colors.greenOk}26`}      color={colors.greenOk}      label={formatDurationHHmm(totals.duration)} />
         </div>
       }
@@ -310,17 +310,17 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
       <div className="flex items-center gap-2 mb-3">
         <NavButton
           label="<"
-          ariaLabel="Semaine précédente"
+          ariaLabel={L.weekNavPrevAria}
           onClick={() => gotoOffsetWeeks(-1)}
         />
         <span className="text-[12px] text-trail-muted flex-1 text-center">
-          du {formatDM(weekDays[0])} au {formatDM(weekEndISO)}
+          {L.weekRangeBetween(formatDM(weekDays[0]), formatDM(weekEndISO))}
         </span>
         <button
           type="button"
           onClick={() => setWeekStartISO(currentMondayISO)}
           aria-pressed={isCurrentWeek}
-          aria-label="Revenir à la semaine en cours"
+          aria-label={L.weekCurrentAria}
           className="rounded-full px-2 py-[3px] text-[11px] font-bold whitespace-nowrap transition-colors"
           style={
             isCurrentWeek
@@ -336,11 +336,11 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
                 }
           }
         >
-          En cours
+          {L.weekCurrent}
         </button>
         <NavButton
           label=">"
-          ariaLabel="Semaine suivante"
+          ariaLabel={L.weekNavNextAria}
           onClick={() => gotoOffsetWeeks(1)}
         />
       </div>
@@ -356,12 +356,13 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
             <DayColumn
               key={iso}
               iso={iso}
-              label={DAY_LABELS[i]}
+              label={L.weekDayLabels[i]}
               isToday={iso === todayISO}
               sessions={sessionsByDay[iso] ?? []}
               matchMap={matchMap}
               onSessionClick={openEdit}
               onAdd={() => openCreate(iso)}
+              L={L}
             />
           ))}
         </div>
@@ -376,12 +377,12 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
           disabled={duplicating || sessions.length === 0}
           className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[13px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:border-trail-primary"
         >
-          {duplicating ? 'Duplication…' : 'Dupliquer la semaine'}
+          {duplicating ? L.weekDuplicating : L.weekDuplicateBtn}
         </button>
       </div>
 
       {!loaded && (
-        <div className="text-center text-trail-muted text-[12px] mt-2" role="status">Chargement…</div>
+        <div className="text-center text-trail-muted text-[12px] mt-2" role="status">{L.loading}</div>
       )}
 
       <SessionEditorModal
@@ -451,7 +452,7 @@ function Pill({ bg, color, label }: { bg: string; color: string; label: string }
 }
 
 function DayColumn({
-  iso, label, isToday, sessions, matchMap, onSessionClick, onAdd,
+  iso, label, isToday, sessions, matchMap, onSessionClick, onAdd, L,
 }: {
   iso: string
   label: string
@@ -460,6 +461,7 @@ function DayColumn({
   matchMap: Map<string, string[]>
   onSessionClick: (s: PlannedSession) => void
   onAdd: () => void
+  L: Dict['plan']
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `day-${iso}` })
   const dayNum = parseISO(iso).getUTCDate()
@@ -505,13 +507,14 @@ function DayColumn({
             done={matchMap.has(s.id)}
             isRaceMirror={isRaceMirrorSession(s)}
             onClick={() => onSessionClick(s)}
+            L={L}
           />
         ))}
         <button
           type="button"
           onClick={onAdd}
           className="mt-auto w-full py-1 rounded-[6px] border border-dashed border-trail-border text-trail-muted text-[14px] hover:border-trail-primary hover:text-trail-primary leading-none"
-          aria-label={`Ajouter une séance le ${iso}`}
+          aria-label={L.weekAddSessionAria(iso)}
         >
           +
         </button>
@@ -521,12 +524,13 @@ function DayColumn({
 }
 
 function DraggableSessionCard({
-  session, done, isRaceMirror, onClick,
+  session, done, isRaceMirror, onClick, L,
 }: {
   session: PlannedSession
   done: boolean
   isRaceMirror: boolean
   onClick: () => void
+  L: Dict['plan']
 }) {
   // Miroir de course : non-draggable (la donnée canonique vit dans la table
   // races, modifier la date doit passer par /plan/courses/<id>). On instancie
@@ -562,8 +566,8 @@ function DraggableSessionCard({
       role="button"
       tabIndex={0}
       aria-label={isRaceMirror
-        ? `Ouvrir le détail de la course ${session.title}`
-        : `Éditer la séance ${session.title}${done ? ' (réalisée)' : ''} (intensité ${session.intensity} sur 5, glisser pour déplacer)`}
+        ? L.weekRaceMirrorAria(session.title)
+        : L.weekEditSessionAria(session.title, done, session.intensity)}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
     >
       {isRaceMirror && (
@@ -578,7 +582,7 @@ function DraggableSessionCard({
             fontSize: 9,
             boxShadow: '0 0 0 1.5px var(--trail-card)',
           }}
-          title="Course objectif"
+          title={L.weekRaceGoalTitle}
         >
           🏆
         </span>
@@ -613,16 +617,16 @@ function DraggableSessionCard({
         <div
           className="text-[10px] leading-[13px] whitespace-nowrap"
           style={{ color: colors.seriesOrange }}
-          aria-label={`Distance ${session.distance} kilomètres`}
+          aria-label={L.weekDistanceAria(session.distance)}
         >
-          {session.distance} km
+          {session.distance} {L.weekKmShort}
         </div>
       )}
       {!!session.elevation && session.elevation > 0 && (
         <div
           className="text-[10px] leading-[13px] whitespace-nowrap"
           style={{ color: colors.seriesBlue }}
-          aria-label={`D plus ${session.elevation} mètres`}
+          aria-label={L.weekDPlusAria(session.elevation)}
         >
           {session.elevation}m
         </div>

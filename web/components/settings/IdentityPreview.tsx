@@ -1,5 +1,8 @@
+'use client'
+
 import Link from 'next/link'
 import { User, ChevronRight } from 'lucide-react'
+import { useT, useLang } from '@/lib/i18n/I18nProvider'
 
 type Props = {
   firstName:        string | null
@@ -9,17 +12,20 @@ type Props = {
   accountCreatedAt: string | null
 }
 
-function formatDate(iso: string | null): string {
+function formatDate(iso: string | null, locale: string): string {
   if (!iso) return '—'
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return '—'
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+  return d.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
 export function IdentityPreview({
   firstName, lastName, email, avatarUrl, accountCreatedAt,
 }: Props) {
-  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim() || 'Athlète'
+  const L = useT().settings
+  const { lang } = useLang()
+  const locale = lang === 'en' ? 'en-US' : 'fr-FR'
+  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim() || L.defaultAthleteName
   return (
     <Link
       href="/profile/identity"
@@ -35,7 +41,7 @@ export function IdentityPreview({
         <p className="text-[14px] font-semibold text-trail-text truncate">{fullName}</p>
         <p className="text-[11px] text-trail-muted truncate">{email ?? '—'}</p>
         <p className="text-[10px] text-trail-muted/80 mt-[1px]">
-          Membre depuis {formatDate(accountCreatedAt)}
+          {L.memberSince(formatDate(accountCreatedAt, locale))}
         </p>
       </div>
       <ChevronRight size={16} className="text-trail-muted flex-shrink-0 group-hover:text-trail-text transition-colors" />

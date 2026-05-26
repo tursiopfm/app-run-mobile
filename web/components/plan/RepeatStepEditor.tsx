@@ -6,6 +6,7 @@ import { DurationDistanceToggle } from './DurationDistanceToggle'
 import { IntensityPaceToggle } from './IntensityPaceToggle'
 import { PaceField } from './PaceField'
 import type { RepeatStep, SessionType, IntensityLevel } from '@/types/plan'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
   step: RepeatStep
@@ -16,6 +17,7 @@ type Props = {
 }
 
 export function RepeatStepEditor({ step, sessionType: _sessionType, intensityModeDisabled = false, onSave, onCancel }: Props) {
+  const L = useT().plan
   const [draft, setDraft] = useState<RepeatStep>(step)
   if (typeof document === 'undefined') return null
 
@@ -29,17 +31,16 @@ export function RepeatStepEditor({ step, sessionType: _sessionType, intensityMod
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-[16px] font-semibold text-trail-text mb-4">
-          Modifier l&apos;étape
+          {L.repeatStepEditTitle}
         </h2>
 
-        {/* Libellé */}
         <label className="block mb-3">
-          <span className="text-[11px] font-semibold text-trail-muted mb-1 block">Libellé</span>
+          <span className="text-[11px] font-semibold text-trail-muted mb-1 block">{L.repeatStepLabelField}</span>
           <input
             type="text"
             value={draft.label ?? ''}
             onChange={(e) => setDraft({ ...draft, label: e.target.value || undefined })}
-            placeholder={draft.stepKind === 'effort' ? 'Course à pied' : 'Récupération'}
+            placeholder={draft.stepKind === 'effort' ? L.repeatStepLabelEffortPh : L.repeatStepLabelRecoveryPh}
             className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
           />
         </label>
@@ -64,7 +65,7 @@ export function RepeatStepEditor({ step, sessionType: _sessionType, intensityMod
                 })
               }
               placeholder="min"
-              aria-label="Durée en minutes"
+              aria-label={L.repeatStepDurationAria}
               className="w-24 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
             />
           ) : (
@@ -82,7 +83,7 @@ export function RepeatStepEditor({ step, sessionType: _sessionType, intensityMod
                   })
                 }
                 placeholder="400"
-                aria-label="Distance en mètres"
+                aria-label={L.repeatStepDistanceAria}
                 className="w-24 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
               />
               <span className="text-[11px] text-trail-muted">m</span>
@@ -104,14 +105,14 @@ export function RepeatStepEditor({ step, sessionType: _sessionType, intensityMod
               onChange={(e) =>
                 setDraft({ ...draft, intensity: Number(e.target.value) as IntensityLevel })
               }
-              aria-label="Niveau d'intensité"
+              aria-label={L.repeatStepIntensityAria}
               className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
             >
-              <option value={1}>1 — Récup</option>
-              <option value={2}>2 — Endurance</option>
-              <option value={3}>3 — Tempo</option>
-              <option value={4}>4 — Seuil</option>
-              <option value={5}>5 — VMA</option>
+              <option value={1}>{L.repeatStepIntensityOptionRecup}</option>
+              <option value={2}>{L.repeatStepIntensityOptionEnd}</option>
+              <option value={3}>{L.repeatStepIntensityOptionTempo}</option>
+              <option value={4}>{L.repeatStepIntensityOptionSeuil}</option>
+              <option value={5}>{L.repeatStepIntensityOptionVma}</option>
             </select>
           ) : (
             <PaceField
@@ -128,14 +129,14 @@ export function RepeatStepEditor({ step, sessionType: _sessionType, intensityMod
             onClick={onCancel}
             className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-[14px] font-semibold text-trail-text"
           >
-            Annuler
+            {L.repeatStepCancel}
           </button>
           <button
             type="button"
             onClick={() => onSave(draft)}
             className="px-3 py-2 rounded-[10px] bg-trail-primary text-black text-[14px] font-semibold"
           >
-            Enregistrer
+            {L.repeatStepSave}
           </button>
         </div>
       </div>

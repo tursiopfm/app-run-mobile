@@ -25,6 +25,8 @@ import {
   phaseWeekCount,
 } from '@/lib/training/phases'
 import { saveCurrentPlan } from '@/lib/plan/storage'
+import { useT } from '@/lib/i18n/I18nProvider'
+import type { Dict } from '@/lib/i18n/dictionaries/fr'
 
 type Props = {
   plan: TrainingPlan | null
@@ -35,13 +37,15 @@ type Props = {
   focusPhaseId?: string
 }
 
-const PHASE_TYPE_OPTIONS: { value: PhaseType; label: string }[] = [
-  { value: 'foncier',       label: 'Foncier'       },
-  { value: 'developpement', label: 'Développement' },
-  { value: 'specifique',    label: 'Spécifique'    },
-  { value: 'affutage',      label: 'Affûtage'      },
-  { value: 'recuperation',  label: 'Récupération'  },
-]
+function buildPhaseTypeOptions(L: Dict['plan']): { value: PhaseType; label: string }[] {
+  return [
+    { value: 'foncier',       label: L.phaseTypes.foncier       },
+    { value: 'developpement', label: L.phaseTypes.developpement },
+    { value: 'specifique',    label: L.phaseTypes.specifique    },
+    { value: 'affutage',      label: L.phaseTypes.affutage      },
+    { value: 'recuperation',  label: L.phaseTypes.recuperation  },
+  ]
+}
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10)
@@ -64,12 +68,12 @@ function makeId(): string {
   return `phase-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
-function newEmptyPhase(startDate: string, endDate: string): Phase {
+function newEmptyPhase(startDate: string, endDate: string, cycleLabelFn: (s: string) => string): Phase {
   const def = PHASE_DEFINITIONS.foncier
   return {
     id: makeId(),
     type: 'foncier',
-    label: `Cycle ${def.label}`,
+    label: cycleLabelFn(def.label),
     startDate,
     endDate,
     weeklyChargeTarget: 300,
@@ -80,6 +84,8 @@ function newEmptyPhase(startDate: string, endDate: string): Phase {
 }
 
 export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhaseId }: Props) {
+  const L = useT().plan
+  const PHASE_TYPE_OPTIONS = useMemo(() => buildPhaseTypeOptions(L), [L])
   const [phases, setPhases] = useState<Phase[]>(plan?.phases ?? [])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -123,12 +129,12 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
 
   const validationError = useMemo<string | null>(() => {
     for (const p of phases) {
-      if (!p.label.trim()) return 'Chaque cycle doit avoir un nom.'
-      if (!p.startDate || !p.endDate) return 'Toutes les dates doivent être renseignées.'
-      if (p.startDate >= p.endDate) return `Le cycle « ${p.label || p.type} » a des dates inversées.`
+      if (!p.label.trim()) return L.phaseEditorErrNameRequired
+      if (!p.startDate || !p.endDate) return L.phaseEditorErrDateRequired
+      if (p.startDate >= p.endDate) return L.phaseEditorErrDateOrder(p.label || p.type)
     }
     return null
-  }, [phases])
+  }, [phases, L])
 
   if (!open) return null
   if (typeof document === 'undefined') return null
@@ -148,12 +154,12 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
     const start = todayISO()
     const raceDate = race?.date
     if (!raceDate) {
-      setError("Définis d'abord ta course objectif pour auto-générer.")
+      setError(L.phaseEditorErrNoRace)
       return
     }
     const next = autoDistributePhases(start, raceDate)
     if (next.length === 0) {
-      setError("Impossible d'auto-générer : vérifie les dates de ta course.")
+      setError(L.phaseEditorErrAutoFailed)
       return
     }
     setPhases(next)
@@ -166,7 +172,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
       const last = prev[prev.length - 1]
       const start = last ? last.endDate : (race?.date ? addDaysISO(race.date, -7) : todayISO())
       const end = addDaysISO(start, 7)
-      const created = newEmptyPhase(start, end)
+      const created = newEmptyPhase(start, end, L.phaseEditorCycleLabel)
       setOpenIds(o => {
         const next = new Set(o)
         next.add(created.id)
@@ -185,11 +191,11 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
     setPhases(prev => prev.map(p => {
       if (p.id !== id) return p
       // Relabel auto seulement si l'utilisateur n'a pas customisé le nom.
-      const autoLabel = p.label.startsWith('Cycle ') || p.label.startsWith('Phase ')
+      const autoLabel = p.label.startsWith('Cycle ') || p.label.startsWith('Phase ') || /\bcycle\b/i.test(p.label)
       return {
         ...p,
         type,
-        label: autoLabel ? `Cycle ${def.label}` : p.label,
+        label: autoLabel ? L.phaseEditorCycleLabel(L.phaseTypes[type]) : p.label,
         description: def.description,
       }
     }))
@@ -246,7 +252,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
       return
     }
     if (phases.length === 0) {
-      setError('Ajoute au moins un cycle ou auto-génère depuis ta course.')
+      setError(L.phaseEditorErrAtLeastOne)
       return
     }
     setSaving(true)
@@ -261,7 +267,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
         : {
             id: makeId(),
             athleteId: '',
-            name: race ? `Prépa ${race.name}` : 'Prépa',
+            name: race ? L.structurePlanName(race.name) : L.structureTitleBlock,
             goalRaceId: race?.id ?? null,
             startDate,
             endDate,
@@ -284,7 +290,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Éditer les cycles du plan"
+      aria-label={L.phaseEditorAriaDialog}
     >
       <div
         className="bg-trail-card border border-trail-border rounded-t-[20px] md:rounded-[16px] w-full max-w-2xl max-h-[92vh] overflow-y-auto p-5 pb-8"
@@ -293,16 +299,16 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
         <div className="w-10 h-1 rounded-full bg-trail-border mx-auto mb-4 md:hidden" />
 
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[16px] font-semibold text-trail-text">Éditer les cycles</h2>
+          <h2 className="text-[16px] font-semibold text-trail-text">{L.phaseEditorTitle}</h2>
           <button
             type="button"
             onClick={handleAutoGenerate}
             disabled={saving || !race}
             className="px-3 py-2 text-[13px] font-semibold text-trail-primary hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
-            aria-label="Auto-générer les cycles depuis ma course"
-            title={!race ? "Définis d'abord ta course objectif" : 'Régénère les cycles depuis aujourd\'hui jusqu\'à la course'}
+            aria-label={L.phaseEditorAutoGenAria}
+            title={!race ? L.phaseEditorAutoGenTitleNoRace : L.phaseEditorAutoGenTitleOk}
           >
-            🪄 Auto-générer
+            {L.phaseEditorAutoGen}
           </button>
         </div>
 
@@ -324,13 +330,15 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
             <div className="space-y-2">
               {phases.length === 0 && (
                 <div className="text-center text-trail-muted text-[13px] py-6">
-                  Aucun cycle. Ajoute-en un ou auto-génère depuis ta course.
+                  {L.phaseEditorEmptyList}
                 </div>
               )}
               {phases.map((p) => (
                 <SortablePhaseRow
                   key={p.id}
                   phase={p}
+                  L={L}
+                  phaseTypeOptions={PHASE_TYPE_OPTIONS}
                   isOpen={openIds.has(p.id)}
                   highlight={p.id === focusPhaseId}
                   onToggle={() => toggleOpen(p.id)}
@@ -352,7 +360,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
           className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-[10px] border border-dashed border-trail-border text-trail-muted hover:border-trail-primary hover:text-trail-primary transition-colors text-[14px] font-semibold"
         >
           <span className="text-[18px] leading-none">+</span>
-          <span>Ajouter un cycle</span>
+          <span>{L.phaseEditorAddPhase}</span>
         </button>
 
         <div className="flex items-center justify-end gap-2 mt-6">
@@ -362,7 +370,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
             disabled={saving}
             className="px-4 py-2 rounded-[10px] text-[14px] font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
           >
-            Annuler
+            {L.phaseEditorCancel}
           </button>
           <button
             type="button"
@@ -370,7 +378,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
             disabled={saving || phases.length === 0 || validationError !== null}
             className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-[14px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Enregistrer
+            {L.phaseEditorSave}
           </button>
         </div>
       </div>
@@ -380,9 +388,11 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
 }
 
 function SortablePhaseRow({
-  phase, isOpen, highlight, onToggle, onChange, onTypeChange, onWeeklyChange, onDelete,
+  phase, L, phaseTypeOptions, isOpen, highlight, onToggle, onChange, onTypeChange, onWeeklyChange, onDelete,
 }: {
   phase: Phase
+  L: Dict['plan']
+  phaseTypeOptions: { value: PhaseType; label: string }[]
   isOpen: boolean
   highlight?: boolean
   onToggle: () => void
@@ -420,7 +430,7 @@ function SortablePhaseRow({
           type="button"
           {...attributes}
           {...listeners}
-          aria-label={`Réordonner le cycle ${phase.label}`}
+          aria-label={L.phaseEditorReorderAria(phase.label)}
           className="cursor-grab active:cursor-grabbing select-none px-1 py-1.5 flex-shrink-0"
           style={{ touchAction: 'none' }}
           onClick={(e) => e.stopPropagation()}
@@ -434,7 +444,7 @@ function SortablePhaseRow({
           onClick={onToggle}
           className="flex-1 min-w-0 flex items-center gap-2 text-left py-1"
           aria-expanded={isOpen}
-          aria-label={`${isOpen ? 'Replier' : 'Déplier'} le cycle ${phase.label}`}
+          aria-label={L.phaseEditorExpandAria(phase.label, isOpen)}
         >
           <span
             className="w-3 h-3 rounded-full flex-shrink-0"
@@ -443,10 +453,10 @@ function SortablePhaseRow({
           />
           <div className="min-w-0 flex-1">
             <div className="text-trail-text font-semibold text-[13px] truncate">
-              {phase.label || def.label}
+              {phase.label || L.phaseTypes[phase.type]}
             </div>
             <div className="text-[11px] text-trail-muted truncate">
-              {weekCount} sem · {formatDDMM(phase.startDate)} → {formatDDMM(phase.endDate)}
+              {weekCount} {L.phaseEditorWeeksShort} · {formatDDMM(phase.startDate)} → {formatDDMM(phase.endDate)}
             </div>
           </div>
         </button>
@@ -456,9 +466,9 @@ function SortablePhaseRow({
           type="button"
           onClick={onDelete}
           className="text-[11px] font-semibold text-trail-danger hover:underline px-2 py-1 flex-shrink-0"
-          aria-label={`Supprimer le cycle ${phase.label}`}
+          aria-label={L.phaseEditorDeleteAria(phase.label)}
         >
-          Suppr
+          {L.phaseEditorDelete}
         </button>
 
         {/* Chevron */}
@@ -466,7 +476,7 @@ function SortablePhaseRow({
           type="button"
           onClick={onToggle}
           className="flex-shrink-0 p-1 text-trail-muted hover:text-trail-text"
-          aria-label={isOpen ? 'Replier' : 'Déplier'}
+          aria-label={L.phaseEditorToggleAria(isOpen)}
         >
           <ChevronDown
             size={18}
@@ -482,7 +492,7 @@ function SortablePhaseRow({
       {/* ─── Body (collapsible) ─────────────────────────────────────────── */}
       {isOpen && (
         <div className="p-3 space-y-3 bg-trail-surface">
-          <Field label="Nom" required>
+          <Field label={L.phaseEditorFieldName} required>
             <input
               type="text"
               value={phase.label}
@@ -492,31 +502,31 @@ function SortablePhaseRow({
           </Field>
 
           <div className="grid grid-cols-2 gap-2">
-            <Field label="Type">
+            <Field label={L.phaseEditorFieldType}>
               <select
                 value={phase.type}
                 onChange={(e) => onTypeChange(e.target.value as PhaseType)}
                 className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
               >
-                {PHASE_TYPE_OPTIONS.map((opt) => (
+                {phaseTypeOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
             </Field>
 
-            <Field label="Focus (libre)">
+            <Field label={L.phaseEditorFieldFocus}>
               <input
                 type="text"
                 value={phase.focus ?? ''}
                 onChange={(e) => onChange({ focus: e.target.value })}
-                placeholder="Base aérobie, VMA, Côtes…"
+                placeholder={L.phaseEditorFieldFocusPh}
                 className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
               />
             </Field>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <Field label="Début" required>
+            <Field label={L.phaseEditorFieldStart} required>
               <input
                 type="date"
                 value={phase.startDate}
@@ -524,7 +534,7 @@ function SortablePhaseRow({
                 className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
               />
             </Field>
-            <Field label="Fin" required>
+            <Field label={L.phaseEditorFieldEnd} required>
               <input
                 type="date"
                 value={phase.endDate}
@@ -537,16 +547,16 @@ function SortablePhaseRow({
           {/* Objectifs semaine par semaine (km + D+) */}
           <div>
             <div className="text-[11px] font-semibold text-trail-muted mb-2">
-              Objectifs semaine par semaine
+              {L.phaseEditorWeeklyGoals}
             </div>
             <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1.5 items-center text-[12px]">
-              <span className="text-[10px] uppercase tracking-wide text-trail-muted">Semaine</span>
-              <span className="text-[10px] uppercase tracking-wide text-trail-muted text-right">Volume</span>
-              <span className="text-[10px] uppercase tracking-wide text-trail-muted text-right">D+</span>
+              <span className="text-[10px] uppercase tracking-wide text-trail-muted">{L.phaseEditorWeekCol}</span>
+              <span className="text-[10px] uppercase tracking-wide text-trail-muted text-right">{L.phaseEditorVolumeCol}</span>
+              <span className="text-[10px] uppercase tracking-wide text-trail-muted text-right">{L.phaseEditorDPlusCol}</span>
               {weeks.map((w, i) => (
                 <Fragment key={`${phase.id}-w${i}`}>
                   <span className="text-trail-text">
-                    Sem {i + 1}
+                    {L.phaseEditorWeekN(i + 1)}
                     <span className="text-trail-muted"> · {formatDDMM(w.startISO)}</span>
                   </span>
                   <div className="relative">
@@ -558,7 +568,7 @@ function SortablePhaseRow({
                       value={Number.isFinite(w.km) ? w.km : 0}
                       onChange={(e) => onWeeklyChange(i, 'km', Number(e.target.value) || 0)}
                       className="w-[84px] pl-2 pr-[28px] py-1 rounded-[6px] bg-trail-card border border-trail-border text-trail-text text-right text-[12px] focus:outline-none focus:border-trail-primary"
-                      aria-label={`Volume km — semaine ${i + 1} du cycle ${phase.label}`}
+                      aria-label={L.phaseEditorVolumeInputAria(i + 1, phase.label)}
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-trail-muted pointer-events-none">km</span>
                   </div>
@@ -571,7 +581,7 @@ function SortablePhaseRow({
                       value={Number.isFinite(w.dPlus) ? w.dPlus : 0}
                       onChange={(e) => onWeeklyChange(i, 'dPlus', Number(e.target.value) || 0)}
                       className="w-[84px] pl-2 pr-[24px] py-1 rounded-[6px] bg-trail-card border border-trail-border text-trail-text text-right text-[12px] focus:outline-none focus:border-trail-primary"
-                      aria-label={`D+ m — semaine ${i + 1} du cycle ${phase.label}`}
+                      aria-label={L.phaseEditorDPlusInputAria(i + 1, phase.label)}
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-trail-muted pointer-events-none">m</span>
                   </div>
@@ -580,7 +590,7 @@ function SortablePhaseRow({
             </div>
           </div>
 
-          <Field label="Description">
+          <Field label={L.phaseEditorFieldDescription}>
             <textarea
               rows={2}
               value={phase.description ?? ''}

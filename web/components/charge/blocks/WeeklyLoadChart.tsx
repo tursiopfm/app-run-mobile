@@ -2,7 +2,7 @@
 
 import { BlockCard } from '@/components/blocks/BlockCard'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
-import { charge as L } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 import { colors } from '@/lib/design/colors'
 import { useChartTooltipDismiss } from '@/lib/charts/use-chart-tooltip-dismiss'
 import {
@@ -17,6 +17,7 @@ const SPORT_COLORS = {
 }
 
 export function WeeklyLoadChart({ payload }: { payload: ChargeSportPayload }) {
+  const L = useT().charge
   const wrapperRef = useChartTooltipDismiss()
   const data = payload.weeklyLoadByCategory.map(w => ({
     week:  w.weekLabel,
@@ -40,11 +41,11 @@ export function WeeklyLoadChart({ payload }: { payload: ChargeSportPayload }) {
               labelStyle={{ color: colors.text }}
             />
             <Legend wrapperStyle={{ fontSize: 11 }} />
-            <Bar dataKey="run"   stackId="a" fill={SPORT_COLORS.run}   name="Course" />
-            <Bar dataKey="ride"  stackId="a" fill={SPORT_COLORS.ride}  name="Vélo" />
-            <Bar dataKey="swim"  stackId="a" fill={SPORT_COLORS.swim}  name="Natation" />
-            <Bar dataKey="other" stackId="a" fill={SPORT_COLORS.other} name="Autres" />
-            <Line type="monotone" dataKey="avg4w" stroke={colors.text} strokeWidth={1.5} dot={false} name="Moy 4 sem." />
+            <Bar dataKey="run"   stackId="a" fill={SPORT_COLORS.run}   name={L.legendRun} />
+            <Bar dataKey="ride"  stackId="a" fill={SPORT_COLORS.ride}  name={L.legendRide} />
+            <Bar dataKey="swim"  stackId="a" fill={SPORT_COLORS.swim}  name={L.legendSwim} />
+            <Bar dataKey="other" stackId="a" fill={SPORT_COLORS.other} name={L.legendOther} />
+            <Line type="monotone" dataKey="avg4w" stroke={colors.text} strokeWidth={1.5} dot={false} name={L.legendAvg4w} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

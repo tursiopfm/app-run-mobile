@@ -4,10 +4,12 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BarChart3, Zap, Brain, Mountain } from 'lucide-react'
 import { createClient } from '@/lib/database/supabase-client'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type Mode = 'login' | 'signup' | 'forgot'
 
 export function LoginForm() {
+  const A = useT().auth
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
@@ -45,7 +47,7 @@ export function LoginForm() {
         setForgotSent(true)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur de connexion.')
+      setError(err instanceof Error ? err.message : A.genericError)
     } finally {
       setLoading(false)
     }
@@ -55,16 +57,16 @@ export function LoginForm() {
     return (
       <div className="min-h-screen bg-trail-bg flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center space-y-4">
-          <h1 className="text-2xl font-bold text-trail-text">Vérifiez votre email</h1>
+          <h1 className="text-2xl font-bold text-trail-text">{A.checkEmailTitle}</h1>
           <p className="text-sm text-trail-muted">
-            Un lien de confirmation a été envoyé à{' '}
+            {A.checkEmailBody}{' '}
             <strong className="text-trail-text">{email}</strong>.
           </p>
           <button
             onClick={() => { setCheckEmail(false); setMode('login') }}
             className="text-sm text-trail-accent underline"
           >
-            Retour à la connexion
+            {A.backToLogin}
           </button>
         </div>
       </div>
@@ -75,16 +77,16 @@ export function LoginForm() {
     return (
       <div className="min-h-screen bg-trail-bg flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center space-y-4">
-          <h1 className="text-2xl font-bold text-trail-text">Email envoyé</h1>
+          <h1 className="text-2xl font-bold text-trail-text">{A.forgotSentTitle}</h1>
           <p className="text-sm text-trail-muted">
-            Un lien de réinitialisation a été envoyé à{' '}
+            {A.forgotSentBody}{' '}
             <strong className="text-trail-text">{email}</strong>.
           </p>
           <button
             onClick={() => { setForgotSent(false); setMode('login') }}
             className="text-sm text-trail-accent underline"
           >
-            Retour à la connexion
+            {A.backToLogin}
           </button>
         </div>
       </div>
@@ -104,7 +106,7 @@ export function LoginForm() {
         </div>
         <h1 className="text-3xl font-bold text-trail-text mb-3 tracking-tight">Trail Cockpit</h1>
         <p className="text-trail-muted text-base max-w-xs leading-relaxed">
-          Pilotez votre entraînement trail &amp; endurance avec précision
+          {A.appTagline}
         </p>
 
         {/* Auth form */}
@@ -120,7 +122,7 @@ export function LoginForm() {
             onChange={e => setEmail(e.target.value)}
             required
             autoComplete="email"
-            placeholder="Email"
+            placeholder={A.emailPh}
             className="w-full bg-trail-surface border border-trail-border rounded-2xl px-4 py-3 text-sm text-trail-text outline-none focus:border-trail-accent placeholder:text-trail-muted"
           />
           {mode !== 'forgot' && (
@@ -132,7 +134,7 @@ export function LoginForm() {
                 required
                 minLength={mode === 'signup' ? 6 : undefined}
                 autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                placeholder="Mot de passe"
+                placeholder={A.passwordPh}
                 className="w-full bg-trail-surface border border-trail-border rounded-2xl px-4 py-3 text-sm text-trail-text outline-none focus:border-trail-accent placeholder:text-trail-muted"
               />
               {mode === 'login' && (
@@ -142,7 +144,7 @@ export function LoginForm() {
                     onClick={() => { setMode('forgot'); setError(null) }}
                     className="text-xs text-trail-accent underline"
                   >
-                    Mot de passe oublié ?
+                    {A.forgotPw}
                   </button>
                 </div>
               )}
@@ -154,25 +156,25 @@ export function LoginForm() {
             className="block w-full py-3.5 px-6 rounded-2xl bg-trail-primary text-white font-semibold text-center text-base active:scale-95 transition-transform disabled:opacity-50"
           >
             {loading
-              ? (mode === 'forgot' ? 'Envoi…' : mode === 'login' ? 'Connexion…' : 'Création…')
-              : (mode === 'forgot' ? 'Envoyer le lien' : mode === 'login' ? 'Se connecter' : 'Créer mon compte')}
+              ? (mode === 'forgot' ? A.btnSending : mode === 'login' ? A.btnLoggingIn : A.btnCreating)
+              : (mode === 'forgot' ? A.btnSendLink : mode === 'login' ? A.btnLogin : A.btnSignup)}
           </button>
           <p className="text-xs text-trail-muted text-center">
             {mode === 'login' ? (
-              <>Pas encore de compte ?{' '}
+              <>{A.noAccount}{' '}
                 <button type="button" onClick={() => { setMode('signup'); setError(null) }} className="text-trail-accent underline">
-                  Créer un compte
+                  {A.createAccount}
                 </button>
               </>
             ) : mode === 'signup' ? (
-              <>Déjà un compte ?{' '}
+              <>{A.haveAccount}{' '}
                 <button type="button" onClick={() => { setMode('login'); setError(null) }} className="text-trail-accent underline">
-                  Se connecter
+                  {A.loginAction}
                 </button>
               </>
             ) : (
               <button type="button" onClick={() => { setMode('login'); setError(null) }} className="text-trail-accent underline">
-                Retour à la connexion
+                {A.backToLogin}
               </button>
             )}
           </p>
@@ -182,10 +184,10 @@ export function LoginForm() {
       {/* Feature grid */}
       <div className="px-6 pb-16 grid grid-cols-2 gap-3 max-w-lg mx-auto w-full">
         {[
-          { icon: BarChart3, title: 'Charge', desc: 'ATL / CTL / TSB en temps réel' },
-          { icon: Zap,       title: 'Effort', desc: 'Score effort multi-sports'     },
-          { icon: Brain,     title: 'Coach',  desc: 'Analyse IA de vos séances'     },
-          { icon: Mountain,  title: 'Ultra',  desc: 'Préparation ultra trails'       },
+          { icon: BarChart3, title: A.featCharge, desc: A.featChargeDesc },
+          { icon: Zap,       title: A.featEffort, desc: A.featEffortDesc },
+          { icon: Brain,     title: A.featCoach,  desc: A.featCoachDesc },
+          { icon: Mountain,  title: A.featUltra,  desc: A.featUltraDesc },
         ].map(({ icon: Icon, title, desc }) => (
           <div key={title} className="bg-trail-surface border border-trail-border rounded-2xl p-4">
             <Icon className="text-trail-primary mb-2" size={20} />

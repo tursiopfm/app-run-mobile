@@ -16,6 +16,8 @@ import { saveCurrentPlan, saveMacrocycle } from '@/lib/plan/storage'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { PhaseEditorModal } from './PhaseEditorModal'
 import { RaceMarkers } from './RaceMarkers'
+import { useT } from '@/lib/i18n/I18nProvider'
+import type { Dict } from '@/lib/i18n/dictionaries/fr'
 
 const MS_PER_DAY = 86_400_000
 const MS_PER_WEEK = 7 * MS_PER_DAY
@@ -33,9 +35,8 @@ function formatDDMM(iso: string): string {
   return `${iso.slice(8, 10)}/${iso.slice(5, 7)}`
 }
 
-function formatLongDate(iso: string): string {
+function formatLongDate(iso: string, months: readonly string[]): string {
   if (!iso || iso.length < 10) return iso
-  const months = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
   const y = iso.slice(0, 4)
   const m = parseInt(iso.slice(5, 7), 10) - 1
   const d = parseInt(iso.slice(8, 10), 10)
@@ -74,6 +75,7 @@ type Props = {
 }
 
 export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props) {
+  const L = useT().plan
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [focusPhaseId, setFocusPhaseId] = useState<string | undefined>(undefined)
@@ -106,7 +108,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
         const newPlan: TrainingPlan = {
           id: makeId(),
           athleteId: '',
-          name: `Prépa ${seedRace.name}`,
+          name: L.structurePlanName(seedRace.name),
           goalRaceId: seedRace.id,
           startDate: start,
           endDate: end,
@@ -166,14 +168,14 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
     if (!seedRace) {
       return (
         <BlockCard
-          title="Structure de prépa"
-          helpTitle="Cycles de prépa"
-          helpBody="Définis une course objectif au-dessus pour démarrer ta prépa."
+          title={L.structureTitleBlock}
+          helpTitle={L.structureHelpTitle}
+          helpBody={L.structureHelpNoRace}
         >
           <div className="flex flex-col items-center justify-center text-center py-6 px-4">
             <span className="text-[40px] leading-none mb-2" aria-hidden>🎯</span>
             <p className="text-[13px] text-[color:var(--trail-muted)]">
-              Définis d&apos;abord ta course objectif dans le bloc ci-dessus.
+              {L.structureNoRaceMsg}
             </p>
           </div>
         </BlockCard>
@@ -181,20 +183,20 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
     }
     return (
       <BlockCard
-        title="Structure de prépa"
-        helpTitle="Cycles de prépa"
-        helpBody="Découpe la prépa en mésocycles : foncier, développement, spécifique, affûtage, récupération."
+        title={L.structureTitleBlock}
+        helpTitle={L.structureHelpTitle}
+        helpBody={L.structureHelpEmpty}
       >
         <div className="flex flex-col items-center justify-center text-center py-6 px-4">
           <p className="text-[13px] text-[color:var(--trail-muted)] mb-4 max-w-xs">
-            Génère ta prépa pour <span className="font-semibold text-[color:var(--trail-text)]">{seedRace.name}</span> ({seedRace.date}) depuis aujourd&apos;hui.
+            {L.structureGenerate(seedRace.name, seedRace.date)}
           </p>
           <button
             type="button"
             onClick={handleGenerateInitial}
             disabled={generating}
             className="inline-flex items-center justify-center w-11 h-11 rounded-[10px] bg-[color:var(--trail-primary)] text-white disabled:opacity-50"
-            aria-label="Générer ma prépa"
+            aria-label={L.structureGenerateAria}
           >
             <SquarePen size={20} aria-hidden />
           </button>
@@ -206,20 +208,20 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
   if (activeMacrocycle.phases.length === 0) {
     return (
       <BlockCard
-        title="Structure de prépa"
-        helpTitle="Cycles de prépa"
-        helpBody="Découpe le macrocycle en mésocycles : foncier, développement, spécifique, affûtage, récupération."
+        title={L.structureTitleBlock}
+        helpTitle={L.structureHelpTitle}
+        helpBody={L.structureHelp}
       >
         <div className="flex flex-col items-center justify-center text-center py-6 px-4">
           <p className="text-[13px] text-[color:var(--trail-muted)] mb-4 max-w-xs">
-            Génère automatiquement la structure de ta prépa depuis aujourd&apos;hui jusqu&apos;à la course objectif.
+            {L.structureGenerateBuilt}
           </p>
           <button
             type="button"
             onClick={handleGenerateInitial}
             disabled={generating}
             className="inline-flex items-center justify-center w-11 h-11 rounded-[10px] bg-[color:var(--trail-primary)] text-white disabled:opacity-50"
-            aria-label="Générer ma structure de prépa"
+            aria-label={L.structureGenerateAria2}
           >
             <SquarePen size={20} aria-hidden />
           </button>
@@ -238,13 +240,13 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
   if (!timelineData) {
     return (
       <BlockCard
-        title="Structure de prépa"
-        helpTitle="Cycles de prépa"
-        helpBody="Macrocycle de durée nulle ou inversée — édite les dates pour corriger."
+        title={L.structureTitleBlock}
+        helpTitle={L.structureHelpTitle}
+        helpBody={L.structureHelpInvalid}
       >
         <div className="flex flex-col items-center justify-center text-center py-6 px-4">
           <p className="text-[13px] text-[color:var(--trail-muted)]">
-            Les dates du macrocycle sont invalides. Édite-le pour repartir d&apos;une plage cohérente.
+            {L.structureInvalidMsg}
           </p>
         </div>
       </BlockCard>
@@ -256,15 +258,15 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
 
   return (
     <BlockCard
-      title="Structure de prépa"
-      helpTitle="Cycles de prépa"
-      helpBody="Découpe le macrocycle en mésocycles : foncier, développement, spécifique, affûtage, récupération."
+      title={L.structureTitleBlock}
+      helpTitle={L.structureHelpTitle}
+      helpBody={L.structureHelp}
       rightSlot={
         <button
           type="button"
           onClick={() => openEditor()}
           className="inline-flex items-center justify-center w-7 h-7 rounded-[6px] text-[color:var(--trail-primary)] hover:bg-[color:var(--trail-surface)]"
-          aria-label="Éditer les cycles"
+          aria-label={L.structureEditAria}
         >
           <SquarePen size={16} aria-hidden />
         </button>
@@ -272,7 +274,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
     >
       <div className="relative pt-9">
         {/* Barre des segments */}
-        <div className="flex w-full rounded-[10px] overflow-hidden relative" style={{ height: 48 }} aria-label="Cycles du plan">
+        <div className="flex w-full rounded-[10px] overflow-hidden relative" style={{ height: 48 }} aria-label={L.structureCyclesAria}>
           {td.segments.map(({ phase, weeks }, idx) => {
             const def = PHASE_DEFINITIONS[phase.type]
             const isExpanded = expandedId === phase.id
@@ -294,14 +296,14 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
                   minWidth: 0,
                   borderLeft: needsSeparator ? '2px solid #000' : undefined,
                 }}
-                aria-label={`Cycle ${phase.label}, ${weeks} semaines`}
+                aria-label={L.structureCycleAria(phase.label, weeks)}
                 aria-expanded={isExpanded}
-                title={`${def.label} · ${weeks}sem${phase.focus ? ` · ${phase.focus}` : ''}`}
+                title={`${def.label} · ${weeks}${L.structureWeeksSuffix}${phase.focus ? ` · ${phase.focus}` : ''}`}
               >
                 {showLabel && (
                   <>
                     <span className="block w-full text-center truncate px-1" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.55)' }}>
-                      {def.label} · {weeks}sem
+                      {L.structureCycleLabel(def.label, weeks)}
                     </span>
                     {phase.focus && (
                       <span className="block w-full text-center text-[9px] opacity-90 truncate px-1" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.55)' }}>
@@ -325,7 +327,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
                 background: '#FFFFFF',
                 boxShadow: '0 0 0 1.5px rgba(0,0,0,0.65), 0 0 6px rgba(255,255,255,0.4)',
               }}
-              aria-label="Aujourd'hui"
+              aria-label={L.structureTodayAria}
             />
           )}
         </div>
@@ -366,7 +368,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
               type="button"
               onClick={() => setExpandedId(null)}
               className="text-[11px] text-[color:var(--trail-muted)] hover:text-[color:var(--trail-text)]"
-              aria-label="Replier le cycle"
+              aria-label={L.structureCollapseAria}
             >
               ✕
             </button>
@@ -379,23 +381,22 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
           )}
 
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[color:var(--trail-text)] mb-3">
-            <span><span className="text-[color:var(--trail-muted)]">Début → Fin :</span> {formatLongDate(expandedPhase.startDate)} → {formatLongDate(expandedPhase.endDate)}</span>
-            <span><span className="text-[color:var(--trail-muted)]">Durée :</span> {diffWeeks(expandedPhase.startDate, expandedPhase.endDate)} sem</span>
+            <span><span className="text-[color:var(--trail-muted)]">{L.structureStartEnd}</span> {formatLongDate(expandedPhase.startDate, L.monthsShort)} → {formatLongDate(expandedPhase.endDate, L.monthsShort)}</span>
+            <span><span className="text-[color:var(--trail-muted)]">{L.structureDuration}</span> {diffWeeks(expandedPhase.startDate, expandedPhase.endDate)} {L.structureWeeksSuffix}</span>
           </div>
 
-          {/* Objectifs hebdo km/D+ READ-ONLY */}
           <div className="mb-3">
             <div className="text-[11px] font-semibold text-[color:var(--trail-muted)] mb-2">
-              Objectifs semaine par semaine
+              {L.structureWeeklyGoals}
             </div>
             <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1 items-center text-[12px]">
-              <span className="text-[10px] uppercase tracking-wide text-[color:var(--trail-muted)]">Semaine</span>
-              <span className="text-[10px] uppercase tracking-wide text-[color:var(--trail-muted)] text-right">Km</span>
-              <span className="text-[10px] uppercase tracking-wide text-[color:var(--trail-muted)] text-right">D+</span>
+              <span className="text-[10px] uppercase tracking-wide text-[color:var(--trail-muted)]">{L.structureWeekCol}</span>
+              <span className="text-[10px] uppercase tracking-wide text-[color:var(--trail-muted)] text-right">{L.structureKmCol}</span>
+              <span className="text-[10px] uppercase tracking-wide text-[color:var(--trail-muted)] text-right">{L.structureDPlusCol}</span>
               {getPhaseWeeks(expandedPhase).map((w, i) => (
                 <Fragment key={`${expandedPhase.id}-w${i}`}>
                   <span className="text-[color:var(--trail-text)]">
-                    Sem {i + 1}
+                    {L.structureWeekN(i + 1)}
                     <span className="text-[color:var(--trail-muted)]"> · {formatDDMM(w.startISO)}</span>
                   </span>
                   <span className="text-right tabular-nums">{w.km} <span className="text-[10px] text-[color:var(--trail-muted)]">km</span></span>
@@ -409,9 +410,9 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
             type="button"
             onClick={() => openEditor(expandedPhase.id)}
             className="px-3 py-2 rounded-[8px] bg-[color:var(--trail-card)] border border-[color:var(--trail-border)] text-[color:var(--trail-text)] text-[12px] font-semibold hover:border-[color:var(--trail-primary)]"
-            aria-label={`Éditer le cycle ${expandedPhase.label}`}
+            aria-label={L.structureEditCycleAria(expandedPhase.label)}
           >
-            Éditer ce cycle
+            {L.structureEditCycle}
           </button>
         </div>
       )}

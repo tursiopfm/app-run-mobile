@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { colors } from '@/lib/design/colors'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import { type SportOverview } from '@/lib/data/dashboard'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
   sportOverviews: Record<SportKey, SportOverview>
@@ -20,6 +21,7 @@ function fmtDuration(totalSec: number): string {
 }
 
 export function WeekBlock({ sportOverviews, allSessions }: Props) {
+  const L = useT().cockpit
   const [activeSport, setActiveSport] = useState<SportKey>('run')
 
   const sessions = activeSport === 'all'
@@ -47,7 +49,7 @@ export function WeekBlock({ sportOverviews, allSessions }: Props) {
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       {/* Header */}
       <div className="flex items-center justify-between mb-[10px]">
-        <p className="text-[15px] font-semibold text-trail-text">Semaine en cours</p>
+        <p className="text-[15px] font-semibold text-trail-text">{L.blockLabel.week}</p>
         <div className="flex gap-1">
           {ALL_SPORT_KEYS.map((sport) => {
             const scfg = SPORT_CONFIG[sport]
@@ -113,18 +115,18 @@ export function WeekBlock({ sportOverviews, allSessions }: Props) {
             {totalKm > 0 ? (totalKm < 10 ? totalKm.toFixed(1) : Math.round(totalKm)) : '—'}
             {totalKm > 0 && <span style={{ fontSize: 9, fontWeight: 400, color: colors.subtleText }}> km</span>}
           </span>
-          <span style={{ fontSize: 9, color: colors.subtleText }}>Total</span>
+          <span style={{ fontSize: 9, color: colors.subtleText }}>{L.totalLabel}</span>
         </div>
         <div className="flex flex-col items-center gap-[1px]">
           <span style={{ fontSize: 13, fontWeight: 800, color: '#4db6f0' }}>
             {totalDp > 0 ? `${totalDp}` : '—'}
             {totalDp > 0 && <span style={{ fontSize: 9, fontWeight: 400, color: colors.subtleText }}> m</span>}
           </span>
-          <span style={{ fontSize: 9, color: colors.subtleText }}>D+</span>
+          <span style={{ fontSize: 9, color: colors.subtleText }}>{L.dPlusShort}</span>
         </div>
         <div className="flex flex-col items-center gap-[1px]">
           <span style={{ fontSize: 13, fontWeight: 800, color: '#4caf50' }}>{durLabel}</span>
-          <span style={{ fontSize: 9, color: colors.subtleText }}>Durée</span>
+          <span style={{ fontSize: 9, color: colors.subtleText }}>{L.durationShort}</span>
         </div>
       </div>
     </div>

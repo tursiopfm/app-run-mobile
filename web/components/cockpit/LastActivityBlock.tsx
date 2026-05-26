@@ -10,6 +10,7 @@ import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports
 import { readSportSettings } from '@/lib/design/sport-settings'
 import { calculateHrZones, type HrZone, type HrZoneMethod } from '@/lib/health/hr-zones'
 import { colors } from '@/lib/design/colors'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 export type AthleteHrProfile = {
   max_hr:               number | null
@@ -49,7 +50,7 @@ function computeHrZones(profile: AthleteHrProfile): HrZone[] {
 
 export function LastActivityBlock({ latestPerSport, athleteProfile, onHide }: Props) {
   const router = useRouter()
-  // Lazy-init depuis LS : settings, sport actif et zones FC dispos au 1er render.
+  const L = useT().cockpit
   const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
   const [currentIdx, setCurrentIdx] = useState(() => {
     const s = readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS)
@@ -84,7 +85,7 @@ export function LastActivityBlock({ latestPerSport, athleteProfile, onHide }: Pr
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       <div className="flex items-center justify-between mb-[8px]">
         <div className="flex items-center gap-1">
-          <span className="text-[15px] font-semibold text-trail-muted">Dernière activité —</span>
+          <span className="text-[15px] font-semibold text-trail-muted">{L.headerLastActivity}</span>
           <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
         </div>
         <div className="flex items-center gap-2">
@@ -92,7 +93,7 @@ export function LastActivityBlock({ latestPerSport, athleteProfile, onHide }: Pr
             <button
               onClick={() => setEditing(activeActivity)}
               className="text-trail-muted hover:text-trail-text transition-colors p-0.5"
-              aria-label="Modifier l'activité"
+              aria-label={L.aria.lastActivityEdit}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -103,7 +104,7 @@ export function LastActivityBlock({ latestPerSport, athleteProfile, onHide }: Pr
           <button
             onClick={() => setShowModal(true)}
             className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
-            aria-label="Paramètres dernière activité"
+            aria-label={L.aria.lastActivitySettings}
           >
             ⋮
           </button>
@@ -126,7 +127,7 @@ export function LastActivityBlock({ latestPerSport, athleteProfile, onHide }: Pr
               />
             ) : (
               <p className="text-[13px] py-2" style={{ color: colors.subtleText }}>
-                Aucune activité {SPORT_CONFIG[sportKey].label.toLowerCase()}.
+                {L.noActivityFor(SPORT_CONFIG[sportKey].label)}
               </p>
             ),
           }
@@ -139,7 +140,7 @@ export function LastActivityBlock({ latestPerSport, athleteProfile, onHide }: Pr
             <button
               key={sportKey}
               onClick={() => setCurrentIdx(i)}
-              aria-label={`Sport ${i + 1}`}
+              aria-label={L.aria.sportN(i + 1)}
               className={`w-[6px] h-[6px] rounded-full transition-colors ${
                 i === safeIdx ? 'bg-trail-text' : 'bg-trail-border'
               }`}
@@ -150,7 +151,7 @@ export function LastActivityBlock({ latestPerSport, athleteProfile, onHide }: Pr
 
       {showModal && (
         <SportSettingsModal
-          title="Dernière activité"
+          title={L.modalTitle.lastActivity}
           allKeys={ALL_SPORT_KEYS}
           visible={settings.visible}
           defaultKey={settings.default}

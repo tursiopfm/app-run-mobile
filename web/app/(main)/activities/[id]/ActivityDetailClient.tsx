@@ -16,7 +16,7 @@ import TypeIndicator from '@/components/activity/TypeIndicator'
 import { fmtPaceSec, fmtDurationSec } from '@/lib/activities/detail'
 import type { StravaSplit, StravaLap } from '@/lib/activities/detail'
 import { vapPaceSec } from '@/lib/activities/vap'
-import { sportLabel } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 import {
   asIntensityKey,
   effectiveWorkoutType,
@@ -78,6 +78,7 @@ const RUN_TYPES  = new Set(['Run', 'TrailRun'])
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
 function SportBadge({ type }: { type: string }) {
+  const sportLabel = useT().sportLabel
   const color = SPORT_COLORS[type] ?? '#8892a4'
   const label = sportLabel[type] ?? type
   return (
@@ -123,6 +124,7 @@ function StatsSection({ title, tiles }: { title: string; tiles: { label: string;
 }
 
 function ActivityStats({ activity: a }: { activity: ActivityDetail }) {
+  const L = useT().activities
   const raw = (a.raw_payload ?? {}) as Record<string, unknown>
 
   function rawNum(key: string): number | null {
@@ -155,30 +157,30 @@ function ActivityStats({ activity: a }: { activity: ActivityDetail }) {
 
   const perfTiles: { label: string; value: string; unit: string }[] = [
     isRun
-      ? { label: 'Allure moy.', value: avgPaceSec ? fmtPaceSec(avgPaceSec) : '—', unit: '/km' }
-      : { label: 'Vitesse moy.', value: avgSpeedKph ? avgSpeedKph.toFixed(1) : '—', unit: 'km/h' },
+      ? { label: L.detailAvgPace, value: avgPaceSec ? fmtPaceSec(avgPaceSec) : '—', unit: '/km' }
+      : { label: L.detailAvgSpeed, value: avgSpeedKph ? avgSpeedKph.toFixed(1) : '—', unit: 'km/h' },
     isRun
-      ? { label: 'Allure max', value: maxSpeedPace ? fmtPaceSec(maxSpeedPace) : '—', unit: '/km' }
-      : { label: 'Vitesse max', value: maxSpeedKph ? maxSpeedKph.toFixed(1) : '—', unit: 'km/h' },
-    ...(isRun && vapSec != null ? [{ label: 'VAP', value: fmtPaceSec(vapSec), unit: '/km' }] : []),
-    { label: 'Cadence moy.', value: avgCadence != null ? Math.round(avgCadence * (isRun ? 2 : 1)).toString() : '—', unit: isRun ? 'pas/min' : 'rpm' },
-    ...(isRide && avgWatts != null ? [{ label: 'Puissance moy.', value: Math.round(avgWatts).toString(), unit: 'W' }] : []),
-    ...(isRide && maxWatts != null ? [{ label: 'Puissance max', value: Math.round(maxWatts).toString(), unit: 'W' }] : []),
-    ...(isRide && kilojoules != null ? [{ label: 'Énergie', value: Math.round(kilojoules).toString(), unit: 'kJ' }] : []),
+      ? { label: L.detailMaxPace, value: maxSpeedPace ? fmtPaceSec(maxSpeedPace) : '—', unit: '/km' }
+      : { label: L.detailMaxSpeed, value: maxSpeedKph ? maxSpeedKph.toFixed(1) : '—', unit: 'km/h' },
+    ...(isRun && vapSec != null ? [{ label: L.detailVap, value: fmtPaceSec(vapSec), unit: '/km' }] : []),
+    { label: L.detailAvgCadence, value: avgCadence != null ? Math.round(avgCadence * (isRun ? 2 : 1)).toString() : '—', unit: isRun ? 'pas/min' : 'rpm' },
+    ...(isRide && avgWatts != null ? [{ label: L.detailAvgPower, value: Math.round(avgWatts).toString(), unit: 'W' }] : []),
+    ...(isRide && maxWatts != null ? [{ label: L.detailMaxPower, value: Math.round(maxWatts).toString(), unit: 'W' }] : []),
+    ...(isRide && kilojoules != null ? [{ label: L.detailEnergy, value: Math.round(kilojoules).toString(), unit: 'kJ' }] : []),
   ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <StatsSection title="Cardio" tiles={[
-        { label: 'FC moyenne', value: a.avg_hr != null ? String(a.avg_hr) : '—', unit: 'bpm' },
-        { label: 'FC max',     value: a.max_hr != null ? String(a.max_hr) : '—', unit: 'bpm' },
-        { label: 'Calories',   value: a.calories != null ? String(a.calories) : '—', unit: 'kcal' },
-        { label: 'Efforts Relatifs (Strava)', value: suffer != null ? Math.round(suffer).toString() : '—', unit: '' },
+      <StatsSection title={L.detailCardio} tiles={[
+        { label: L.detailHrAvg, value: a.avg_hr != null ? String(a.avg_hr) : '—', unit: 'bpm' },
+        { label: L.detailHrMax, value: a.max_hr != null ? String(a.max_hr) : '—', unit: 'bpm' },
+        { label: L.detailCalories,   value: a.calories != null ? String(a.calories) : '—', unit: 'kcal' },
+        { label: L.detailSufferStrava, value: suffer != null ? Math.round(suffer).toString() : '—', unit: '' },
       ]} />
-      <StatsSection title="Performance" tiles={perfTiles} />
-      <StatsSection title="Temps" tiles={[
-        { label: 'Temps actif', value: fmtDurationSec(movingTime), unit: '' },
-        { label: 'Temps total', value: fmtDurationSec(elapsed ?? a.duration_sec), unit: '' },
+      <StatsSection title={L.detailPerformance} tiles={perfTiles} />
+      <StatsSection title={L.detailTime} tiles={[
+        { label: L.detailActiveTime, value: fmtDurationSec(movingTime), unit: '' },
+        { label: L.detailTotalTime, value: fmtDurationSec(elapsed ?? a.duration_sec), unit: '' },
       ]} />
     </div>
   )
@@ -230,6 +232,7 @@ export function ActivityDetailClient({
   athleteProfile: AthleteHrProfile
 }) {
   const router = useRouter()
+  const A = useT().activities
   const [showEdit, setShowEdit] = useState(false)
   const [mapExpanded, setMapExpanded] = useState(false)
   const [popup, setPopup] = useState<null | 'effort' | 'intensity' | 'workoutType'>(null)
@@ -415,12 +418,12 @@ export function ActivityDetailClient({
 
         {/* Stats grid 3×2 */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 16 }}>
-          <StatTile label="Distance"   value={fmtDist(dist)}                                 unit="km"   valueStyle={{ color: '#e8651a', fontSize: 20 }} />
-          <StatTile label="D+"         value={fmtElev(elev)}                                 unit="m"    valueStyle={{ color: '#4db6f0', fontSize: 20 }} />
-          <StatTile label="Durée"      value={fmtDurationSec(movingTime)}                    unit=""     valueStyle={{ color: '#4caf50', fontSize: 17 }} />
-          <StatTile label={paceLabel}  value={paceValue}                                     unit={paceUnit} valueStyle={{ color: 'var(--trail-text)', fontSize: 17 }} />
-          <StatTile label="Calories"   value={a.calories != null ? String(a.calories) : '—'} unit="kcal" valueStyle={{ color: '#ff7043', fontSize: 18 }} />
-          <StatTile label="Tps écoulé" value={fmtDurationSec(a.duration_sec)}                unit=""     valueStyle={{ color: '#4caf50', fontSize: 16 }} />
+          <StatTile label={A.distanceLabel}        value={fmtDist(dist)}                                 unit="km"   valueStyle={{ color: '#e8651a', fontSize: 20 }} />
+          <StatTile label={A.dPlusLabel}           value={fmtElev(elev)}                                 unit="m"    valueStyle={{ color: '#4db6f0', fontSize: 20 }} />
+          <StatTile label={A.detailDurationLabel}  value={fmtDurationSec(movingTime)}                    unit=""     valueStyle={{ color: '#4caf50', fontSize: 17 }} />
+          <StatTile label={paceLabel}              value={paceValue}                                     unit={paceUnit} valueStyle={{ color: 'var(--trail-text)', fontSize: 17 }} />
+          <StatTile label={A.detailCalories}       value={a.calories != null ? String(a.calories) : '—'} unit="kcal" valueStyle={{ color: '#ff7043', fontSize: 18 }} />
+          <StatTile label={A.detailElapsedTime}    value={fmtDurationSec(a.duration_sec)}                unit=""     valueStyle={{ color: '#4caf50', fontSize: 16 }} />
         </div>
 
         {/* Tabs — always shown (STATS tab is always available) */}
@@ -445,7 +448,7 @@ export function ActivityDetailClient({
                   cursor: 'pointer',
                 }}
               >
-                Splits
+                {A.splitsTitle}
               </button>
             )}
             {showFractionne && (
@@ -461,7 +464,7 @@ export function ActivityDetailClient({
                   cursor: 'pointer',
                 }}
               >
-                Fractionné
+                {A.splitsInterval}
               </button>
             )}
             {showZones && (
@@ -477,7 +480,7 @@ export function ActivityDetailClient({
                   cursor: 'pointer',
                 }}
               >
-                Zones FC
+                {A.detailHeartRateZones}
               </button>
             )}
             <button

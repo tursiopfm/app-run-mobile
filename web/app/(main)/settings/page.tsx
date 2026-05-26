@@ -7,7 +7,7 @@ import { IdentityPreview } from '@/components/settings/IdentityPreview'
 import { HrCalibrationTeaser } from '@/components/settings/HrCalibrationTeaser'
 import { createClient } from '@/lib/database/supabase-server'
 import { getServerUser } from '@/lib/database/get-user'
-import { settings as settingsLabels } from '@/lib/design/labels'
+import { getServerT } from '@/lib/i18n/server'
 import type { HrZoneMethod } from '@/lib/health/hr-zones'
 
 // ── Section header with icon + title + subtitle (mirrors a true settings UI rhythm)
@@ -39,37 +39,30 @@ function SectionCard({ children }: { children: React.ReactNode }) {
 }
 
 // ── Roadmap items grouped by theme — derived from project memory + TODO docs
-const ROADMAP: { group: string; items: string[] }[] = [
-  {
-    group: 'Intelligence',
-    items: [
-      'Coach IA personnalisé (résumé hebdo, conseil du jour)',
-      'Zones cardiaques configurables (manuel · déduit · mixte)',
-    ],
-  },
-  {
-    group: 'Personnalisation',
-    items: [
-      'Plan d’entraînement personnalisable manuellement',
-      'Data cockpit entièrement personnalisables',
-    ],
-  },
-  {
-    group: 'Gestion de course',
-    items: [
-      'Définir son calendrier de course',
-      'Tableau de plan de course (ravito, BH, temps de passage)',
-    ],
-  },
-  {
-    group: 'Indicateurs physiologiques',
-    items: [
-      'Amélioration des indicateurs d’effort et de fatigue',
-    ],
-  },
-]
+function buildRoadmap(L: ReturnType<typeof getServerT>['settings']) {
+  return [
+    {
+      group: L.roadmap.intelligence,
+      items: [L.roadmapItems.coachAi, L.roadmapItems.hrZones],
+    },
+    {
+      group: L.roadmap.personalization,
+      items: [L.roadmapItems.planEditable, L.roadmapItems.dataCockpit],
+    },
+    {
+      group: L.roadmap.raceManagement,
+      items: [L.roadmapItems.raceCalendar, L.roadmapItems.raceTable],
+    },
+    {
+      group: L.roadmap.physiology,
+      items: [L.roadmapItems.effortIndicators],
+    },
+  ]
+}
 
 export default async function SettingsPage() {
+  const settingsLabels = getServerT().settings
+  const ROADMAP = buildRoadmap(settingsLabels)
   const user = await getServerUser()
   const supabase = await createClient()
 
@@ -127,10 +120,10 @@ export default async function SettingsPage() {
           {settingsLabels.title}
         </p>
         <p className="text-[22px] font-black text-trail-text leading-tight mt-[2px]">
-          Compte, connexions & préférences
+          {settingsLabels.pageHeroSubtitle}
         </p>
         <p className="text-[12px] text-trail-muted leading-[16px] mt-[6px] max-w-[360px]">
-          Gère ton identité, tes intégrations sportives et l’apparence de ton cockpit.
+          {settingsLabels.pageHeroIntro}
         </p>
       </div>
 
@@ -139,7 +132,7 @@ export default async function SettingsPage() {
         <SectionHeader
           icon={Plug2}
           title={settingsLabels.sectionAccount}
-          subtitle="Identité Trail Cockpit et intégrations tierces"
+          subtitle={settingsLabels.sectionAccountSub}
         />
         <SectionCard>
           <AccountSection />
@@ -152,7 +145,7 @@ export default async function SettingsPage() {
         <SectionHeader
           icon={User}
           title={settingsLabels.sectionProfile}
-          subtitle="Aperçu de ton profil sportif et accès à la calibration cardiaque"
+          subtitle={settingsLabels.sectionProfileSub}
         />
         <SectionCard>
           <IdentityPreview
@@ -175,7 +168,7 @@ export default async function SettingsPage() {
         <SectionHeader
           icon={Palette}
           title={settingsLabels.sectionAppearance}
-          subtitle="Thème et langue de l’interface"
+          subtitle={settingsLabels.sectionAppearanceSub}
         />
         <SectionCard>
           <AppearanceSection />
@@ -187,7 +180,7 @@ export default async function SettingsPage() {
         <SectionHeader
           icon={Sparkles}
           title={settingsLabels.comingSoon}
-          subtitle="Prochaines étapes du produit"
+          subtitle={settingsLabels.sectionComingSoonSub}
         />
         <SectionCard>
           <div className="space-y-[14px]">
@@ -217,8 +210,8 @@ export default async function SettingsPage() {
       <section>
         <SectionHeader
           icon={LifeBuoy}
-          title="Aide & À propos"
-          subtitle="Mentions, support et version de l’application"
+          title={settingsLabels.helpAboutTitle}
+          subtitle={settingsLabels.helpAboutSub}
         />
         <SectionCard>
           <HelpAboutSection />
@@ -227,7 +220,7 @@ export default async function SettingsPage() {
 
       {/* ── Footer signature ── */}
       <p className="text-center text-[10px] text-trail-muted/70 tracking-wider uppercase pt-2">
-        Trail Cockpit · Conçu pour les coureurs de trail
+        {settingsLabels.footerTagline}
       </p>
 
     </div>

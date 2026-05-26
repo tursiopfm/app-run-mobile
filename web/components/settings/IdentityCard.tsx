@@ -4,13 +4,9 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { User, Camera, Mail } from 'lucide-react'
 import { colors } from '@/lib/design/colors'
+import { useT, useLang } from '@/lib/i18n/I18nProvider'
 
 type Sex = 'male' | 'female' | 'other'
-const SEX_OPTIONS: { value: Sex; label: string }[] = [
-  { value: 'male',   label: 'Homme' },
-  { value: 'female', label: 'Femme' },
-  { value: 'other',  label: 'Autre' },
-]
 
 type Props = {
   firstName:        string | null
@@ -25,11 +21,11 @@ type Props = {
 
 type Status = 'idle' | 'saving' | 'saved' | 'error'
 
-function formatDate(iso: string | null): string {
+function formatDate(iso: string | null, locale: string): string {
   if (!iso) return '—'
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return '—'
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+  return d.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
 export function IdentityCard({
@@ -37,6 +33,14 @@ export function IdentityCard({
   hasCustomAvatar, accountCreatedAt,
 }: Props) {
   const router = useRouter()
+  const L = useT().settings
+  const { lang } = useLang()
+  const locale = lang === 'en' ? 'en-US' : 'fr-FR'
+  const SEX_OPTIONS: { value: Sex; label: string }[] = [
+    { value: 'male',   label: L.sexMale   },
+    { value: 'female', label: L.sexFemale },
+    { value: 'other',  label: L.sexOther  },
+  ]
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Avatar state (inline upload)
@@ -124,7 +128,7 @@ export function IdentityCard({
     }
   }
 
-  const fullName = [first, last].filter(Boolean).join(' ').trim() || 'Athlète'
+  const fullName = [first, last].filter(Boolean).join(' ').trim() || L.defaultAthleteName
 
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[14px]">
@@ -135,11 +139,11 @@ export function IdentityCard({
             type="button"
             onClick={() => !avatarUploading && fileInputRef.current?.click()}
             className="w-16 h-16 rounded-full overflow-hidden bg-trail-surface border border-trail-border flex items-center justify-center relative group"
-            aria-label="Changer la photo de profil"
+            aria-label={L.identityChangeAvatarAria}
           >
             {currentAvatarUrl
               // eslint-disable-next-line @next/next/no-img-element
-              ? <img src={currentAvatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ? <img src={currentAvatarUrl} alt={L.identityAvatarAlt} className="w-full h-full object-cover" />
               : <User size={24} className="text-trail-muted" />}
             <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               {avatarUploading
@@ -167,40 +171,40 @@ export function IdentityCard({
               onClick={handleRemoveAvatar}
               className="text-[10px] text-trail-muted underline underline-offset-2 mt-[4px]"
             >
-              Retirer la photo
+              {L.identityRemovePhoto}
             </button>
           )}
         </div>
       </div>
 
       {avatarError && (
-        <p className="text-[11px] text-red-500">Erreur photo — réessayer</p>
+        <p className="text-[11px] text-red-500">{L.identityAvatarError}</p>
       )}
 
       {/* ── Champs éditables ── */}
       <div className="space-y-[10px]">
         <div className="grid grid-cols-2 gap-[8px]">
-          <Field label="Prénom">
+          <Field label={L.identityFirstName}>
             <input
               type="text"
               value={first}
               onChange={e => setFirst(e.target.value)}
-              placeholder="Prénom"
+              placeholder={L.identityFirstName}
               className="w-full rounded-[8px] bg-trail-surface border border-trail-border px-2 py-[6px] text-[14px] text-trail-text outline-none focus:border-trail-primary"
             />
           </Field>
-          <Field label="Nom">
+          <Field label={L.identityLastName}>
             <input
               type="text"
               value={last}
               onChange={e => setLast(e.target.value)}
-              placeholder="Nom"
+              placeholder={L.identityLastName}
               className="w-full rounded-[8px] bg-trail-surface border border-trail-border px-2 py-[6px] text-[14px] text-trail-text outline-none focus:border-trail-primary"
             />
           </Field>
         </div>
 
-        <Field label="Date de naissance">
+        <Field label={L.identityBirthDate}>
           <input
             type="date"
             value={bdate}
@@ -210,7 +214,7 @@ export function IdentityCard({
           />
         </Field>
 
-        <Field label="Sexe">
+        <Field label={L.identitySex}>
           <div className="flex gap-[6px]">
             {SEX_OPTIONS.map(opt => {
               const active = sexVal === opt.value
@@ -231,7 +235,7 @@ export function IdentityCard({
             })}
           </div>
           {sexVal == null && (
-            <p className="text-[10px] text-trail-muted/70 mt-[4px]">Non précisé</p>
+            <p className="text-[10px] text-trail-muted/70 mt-[4px]">{L.sexUnset}</p>
           )}
         </Field>
       </div>
@@ -249,22 +253,22 @@ export function IdentityCard({
           cursor: (!dirty || status === 'saving') ? 'not-allowed' : 'pointer',
         }}
       >
-        {status === 'saving' ? 'Enregistrement…'
-          : status === 'saved' ? '✓ Enregistré'
-          : status === 'error' ? 'Erreur — réessayer'
-          : dirty ? 'Enregistrer les modifications'
-          : 'Aucune modification'}
+        {status === 'saving' ? L.identitySaveSaving
+          : status === 'saved' ? L.identitySaveSaved
+          : status === 'error' ? L.identitySaveError
+          : dirty ? L.identitySaveCta
+          : L.identitySaveNoop}
       </button>
 
       {/* ── Meta (lecture seule) ── */}
       <div className="grid grid-cols-2 gap-[8px] text-[12px] pt-[2px]">
         <div className="rounded-[10px] bg-trail-surface px-3 py-[8px]">
-          <p className="text-[10px] uppercase tracking-wider text-trail-muted">Compte créé</p>
-          <p className="text-[13px] text-trail-text mt-[2px]">{formatDate(accountCreatedAt)}</p>
+          <p className="text-[10px] uppercase tracking-wider text-trail-muted">{L.identityAccountCreated}</p>
+          <p className="text-[13px] text-trail-text mt-[2px]">{formatDate(accountCreatedAt, locale)}</p>
         </div>
         <div className="rounded-[10px] bg-trail-surface px-3 py-[8px]">
-          <p className="text-[10px] uppercase tracking-wider text-trail-muted">Abonnement</p>
-          <p className="text-[13px] text-trail-text mt-[2px]">Free</p>
+          <p className="text-[10px] uppercase tracking-wider text-trail-muted">{L.identitySubscription}</p>
+          <p className="text-[13px] text-trail-text mt-[2px]">{L.identitySubscriptionFree}</p>
         </div>
       </div>
     </div>

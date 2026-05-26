@@ -14,6 +14,8 @@ import { colors } from '@/lib/design/colors'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { RaceEditorModal } from './RaceEditorModal'
 import { RaceCardSkeleton } from './RaceCardSkeleton'
+import { useT } from '@/lib/i18n/I18nProvider'
+import type { Dict } from '@/lib/i18n/dictionaries/fr'
 
 // Couleurs priorité — identiques à RaceMarkers pour cohérence visuelle avec la timeline « Structure de prépa ».
 const PRIORITY_COLOR: Record<Race['priority'], string> = {
@@ -26,24 +28,13 @@ type Props = {
   onChange?: () => void
 }
 
-const RACE_TYPE_LABEL: Record<RaceType, string> = {
-  trail:   'Trail',
-  ultra:   'Ultra',
-  route:   'Route',
-  cross:   'Cross',
-  skyrace: 'Skyrace',
-}
-
 function computeDaysLeft(isoDate: string): number {
-  // Math.ceil pour qu'une course "aujourd'hui" affiche J-0 et pas J-(-1).
   const target = new Date(isoDate + 'T00:00:00').getTime()
   return Math.ceil((target - Date.now()) / 86_400_000)
 }
 
-function formatShortDate(iso: string): string {
-  // YYYY-MM-DD → "25 oct."
+function formatShortDate(iso: string, months: readonly string[]): string {
   if (!iso || iso.length < 10) return iso
-  const months = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
   const m = parseInt(iso.slice(5, 7), 10) - 1
   const d = parseInt(iso.slice(8, 10), 10)
   if (Number.isNaN(d) || m < 0 || m > 11) return iso
@@ -51,8 +42,7 @@ function formatShortDate(iso: string): string {
 }
 
 export function ObjectifCourseBlock({ onChange }: Props) {
-  // Lazy-init depuis le snapshot LS (visite précédente) pour rendre
-  // synchronement avec les data — pas de flash skeleton sur visites répétées.
+  const L = useT().plan
   const initial = peekRaces()
   const [races, setRaces] = useState<Race[]>(initial ?? [])
   const [loaded, setLoaded] = useState(initial !== null)
@@ -98,26 +88,24 @@ export function ObjectifCourseBlock({ onChange }: Props) {
     return { mainRace: main, otherRaces: others }
   }, [races])
 
-  // ── Skeleton anti-flash (chargement en cours) ──
   if (!loaded) {
     return (
       <BlockCard
-        title="Objectif course"
-        helpTitle="Ton objectif"
-        helpBody="Définis la course principale qui structure ta prépa. Tu peux ajouter d'autres courses secondaires en saison."
+        title={L.objectifTitle}
+        helpTitle={L.objectifHelpTitle}
+        helpBody={L.objectifHelp}
       >
         <RaceCardSkeleton />
       </BlockCard>
     )
   }
 
-  // ── État vide ──
   if (races.length === 0) {
     return (
       <BlockCard
-        title="Objectif course"
-        helpTitle="Ton objectif"
-        helpBody="Définis la course principale qui structure ta prépa. Tu peux ajouter d'autres courses secondaires en saison."
+        title={L.objectifTitle}
+        helpTitle={L.objectifHelpTitle}
+        helpBody={L.objectifHelp}
       >
         <div className="flex flex-col items-center justify-center text-center py-6 px-4">
           <span className="text-[40px] leading-none mb-2" aria-hidden>🎯</span>
@@ -125,19 +113,19 @@ export function ObjectifCourseBlock({ onChange }: Props) {
             className="text-[20px] text-trail-text mb-1"
             style={{ fontFamily: "'Bebas Neue', sans-serif" }}
           >
-            Définis ton objectif
+            {L.objectifEmpty}
           </h3>
           <p className="text-[13px] text-trail-muted mb-4 max-w-xs">
-            Ton objectif structure toute ta prépa.
+            {L.objectifEmptyHint}
           </p>
           <button
             type="button"
             onClick={openCreate}
             className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-[14px] font-semibold"
-            aria-label="Définir mon premier objectif"
+            aria-label={L.objectifFirstAria}
             disabled={!loaded}
           >
-            + Définir mon premier objectif
+            {L.objectifFirstCTA}
           </button>
         </div>
         <RaceEditorModal
@@ -152,32 +140,31 @@ export function ObjectifCourseBlock({ onChange }: Props) {
 
   return (
     <BlockCard
-      title="Objectif course"
-      helpTitle="Ton objectif"
-      helpBody="Définis la course principale qui structure ta prépa. Tu peux ajouter d'autres courses secondaires en saison."
+      title={L.objectifTitle}
+      helpTitle={L.objectifHelpTitle}
+      helpBody={L.objectifHelp}
       rightSlot={
         <button
           type="button"
           onClick={openCreate}
           className="inline-flex items-center justify-center w-7 h-7 rounded-[6px] text-[color:var(--trail-primary)] hover:bg-[color:var(--trail-surface)]"
-          aria-label="Ajouter une nouvelle course"
+          aria-label={L.objectifAddRaceAria}
         >
           <SquarePen size={16} aria-hidden />
         </button>
       }
     >
-      {/* Course principale : grande carte */}
       {mainRace && (
-        <MainRaceCard race={mainRace} onSelect={() => openCourseDetail(mainRace)} />
+        <MainRaceCard race={mainRace} L={L} onSelect={() => openCourseDetail(mainRace)} />
       )}
 
-      {/* Cartes compactes pour les autres courses */}
       {otherRaces.length > 0 && (
         <div className={`flex flex-col gap-2 ${mainRace ? 'mt-3' : ''}`}>
           {otherRaces.map(r => (
             <CompactRaceCard
               key={r.id}
               race={r}
+              L={L}
               onSelect={() => openCourseDetail(r)}
             />
           ))}
@@ -194,19 +181,17 @@ export function ObjectifCourseBlock({ onChange }: Props) {
   )
 }
 
-// ─── Carte principale (grand format) ───────────────────────────────────────
-function MainRaceCard({ race, onSelect }: { race: Race; onSelect: () => void }) {
+function MainRaceCard({ race, L, onSelect }: { race: Race; L: Dict['plan']; onSelect: () => void }) {
   const daysLeft = computeDaysLeft(race.date)
   const isPast = daysLeft < 0
-  const typeLabel = RACE_TYPE_LABEL[race.type] ?? race.type
+  const typeLabel = L.raceTypes[race.type as RaceType] ?? race.type
   return (
     <button
       type="button"
       onClick={onSelect}
       className="block w-full text-left rounded-[10px] hover:bg-trail-surface/30 transition-colors -mx-1 px-1"
-      aria-label={`Ouvrir le détail de la course ${race.name}`}
+      aria-label={L.raceOpenAria(race.name)}
     >
-      {/* Header compact : nom de la course + compteur J-XX sur la même ligne */}
       <div className="flex items-start justify-between gap-3">
         <h3
           className="text-[22px] leading-tight text-trail-text min-w-0 flex-1 truncate"
@@ -216,27 +201,26 @@ function MainRaceCard({ race, onSelect }: { race: Race; onSelect: () => void }) 
           {race.name}
         </h3>
         {isPast ? (
-          <span className="text-[12px] text-trail-muted whitespace-nowrap flex-shrink-0 mt-1">Course passée</span>
+          <span className="text-[12px] text-trail-muted whitespace-nowrap flex-shrink-0 mt-1">{L.racePast}</span>
         ) : (
           <div className="flex flex-col items-end leading-none flex-shrink-0">
             <span
               className="text-[28px] leading-none text-trail-text"
               style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-              aria-label={`J moins ${daysLeft} jours`}
+              aria-label={L.raceJMinusAria(daysLeft)}
             >
               J-{daysLeft}
             </span>
             <span className="text-[10px] text-trail-muted mt-0.5 whitespace-nowrap">
-              {daysLeft === 0 ? "c'est aujourd'hui" : daysLeft === 1 ? 'demain' : 'jours restants'}
+              {daysLeft === 0 ? L.raceDayToday : daysLeft === 1 ? L.raceDayTomorrow : L.raceDayRemaining}
             </span>
           </div>
         )}
       </div>
 
-      {/* Pills row — pas de chip Trophy sur la course principale (le card lui-même fait office de marqueur) */}
       <div className="flex flex-wrap items-center gap-2 mt-2">
         <Pill bg={`${colors.chargeOrange}26`} color={colors.chargeOrange} label={`${race.distance} km`} />
-        <Pill bg={`${colors.seriesBlue}26`} color={colors.seriesBlue} label={`${race.elevation} m D+`} />
+        <Pill bg={`${colors.seriesBlue}26`} color={colors.seriesBlue} label={`${race.elevation} ${L.mDPlus}`} />
         <Pill bg="var(--trail-surface)" color="var(--trail-text)" label={typeLabel} />
         {race.location && (
           <Pill
@@ -250,8 +234,7 @@ function MainRaceCard({ race, onSelect }: { race: Race; onSelect: () => void }) 
   )
 }
 
-// ─── Carte compacte (1 ligne, courses secondaires/archivées) ───────────────
-function CompactRaceCard({ race, onSelect }: { race: Race; onSelect: () => void }) {
+function CompactRaceCard({ race, L, onSelect }: { race: Race; L: Dict['plan']; onSelect: () => void }) {
   const daysLeft = computeDaysLeft(race.date)
   const isPast = daysLeft < 0
   return (
@@ -259,10 +242,9 @@ function CompactRaceCard({ race, onSelect }: { race: Race; onSelect: () => void 
       type="button"
       onClick={onSelect}
       className="w-full flex items-center gap-2 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border hover:border-trail-primary transition-colors text-left"
-      aria-label={`Ouvrir le détail de la course ${race.name}`}
+      aria-label={L.raceOpenAria(race.name)}
     >
-      {/* Chip priorité — Trophy si isMain, Flag (couleur priorité) sinon */}
-      <RacePriorityChip race={race} size={24} />
+      <RacePriorityChip race={race} L={L} size={24} />
       <div className="flex items-center gap-2 min-w-0 flex-1">
         <span
           className="text-[13px] font-semibold text-trail-text truncate"
@@ -274,13 +256,13 @@ function CompactRaceCard({ race, onSelect }: { race: Race; onSelect: () => void 
           <span
             className="text-[14px] leading-none text-trail-text flex-shrink-0"
             style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-            aria-label={`J moins ${daysLeft} jours`}
+            aria-label={L.raceJMinusAria(daysLeft)}
           >
             J-{daysLeft}
           </span>
         )}
         <span className="text-[11px] text-trail-muted flex-shrink-0">
-          {formatShortDate(race.date)}
+          {formatShortDate(race.date, L.monthsShort)}
         </span>
         <span className="text-[11px] text-trail-muted flex-shrink-0">
           · {race.distance} km
@@ -293,7 +275,7 @@ function CompactRaceCard({ race, onSelect }: { race: Race; onSelect: () => void 
 // Chip uniforme (Trophy pour la course objectif principale, Flag sinon) — mêmes couleurs
 // et même style que les pins de RaceMarkers, pour que le bloc « Objectif course » soit
 // visuellement cohérent avec le bloc « Structure de prépa ».
-function RacePriorityChip({ race, size = 28 }: { race: Race; size?: number }) {
+function RacePriorityChip({ race, L, size = 28 }: { race: Race; L: Dict['plan']; size?: number }) {
   const isMainGoal = race.priority === 'A' && race.isMain
   const color = PRIORITY_COLOR[race.priority]
   const isB = race.priority === 'B'
@@ -307,7 +289,7 @@ function RacePriorityChip({ race, size = 28 }: { race: Race; size?: number }) {
         background: color,
         boxShadow: '0 2px 6px rgba(0,0,0,0.4), 0 0 0 1.5px var(--trail-card)',
       }}
-      aria-label={isMainGoal ? 'Course objectif principale' : `Course priorité ${race.priority}`}
+      aria-label={isMainGoal ? L.raceMainGoalAria : L.racePriorityAria(race.priority)}
     >
       {isMainGoal ? <Trophy size={iconSize} strokeWidth={2.5} /> : <Flag size={iconSize} strokeWidth={2.5} />}
     </span>

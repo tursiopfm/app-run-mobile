@@ -6,8 +6,10 @@ import { getServerUser } from '@/lib/database/get-user'
 import { HrCalibrationCard } from '@/components/settings/HrCalibrationCard'
 import type { HrZoneMethod } from '@/lib/health/hr-zones'
 import type { CardioState } from '@/components/settings/HrCardioFields'
+import { getServerT } from '@/lib/i18n/server'
 
 export default async function ProfilePage() {
+  const S = getServerT().settings
   const user = await getServerUser()
   if (!user) redirect('/login')
   const supabase = await createClient()
@@ -51,14 +53,14 @@ export default async function ProfilePage() {
         <Link
           href="/settings"
           className="text-trail-muted hover:text-trail-text -ml-1 p-1"
-          aria-label="Retour aux Réglages"
+          aria-label={S.backToSettingsAria}
         >
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <p className="text-[22px] font-black text-trail-text leading-tight">Calibration FC & zones cardiaques</p>
+          <p className="text-[22px] font-black text-trail-text leading-tight">{S.profilePageTitle}</p>
           <p className="text-[12px] text-trail-muted leading-[16px] mt-1">
-            Ces réglages calibrent tes zones de fréquence cardiaque et améliorent l&apos;interprétation de l&apos;effort.
+            {S.profilePageIntro}
           </p>
         </div>
       </div>

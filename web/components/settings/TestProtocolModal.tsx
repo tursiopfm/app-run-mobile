@@ -2,8 +2,10 @@
 
 import { useEffect } from 'react'
 import { colors } from '@/lib/design/colors'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 export function TestProtocolModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const L = useT().settings
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -26,41 +28,41 @@ export function TestProtocolModal({ open, onClose }: { open: boolean; onClose: (
       >
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-[14px] font-bold text-trail-text">Protocole — Test terrain 30 min</p>
-            <p className="text-[11px] text-trail-muted">Méthode Coggan / Friel — détermine ta LTHR</p>
+            <p className="text-[14px] font-bold text-trail-text">{L.protocolTitle}</p>
+            <p className="text-[11px] text-trail-muted">{L.protocolSubtitle}</p>
           </div>
-          <button onClick={onClose} className="text-trail-muted text-[20px] leading-none" aria-label="Fermer">×</button>
+          <button onClick={onClose} className="text-trail-muted text-[20px] leading-none" aria-label={L.protocolCloseAria}>×</button>
         </div>
 
         <section>
-          <p className="text-[12px] font-semibold" style={{ color: '#22c55e' }}>✓ À faire avant</p>
+          <p className="text-[12px] font-semibold" style={{ color: '#22c55e' }}>{L.protocolSection1Title}</p>
           <ul className="text-[12px] text-trail-text pl-5 mt-1 list-disc space-y-[2px]">
-            <li>Repos complet 24h, hydratation, pas d&apos;alcool la veille</li>
-            <li>Choisir un parcours plat ou piste, par temps tempéré</li>
-            <li>Échauffement 15 min progressif (Z1 → Z3)</li>
+            <li>{L.protocolSection1Item1}</li>
+            <li>{L.protocolSection1Item2}</li>
+            <li>{L.protocolSection1Item3}</li>
           </ul>
         </section>
 
         <section>
-          <p className="text-[12px] font-semibold" style={{ color: '#fb923c' }}>⏱ Pendant le test</p>
+          <p className="text-[12px] font-semibold" style={{ color: '#fb923c' }}>{L.protocolSection2Title}</p>
           <ul className="text-[12px] text-trail-text pl-5 mt-1 list-disc space-y-[2px]">
-            <li>Cours <strong>30 minutes en continu à allure maximale soutenable</strong></li>
-            <li>Démarre à un rythme que tu sais tenir 30 min — pas un sprint</li>
-            <li>Démarre le lap <strong>après 10 min</strong> de test (clé du protocole)</li>
-            <li>Garde un effort très régulier sur les 20 dernières minutes</li>
+            <li>{L.protocolSection2Item1}</li>
+            <li>{L.protocolSection2Item2}</li>
+            <li>{L.protocolSection2Item3}</li>
+            <li>{L.protocolSection2Item4}</li>
           </ul>
         </section>
 
         <section>
-          <p className="text-[12px] font-semibold" style={{ color: '#facc15' }}>📊 Lecture du résultat</p>
+          <p className="text-[12px] font-semibold" style={{ color: '#facc15' }}>{L.protocolSection3Title}</p>
           <div className="rounded-[8px] p-[8px] mt-1" style={{ backgroundColor: colors.surface }}>
-            <p className="text-[13px] font-bold text-trail-text">FC moyenne des 20 dernières minutes = ta LTHR</p>
-            <p className="text-[11px] text-trail-muted mt-1">C&apos;est cette valeur que tu reportes dans « FC seuil test 30 min ».</p>
+            <p className="text-[13px] font-bold text-trail-text">{L.protocolResult}</p>
+            <p className="text-[11px] text-trail-muted mt-1">{L.protocolResultHint}</p>
           </div>
         </section>
 
         <div className="rounded-[6px] p-[8px] text-[11px]" style={{ backgroundColor: '#1f2419', border: '1px solid #facc15', color: '#facc15' }}>
-          💡 À refaire tous les 3–6 mois ou après un bloc d&apos;entraînement structurant. La LTHR évolue avec ta forme.
+          {L.protocolFooter}
         </div>
 
         <button
@@ -68,7 +70,7 @@ export function TestProtocolModal({ open, onClose }: { open: boolean; onClose: (
           className="w-full rounded-[8px] py-[10px] text-[13px] font-bold text-white"
           style={{ backgroundColor: colors.chargeOrange }}
         >
-          J&apos;ai compris, fermer
+          {L.protocolGotIt}
         </button>
       </div>
     </div>

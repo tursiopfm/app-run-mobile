@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { type ActivityRow } from '@/components/ui/ActivityCard'
 import { EditActivityModal } from '@/components/ui/EditActivityModal'
 import { colors } from '@/lib/design/colors'
-import { sportLabel } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 import { effectiveWorkoutType } from '@/lib/activities/intensity'
 import { calculateHrZones, type HrZone, type HrZoneMethod } from '@/lib/health/hr-zones'
 import { getRaces } from '@/lib/plan/storage'
@@ -613,6 +613,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
   onClose:    () => void
   onReset:    () => void
 }) {
+  const sportLabel = useT().sportLabel
   const si = inputStyle()
 
   const handleSort = (field: SortField, dir: SortDir) =>
@@ -878,6 +879,7 @@ export default function CoursesClient({
   athleteProfile: AthleteHrProfile
 }) {
   const router = useRouter()
+  const L = useT().activities
   const [view, setView] = useState<'Races' | 'Records'>('Races')
   const [activities, setActivities] = useState<ActivityRow[]>(initial)
   const [upcomingRaces, setUpcomingRaces] = useState<Race[]>([])
@@ -1073,17 +1075,17 @@ export default function CoursesClient({
   const blocks: BlockDef[] = [
     {
       id: 'upcoming-races',
-      label: 'Prochaines courses',
+      label: L.upcomingRaces,
       emoji: '🏁',
       render: () => (
         <BlockCard
-          title="Prochaines courses"
-          helpTitle="Prochaines courses"
-          helpBody="Les courses planifiées dans l'onglet Plan dont la date est à venir, triées de la plus proche à la plus lointaine. Clique sur une course pour ouvrir sa fiche."
+          title={L.upcomingRaces}
+          helpTitle={L.upcomingRaces}
+          helpBody={L.upcomingRacesHelp}
           titleClassName="text-[15px] font-semibold text-trail-text"
         >
           {upcomingRaces.length === 0 ? (
-            <p className="text-[13px] text-trail-muted">Aucune course planifiée. Ajoute-en une depuis l&apos;onglet Plan.</p>
+            <p className="text-[13px] text-trail-muted">{L.noRacePlanned}</p>
           ) : (
             <div className="space-y-[10px]">
               {upcomingRaces.map(r => (
@@ -1096,32 +1098,32 @@ export default function CoursesClient({
     },
     {
       id: 'summary',
-      label: 'Résumé',
+      label: L.summary,
       emoji: '📊',
       render: () => (
         <BlockCard
-          title="Résumé"
-          helpTitle="Résumé"
-          helpBody="Synthèse globale de tes courses passées : nombre total, kilomètres cumulés, date de la dernière course, dénivelé maximum."
+          title={L.summary}
+          helpTitle={L.summary}
+          helpBody={L.summaryHelp}
         >
           <div className="flex gap-2">
-            <SummaryPill label="courses"   value={courseActivities.length.toString()} color={colors.chargeOrange} />
-            <SummaryPill label="km total"  value={Math.round(totalKm).toString()}     color={colors.seriesBlue} />
-            <SummaryPill label="dernière"  value={lastDate}                           color={colors.greenOk} />
-            <SummaryPill label="max D+"    value={`${Math.round(maxDPlus)} m`}        color={colors.seriesYellow} />
+            <SummaryPill label={L.racesSummaryRaces}   value={courseActivities.length.toString()} color={colors.chargeOrange} />
+            <SummaryPill label={L.racesSummaryTotalKm} value={Math.round(totalKm).toString()}     color={colors.seriesBlue} />
+            <SummaryPill label={L.racesSummaryLastDate} value={lastDate}                          color={colors.greenOk} />
+            <SummaryPill label={L.racesSummaryMaxDPlus} value={`${Math.round(maxDPlus)} m`}       color={colors.seriesYellow} />
           </div>
         </BlockCard>
       ),
     },
     {
       id: 'past-races',
-      label: 'Courses passées',
+      label: L.raceTabRaces,
       emoji: '🏆',
       render: () => (
         <BlockCard
-          title="Liste des courses"
-          helpTitle="Liste des courses"
-          helpBody="Toutes tes activités taguées comme 'Course' (manuellement ou détectées automatiquement depuis le titre). Utilise la recherche et les filtres pour affiner."
+          title={L.racesList}
+          helpTitle={L.racesList}
+          helpBody={L.racesListHelp}
         >
           <div
             className="rounded-[12px] border flex items-center mb-[10px]"
@@ -1137,7 +1139,7 @@ export default function CoursesClient({
                 <path d="M16.5 16.5L21 21" stroke={hasActiveSearch ? colors.chargeOrange : colors.subtleText} strokeWidth="2" strokeLinecap="round" />
               </svg>
               <span className="text-[14px]" style={{ color: hasActiveSearch ? colors.chargeOrange : colors.subtleText }}>
-                Rechercher
+                {L.headerSearch}
               </span>
             </button>
 
@@ -1161,15 +1163,15 @@ export default function CoursesClient({
 
           {(hasActiveSearch || hasActiveFilter) && (
             <p className="text-[13px] text-trail-muted px-1 mb-[6px]">
-              {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
+              {L.resultsCount(filtered.length)}
             </p>
           )}
 
           {filtered.length === 0 ? (
             <p className="text-[13px] text-trail-muted">
               {courseActivities.length === 0
-                ? 'Aucune course enregistrée. Tague une activité comme "Course" dans l\'onglet Activités pour la voir ici.'
-                : 'Aucune course ne correspond aux filtres.'}
+                ? L.noRaceLogged
+                : L.noRaceMatch}
             </p>
           ) : (
             <div>
@@ -1192,8 +1194,8 @@ export default function CoursesClient({
     <div className="px-3 py-3 space-y-3 max-w-lg mx-auto">
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[6px]">
         <div className="flex gap-2">
-          <SegmentButton label="Courses" selected={view === 'Races'}   onClick={() => setView('Races')} />
-          <SegmentButton label="Records" selected={view === 'Records'} onClick={() => setView('Records')} />
+          <SegmentButton label={L.raceTabRaces}    selected={view === 'Races'}   onClick={() => setView('Races')} />
+          <SegmentButton label={L.raceRecordsTab}  selected={view === 'Records'} onClick={() => setView('Records')} />
         </div>
       </div>
 

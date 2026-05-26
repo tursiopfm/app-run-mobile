@@ -3,16 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutGrid, Dumbbell, Calendar, Footprints, Trophy, ShieldCheck } from 'lucide-react'
-
-const BASE_NAV = [
-  { href: '/dashboard',  icon: LayoutGrid, label: 'Cockpit'   },
-  { href: '/charge',     icon: Dumbbell,   label: 'Charge'    },
-  { href: '/plan',       icon: Calendar,   label: 'Plan'      },
-  { href: '/activities', icon: Footprints, label: 'Activités' },
-  { href: '/courses',    icon: Trophy,     label: 'Courses'   },
-]
-
-const ADMIN_NAV = { href: '/admin', icon: ShieldCheck, label: 'Admin' }
+import { useT } from '@/lib/i18n/I18nProvider'
 
 // Fallback si le router Next.js est gelé (cas reproductible après visite de
 // /charge avec ordre de blocs custom — voir tasks/lessons). Si l'URL n'a pas
@@ -31,6 +22,15 @@ function navWithFallback(href: string) {
 
 export function BottomNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname()
+  const tabs = useT().tabs
+  const BASE_NAV = [
+    { href: '/dashboard',  icon: LayoutGrid, label: tabs.cockpit    },
+    { href: '/charge',     icon: Dumbbell,   label: tabs.charge     },
+    { href: '/plan',       icon: Calendar,   label: tabs.plan       },
+    { href: '/activities', icon: Footprints, label: tabs.activities },
+    { href: '/courses',    icon: Trophy,     label: tabs.courses    },
+  ]
+  const ADMIN_NAV = { href: '/admin', icon: ShieldCheck, label: 'Admin' }
   const items = isAdmin ? [...BASE_NAV, ADMIN_NAV] : BASE_NAV
 
   return (

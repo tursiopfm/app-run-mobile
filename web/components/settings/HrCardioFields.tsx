@@ -6,6 +6,7 @@ import type { HrZoneMethod as Method } from '@/lib/health/hr-zones'
 import { TestProtocolModal } from './TestProtocolModal'
 import { RestingHrInfoPopover } from './RestingHrInfoPopover'
 import { CustomZonesEditor, type CustomZone } from './CustomZonesEditor'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 export type CardioState = {
   max_hr:               number | null
@@ -71,6 +72,7 @@ export function HrCardioFields({
   deduced:     DeducedValues
   onRecompute: () => void
 }) {
+  const L = useT().settings
   const [protocolOpen, setProtocolOpen]   = useState(false)
   const [restingInfoOpen, setRestingInfo] = useState(false)
 
@@ -83,31 +85,31 @@ export function HrCardioFields({
   return (
     <div className="space-y-[8px]">
       {method === 'seuils' && <>
-        <Field label="FC max" unit="bpm" value={state.max_hr} onChange={v => set('max_hr', v)} />
+        <Field label={L.hrFieldMax} unit="bpm" value={state.max_hr} onChange={v => set('max_hr', v)} />
         <div className="grid grid-cols-2 gap-[8px]">
-          <Field label="Seuil aérobie / AeT" unit="bpm" value={state.aerobic_threshold_hr} onChange={v => set('aerobic_threshold_hr', v)} />
-          <Field label="Seuil anaéro / LTHR" unit="bpm" value={state.threshold_hr} onChange={v => set('threshold_hr', v)} />
+          <Field label={L.hrFieldAerobic} unit="bpm" value={state.aerobic_threshold_hr} onChange={v => set('aerobic_threshold_hr', v)} />
+          <Field label={L.hrFieldAnaerobic} unit="bpm" value={state.threshold_hr} onChange={v => set('threshold_hr', v)} />
         </div>
       </>}
 
       {method === 'test30' && <>
-        <Field label="FC max" unit="bpm" value={state.max_hr} onChange={v => set('max_hr', v)} />
-        <Field label="FC seuil test 30 min" unit="bpm" value={state.threshold_hr} onChange={v => set('threshold_hr', v)} />
+        <Field label={L.hrFieldMax} unit="bpm" value={state.max_hr} onChange={v => set('max_hr', v)} />
+        <Field label={L.hrFieldThresholdTest30} unit="bpm" value={state.threshold_hr} onChange={v => set('threshold_hr', v)} />
         <button
           onClick={() => setProtocolOpen(true)}
           className="rounded-[8px] px-[10px] py-[6px] text-[12px] font-semibold border"
           style={{ borderColor: colors.border, color: colors.text }}
         >
-          📖 Voir le protocole du test
+          {L.hrSeeProtocol}
         </button>
         <TestProtocolModal open={protocolOpen} onClose={() => setProtocolOpen(false)} />
       </>}
 
       {method === 'karvonen' && <>
-        <Field label="FC max" unit="bpm" value={state.max_hr} onChange={v => set('max_hr', v)} />
+        <Field label={L.hrFieldMax} unit="bpm" value={state.max_hr} onChange={v => set('max_hr', v)} />
         <div className="relative">
           <Field
-            label="FC repos"
+            label={L.hrFieldResting}
             unit="bpm"
             value={state.resting_hr}
             onChange={v => set('resting_hr', v)}
@@ -117,7 +119,7 @@ export function HrCardioFields({
                 onClick={() => setRestingInfo(v => !v)}
                 className="inline-flex items-center justify-center rounded-full border text-[9px] italic"
                 style={{ width: 14, height: 14, borderColor: '#fb923c', color: '#fb923c' }}
-                aria-label="Comment mesurer la FC repos"
+                aria-label={L.hrRestingInfoAria}
               >i</button>
             }
           />
@@ -126,13 +128,13 @@ export function HrCardioFields({
       </>}
 
       {method === 'pct_max' && (
-        <Field label="FC max" unit="bpm" value={state.max_hr} onChange={v => set('max_hr', v)} />
+        <Field label={L.hrFieldMax} unit="bpm" value={state.max_hr} onChange={v => set('max_hr', v)} />
       )}
 
       {method === 'auto' && <>
-        <Field label="FC max estimée (calculée)" unit="bpm" value={estimatedMaxFromAge} disabled />
+        <Field label={L.hrFieldMaxEstimated} unit="bpm" value={estimatedMaxFromAge} disabled />
         <Field
-          label="Année de naissance (requis)"
+          label={L.hrFieldBirthYear}
           value={state.birth_year}
           onChange={v => set('birth_year', v)}
           alert={!state.birth_year}
@@ -141,23 +143,21 @@ export function HrCardioFields({
 
       {method === 'deduced' && (
         <div className="rounded-[10px] p-[12px] text-[12px]" style={{ backgroundColor: colors.surface }}>
-          <p className="text-trail-muted mb-2">Détecté depuis Strava :</p>
+          <p className="text-trail-muted mb-2">{L.hrDeducedTitle}</p>
           <ul className="space-y-1 text-trail-text">
-            <li>• FC max observée : <strong>{deduced.maxHrObserved ?? '—'} bpm</strong></li>
-            <li>• FC repos estimée : <strong>{deduced.restingHrEstimated ?? '—'} bpm</strong></li>
-            <li>• LTHR estimée : <strong>{deduced.lthrEstimated ?? '—'} bpm</strong></li>
+            <li>• {L.hrDeducedMaxObs} : <strong>{deduced.maxHrObserved ?? '—'} bpm</strong></li>
+            <li>• {L.hrDeducedRestEst} : <strong>{deduced.restingHrEstimated ?? '—'} bpm</strong></li>
+            <li>• {L.hrDeducedLthrEst} : <strong>{deduced.lthrEstimated ?? '—'} bpm</strong></li>
           </ul>
           <button
             onClick={onRecompute}
             className="mt-3 rounded-[8px] px-[10px] py-[6px] text-[12px] font-semibold border"
             style={{ borderColor: colors.border, color: colors.text }}
           >
-            🔄 Recalculer depuis l&apos;historique
+            {L.hrRecomputeBtn}
           </button>
           {deduced.maxHrObserved == null && (
-            <p className="text-[11px] text-trail-muted mt-2">
-              Aucune activité avec FC trouvée. Importe des activités Strava pour activer ce mode.
-            </p>
+            <p className="text-[11px] text-trail-muted mt-2">{L.hrNoActivityFC}</p>
           )}
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { colors } from '@/lib/design/colors'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 export type ProfileData = {
   first_name:   string | null
@@ -44,6 +45,7 @@ function FieldRow({ children }: { children: React.ReactNode }) {
 }
 
 export function ProfileSection({ initial }: { initial: ProfileData }) {
+  const L = useT().settings
   const [firstName,   setFirstName]   = useState(initial.first_name   ?? '')
   const [lastName,    setLastName]    = useState(initial.last_name     ?? '')
   const [maxHr,       setMaxHr]       = useState(initial.max_hr        != null ? String(initial.max_hr)       : '')
@@ -80,26 +82,23 @@ export function ProfileSection({ initial }: { initial: ProfileData }) {
 
   return (
     <div className="space-y-[8px]">
-      {/* Identity */}
       <FieldRow>
-        <FieldInput label="Prénom"       type="text" value={firstName} onChange={setFirstName} />
-        <FieldInput label="Nom"          type="text" value={lastName}  onChange={setLastName}  />
+        <FieldInput label={L.profileFirstName} type="text" value={firstName} onChange={setFirstName} />
+        <FieldInput label={L.profileLastName}  type="text" value={lastName}  onChange={setLastName}  />
       </FieldRow>
 
-      {/* Heart rate */}
       <FieldRow>
-        <FieldInput label="FC Max"   value={maxHr}       unit="bpm" onChange={setMaxHr}       />
-        <FieldInput label="FC Seuil" value={thresholdHr} unit="bpm" onChange={setThresholdHr} />
+        <FieldInput label={L.profileFcMax}    value={maxHr}       unit="bpm" onChange={setMaxHr}       />
+        <FieldInput label={L.profileFcSeuil}  value={thresholdHr} unit="bpm" onChange={setThresholdHr} />
       </FieldRow>
       <FieldRow>
-        <FieldInput label="FC Repos" value={restingHr} unit="bpm" onChange={setRestingHr} />
-        <FieldInput label="FTP"      value={ftp}       unit="W"   onChange={setFtp}       />
+        <FieldInput label={L.profileFcRepos}  value={restingHr} unit="bpm" onChange={setRestingHr} />
+        <FieldInput label={L.profileFtp}      value={ftp}       unit="W"   onChange={setFtp}       />
       </FieldRow>
 
-      {/* Body + goal */}
       <FieldRow>
-        <FieldInput label="Poids"        value={weight}   unit="kg"      onChange={setWeight}   />
-        <FieldInput label="Objectif/an"  value={yearGoal} unit="km"      onChange={setYearGoal} />
+        <FieldInput label={L.profileWeight}    value={weight}   unit="kg" onChange={setWeight}   />
+        <FieldInput label={L.profileYearGoal}  value={yearGoal} unit="km" onChange={setYearGoal} />
       </FieldRow>
 
       {/* Save button */}
@@ -114,10 +113,10 @@ export function ProfileSection({ initial }: { initial: ProfileData }) {
           opacity: status === 'saving' ? 0.6 : 1,
         }}
       >
-        {status === 'saving' ? 'Enregistrement…'
-          : status === 'saved' ? '✓ Enregistré'
-          : status === 'error' ? 'Erreur — réessayer'
-          : 'Enregistrer le profil'}
+        {status === 'saving' ? L.hrSaveSaving
+          : status === 'saved' ? L.hrSaveSaved
+          : status === 'error' ? L.identitySaveError
+          : L.hrSaveCta}
       </button>
     </div>
   )

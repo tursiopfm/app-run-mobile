@@ -3,19 +3,18 @@
 import { useRouter } from 'next/navigation'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
 import { colors } from '@/lib/design/colors'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
   activities: ActivityRow[]
   onHide?:    () => void
 }
 
-const DAY_FR = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
-
-function fmtDayLabel(iso: string): string {
+function fmtDayLabel(iso: string, days: readonly string[]): string {
   const d = new Date(iso)
   const dd = String(d.getDate()).padStart(2, '0')
   const mm = String(d.getMonth() + 1).padStart(2, '0')
-  return `${DAY_FR[d.getDay()]} ${dd}/${mm}`
+  return `${days[d.getDay()]} ${dd}/${mm}`
 }
 
 function fmtDuration(seconds: number | null): string {
@@ -39,19 +38,20 @@ function fmtDPlus(m: number | null): string {
 
 export function WeekActivitiesBlock({ activities, onHide }: Props) {
   const router = useRouter()
+  const L = useT().cockpit
 
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       <div className="flex items-center justify-between mb-[8px]">
         <div className="flex items-center gap-1">
-          <span className="text-[15px] font-semibold text-trail-muted">Activités —</span>
-          <span className="text-[15px] font-semibold text-trail-text">Semaine en cours</span>
+          <span className="text-[15px] font-semibold text-trail-muted">{L.weekActivitiesPrefix}</span>
+          <span className="text-[15px] font-semibold text-trail-text">{L.weekActivitiesSuffix}</span>
         </div>
         {onHide && (
           <button
             onClick={onHide}
             className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
-            aria-label="Masquer le bloc"
+            aria-label={L.aria.weekActivitiesHide}
           >
             ⋮
           </button>
@@ -60,7 +60,7 @@ export function WeekActivitiesBlock({ activities, onHide }: Props) {
 
       {activities.length === 0 ? (
         <p className="text-[13px] py-2" style={{ color: colors.subtleText }}>
-          Aucune activité cette semaine.
+          {L.noActivityThisWeek}
         </p>
       ) : (
         <ul className="divide-y" style={{ borderColor: colors.border }}>
@@ -77,7 +77,7 @@ export function WeekActivitiesBlock({ activities, onHide }: Props) {
               >
                 <div className="flex items-baseline justify-between gap-2">
                   <span suppressHydrationWarning className="text-[12px] font-semibold text-trail-muted flex-shrink-0">
-                    {fmtDayLabel(a.start_time)}
+                    {fmtDayLabel(a.start_time, L.dayAbbr)}
                   </span>
                   <span className="text-[14px] text-trail-text truncate flex-1 text-right" title={a.name}>
                     {a.name}

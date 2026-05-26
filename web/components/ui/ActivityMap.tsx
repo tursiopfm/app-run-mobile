@@ -4,6 +4,7 @@ import { useMemo, useEffect, useState } from 'react'
 import { MapContainer, TileLayer, Polyline, CircleMarker, Tooltip, useMap } from 'react-leaflet'
 import polylineLib from '@mapbox/polyline'
 import 'leaflet/dist/leaflet.css'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type LatLng = [number, number]
 type LayerType = 'osm' | 'satellite' | 'relief'
@@ -127,6 +128,7 @@ function MapResizer({ expanded, positions }: { expanded: boolean; positions: Lat
 }
 
 export function ActivityMap({ encodedPolyline, expanded = false }: { encodedPolyline: string; expanded?: boolean }) {
+  const L = useT().activities
   const [layer, setLayer] = useState<LayerType>('osm')
 
   const positions = useMemo<LatLng[]>(
@@ -232,7 +234,7 @@ export function ActivityMap({ encodedPolyline, expanded = false }: { encodedPoly
             boxShadow: '0 2px 8px rgba(0,0,0,0.45)',
             padding: 0,
           }}
-          title="Rejouer l'animation"
+          title={L.mapReplay}
         >
           <IconPlay />
         </button>

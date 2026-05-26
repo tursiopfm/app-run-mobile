@@ -1,31 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { useColors } from '@/lib/design/useColors'
 import { type TrailPalette } from '@/lib/design/colors'
-import { settings as settingsLabels } from '@/lib/design/labels'
+import { useT, useLang } from '@/lib/i18n/I18nProvider'
+import type { LangChoice } from '@/lib/i18n'
 
 type ThemeOption = 'Dark' | 'Light' | 'System'
-type Lang  = 'fr' | 'en' | 'system'
-
-const THEME_OPTIONS: { value: ThemeOption; nextTheme: string; label: string }[] = [
-  { value: 'Dark',   nextTheme: 'dark',   label: settingsLabels.themeDark },
-  { value: 'Light',  nextTheme: 'light',  label: settingsLabels.themeLight },
-  { value: 'System', nextTheme: 'system', label: settingsLabels.themeSystem },
-]
-
-const LANG_OPTIONS: { value: Lang; label: string }[] = [
-  { value: 'fr',     label: settingsLabels.langFrench },
-  { value: 'en',     label: settingsLabels.langEnglish },
-  { value: 'system', label: settingsLabels.langSystem },
-]
-
-const THEME_DESC: Record<ThemeOption, string> = {
-  Dark:   'Interface sombre optimisée pour la lecture en extérieur.',
-  Light:  'Interface claire adaptée aux environnements bien éclairés.',
-  System: "Suit automatiquement le réglage système de l'appareil.",
-}
 
 function ActionChip({
   label, active, onClick, colors,
@@ -66,36 +48,45 @@ function SettingsRow({
 
 export function AppearanceSection() {
   const { theme, setTheme } = useTheme()
-  const [lang, setLang] = useState<Lang>('fr')
+  const { choice, setLang } = useLang()
+  const t = useT()
   const colors = useColors()
+  const router = useRouter()
 
-  useEffect(() => {
-    const saved = localStorage.getItem('tc_lang') as Lang | null
-    if (saved && ['fr', 'en', 'system'].includes(saved)) setLang(saved)
-  }, [])
+  const themeOptions: { value: ThemeOption; nextTheme: string; label: string }[] = [
+    { value: 'Dark',   nextTheme: 'dark',   label: t.settings.themeDark },
+    { value: 'Light',  nextTheme: 'light',  label: t.settings.themeLight },
+    { value: 'System', nextTheme: 'system', label: t.settings.themeSystem },
+  ]
 
-  function handleLang(newLang: Lang) {
-    let effective: Lang = newLang
-    if (newLang === 'system') {
-      effective = navigator.language.startsWith('en') ? 'en' : 'fr'
-      localStorage.setItem('tc_lang', 'system')
-      setLang('system')
-      document.documentElement.lang = effective === 'en' ? 'en' : 'fr'
-      return
-    }
-    localStorage.setItem('tc_lang', newLang)
-    setLang(newLang)
-    document.documentElement.lang = newLang === 'en' ? 'en' : 'fr'
+  const langOptions: { value: LangChoice; label: string }[] = [
+    { value: 'fr',     label: t.settings.langFrench },
+    { value: 'en',     label: t.settings.langEnglish },
+    { value: 'system', label: t.settings.langSystem },
+  ]
+
+  const themeDesc: Record<ThemeOption, string> = {
+    Dark:   t.settings.themeDescDark,
+    Light:  t.settings.themeDescLight,
+    System: t.settings.themeDescSystem,
   }
 
-  const activeOption = THEME_OPTIONS.find(o => o.nextTheme === theme) ?? THEME_OPTIONS[0]
-  const selectedLang = LANG_OPTIONS.find(l => l.value === lang)!
+  function handleLang(newChoice: LangChoice) {
+    setLang(newChoice)
+    // Server components (e.g. settings/page.tsx) read the cookie at request time,
+    // so we refresh the route to pick up the new language without a full reload.
+    router.refresh()
+  }
+
+  const activeOption = themeOptions.find(o => o.nextTheme === theme) ?? themeOptions[0]
+  const selectedLang = langOptions.find(l => l.value === choice) ?? langOptions[0]
+  const langRowTitle = t.settings.languageRow
 
   return (
     <>
       {/* Theme chips */}
       <div className="flex gap-2 overflow-x-auto pb-0.5">
-        {THEME_OPTIONS.map(opt => (
+        {themeOptions.map(opt => (
           <ActionChip
             key={opt.value}
             label={opt.label}
@@ -106,23 +97,23 @@ export function AppearanceSection() {
         ))}
       </div>
       <p className="text-[11px] text-trail-muted leading-[16px] mt-[10px]">
-        {THEME_DESC[activeOption.value]}
+        {themeDesc[activeOption.value]}
       </p>
 
       {/* Language row + chips */}
       <div className="mt-[14px] space-y-2">
         <SettingsRow
-          title="Langue"
+          title={langRowTitle}
           value={selectedLang.label}
           accent={colors.seriesBlue}
           colors={colors}
         />
         <div className="flex gap-2 overflow-x-auto pb-0.5">
-          {LANG_OPTIONS.map(opt => (
+          {langOptions.map(opt => (
             <ActionChip
               key={opt.value}
               label={opt.label}
-              active={lang === opt.value}
+              active={choice === opt.value}
               onClick={() => handleLang(opt.value)}
               colors={colors}
             />

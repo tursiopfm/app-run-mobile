@@ -12,7 +12,7 @@ import { SportSettingsModal } from './SportSettingsModal'
 import { SportsCarousel } from './SportsCarousel'
 import { BlockHelpSheet } from '@/components/blocks/BlockHelpSheet'
 import { colors } from '@/lib/design/colors'
-import { charge as L } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 import { kpiStatusFreshness } from '@/lib/analytics/charge-kpi-status'
 
 type Settings = { visible: SportKey[]; default: SportKey }
@@ -29,6 +29,9 @@ function normalizeTsb(arr: number[]): number[] {
 type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
 export function ChargeBlock({ sportOverviews, onHide }: Props) {
+  const t = useT()
+  const L = t.charge
+  const C = t.cockpit
   const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
   const [currentIdx, setCurrentIdx] = useState(() => {
     const s = readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS)
@@ -58,7 +61,7 @@ export function ChargeBlock({ sportOverviews, onHide }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-[6px]">
         <div className="flex items-center gap-1">
-          <span className="text-[15px] font-semibold text-trail-muted">Charge —</span>
+          <span className="text-[15px] font-semibold text-trail-muted">{C.headerCharge}</span>
           <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
         </div>
         <div className="flex items-center gap-2">
@@ -66,7 +69,7 @@ export function ChargeBlock({ sportOverviews, onHide }: Props) {
           <button
             onClick={() => setShowModal(true)}
             className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
-            aria-label="Paramètres charge"
+            aria-label={C.aria.chargeSettings}
           >
             ⋮
           </button>
@@ -86,12 +89,12 @@ export function ChargeBlock({ sportOverviews, onHide }: Props) {
             key: sportKey,
             node: (
               <CockpitKpiTile
-                title="CHARGE"
+                title={C.chargeTitle}
                 subline={
                   <>
-                    <span>TSB (Fraîcheur) </span>
+                    <span>{C.tsbFreshness} </span>
                     <span className="font-semibold text-trail-text">{Math.round(sov.tsb)}</span>
-                    <span> • 7 derniers jours</span>
+                    <span> • {C.lastSevenDays}</span>
                   </>
                 }
                 barValues={tsbNorm} barLabels={tsbLabs} barColor={colors.seriesYellow}
@@ -99,16 +102,16 @@ export function ChargeBlock({ sportOverviews, onHide }: Props) {
                   <button
                     type="button"
                     onClick={() => setShowChargeHelp(true)}
-                    aria-label="Aide sur la charge"
+                    aria-label={C.aria.chargeHelp}
                     className="text-trail-muted hover:text-trail-text w-5 h-5 flex items-center justify-center text-[12px] leading-none"
                   >ⓘ</button>
                 }
               >
                 <div className="flex items-baseline gap-[2px] flex-nowrap">
-                  <span className="text-[13px] text-trail-muted">ATL (7j) </span>
+                  <span className="text-[13px] text-trail-muted">{C.atl7d} </span>
                   <span className="text-[21px] font-black leading-none text-trail-text">{Math.round(sov.atl)}</span>
                   <span className="text-[13px] text-trail-muted mx-[3px]">·</span>
-                  <span className="text-[13px] text-trail-muted">CTL (42j) </span>
+                  <span className="text-[13px] text-trail-muted">{C.ctl42d} </span>
                   <span className="text-[21px] font-black leading-none text-trail-text">{Math.round(sov.ctl)}</span>
                 </div>
               </CockpitKpiTile>
@@ -124,7 +127,7 @@ export function ChargeBlock({ sportOverviews, onHide }: Props) {
             <button
               key={sportKey}
               onClick={() => setCurrentIdx(i)}
-              aria-label={`Sport ${i + 1}`}
+              aria-label={C.aria.sportN(i + 1)}
               className={`w-[6px] h-[6px] rounded-full transition-colors ${
                 i === safeIdx ? 'bg-trail-text' : 'bg-trail-border'
               }`}
@@ -135,7 +138,7 @@ export function ChargeBlock({ sportOverviews, onHide }: Props) {
 
       {showModal && (
         <SportSettingsModal
-          title="Charge d'entraînement"
+          title={C.modalTitle.charge}
           allKeys={ALL_SPORT_KEYS}
           visible={settings.visible}
           defaultKey={settings.default}

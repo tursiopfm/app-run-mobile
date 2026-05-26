@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { formatDurationColon, parseDurationToMinutes } from '@/lib/training/duration'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 // Input texte ergonomique pour saisir une durée au format hh:mm / 1h30 / 90.
 // Émet la durée en minutes (number) au blur (ou onChange si l'utilisateur efface
@@ -18,6 +19,7 @@ type Props = {
 }
 
 export function DurationField({ value, onChange }: Props) {
+  const L = useT().plan
   const [text, setText] = useState(() => value > 0 ? formatDurationColon(value) : '')
   const [error, setError] = useState(false)
   // Sert à distinguer "value changée parce qu'on vient de commit" vs "value
@@ -57,15 +59,15 @@ export function DurationField({ value, onChange }: Props) {
       <input
         type="text"
         inputMode="numeric"
-        placeholder="ex : 1h30"
+        placeholder={L.durationFieldPh}
         value={text}
         onChange={e => { setText(e.target.value); if (error) setError(false) }}
         onBlur={commit}
         onKeyDown={e => { if (e.key === 'Enter') { e.currentTarget.blur() } }}
         className={`w-full px-3 py-2 rounded-[10px] bg-trail-surface border ${error ? 'border-trail-danger' : 'border-trail-border'} text-trail-text text-[14px] focus:outline-none focus:border-trail-primary`}
-        aria-label="Durée au format heures et minutes"
+        aria-label={L.durationFieldAria}
       />
-      {error && <p className="text-[10px] text-trail-danger mt-1">Format : 1h30, 1:30 ou 90</p>}
+      {error && <p className="text-[10px] text-trail-danger mt-1">{L.durationFieldFormatErr}</p>}
     </div>
   )
 }

@@ -43,6 +43,7 @@ import {
 import { estimateCharge } from '@/lib/training/charge'
 import type { PlannedSession, Race, SessionTemplate, TrainingPlan } from '@/types/plan'
 import { seedMockDataIfEmpty } from '@/lib/plan/mock-data'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 const DEFAULT_ORDER = ['objectif', 'resume-semaine', 'structure', 'calendrier-mois', 'semaine-bibliotheque', 'charge']
 
@@ -54,8 +55,7 @@ function makeId(): string {
 }
 
 export default function PlanClient() {
-  // Compteur incrémenté à chaque opération DnD (move / create depuis template).
-  // Passé en prop aux blocs concernés pour forcer un re-fetch sans démonter.
+  const L = useT().plan
   const [reloadKey, setReloadKey] = useState(0)
   const bumpReload = useCallback(() => setReloadKey(k => k + 1), [])
 
@@ -140,19 +140,19 @@ export default function PlanClient() {
   const blocks: BlockDef[] = [
     {
       id: 'objectif',
-      label: 'Objectif course',
+      label: L.blockObjectif,
       emoji: '🎯',
       render: () => <ObjectifCourseBlock onChange={bumpReload} />,
     },
     {
       id: 'resume-semaine',
-      label: 'Résumé semaine',
+      label: L.blockResume,
       emoji: '📊',
       render: () => <ResumeSemaineBlock reloadKey={reloadKey} />,
     },
     {
       id: 'structure',
-      label: 'Cycle de préparation',
+      label: L.blockCycle,
       emoji: '🏗️',
       render: () => (
         <StructurePrepaBlock
@@ -164,13 +164,13 @@ export default function PlanClient() {
     },
     {
       id: 'calendrier-mois',
-      label: 'Calendrier mois',
+      label: L.blockCalendar,
       emoji: '🗓️',
       render: () => <CalendrierMoisBlock reloadKey={reloadKey} onSessionsChanged={bumpReload} />,
     },
     {
       id: 'semaine-bibliotheque',
-      label: 'Semaine & Bibliothèque',
+      label: L.blockWeekLibrary,
       emoji: '📅',
       render: () => (
         <PlanSessionsDndProvider
@@ -187,7 +187,7 @@ export default function PlanClient() {
     },
     {
       id: 'charge',
-      label: 'Charge planifiée',
+      label: L.blockCharge,
       emoji: '⚡',
       render: () => <ChargePlanifieeBlock reloadKey={reloadKey} />,
     },
@@ -200,7 +200,7 @@ export default function PlanClient() {
         storageKey="plan"
         defaultOrder={DEFAULT_ORDER}
         blocks={blocks}
-        addLabel="Ajouter un bloc"
+        addLabel={L.addBlock}
       />
     </div>
   )

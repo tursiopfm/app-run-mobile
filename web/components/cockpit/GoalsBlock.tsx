@@ -10,6 +10,7 @@ import type { SportOverview } from '@/lib/data/dashboard'
 import { getCurrentPlan, peekMacros, pickActiveMacrocycle } from '@/lib/plan/storage'
 import { resolveWeeklyTarget } from '@/lib/training/phases'
 import { readSportSettings } from '@/lib/design/sport-settings'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 const SETTINGS_KEY = 'cockpit_goals_settings'
 const TARGETS_KEY  = 'cockpit_goals_targets'
@@ -72,8 +73,7 @@ function computePlanWeeklyFromSnapshot(): { km: number; dPlus: number } | null {
 }
 
 export function GoalsBlock({ sportOverviews, onHide }: Props) {
-  // Lazy-init depuis LS — settings, targets et planWeekly disponibles dès
-  // le 1er render. Aucun flash entre defaults et préférences user.
+  const L = useT().cockpit
   const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(SETTINGS_KEY, DEFAULT_SETTINGS))
   const [targets,    setTargets]    = useState<Partial<Record<SportKey, Partial<Goals>>>>(() => readTargets())
   const [planWeekly, setPlanWeekly] = useState<{ km: number; dPlus: number } | null>(() => computePlanWeeklyFromSnapshot())
@@ -174,7 +174,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                 <div className="p-[10px]">
                   <div className="flex items-center justify-between mb-[10px]">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[15px] font-semibold text-trail-muted">Objectifs —</span>
+                      <span className="text-[15px] font-semibold text-trail-muted">{L.headerGoals}</span>
                       <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>
                         {cfg.label}
                       </span>
@@ -183,7 +183,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                       <button
                         onClick={() => openEdit(sport)}
                         className="text-trail-muted hover:text-trail-text transition-colors p-0.5"
-                        aria-label="Modifier les objectifs"
+                        aria-label={L.aria.goalsEdit}
                       >
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -193,7 +193,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                       <button
                         onClick={() => setShowConfig(true)}
                         className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
-                        aria-label="Paramètres"
+                        aria-label={L.aria.goalsSettings}
                       >
                         ⋮
                       </button>
@@ -202,7 +202,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
 
                   <div className="space-y-[10px]">
                     <GoalProgressRow
-                      label="Km semaine"
+                      label={L.kmWeek}
                       current={sov.weekKm}
                       target={tgt.weekKm}
                       unit="km"
@@ -210,7 +210,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                     />
                     {sport !== 'swim' && (
                       <GoalProgressRow
-                        label="D+ semaine"
+                        label={L.dPlusWeek}
                         current={sov.weekDPlus}
                         target={tgt.weekDPlus}
                         unit="m"
@@ -223,11 +223,11 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                       const dayOfYear = Math.ceil((now.getTime() - start.getTime()) / 86400000)
                       const expectedKm = (tgt.yearKm * dayOfYear) / 365
                       const diff = sov.ytdKm - expectedKm
-                      const diffLabel = `${diff >= 0 ? '+' : ''}${Math.round(diff)} km vs objectif`
+                      const diffLabel = L.goalEdit.vsGoal(diff)
                       return (
                         <div>
                           <GoalProgressRow
-                            label="Km année"
+                            label={L.kmYear}
                             current={sov.ytdKm}
                             target={tgt.yearKm}
                             unit="km"
@@ -269,7 +269,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
 
       {showConfig && (
         <SportSettingsModal
-          title="Objectifs — sports"
+          title={L.modalTitle.goals}
           allKeys={ALL_SPORT_KEYS}
           visible={settings.visible}
           defaultKey={settings.default}
@@ -289,7 +289,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-[16px] font-bold text-trail-text mb-4">
-              Objectifs {SPORT_CONFIG[editSport].label} {SPORT_CONFIG[editSport].emoji}
+              {L.goalEdit.titleFor(SPORT_CONFIG[editSport].label, SPORT_CONFIG[editSport].emoji)}
             </h3>
             {planWeekly && (editSport === 'run' || editSport === 'all') && (
               <button
@@ -301,26 +301,26 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                 }))}
                 className="w-full mb-4 text-[13px] font-semibold px-3 py-2 rounded-[8px] border border-trail-border bg-trail-surface text-trail-text hover:bg-trail-card transition-colors"
               >
-                ↻ Charger depuis le plan ({Math.round(planWeekly.km)} km · {Math.round(planWeekly.dPlus)} m D+)
+                {L.goalEdit.loadFromPlan(Math.round(planWeekly.km), Math.round(planWeekly.dPlus))}
               </button>
             )}
             <div className="space-y-4">
               <GoalField
-                label="Km semaine"
+                label={L.kmWeek}
                 value={draft.weekKm}
                 onChange={(v) => setDraft((g) => ({ ...g, weekKm: v }))}
                 unit="km"
               />
               {editSport !== 'swim' && (
                 <GoalField
-                  label="D+ semaine"
+                  label={L.dPlusWeek}
                   value={draft.weekDPlus}
                   onChange={(v) => setDraft((g) => ({ ...g, weekDPlus: v }))}
                   unit="m"
                 />
               )}
               <GoalField
-                label="Km année"
+                label={L.kmYear}
                 value={draft.yearKm}
                 onChange={(v) => setDraft((g) => ({ ...g, yearKm: v }))}
                 unit="km"
@@ -331,14 +331,14 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                 onClick={() => setEditSport(null)}
                 className="text-[14px] text-trail-muted px-4 py-2"
               >
-                Annuler
+                {L.goalEdit.cancel}
               </button>
               <button
                 onClick={saveEdit}
                 className="text-[14px] font-semibold px-4 py-2 rounded-[8px]"
                 style={{ backgroundColor: SPORT_CONFIG[editSport].color, color: '#fff' }}
               >
-                Valider
+                {L.goalEdit.save}
               </button>
             </div>
           </div>

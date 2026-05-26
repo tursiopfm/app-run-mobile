@@ -98,10 +98,24 @@ export type StatusId =
   | 'progressing'
   | 'balanced'
 
+export type NoteCode =
+  | 'run-heavy'
+  | 'ride-compensates'
+  | 'concentrated'
+  | 'monotonous'
+  | 'strenuous'
+  | 'high-intensity'
+  | 'sport-variety'
+  | 'no-ces'
+  | 'low-base'
+
+// Language-agnostic note descriptor. UI components translate via the i18n dict.
+export type NoteItem = { code: NoteCode; n?: number }
+
 export type InsightsResult = {
   status:    StatusId
-  headline:  string
-  notes:     string[]
+  headline:  string         // legacy, not displayed — kept for backward compatibility
+  notes:     NoteItem[]
 }
 
 export type ChargeSportPayload = {

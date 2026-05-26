@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Loader2, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { useT, useLang } from '@/lib/i18n/I18nProvider'
 
 const POLL_INTERVAL_MS = 10_000
 const COMPLETED_DISPLAY_MS = 5_000
@@ -16,12 +17,15 @@ type ImportStatus = {
   error: string | null
 }
 
-function formatMonth(iso: string): string {
+function formatMonth(iso: string, locale: string): string {
   const d = new Date(iso)
-  return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  return d.toLocaleDateString(locale, { month: 'long', year: 'numeric' })
 }
 
 export function ImportProgressBanner() {
+  const L = useT().activities
+  const { lang } = useLang()
+  const locale = lang === 'en' ? 'en-US' : 'fr-FR'
   const [data, setData] = useState<ImportStatus | null>(null)
   const [retrying, setRetrying] = useState(false)
   const [hideCompleted, setHideCompleted] = useState(false)
@@ -108,13 +112,11 @@ export function ImportProgressBanner() {
   const baseClasses = 'sticky top-0 z-40 w-full min-h-9 flex items-center justify-center gap-2 px-3 pt-safe text-xs font-medium transition-all duration-300'
 
   if (data.status === 'pending' || data.status === 'in_progress') {
+    const oldestLabel = data.oldestAt ? formatMonth(data.oldestAt, locale) : null
     return (
       <div className={`${baseClasses} bg-trail-accent/10 text-trail-text`}>
         <Loader2 size={14} className="animate-spin" />
-        <span>
-          Import Strava — <strong>{data.total}</strong> activité{data.total > 1 ? 's' : ''}
-          {data.oldestAt ? ` (remonté jusqu'à ${formatMonth(data.oldestAt)})` : ''}
-        </span>
+        <span>{L.importPending(data.total, oldestLabel)}</span>
       </div>
     )
   }
@@ -123,22 +125,21 @@ export function ImportProgressBanner() {
     return (
       <div className={`${baseClasses} bg-green-500/15 text-green-400`}>
         <CheckCircle2 size={14} />
-        <span>Import Strava terminé — {data.total} activité{data.total > 1 ? 's' : ''}</span>
+        <span>{L.importCompleted(data.total)}</span>
       </div>
     )
   }
 
-  // status === 'error'
   return (
     <div className={`${baseClasses} bg-red-500/15 text-red-400`}>
       <AlertTriangle size={14} />
-      <span className="truncate">Import Strava : {data.error ?? 'erreur inconnue'}</span>
+      <span className="truncate">{L.importErrorPrefix(data.error ?? L.importErrorUnknown)}</span>
       <button
         onClick={handleRetry}
         disabled={retrying}
         className="ml-2 px-2 py-0.5 rounded border border-red-400/40 text-red-300 hover:bg-red-500/20 disabled:opacity-50"
       >
-        {retrying ? '…' : 'Réessayer'}
+        {retrying ? '…' : L.importRetry}
       </button>
     </div>
   )

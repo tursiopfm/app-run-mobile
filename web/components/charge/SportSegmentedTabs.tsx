@@ -2,26 +2,26 @@
 'use client'
 
 import { SPORT_CONFIG, type SportKey } from '@/lib/design/sports'
-import { charge as chargeLabels } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
   sport:    SportKey
   onChange: (k: SportKey) => void
 }
 
-const TABS: { key: SportKey; label: string }[] = [
-  { key: 'all',  label: chargeLabels.sportFilterAll },
-  { key: 'run',  label: chargeLabels.sportFilterRun },
-  { key: 'ride', label: chargeLabels.sportFilterRide },
-  { key: 'swim', label: chargeLabels.sportFilterSwim },
-]
-
 export function SportSegmentedTabs({ sport, onChange }: Props) {
+  const chargeLabels = useT().charge
+  const TABS: { key: SportKey; label: string }[] = [
+    { key: 'all',  label: chargeLabels.sportFilterAll },
+    { key: 'run',  label: chargeLabels.sportFilterRun },
+    { key: 'ride', label: chargeLabels.sportFilterRide },
+    { key: 'swim', label: chargeLabels.sportFilterSwim },
+  ]
   return (
     <div
       className="sticky top-0 z-20 bg-trail-bg/95 backdrop-blur supports-[backdrop-filter]:bg-trail-bg/80 pb-2 pt-2 px-1"
       role="tablist"
-      aria-label="Filtre sport"
+      aria-label={chargeLabels.sportFilterAria}
     >
       <div className="flex gap-1 rounded-[10px] bg-trail-card border border-trail-border p-1">
         {TABS.map(({ key, label }) => {

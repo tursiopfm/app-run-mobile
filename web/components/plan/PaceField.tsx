@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { parsePace, formatPace } from '@/lib/plan/pace-format'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
   value: number | null | undefined  // secondes par km
@@ -10,6 +11,7 @@ type Props = {
 }
 
 export function PaceField({ value, onChange, placeholder = '5:30' }: Props) {
+  const L = useT().plan
   const [text, setText] = useState<string>(formatPace(value))
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export function PaceField({ value, onChange, placeholder = '5:30' }: Props) {
         onChange={e => setText(e.target.value)}
         onBlur={commit}
         placeholder={placeholder}
-        aria-label="Allure (mm:ss par km)"
+        aria-label={L.paceFieldAria}
         className="w-20 px-2 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
       />
       <span className="text-[11px] text-trail-muted">/km</span>

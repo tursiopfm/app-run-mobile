@@ -1,9 +1,11 @@
+'use client'
+
 import React from 'react'
 import {
   INTENSITY_LEVEL_COLORS,
-  INTENSITY_LEVEL_LABELS,
   type IntensityLevel,
 } from '@/lib/activities/indicators'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 interface IntensityIndicatorProps {
   level: IntensityLevel | null
@@ -26,13 +28,14 @@ export default function IntensityIndicator({
   onClick,
   className,
 }: IntensityIndicatorProps) {
+  const L = useT().activities
   const uid = React.useId()
   const gradId = `gauge-grad-${uid}`
   const isEmpty = level === null
   const color = isEmpty ? '#6B7280' : INTENSITY_LEVEL_COLORS[level]
-  const label = isEmpty ? 'Non mesurée' : INTENSITY_LEVEL_LABELS[level]
+  const label = isEmpty ? L.intensityNotMeasured : L.intensityLevelLabels[level]
   const angle = isEmpty ? 0 : -90 + ((level - 1) / 4) * 180
-  const ariaLabel = isEmpty ? 'Intensité non mesurée' : `Intensité ${label}`
+  const ariaLabel = isEmpty ? L.intensityNotMeasuredAria : L.intensityAria(label)
   const interactive = !isEmpty && !!onClick
 
   const containerStyle: React.CSSProperties = {

@@ -27,6 +27,8 @@ import {
   deletePlannedSessionsByType,
 } from '@/lib/plan/storage'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { useT } from '@/lib/i18n/I18nProvider'
+import type { Dict } from '@/lib/i18n/dictionaries/fr'
 
 type Draft = {
   slug: string
@@ -53,6 +55,7 @@ type Props = {
 export function ActivityTypesPrefsModal({
   types, prefs, onSave, onCreateCustom, onDeleteCustom, onRenameCustom, onClose,
 }: Props) {
+  const L = useT().plan
   const [drafts, setDrafts] = useState<Draft[]>(() => buildInitialDrafts(types, prefs))
   const [newLabel, setNewLabel] = useState('')
   const [newCategory, setNewCategory] = useState<NonNullable<ActivityType['category']>>('other')
@@ -109,19 +112,11 @@ export function ActivityTypesPrefsModal({
       countPlannedSessionsByType(d.slug),
       countCustomTemplatesByType(d.slug),
     ])
-    const lines: string[] = [`Le type d'activité « ${d.label} » sera supprimé.`]
-    if (templatesCount > 0) {
-      lines.push(
-        `${templatesCount} séance${templatesCount > 1 ? 's' : ''} de la bibliothèque ${templatesCount > 1 ? 'seront aussi supprimées' : 'sera aussi supprimée'}.`
-      )
-    }
-    if (sessionsCount > 0) {
-      lines.push(
-        `${sessionsCount} séance${sessionsCount > 1 ? 's' : ''} planifiée${sessionsCount > 1 ? 's' : ''} ${sessionsCount > 1 ? 'seront aussi supprimées' : 'sera aussi supprimée'}.`
-      )
-    }
+    const lines: string[] = [L.typesPrefsDeleteMsgIntro(d.label)]
+    if (templatesCount > 0) lines.push(L.typesPrefsDeleteMsgTemplates(templatesCount))
+    if (sessionsCount > 0)  lines.push(L.typesPrefsDeleteMsgSessions(sessionsCount))
     setPendingDelete({
-      title: `Supprimer « ${d.label} » ?`,
+      title: L.typesPrefsDeleteCustomTitle(d.label),
       message: lines.join('\n\n'),
       onConfirm: async () => {
         if (templatesCount > 0) await deleteCustomTemplatesByType(d.slug)
@@ -175,17 +170,17 @@ export function ActivityTypesPrefsModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[16px] font-semibold text-trail-text">Personnaliser mes activités</h2>
+          <h2 className="text-[16px] font-semibold text-trail-text">{L.typesPrefsTitle}</h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={L.typesPrefsCloseAria}
             className="text-trail-muted hover:text-trail-text text-[16px]"
           >✕</button>
         </div>
 
         <p className="text-[12px] text-trail-muted mb-3">
-          Activités affichées dans la barre :
+          {L.typesPrefsIntro}
         </p>
 
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
@@ -195,6 +190,7 @@ export function ActivityTypesPrefsModal({
                 <SortableRow
                   key={d.slug}
                   draft={d}
+                  L={L}
                   onToggle={() => toggleVisible(d.slug)}
                   onDelete={() => void requestRemoveCustom(d)}
                   onStartRename={() => startRename(d)}
@@ -211,23 +207,22 @@ export function ActivityTypesPrefsModal({
 
         {/* Ajout custom */}
         <div className="mb-4 p-3 rounded-[10px] bg-trail-surface border border-trail-border">
-          <p className="text-[12px] font-semibold text-trail-text mb-2">+ Ajouter une activité</p>
+          <p className="text-[12px] font-semibold text-trail-text mb-2">{L.typesPrefsAddTitle}</p>
 
           <input
             type="text"
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
-            placeholder="Ex : Tennis"
-            aria-label="Libellé de la nouvelle activité"
+            placeholder={L.typesPrefsAddPh}
+            aria-label={L.typesPrefsAddAria}
             className="w-full px-3 py-2 mb-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
           />
 
           <label className="block text-[11px] font-semibold text-trail-muted uppercase tracking-wider mb-1.5">
-            Catégorie
+            {L.typesPrefsCategory}
           </label>
           <div className="grid grid-cols-4 gap-1.5 mb-2">
             {(['run', 'bike', 'swim', 'other'] as const).map(c => {
-              const labels: Record<typeof c, string> = { run: 'Run', bike: 'Vélo', swim: 'Natation', other: 'Autre' }
               const checked = newCategory === c
               return (
                 <button
@@ -241,13 +236,13 @@ export function ActivityTypesPrefsModal({
                       : 'border-trail-border bg-trail-card text-trail-muted hover:text-trail-text')
                   }
                 >
-                  {labels[c]}
+                  {L.typesPrefsCategories[c]}
                 </button>
               )
             })}
           </div>
           <p className="mb-3 text-[11px] text-trail-muted italic">
-            Détermine si la séance compte dans les bulles km / D+ / durée du bloc Semaine (running uniquement).
+            {L.typesPrefsCategoryHint}
           </p>
 
           <button
@@ -256,25 +251,24 @@ export function ActivityTypesPrefsModal({
             disabled={!newLabel.trim()}
             className="w-full px-3 py-2 rounded-[8px] bg-trail-primary text-black text-[13px] font-semibold disabled:opacity-50"
           >
-            Ajouter
+            {L.typesPrefsAddBtn}
           </button>
         </div>
 
-        {/* Footer */}
         <div className="flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
             className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-[14px] font-semibold text-trail-text"
           >
-            Annuler
+            {L.typesPrefsCancel}
           </button>
           <button
             type="button"
             onClick={save}
             className="px-3 py-2 rounded-[10px] bg-trail-primary text-black text-[14px] font-semibold"
           >
-            Enregistrer
+            {L.typesPrefsSave}
           </button>
         </div>
       </div>
@@ -283,7 +277,7 @@ export function ActivityTypesPrefsModal({
       open={pendingDelete !== null}
       title={pendingDelete?.title ?? ''}
       message={pendingDelete?.message ?? ''}
-      confirmLabel="Supprimer"
+      confirmLabel={L.typesPrefsDeleteConfirm}
       destructive
       onConfirm={() => { void pendingDelete?.onConfirm() }}
       onCancel={() => setPendingDelete(null)}
@@ -294,10 +288,11 @@ export function ActivityTypesPrefsModal({
 }
 
 function SortableRow({
-  draft, onToggle, onDelete, onStartRename, onCommitRename, onCancelRename,
+  draft, L, onToggle, onDelete, onStartRename, onCommitRename, onCancelRename,
   isEditing, editingLabel, setEditingLabel,
 }: {
   draft: Draft
+  L: Dict['plan']
   onToggle: () => void
   onDelete: () => void
   onStartRename: () => void
@@ -323,7 +318,7 @@ function SortableRow({
         type="checkbox"
         checked={draft.isVisible}
         onChange={onToggle}
-        aria-label={`Afficher ${draft.label}`}
+        aria-label={L.typesPrefsCheckAria(draft.label)}
       />
       {isEditing ? (
         <input
@@ -335,7 +330,7 @@ function SortableRow({
             if (e.key === 'Escape') { e.preventDefault(); onCancelRename() }
           }}
           autoFocus
-          aria-label={`Renommer ${draft.label}`}
+          aria-label={L.typesPrefsRenameAria(draft.label)}
           className="flex-1 min-w-0 px-2 py-1 rounded-[6px] bg-trail-card border border-trail-primary text-trail-text text-[13px] focus:outline-none"
         />
       ) : (
@@ -351,16 +346,16 @@ function SortableRow({
           <button
             type="button"
             onClick={onStartRename}
-            aria-label={`Renommer ${draft.label}`}
+            aria-label={L.typesPrefsRenameAria(draft.label)}
             className="text-trail-muted text-[12px] hover:text-trail-primary"
-            title="Renommer"
+            title={L.typesPrefsRenameTitle}
           >
             ✎
           </button>
           <button
             type="button"
             onClick={onDelete}
-            aria-label={`Supprimer ${draft.label}`}
+            aria-label={L.typesPrefsDeleteAria(draft.label)}
             className="text-trail-danger text-[12px] font-semibold hover:underline"
           >
             🗑
@@ -372,18 +367,18 @@ function SortableRow({
           <button
             type="button"
             onClick={onCommitRename}
-            aria-label="Valider le nouveau nom"
+            aria-label={L.typesPrefsRenameConfirmAria}
             className="text-trail-primary text-[12px] font-semibold"
-            title="Valider (Entrée)"
+            title={L.typesPrefsRenameConfirmTitle}
           >
             ✓
           </button>
           <button
             type="button"
             onClick={onCancelRename}
-            aria-label="Annuler le renommage"
+            aria-label={L.typesPrefsRenameCancelAria}
             className="text-trail-muted text-[12px]"
-            title="Annuler (Échap)"
+            title={L.typesPrefsRenameCancelTitle}
           >
             ✕
           </button>

@@ -6,8 +6,10 @@
 // qui fade out après 2.5 s — évite l'`alert()` natif.
 
 import { useState, useEffect } from 'react'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 export function ModeToggleBlock() {
+  const L = useT().plan
   const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
@@ -17,7 +19,7 @@ export function ModeToggleBlock() {
   }, [toast])
 
   function handleClickIA() {
-    setToast('Le coach IA arrive prochainement')
+    setToast(L.modeAiToast)
   }
 
   return (
@@ -25,17 +27,17 @@ export function ModeToggleBlock() {
       <div
         className="flex items-stretch rounded-[10px] bg-trail-surface border border-trail-border overflow-hidden"
         role="tablist"
-        aria-label="Mode de planification"
+        aria-label={L.modeAriaPanning}
       >
         {/* Segment actif : Manuel */}
         <button
           type="button"
           role="tab"
           aria-selected="true"
-          aria-label="Mode Manuel (actif)"
+          aria-label={L.modeAriaManual}
           className="flex-1 px-3 py-2 bg-trail-primary text-white text-[13px] font-semibold cursor-default"
         >
-          Manuel
+          {L.modeManual}
         </button>
 
         {/* Segment IA Coach (désactivé) + mini-pill "Bientôt" */}
@@ -43,13 +45,13 @@ export function ModeToggleBlock() {
           type="button"
           role="tab"
           aria-selected="false"
-          aria-label="Mode IA Coach (bientôt disponible)"
+          aria-label={L.modeAriaAi}
           onClick={handleClickIA}
           className="flex-1 px-3 py-2 text-trail-text/50 text-[13px] font-semibold flex items-center justify-center gap-2 hover:bg-trail-border/30 transition-colors"
         >
-          <span>IA Coach</span>
+          <span>{L.modeAiCoach}</span>
           <span className="px-[6px] py-[2px] rounded-full text-[10px] font-semibold bg-trail-border/60 text-trail-muted leading-none">
-            Bientôt
+            {L.modeAiSoon}
           </span>
         </button>
       </div>

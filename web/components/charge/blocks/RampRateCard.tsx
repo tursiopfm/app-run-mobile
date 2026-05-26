@@ -2,7 +2,7 @@
 
 import { BlockCard } from '@/components/blocks/BlockCard'
 import type { ChargeSportPayload, RampRateLabel } from '@/lib/analytics/charge-insights.types'
-import { charge as L } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 import { colors } from '@/lib/design/colors'
 
 const COLOR_BY_LABEL: Record<RampRateLabel, string> = {
@@ -15,6 +15,7 @@ const COLOR_BY_LABEL: Record<RampRateLabel, string> = {
 }
 
 export function RampRateCard({ payload }: { payload: ChargeSportPayload }) {
+  const L = useT().charge
   const pct = Math.round(payload.rampRate.deltaWeekPct * 100)
   const color = COLOR_BY_LABEL[payload.rampRate.label]
   const txt = L.ramp[payload.rampRate.label]
@@ -28,7 +29,7 @@ export function RampRateCard({ payload }: { payload: ChargeSportPayload }) {
         <p className="text-[14px] font-semibold text-trail-text">{txt}</p>
       </div>
       <p className="mt-2 text-[11px] text-trail-muted leading-[16px]">
-        Variation de la charge totale entre la semaine en cours et la précédente.
+        {L.rampCaption}
       </p>
     </BlockCard>
   )

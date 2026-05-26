@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
-import { charge as L } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 import { colors } from '@/lib/design/colors'
 import { useChartTooltipDismiss } from '@/lib/charts/use-chart-tooltip-dismiss'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
@@ -17,9 +17,10 @@ const SPORT_COLORS = {
   other: colors.subtleText,
 }
 
-const LABELS = { run: 'Course', ride: 'Vélo', swim: 'Natation', other: 'Autres' } as const
-
 export function SportDistributionChart({ payload }: { payload: ChargeSportPayload }) {
+  const t = useT()
+  const L = t.charge
+  const LABELS = { run: t.sports.run, ride: t.sports.bike, swim: t.sports.swim, other: t.intensity.autre } as const
   const [win, setWin] = useState<Win>('28')
   const wrapperRef = useChartTooltipDismiss()
   const d = payload.sportDistribution[win]
@@ -40,7 +41,7 @@ export function SportDistributionChart({ payload }: { payload: ChargeSportPayloa
               onClick={() => setWin(w)}
               className={`text-[10px] px-1.5 py-0.5 rounded-[6px] ${win === w ? 'bg-trail-surface text-trail-text' : 'text-trail-muted'}`}
             >
-              {w === '7' ? '7j' : w === '28' ? '28j' : '10 sem.'}
+              {w === '7' ? L.windowWeek : w === '28' ? L.window28d : L.window10w}
             </button>
           ))}
         </div>

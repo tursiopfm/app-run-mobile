@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 import { colors } from '@/lib/design/colors'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 export type DayPill = {
   label:    string   // 'L'|'M'|'M'|'J'|'V'|'S'|'D'
@@ -29,6 +30,8 @@ const MONTH_LETTERS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D
 type Period = 'week' | 'month' | 'year'
 
 export function HistoryPillsBlock({ daySessions, weeklyPoints, monthlyRunKm }: Props) {
+  const t = useT()
+  const L = t.cockpit
   const [period, setPeriod] = useState<Period>('week')
 
   type PillData = { label: string; km: number; dPlus: number }
@@ -48,8 +51,8 @@ export function HistoryPillsBlock({ daySessions, weeklyPoints, monthlyRunKm }: P
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       <div className="flex items-center justify-between mb-[10px]">
         <div className="flex items-center gap-1.5">
-          <span className="text-[15px] font-semibold text-trail-muted">Historique</span>
-          <span className="text-[15px] font-semibold" style={{ color: colors.chargeOrange }}>Course 🏃</span>
+          <span className="text-[15px] font-semibold text-trail-muted">{L.blockLabel.history}</span>
+          <span className="text-[15px] font-semibold" style={{ color: colors.chargeOrange }}>{t.sports.run} 🏃</span>
         </div>
         <div className="flex gap-1">
           {(['week', 'month', 'year'] as Period[]).map((p) => (
@@ -63,7 +66,7 @@ export function HistoryPillsBlock({ daySessions, weeklyPoints, monthlyRunKm }: P
                 border:          `1px solid ${period === p ? colors.chargeOrange : colors.border}`,
               }}
             >
-              {p === 'week' ? 'Sem.' : p === 'month' ? 'Mois' : 'An'}
+              {L.periodShort[p]}
             </button>
           ))}
         </div>

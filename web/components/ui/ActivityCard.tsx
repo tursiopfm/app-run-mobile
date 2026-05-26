@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { colors } from '@/lib/design/colors'
-import { sportLabel } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 import { asIntensityKey, effectiveWorkoutType, guessIntensity } from '@/lib/activities/intensity'
 import { INTENSITY_KEY_TO_LEVEL } from '@/lib/activities/indicators'
 import type { HrZone } from '@/lib/health/hr-zones'
@@ -31,6 +31,7 @@ function toHex(color: string, opacity: number): string {
 }
 
 function TypeBadge({ type }: { type: string }) {
+  const sportLabel = useT().sportLabel
   const color = SPORT_COLORS[type] ?? colors.subtleText
   const label = sportLabel[type] ?? type
   return (
@@ -96,14 +97,20 @@ function fmtSpeed(distM: number | null, timeSec: number | null): string {
   return ((distM / 1000) / (timeSec / 3600)).toFixed(1)
 }
 
-function fourthMetric(sport: string, distM: number | null, timeSec: number | null, ces: number | null) {
+function fourthMetric(
+  sport: string,
+  distM: number | null,
+  timeSec: number | null,
+  ces: number | null,
+  labels: { pace: string; speed: string; ces: string },
+) {
   if (sport === 'Run' || sport === 'TrailRun') {
-    return { label: 'Allure', value: fmtPace(distM, timeSec), unit: '/km', color: colors.text }
+    return { label: labels.pace, value: fmtPace(distM, timeSec), unit: '/km', color: colors.text }
   }
   if (sport === 'Ride' || sport === 'GravelRide' || sport === 'VirtualRide') {
-    return { label: 'Vitesse', value: fmtSpeed(distM, timeSec), unit: 'km/h', color: colors.text }
+    return { label: labels.speed, value: fmtSpeed(distM, timeSec), unit: 'km/h', color: colors.text }
   }
-  return { label: 'CES', value: ces != null ? Math.round(ces).toString() : '—', unit: '', color: colors.text }
+  return { label: labels.ces, value: ces != null ? Math.round(ces).toString() : '—', unit: '', color: colors.text }
 }
 
 export type ActivityRow = {
@@ -138,6 +145,8 @@ export function ActivityCard({
   hrZones?: HrZone[]
   embedded?: boolean
 }) {
+  const t = useT()
+  const A = t.activities
   const [popup, setPopup]     = useState<null | 'effort' | 'intensity' | 'workoutType'>(null)
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
@@ -151,7 +160,11 @@ export function ActivityCard({
   const dPlus = effectiveElevation != null ? Math.round(effectiveElevation).toString() : '—'
   const dur   = fmtDuration(effectiveDuration)
   const ces   = a.ces != null ? Math.round(a.ces).toString() : '—'
-  const fourth = fourthMetric(effectiveSport, effectiveDistance, effectiveDuration, a.ces)
+  const fourth = fourthMetric(effectiveSport, effectiveDistance, effectiveDuration, a.ces, {
+    pace:  A.paceLabel,
+    speed: A.speedLabel,
+    ces:   A.cesShortLabel,
+  })
 
   const computedIntensity = mounted
     ? guessIntensity(a.avg_hr, hrZones, {
@@ -188,9 +201,9 @@ export function ActivityCard({
               {a.name}
             </p>
             <div className="flex gap-[4px] mt-[4px] overflow-x-auto pb-0.5">
-              <MetricTile label="Distance"    value={km}           unit="km"         color={colors.chargeOrange} />
-              <MetricTile label="Durée"       value={dur}          unit=""           color={colors.seriesGreen}  />
-              <MetricTile label="D+"          value={dPlus}        unit="m"          color={colors.seriesBlue}   />
+              <MetricTile label={A.distanceLabel}    value={km}    unit="km" color={colors.chargeOrange} />
+              <MetricTile label={A.durationLabel}    value={dur}   unit=""   color={colors.seriesGreen}  />
+              <MetricTile label={A.dPlusLabel}       value={dPlus} unit="m"  color={colors.seriesBlue}   />
               <MetricTile label={fourth.label} value={fourth.value} unit={fourth.unit} color={fourth.color}      />
             </div>
           </div>
@@ -199,7 +212,7 @@ export function ActivityCard({
             {onEdit && (
               <button
                 onClick={(e) => { e.stopPropagation(); if (onEdit) onEdit(a) }}
-                aria-label="Modifier l'activité"
+                aria-label={A.detailEditAria}
                 className="absolute top-0 right-0"
                 style={{
                   color:      colors.subtleText,

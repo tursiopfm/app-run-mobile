@@ -1,7 +1,10 @@
+'use client'
+
 import Link from 'next/link'
 import { Heart, ChevronRight } from 'lucide-react'
 import { getMethodMeta } from '@/lib/health/hr-method-meta'
 import type { HrZoneMethod } from '@/lib/health/hr-zones'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
   method:      HrZoneMethod | null
@@ -10,16 +13,17 @@ type Props = {
 }
 
 export function HrCalibrationTeaser({ method, maxHr, thresholdHr }: Props) {
+  const L = useT().settings
   const isConfigured = method != null
   const meta = isConfigured ? getMethodMeta(method) : null
 
   const bits: string[] = []
   if (meta) bits.push(meta.label)
-  if (maxHr)       bits.push(`FCmax ${maxHr}`)
-  if (thresholdHr) bits.push(`Seuil ${thresholdHr}`)
+  if (maxHr)       bits.push(`${L.hrMaxLabel} ${maxHr}`)
+  if (thresholdHr) bits.push(`${L.hrThresholdLabel} ${thresholdHr}`)
   const subtitle = isConfigured
     ? bits.join(' · ')
-    : 'Pas encore configuré — calibre tes zones'
+    : L.hrCalibrationNotConfigured
 
   return (
     <Link
@@ -32,7 +36,7 @@ export function HrCalibrationTeaser({ method, maxHr, thresholdHr }: Props) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-[13px] font-semibold text-trail-text">
-            Calibration FC & zones cardiaques
+            {L.hrCalibrationTitle}
           </p>
           {meta && (
             <span

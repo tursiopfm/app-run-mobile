@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import type { IntensityMode } from '@/types/plan'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
   value: IntensityMode
@@ -11,7 +12,7 @@ type Props = {
 }
 
 export function IntensityPaceToggle({ value, onChange, size = 'sm', disabled = false }: Props) {
-  // Coercition automatique : si on devient disabled et value='pace', repasse en 'level'
+  const L = useT().plan
   useEffect(() => {
     if (disabled && value === 'pace') onChange('level')
   }, [disabled, value, onChange])
@@ -22,7 +23,7 @@ export function IntensityPaceToggle({ value, onChange, size = 'sm', disabled = f
     <div
       className="inline-flex rounded-[8px] bg-trail-surface border border-trail-border overflow-hidden"
       role="tablist"
-      aria-label="Mode d'intensité du segment"
+      aria-label={L.toggleAriaIntensity}
     >
       <button
         type="button"
@@ -35,7 +36,7 @@ export function IntensityPaceToggle({ value, onChange, size = 'sm', disabled = f
             : 'text-trail-muted hover:text-trail-text'
         }`}
       >
-        Intensité
+        {L.toggleIntensity}
       </button>
       <button
         type="button"
@@ -43,7 +44,7 @@ export function IntensityPaceToggle({ value, onChange, size = 'sm', disabled = f
         aria-selected={value === 'pace'}
         onClick={() => !disabled && onChange('pace')}
         disabled={disabled}
-        title={disabled ? 'Mode allure disponible uniquement pour les types running' : undefined}
+        title={disabled ? L.togglePaceDisabledTitle : undefined}
         className={`${sizeCls} font-semibold transition-colors ${
           disabled
             ? 'text-trail-muted/40 cursor-not-allowed'

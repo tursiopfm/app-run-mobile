@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { Flag, Trophy } from 'lucide-react'
 import type { Race } from '@/types/plan'
 import { computeRaceMarkers, type RaceMarker } from '@/lib/training/race-stacking'
+import { useT } from '@/lib/i18n/I18nProvider'
+import type { Dict } from '@/lib/i18n/dictionaries/fr'
 
 type Props = {
   races: Race[]
@@ -35,6 +37,7 @@ function formatShortDate(iso: string): string {
 }
 
 export function RaceMarkers({ races, macroStart, macroEnd }: Props) {
+  const L = useT().plan
   const markers = computeRaceMarkers(races, macroStart, macroEnd)
   const [openRaceId, setOpenRaceId] = useState<string | null>(null)
 
@@ -55,6 +58,7 @@ export function RaceMarkers({ races, macroStart, macroEnd }: Props) {
           <RacePinAbove
             key={`pin-${m.race.id}`}
             marker={m}
+            L={L}
             onTap={() => setOpenRaceId(m.race.id)}
           />
         ))}
@@ -66,20 +70,21 @@ export function RaceMarkers({ races, macroStart, macroEnd }: Props) {
           <RaceBubbleBelow
             key={`bubble-${m.race.id}`}
             marker={m}
+            L={L}
             onTap={() => setOpenRaceId(m.race.id)}
           />
         ))}
       </div>
 
       {openRace && (
-        <RaceDetailDrawer race={openRace} onClose={() => setOpenRaceId(null)} />
+        <RaceDetailDrawer race={openRace} L={L} onClose={() => setOpenRaceId(null)} />
       )}
     </>
   )
 }
 
 // === Pin au-dessus de la barre — chip 28×28 + petit trait connectant à la barre ===
-function RacePinAbove({ marker, onTap }: { marker: RaceMarker; onTap: () => void }) {
+function RacePinAbove({ marker, L, onTap }: { marker: RaceMarker; L: Dict['plan']; onTap: () => void }) {
   const { race, leftPercent } = marker
   const color = PRIORITY_COLOR[race.priority]
   const isA = race.priority === 'A'
@@ -94,7 +99,7 @@ function RacePinAbove({ marker, onTap }: { marker: RaceMarker; onTap: () => void
       onClick={onTap}
       className="absolute pointer-events-auto flex flex-col items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--trail-primary)] rounded-[8px]"
       style={{ left: `${leftPercent}%`, bottom: 0, transform: 'translateX(-50%)' }}
-      aria-label={`Course ${race.name}, ${formatShortDate(race.date)}`}
+      aria-label={L.raceMarkerAria(race.name, formatShortDate(race.date))}
       title={race.name}
     >
       {/* Chip uniforme 28×28 avec icône taille 14 */}
@@ -122,7 +127,7 @@ function RacePinAbove({ marker, onTap }: { marker: RaceMarker; onTap: () => void
 }
 
 // === Bulle en dessous de la barre — connecteur depuis la barre + carte résumé ===
-function RaceBubbleBelow({ marker, onTap }: { marker: RaceMarker; onTap: () => void }) {
+function RaceBubbleBelow({ marker, L, onTap }: { marker: RaceMarker; L: Dict['plan']; onTap: () => void }) {
   const { race, leftPercent, lane } = marker
   const color = PRIORITY_COLOR[race.priority]
   const isA = race.priority === 'A'
@@ -180,7 +185,7 @@ function RaceBubbleBelow({ marker, onTap }: { marker: RaceMarker; onTap: () => v
           top: connectorHeight,
           transform: `translateX(${cardTranslateXPct}%)`,
         }}
-        aria-label={`Course ${race.name}, ${formatShortDate(race.date)}`}
+        aria-label={L.raceMarkerAria(race.name, formatShortDate(race.date))}
       >
         <div
           className="flex flex-col items-start leading-tight px-1.5 py-1 rounded-[8px] bg-[color:var(--trail-card)]"
@@ -203,7 +208,7 @@ function RaceBubbleBelow({ marker, onTap }: { marker: RaceMarker; onTap: () => v
   )
 }
 
-function RaceDetailDrawer({ race, onClose }: { race: Race; onClose: () => void }) {
+function RaceDetailDrawer({ race, L, onClose }: { race: Race; L: Dict['plan']; onClose: () => void }) {
   // Pattern aligné avec RaceEditorModal / ConfirmDialog : Escape ferme le drawer.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -219,7 +224,7 @@ function RaceDetailDrawer({ race, onClose }: { race: Race; onClose: () => void }
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label={`Détail de la course ${race.name}`}
+      aria-label={L.raceDrawerAria(race.name)}
     >
       <div
         className="w-full sm:max-w-md bg-[color:var(--trail-card)] border border-[color:var(--trail-border)] rounded-t-[16px] sm:rounded-[16px] p-4"
@@ -227,7 +232,7 @@ function RaceDetailDrawer({ race, onClose }: { race: Race; onClose: () => void }
       >
         <h3 className="text-[18px] font-bold text-[color:var(--trail-text)] mb-1">{race.name}</h3>
         <p className="text-[12px] text-[color:var(--trail-muted)] mb-3">
-          {race.date} · {race.distance} km · {race.elevation} m D+ · priorité {race.priority}
+          {L.raceDrawerInfo(race.date, race.distance, race.elevation, race.priority)}
         </p>
         {race.location && (
           <p className="text-[12px] text-[color:var(--trail-muted)] mb-2">📍 {race.location}</p>
@@ -237,14 +242,14 @@ function RaceDetailDrawer({ race, onClose }: { race: Race; onClose: () => void }
             href={`/plan/courses/${race.id}`}
             className="text-[12px] text-[color:var(--trail-primary)] font-semibold"
           >
-            Voir le détail →
+            {L.raceDrawerSeeDetail}
           </a>
           <button
             type="button"
             onClick={onClose}
             className="px-3 py-1.5 rounded-[8px] bg-[color:var(--trail-surface)] text-[12px] text-[color:var(--trail-text)]"
           >
-            Fermer
+            {L.raceDrawerClose}
           </button>
         </div>
       </div>

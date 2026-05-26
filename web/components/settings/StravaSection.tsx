@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Activity, RefreshCw, LogOut } from 'lucide-react'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
   isConnected: boolean
@@ -11,6 +12,7 @@ type Props = {
 
 export function StravaSection({ isConnected, athleteName }: Props) {
   const router = useRouter()
+  const L = useT().settings
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<string | null>(null)
   const [disconnecting, setDisconnecting] = useState(false)
@@ -23,12 +25,12 @@ export function StravaSection({ isConnected, athleteName }: Props) {
       const json = (await res.json()) as { saved?: number; error?: string }
       setSyncMsg(
         res.ok
-          ? `${json.saved ?? 0} activité(s) importée(s)`
-          : `Erreur : ${json.error ?? 'inconnue'}`
+          ? L.syncImportedActivities(json.saved ?? 0)
+          : L.syncErrorPrefix(json.error ?? L.syncErrorUnknown)
       )
       if (res.ok) router.refresh()
     } catch {
-      setSyncMsg('Erreur réseau')
+      setSyncMsg(L.syncErrorNetwork)
     } finally {
       setSyncing(false)
     }
@@ -53,7 +55,7 @@ export function StravaSection({ isConnected, athleteName }: Props) {
         <div className="flex-1 min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-trail-muted">Strava</p>
           <p className="text-[13px] text-trail-text truncate">
-            {isConnected ? (athleteName ?? 'Compte connecté') : 'Aucun compte lié'}
+            {isConnected ? (athleteName ?? L.stravaAccountConnected) : L.stravaNoAccount}
           </p>
         </div>
         <span
@@ -70,7 +72,7 @@ export function StravaSection({ isConnected, athleteName }: Props) {
               (isConnected ? 'bg-emerald-400' : 'bg-amber-400')
             }
           />
-          {isConnected ? 'Connecté' : 'Hors ligne'}
+          {isConnected ? L.stravaConnected : L.stravaOffline}
         </span>
       </div>
 
@@ -82,7 +84,7 @@ export function StravaSection({ isConnected, athleteName }: Props) {
             className="flex items-center justify-center gap-[6px] flex-1 px-3 py-[7px] rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] font-semibold hover:bg-trail-border/40 transition-colors disabled:opacity-50"
           >
             <RefreshCw size={12} className={syncing ? 'animate-spin' : ''} />
-            {syncing ? 'Synchro…' : 'Synchroniser'}
+            {syncing ? L.syncShort : L.syncLabel}
           </button>
           <button
             onClick={handleDisconnect}
@@ -90,7 +92,7 @@ export function StravaSection({ isConnected, athleteName }: Props) {
             className="flex items-center gap-[6px] px-3 py-[6px] rounded-full border border-red-500/25 text-red-400 text-[11px] font-semibold tracking-wide hover:bg-red-500/10 transition-colors disabled:opacity-50 flex-shrink-0"
           >
             <LogOut size={12} />
-            {disconnecting ? '…' : 'Déconnexion'}
+            {disconnecting ? '…' : L.logoutLabel}
           </button>
         </div>
       ) : (
@@ -99,7 +101,7 @@ export function StravaSection({ isConnected, athleteName }: Props) {
           className="flex items-center justify-center gap-2 w-full px-3 py-[8px] rounded-[8px] bg-[#FC4C02] hover:bg-[#FC4C02]/90 text-white text-[12px] font-bold uppercase tracking-wider transition-colors"
         >
           <Activity size={13} />
-          Connecter mon compte Strava
+          {L.stravaConnectMyAccount}
         </a>
       )}
 

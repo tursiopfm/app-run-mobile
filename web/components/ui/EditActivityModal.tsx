@@ -17,13 +17,12 @@ import {
 import {
   INTENSITY_KEY_TO_LEVEL,
   INTENSITY_LEVEL_COLORS,
-  INTENSITY_LEVEL_LABELS,
   SESSION_TYPE_COLORS,
-  SESSION_TYPE_LABELS,
 } from '@/lib/activities/indicators'
 import { IntensityGauge, TypeIcon, UnknownTypeIcon } from '@/components/activity/indicatorIcons'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
 import type { HrZone } from '@/lib/health/hr-zones'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 function fmtModalDate(iso: string): string {
   const d = new Date(iso)
@@ -111,6 +110,8 @@ type Props = {
 }
 
 export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDeleted, onClose }: Props) {
+  const t = useT()
+  const L = t.activities
   const effectiveSport     = a.manual_sport_type     ?? a.sport_type
   const effectiveDistance  = a.manual_distance_m     ?? a.distance_m
   const effectiveDuration  = a.manual_moving_time_sec ?? a.moving_time_sec
@@ -178,7 +179,7 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
           manual_elevation_gain_m: elev,
         }),
       })
-      if (!res.ok) throw new Error('Erreur lors de la sauvegarde')
+      if (!res.ok) throw new Error(L.editError)
       onSaved({
         ...a,
         name,
@@ -190,7 +191,7 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
         manual_elevation_gain_m: elev,
       })
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur inconnue')
+      setError(e instanceof Error ? e.message : L.editErrorUnknown)
     } finally {
       setSaving(false)
     }
@@ -203,7 +204,7 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
       const res = await fetch(`/api/activities/${a.id}`, { method: 'DELETE' })
       if (!res.ok) {
         const json = await res.json().catch(() => ({})) as { error?: string }
-        throw new Error(json.error ?? 'Erreur lors de la suppression')
+        throw new Error(json.error ?? L.editErrorDelete)
       }
       const json = await res.json() as { warning?: string }
       if (json.warning) {
@@ -213,7 +214,7 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
       }
       onDeleted()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur inconnue')
+      setError(e instanceof Error ? e.message : L.editErrorUnknown)
     } finally {
       setSaving(false)
     }
@@ -236,7 +237,7 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
             <path d="M19 12H5M5 12L12 19M5 12L12 5"
               stroke={colors.subtleText} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span className="text-[16px] font-semibold text-trail-text">Modifier l&apos;activité</span>
+          <span className="text-[16px] font-semibold text-trail-text">{L.editTitle}</span>
         </button>
         <span className="text-[13px] text-trail-muted">{fmtModalDate(a.start_time)}</span>
       </div>
@@ -244,9 +245,8 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
       {/* Body — scrollable */}
       <div className="flex-1 overflow-y-auto p-4 max-w-lg mx-auto w-full space-y-3">
 
-        {/* Activité */}
-        <SectionCard title="Activité">
-          <FieldRow label="Titre">
+        <SectionCard title={L.editSectionActivity}>
+          <FieldRow label={L.editFieldTitle}>
             <input
               type="text"
               value={name}
@@ -257,9 +257,8 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
           </FieldRow>
         </SectionCard>
 
-        {/* Métriques */}
-        <SectionCard title="Métriques">
-          <FieldRow label="Distance (km)">
+        <SectionCard title={L.editSectionMetrics}>
+          <FieldRow label={L.editFieldDistance}>
             <input
               type="text"
               inputMode="decimal"
@@ -270,7 +269,7 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
               placeholder="0.0"
             />
           </FieldRow>
-          <FieldRow label="Durée (hh:mm:ss)">
+          <FieldRow label={L.editFieldDuration}>
             <input
               type="text"
               value={duration}
@@ -280,7 +279,7 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
               placeholder="0:00:00"
             />
           </FieldRow>
-          <FieldRow label="Dénivelé positif (m)">
+          <FieldRow label={L.editFieldElevation}>
             <input
               type="text"
               inputMode="decimal"
@@ -293,23 +292,24 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
           </FieldRow>
         </SectionCard>
 
-        {/* Sport */}
-        <SectionCard title="Sport">
+        <SectionCard title={L.editSectionSport}>
           <ChipRow
-            options={SPORT_OPTIONS}
+            options={SPORT_OPTIONS.map(o => ({
+              ...o,
+              label: L.sportOptionsLabels[o.value] ?? o.label,
+            }))}
             selected={sport}
             onSelect={handleSportChange}
           />
         </SectionCard>
 
-        {/* Intensité */}
-        <SectionCard title="Intensité">
+        <SectionCard title={L.editSectionIntensity}>
           <ChipRow
             options={INTENSITY_OPTIONS.map(i => {
               const level = INTENSITY_KEY_TO_LEVEL[i.key]
               return {
                 value: i.key,
-                label: INTENSITY_LEVEL_LABELS[level],
+                label: L.intensityLevelLabels[level],
                 icon:  <IntensityGauge level={level} size={20} idSuffix={`mod-int-${i.key}`} />,
                 color: INTENSITY_LEVEL_COLORS[level],
               }
@@ -319,19 +319,18 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
           />
         </SectionCard>
 
-        {/* Type */}
-        <SectionCard title="Type">
+        <SectionCard title={L.editSectionType}>
           <ChipRow
             options={[
               ...availableWorkoutTypes(sport).map(o => ({
                 value: o.value,
-                label: SESSION_TYPE_LABELS[o.value],
+                label: L.sessionTypeLabels[o.value],
                 icon:  <TypeIcon type={o.value} size={20} />,
                 color: SESSION_TYPE_COLORS[o.value],
               })),
               {
                 value: '__none__',
-                label: 'Non défini',
+                label: L.sessionTypeUndefined,
                 icon:  <UnknownTypeIcon size={20} />,
                 color: '#6B7280',
               },
@@ -367,7 +366,7 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
               opacity:         saving ? 0.7 : 1,
             }}
           >
-            Supprimer
+            {L.editButtonDelete}
           </button>
           <button
             onClick={onClose}
@@ -381,7 +380,7 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
               opacity:         saving ? 0.7 : 1,
             }}
           >
-            Annuler
+            {L.editButtonCancel}
           </button>
           <button
             onClick={handleSave}
@@ -395,7 +394,7 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
               opacity:         saving ? 0.7 : 1,
             }}
           >
-            {saving ? '…' : 'Enregistrer'}
+            {saving ? '…' : L.editButtonSave}
           </button>
         </div>
 

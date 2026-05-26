@@ -1,6 +1,7 @@
 'use client'
 
 import { colors } from '@/lib/design/colors'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 const ACCENT = '#38BDF8'
 const NUMERIC_PRESETS = [3, 5, 10] as const
@@ -13,6 +14,7 @@ type Props = {
 }
 
 export function YearRangeSelector({ value, max, onChange, accent = ACCENT }: Props) {
+  const L = useT().cockpit
   const safeMax  = Math.max(1, max)
   const clamped  = Math.min(Math.max(1, value), safeMax)
   const filled   = safeMax === 1 ? 100 : ((clamped - 1) / (safeMax - 1)) * 100
@@ -41,7 +43,7 @@ export function YearRangeSelector({ value, max, onChange, accent = ACCENT }: Pro
               className="text-[11px] font-semibold px-2 py-0.5 rounded-full transition-colors disabled:cursor-not-allowed"
               style={{ ...pillStyle(active), opacity: disabled ? 0.4 : 1 }}
             >
-              {n}A
+              {n}{L.yearShortSuffix}
             </button>
           )
         })}
@@ -51,7 +53,7 @@ export function YearRangeSelector({ value, max, onChange, accent = ACCENT }: Pro
           className="text-[11px] font-semibold px-2 py-0.5 rounded-full transition-colors"
           style={pillStyle(clamped === safeMax)}
         >
-          Tout
+          {L.yearAll}
         </button>
       </div>
 
@@ -63,7 +65,7 @@ export function YearRangeSelector({ value, max, onChange, accent = ACCENT }: Pro
           step={1}
           value={clamped}
           onChange={(e) => onChange(Number(e.target.value))}
-          aria-label="Nombre d'années affichées"
+          aria-label={L.aria.yearRange}
           className="
             flex-1 h-[14px] cursor-pointer appearance-none bg-transparent
             [&::-webkit-slider-runnable-track]:h-[2px]
@@ -91,7 +93,7 @@ export function YearRangeSelector({ value, max, onChange, accent = ACCENT }: Pro
           }}
         />
         <span className="text-[11px] text-trail-muted whitespace-nowrap">
-          {clamped} {clamped === 1 ? 'année' : 'années'}
+          {L.yearLabel(clamped)}
         </span>
       </div>
     </div>

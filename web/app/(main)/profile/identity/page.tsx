@@ -4,8 +4,10 @@ import { ChevronLeft } from 'lucide-react'
 import { createClient } from '@/lib/database/supabase-server'
 import { getServerUser } from '@/lib/database/get-user'
 import { IdentityCard } from '@/components/settings/IdentityCard'
+import { getServerT } from '@/lib/i18n/server'
 
 export default async function ProfileIdentityPage() {
+  const S = getServerT().settings
   const user = await getServerUser()
   if (!user) redirect('/login')
   const supabase = await createClient()
@@ -40,14 +42,14 @@ export default async function ProfileIdentityPage() {
         <Link
           href="/settings"
           className="text-trail-muted hover:text-trail-text -ml-1 p-1"
-          aria-label="Retour aux Réglages"
+          aria-label={S.backToSettingsAria}
         >
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <p className="text-[22px] font-black text-trail-text leading-tight">Identité</p>
+          <p className="text-[22px] font-black text-trail-text leading-tight">{S.identityPageTitle}</p>
           <p className="text-[12px] text-trail-muted leading-[16px]">
-            Modifie ton nom et ta photo de profil.
+            {S.identityPageIntro}
           </p>
         </div>
       </div>

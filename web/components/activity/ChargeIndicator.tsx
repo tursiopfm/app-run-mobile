@@ -1,9 +1,11 @@
+'use client'
+
 import {
   CHARGE_COLORS,
-  CHARGE_LABELS,
   getChargeLevel,
   type ChargeLevel,
 } from '@/lib/activities/indicators'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 interface ChargeIndicatorProps {
   value: number
@@ -26,11 +28,12 @@ export default function ChargeIndicator({
   onClick,
   className,
 }: ChargeIndicatorProps) {
+  const L = useT().activities
   const level: ChargeLevel = levelProp ?? getChargeLevel(value)
   const color = CHARGE_COLORS[level]
   const isValid = Number.isFinite(value) && value >= 0
   const displayValue = isValid ? String(Math.round(value)) : '—'
-  const ariaLabel = `Charge ${isValid ? Math.round(value) : 0}, niveau ${CHARGE_LABELS[level]}`
+  const ariaLabel = L.chargeAria(isValid ? Math.round(value) : 0, L.chargeLevelLabels[level])
 
   const containerStyle: React.CSSProperties = {
     width: '100%',
@@ -135,7 +138,7 @@ export default function ChargeIndicator({
       <div style={iconWrapperStyle}>{dumbbell}</div>
       <div style={bodyStyle}>
         <div style={titleRowStyle}>
-          <span style={labelStyle}>CHARGE :</span>
+          <span style={labelStyle}>{L.chargeLabel}</span>
           <span style={valueStyle}>{displayValue}</span>
         </div>
         <div style={barsRowStyle}>{bars}</div>

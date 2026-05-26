@@ -2,7 +2,7 @@
 
 import { BlockCard } from '@/components/blocks/BlockCard'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
-import { charge as L } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 import { colors } from '@/lib/design/colors'
 import { useChartTooltipDismiss } from '@/lib/charts/use-chart-tooltip-dismiss'
 import {
@@ -10,6 +10,7 @@ import {
 } from 'recharts'
 
 export function FitnessFatigueChart({ payload }: { payload: ChargeSportPayload }) {
+  const L = useT().charge
   const data = payload.dailyMetrics.slice(-70).map(m => ({
     date: m.date.slice(5),
     atl:  Math.round(m.atl),
@@ -35,9 +36,9 @@ export function FitnessFatigueChart({ payload }: { payload: ChargeSportPayload }
                 return order[String(item?.dataKey)] ?? 99
               }}
               formatter={(v: number, n) =>
-                n === 'atl' ? [v, 'Fatigue récente (ATL)']
-                : n === 'ctl' ? [v, 'Base de forme (CTL)']
-                : [v, 'Fraîcheur (TSB)']
+                n === 'atl' ? [v, L.legendAtlTip]
+                : n === 'ctl' ? [v, L.legendCtlTip]
+                : [v, L.legendTsbTip]
               }
             />
             <Area dataKey="tsb" type="monotone" fill={colors.seriesYellow} stroke="none" fillOpacity={0.18} />

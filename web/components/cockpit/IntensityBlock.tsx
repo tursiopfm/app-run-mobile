@@ -10,6 +10,7 @@ import { SportSettingsModal } from './SportSettingsModal'
 import { SportsCarousel } from './SportsCarousel'
 import { SESSION_TYPE_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
 import { TypeIcon, UnknownTypeIcon } from '@/components/activity/indicatorIcons'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type Settings = { visible: SportKey[]; default: SportKey }
 const DEFAULT_SETTINGS: Settings = { visible: ['run', 'ride', 'swim', 'all'], default: 'all' }
@@ -20,6 +21,7 @@ const UNDEFINED_COLOR = '#6B7280'
 type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
 export function IntensityBlock({ sportOverviews, onHide }: Props) {
+  const L = useT().cockpit
   const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
   const [currentIdx, setCurrentIdx] = useState(() => {
     const s = readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS)
@@ -46,13 +48,13 @@ export function IntensityBlock({ sportOverviews, onHide }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-[6px]">
         <div className="flex items-center gap-1">
-          <span className="text-[15px] font-semibold text-trail-muted">Type de séance 30j —</span>
+          <span className="text-[15px] font-semibold text-trail-muted">{L.headerIntensityBlock}</span>
           <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
         </div>
         <button
           onClick={() => setShowModal(true)}
           className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
-          aria-label="Paramètres type de séance"
+          aria-label={L.aria.intensitySettings}
         >
           ⋮
         </button>
@@ -65,7 +67,7 @@ export function IntensityBlock({ sportOverviews, onHide }: Props) {
         slides={visibleSports.map((sportKey) => {
           const sov = sportOverviews[sportKey]
           const pieData: PieSlice[] = sov.workoutTypeBreakdown.map((s) => ({
-            label: s.type === null ? 'Non défini' : SESSION_TYPE_LABELS[s.type],
+            label: s.type === null ? L.intensityUndefined : SESSION_TYPE_LABELS[s.type],
             value: s.km,
             color: s.type === null ? UNDEFINED_COLOR : SESSION_TYPE_COLORS[s.type],
             icon:  s.type === null ? <UnknownTypeIcon size={18} /> : <TypeIcon type={s.type} size={18} />,
@@ -85,7 +87,7 @@ export function IntensityBlock({ sportOverviews, onHide }: Props) {
             <button
               key={sportKey}
               onClick={() => setCurrentIdx(i)}
-              aria-label={`Sport ${i + 1}`}
+              aria-label={L.aria.sportN(i + 1)}
               className={`w-[6px] h-[6px] rounded-full transition-colors ${
                 i === safeIdx ? 'bg-trail-text' : 'bg-trail-border'
               }`}
@@ -96,7 +98,7 @@ export function IntensityBlock({ sportOverviews, onHide }: Props) {
 
       {showModal && (
         <SportSettingsModal
-          title="Type de séance"
+          title={L.modalTitle.intensity}
           allKeys={ALL_SPORT_KEYS}
           visible={settings.visible}
           defaultKey={settings.default}

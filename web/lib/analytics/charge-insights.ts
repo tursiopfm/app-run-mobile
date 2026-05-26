@@ -1,6 +1,6 @@
 // web/lib/analytics/charge-insights.ts
 import type { DailyLoad, DailyMetrics } from './fatigue'
-import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone, LoadBalanceResult, SportDistribution, IntensityLabel, IntensityShareCes, TopActivity, RampRateResult, RampRateLabel, InsightsResult, StatusId, ChargeSportPayload } from './charge-insights.types'
+import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone, LoadBalanceResult, SportDistribution, IntensityLabel, IntensityShareCes, TopActivity, RampRateResult, RampRateLabel, InsightsResult, NoteItem, StatusId, ChargeSportPayload } from './charge-insights.types'
 import { FRESHNESS, MONOTONY, RAMP_RATE, LOAD_BALANCE, STRAIN } from './charge-thresholds'
 import type { HrZone } from '@/lib/health/hr-zones'
 import { hrZoneForAvgHr } from '@/lib/health/hr-zones'
@@ -268,12 +268,7 @@ function classifyIntensity(a: CesActivity, zones: HrZone[]): IntensityLabel {
 }
 
 // ── Top load activities ──────────────────────────────────────────────────────
-
-const SPORT_LABELS: Record<string, string> = {
-  Run: 'Course', TrailRun: 'Trail', Ride: 'Vélo', VirtualRide: 'Home trainer',
-  EBikeRide: 'E-Bike', GravelRide: 'Gravel', MountainBikeRide: 'VTT',
-  Swim: 'Natation', Walk: 'Marche', Hike: 'Rando', WeightTraining: 'Muscu',
-}
+// TopActivity.sport carries the raw Strava sport_type; the UI localises it.
 
 export function computeTopLoadActivities(
   activities: CesActivity[],
@@ -298,7 +293,7 @@ export function computeTopLoadActivities(
     .map(a => ({
       id:             a.id,
       date:           a.startDate,
-      sport:          SPORT_LABELS[a.rawSportType] ?? a.rawSportType,
+      sport:          a.rawSportType,
       name:           a.name,
       ces:            Math.round(a.ces),
       durationSec:    a.movingTimeSec ?? 0,
@@ -382,41 +377,41 @@ function pickStatus(p: ChargeSportPayload): StatusId {
   return 'balanced'
 }
 
-function buildNotes(p: ChargeSportPayload): string[] {
-  const notes: string[] = []
+function buildNotes(p: ChargeSportPayload): NoteItem[] {
+  const notes: NoteItem[] = []
   const sd7  = p.sportDistribution['7']
   const sd28 = p.sportDistribution['28']
 
   if (sd7.total > 0 && sd7.run / sd7.total > 0.7)
-    notes.push("Tu as beaucoup chargé en course à pied.")
+    notes.push({ code: 'run-heavy' })
   if (sd7.total > 0 && sd28.total > 0 && sd7.ride / sd7.total > 0.5 && sd28.ride / sd28.total < 0.3)
-    notes.push("La charge vélo compense une baisse de charge running.")
+    notes.push({ code: 'ride-compensates' })
 
   const sum7 = p.dailyLoads.slice(-7).reduce((s, d) => s + d.ces, 0)
   if (p.activeDays7d <= 2 && sum7 > 0)
-    notes.push("Beaucoup de charge concentrée sur peu de jours.")
+    notes.push({ code: 'concentrated' })
 
   if (p.monotony7d >= 2.0)
-    notes.push("Semaine peu variée. Pense à alterner intensités et durées.")
+    notes.push({ code: 'monotonous' })
   if (p.strain7d > STRAIN.high)
-    notes.push("Semaine très exigeante, prends le temps de récupérer.")
+    notes.push({ code: 'strenuous' })
 
   const intense = p.intensityDistribution['7'].reduce((s, x) => s + (x.label === 'Seuil' || x.label === 'VMA' ? x.ces : 0), 0)
   const total7  = p.intensityDistribution['7'].reduce((s, x) => s + x.ces, 0)
   if (total7 > 0 && intense / total7 > 0.4)
-    notes.push("Beaucoup d'intensité haute cette semaine.")
+    notes.push({ code: 'high-intensity' })
 
   const sportsCount = [sd7.run, sd7.ride, sd7.swim, sd7.other].filter(v => v > 0).length
   const anyDominant = sd7.total > 0 && [sd7.run, sd7.ride, sd7.swim, sd7.other].some(v => v / sd7.total > 0.4)
   if (sportsCount >= 2 && !anyDominant)
-    notes.push("Bonne variété entre sports.")
+    notes.push({ code: 'sport-variety' })
 
   if (p.noCesActivities28d > 0)
-    notes.push(`${p.noCesActivities28d} activité(s) récente(s) n'ont pas de charge exploitable.`)
+    notes.push({ code: 'no-ces', n: p.noCesActivities28d })
 
   const ctl = p.dailyMetrics[p.dailyMetrics.length - 1]?.ctl ?? 0
   if (ctl < 20 && p.historyDays >= 14)
-    notes.push("Ta base de forme est encore basse, progresse graduellement.")
+    notes.push({ code: 'low-base' })
 
   return notes
 }

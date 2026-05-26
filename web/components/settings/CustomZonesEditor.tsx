@@ -2,32 +2,44 @@
 
 import { useState } from 'react'
 import { colors } from '@/lib/design/colors'
+import { useT } from '@/lib/i18n/I18nProvider'
+import { getDict } from '@/lib/i18n'
+import type { Dict } from '@/lib/i18n/dictionaries/fr'
 
 export type CustomZone = { zone: number; min: number | null; max: number | null }
 
+// Allows external (non-React) validation; defaults to French.
+function buildValidator(L: Dict['settings']) {
+  return (zones: CustomZone[]): string[] => {
+    const errors: string[] = []
+    if (zones.length !== 5) errors.push(L.customZoneErrCount)
+
+    for (const z of zones) {
+      if (z.zone === 1) {
+        if (z.max == null) errors.push(L.customZoneErrMaxMissing(z.zone))
+      } else {
+        if (z.min == null || z.max == null) errors.push(L.customZoneErrMissing(z.zone))
+        else if (z.min > z.max) errors.push(L.customZoneErrInverted(z.zone))
+      }
+    }
+
+    for (let i = 1; i < zones.length; i++) {
+      const prev = zones[i - 1]
+      const cur  = zones[i]
+      if (prev.max == null || cur.min == null) continue
+      if (cur.min !== prev.max + 1) {
+        errors.push(L.customZoneErrDiscontinuous(cur.zone, prev.max + 1, prev.zone))
+      }
+    }
+
+    return errors
+  }
+}
+
 export function validateCustomZones(zones: CustomZone[]): string[] {
-  const errors: string[] = []
-  if (zones.length !== 5) errors.push('Il faut exactement 5 zones.')
-
-  for (const z of zones) {
-    if (z.zone === 1) {
-      if (z.max == null) errors.push(`Z${z.zone} : valeur max manquante`)
-    } else {
-      if (z.min == null || z.max == null) errors.push(`Z${z.zone} : valeur manquante`)
-      else if (z.min > z.max) errors.push(`Z${z.zone} : min > max`)
-    }
-  }
-
-  for (let i = 1; i < zones.length; i++) {
-    const prev = zones[i - 1]
-    const cur  = zones[i]
-    if (prev.max == null || cur.min == null) continue
-    if (cur.min !== prev.max + 1) {
-      errors.push(`Z${cur.zone} doit commencer à ${prev.max + 1} (continuité avec Z${prev.zone})`)
-    }
-  }
-
-  return errors
+  // Non-hook export — uses FR by default; in-component validation uses the
+  // active language via the builder below.
+  return buildValidator(getDict('fr').settings)(zones)
 }
 
 const DEFAULT_ZONES: CustomZone[] = [
@@ -44,6 +56,8 @@ export function CustomZonesEditor({
   initial: CustomZone[] | null
   onChange: (zones: CustomZone[], errors: string[]) => void
 }) {
+  const L = useT().settings
+  const validate = buildValidator(L)
   const [zones, setZones] = useState<CustomZone[]>(initial && initial.length === 5 ? initial : DEFAULT_ZONES)
 
   function update(idx: number, field: 'min' | 'max', value: string) {
@@ -54,18 +68,18 @@ export function CustomZonesEditor({
       next[idx + 1] = { ...next[idx + 1], min: cleaned + 1 }
     }
     setZones(next)
-    onChange(next, validateCustomZones(next))
+    onChange(next, validate(next))
   }
 
-  const errors = validateCustomZones(zones)
+  const errors = validate(zones)
 
   return (
     <div className="space-y-[6px]">
       {zones.map((z, i) => (
         <div key={z.zone} className="flex items-center gap-[8px]">
-          <span className="text-[12px] font-bold text-trail-text w-[24px]">Z{z.zone}</span>
+          <span className="text-[12px] font-bold text-trail-text w-[24px]">{L.customZonesZ(z.zone)}</span>
           <div className="flex-1 rounded-[8px] px-[10px] py-[6px]" style={{ backgroundColor: colors.surface }}>
-            <p className="text-[10px] text-trail-muted">Min</p>
+            <p className="text-[10px] text-trail-muted">{L.customZonesMin}</p>
             <input
               type="number" inputMode="numeric"
               value={z.min ?? ''}
@@ -76,7 +90,7 @@ export function CustomZonesEditor({
             />
           </div>
           <div className="flex-1 rounded-[8px] px-[10px] py-[6px]" style={{ backgroundColor: colors.surface }}>
-            <p className="text-[10px] text-trail-muted">Max</p>
+            <p className="text-[10px] text-trail-muted">{L.customZonesMax}</p>
             <input
               type="number" inputMode="numeric"
               value={z.max ?? ''}
@@ -91,9 +105,7 @@ export function CustomZonesEditor({
           {errors.map((e, i) => <li key={i}>• {e}</li>)}
         </ul>
       )}
-      <p className="text-[11px] text-trail-muted leading-[16px]">
-        Vérifie que les zones personnalisées sont continues, croissantes et sans chevauchement.
-      </p>
+      <p className="text-[11px] text-trail-muted leading-[16px]">{L.customZonesHint}</p>
     </div>
   )
 }

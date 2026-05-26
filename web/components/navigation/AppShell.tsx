@@ -7,6 +7,7 @@ import { MoreVertical } from 'lucide-react'
 import { createClient } from '@/lib/database/supabase-server'
 import { getServerUser } from '@/lib/database/get-user'
 import { getIsAdmin } from '@/lib/database/get-admin'
+import { getServerT } from '@/lib/i18n/server'
 
 async function fetchDisplayName(): Promise<string | null> {
   try {
@@ -28,6 +29,7 @@ async function fetchDisplayName(): Promise<string | null> {
 export async function AppShell({ children }: { children: ReactNode }) {
   const [displayName, user] = await Promise.all([fetchDisplayName(), getServerUser()])
   const isAdmin = user ? await getIsAdmin(user.id) : false
+  const settingsAria = getServerT().settings.title
 
   return (
     <div className="flex flex-col min-h-screen bg-trail-bg">
@@ -47,7 +49,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
             <Link
               href="/settings"
               className="text-trail-muted hover:text-trail-text p-1 -mr-1"
-              aria-label="Réglages"
+              aria-label={settingsAria}
             >
               <MoreVertical size={18} />
             </Link>

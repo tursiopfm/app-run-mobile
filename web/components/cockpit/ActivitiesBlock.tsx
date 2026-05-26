@@ -12,6 +12,7 @@ import { SportSettingsModal } from './SportSettingsModal'
 import { SportsCarousel } from './SportsCarousel'
 import { colors } from '@/lib/design/colors'
 import { kpiStatusFreshness } from '@/lib/analytics/charge-kpi-status'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type Settings = { visible: SportKey[]; default: SportKey }
 const DEFAULT_SETTINGS: Settings = { visible: ['run', 'ride', 'swim', 'all'], default: 'run' }
@@ -34,6 +35,7 @@ function formatDPlusLabel(v: number): string {
 type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
 export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
+  const L = useT().cockpit
   // Lazy-init depuis LS — pas de flash entre default et préférences user.
   const [settings,    setSettings]    = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
   const [currentIdx,  setCurrentIdx]  = useState(() => {
@@ -62,7 +64,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-[6px]">
         <div className="flex items-center gap-1">
-          <span className="text-[15px] font-semibold text-trail-muted">Activités —</span>
+          <span className="text-[15px] font-semibold text-trail-muted">{L.headerActivities}</span>
           <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
         </div>
         <div className="flex items-center gap-2">
@@ -70,7 +72,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
           <button
             onClick={() => setShowModal(true)}
             className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
-            aria-label="Paramètres activités"
+            aria-label={L.aria.activitiesSettings}
           >
             ⋮
           </button>
@@ -99,8 +101,8 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
               <>
                 <div className="grid grid-cols-2 gap-[6px]">
                   <CockpitKpiTile
-                    title="Km semaine"
-                    subline={`${sov.weekSessions} séance${sov.weekSessions !== 1 ? 's' : ''}`}
+                    title={L.kmWeek}
+                    subline={L.sessionsCount(sov.weekSessions)}
                     barValues={kmNorm} barLabels={kmLabels} barColor={scfg.color}
                   >
                     <div className="flex items-baseline gap-[3px]">
@@ -110,8 +112,8 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
                   </CockpitKpiTile>
 
                   <CockpitKpiTile
-                    title="D+ semaine"
-                    subline="Dénivelé positif"
+                    title={L.dPlusWeek}
+                    subline={L.elevationPositive}
                     barValues={dpNorm} barLabels={dpLabels} barColor={colors.seriesBlue}
                   >
                     <div className="flex items-baseline gap-[3px]">
@@ -125,8 +127,8 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
 
                 <div className="grid grid-cols-2 gap-[6px]">
                   <CockpitKpiTile
-                    title="Km année"
-                    subline={`${sov.ytdSessions} séance${sov.ytdSessions !== 1 ? 's' : ''}`}
+                    title={L.kmYear}
+                    subline={L.sessionsCount(sov.ytdSessions)}
                     barValues={mNorm} barLabels={mLabels} barColor={scfg.color}
                   >
                     <div className="flex items-baseline gap-[3px]">
@@ -136,8 +138,8 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
                   </CockpitKpiTile>
 
                   <CockpitKpiTile
-                    title="D+ année"
-                    subline="Dénivelé positif"
+                    title={L.dPlusYear}
+                    subline={L.elevationPositive}
                     barValues={mdpNorm} barLabels={mdpLabels} barColor={colors.seriesBlue}
                   >
                     <div className="flex items-baseline gap-[3px]">
@@ -159,7 +161,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
             <button
               key={sportKey}
               onClick={() => setCurrentIdx(i)}
-              aria-label={`Sport ${i + 1}`}
+              aria-label={L.aria.sportN(i + 1)}
               className={`w-[6px] h-[6px] rounded-full transition-colors ${
                 i === safeIdx ? 'bg-trail-text' : 'bg-trail-border'
               }`}
@@ -170,7 +172,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
 
       {showModal && (
         <SportSettingsModal
-          title="Volume d'activités"
+          title={L.modalTitle.activities}
           allKeys={ALL_SPORT_KEYS}
           visible={settings.visible}
           defaultKey={settings.default}

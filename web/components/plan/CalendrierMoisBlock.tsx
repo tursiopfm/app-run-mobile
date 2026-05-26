@@ -13,6 +13,7 @@ import { BlockCard } from '@/components/blocks/BlockCard'
 import { DayDetailPanel } from './DayDetailPanel'
 import { resolveSessionMeta } from '@/lib/plan/session-meta'
 import { useActivityTypes } from '@/lib/plan/use-activity-types'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 // ─── Helpers date (UTC) ──────────────────────────────────────────────────────
 function toISO(d: Date): string {
@@ -44,13 +45,8 @@ function startOfCalendarGrid(visibleMonth: Date): Date {
   return addDays(firstOfMonth, 1 - dow)
 }
 
-const MONTHS_FR = [
-  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
-]
-
-function formatMonthYearFR(d: Date): string {
-  return `${MONTHS_FR[d.getUTCMonth()]} ${d.getUTCFullYear()}`
+function formatMonthYear(d: Date, months: readonly string[]): string {
+  return `${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`
 }
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -61,7 +57,7 @@ type CalendrierMoisBlockProps = {
 
 // ─── Composant principal ─────────────────────────────────────────────────────
 export function CalendrierMoisBlock({ reloadKey = 0, onSessionsChanged }: CalendrierMoisBlockProps = {}) {
-  // Init = 1er du mois courant en UTC.
+  const L = useT().plan
   const todayUTC = useMemo(() => {
     const n = new Date()
     return new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate()))
@@ -142,29 +138,28 @@ export function CalendrierMoisBlock({ reloadKey = 0, onSessionsChanged }: Calend
 
   return (
     <BlockCard
-      title={formatMonthYearFR(visibleMonth)}
-      helpTitle="Calendrier mensuel"
-      helpBody="Vue 6 semaines. Les dots indiquent les jours avec séances planifiées."
+      title={formatMonthYear(visibleMonth, L.monthsLong)}
+      helpTitle={L.calTitle}
+      helpBody={L.calHelp}
       rightSlot={
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => gotoMonth(-1)}
-            aria-label="Mois précédent"
+            aria-label={L.calMonthPrev}
             className="w-7 h-7 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[14px] font-bold flex items-center justify-center"
           >‹</button>
           <button
             type="button"
             onClick={() => gotoMonth(1)}
-            aria-label="Mois suivant"
+            aria-label={L.calMonthNext}
             className="w-7 h-7 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[14px] font-bold flex items-center justify-center"
           >›</button>
         </div>
       }
     >
-      {/* ── Day headers ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-7 gap-[5px] mb-[6px]">
-        {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
+        {L.calDayShort.map((d, i) => (
           <p
             key={i}
             className="text-[11px] font-bold text-trail-muted text-center"
@@ -195,7 +190,7 @@ export function CalendrierMoisBlock({ reloadKey = 0, onSessionsChanged }: Calend
       </div>
 
       {!loaded && (
-        <div className="text-center text-trail-muted text-[12px] mt-2" role="status">Chargement…</div>
+        <div className="text-center text-trail-muted text-[12px] mt-2" role="status">{L.loading}</div>
       )}
 
       {openDayISO && (

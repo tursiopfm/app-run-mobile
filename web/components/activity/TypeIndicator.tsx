@@ -1,7 +1,10 @@
+'use client'
+
 import React from 'react'
-import { SESSION_TYPE_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
+import { SESSION_TYPE_COLORS } from '@/lib/activities/indicators'
 import type { WorkoutType } from '@/lib/activities/intensity'
 import { TypeIcon } from '@/components/activity/indicatorIcons'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 interface TypeIndicatorProps {
   type: WorkoutType | null
@@ -10,10 +13,11 @@ interface TypeIndicatorProps {
 }
 
 export default function TypeIndicator({ type, onClick, className }: TypeIndicatorProps) {
+  const L = useT().activities
   const isEmpty = type === null
   const color = isEmpty ? '#6B7280' : SESSION_TYPE_COLORS[type]
-  const label = isEmpty ? 'Non défini' : SESSION_TYPE_LABELS[type]
-  const ariaLabel = isEmpty ? 'Type de séance non défini' : `Type de séance : ${label}`
+  const label = isEmpty ? L.sessionTypeUndefined : L.sessionTypeLabels[type]
+  const ariaLabel = isEmpty ? L.sessionTypeUndefinedAria : L.sessionTypeAria(label)
   const interactive = !!onClick
 
   const containerStyle: React.CSSProperties = {

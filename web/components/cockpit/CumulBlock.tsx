@@ -10,6 +10,7 @@ import { CockpitCumulChart } from '@/components/charts/CockpitCumulChart'
 import { SportSettingsModal } from './SportSettingsModal'
 import { SportsCarousel } from './SportsCarousel'
 import { YearRangeSelector } from './YearRangeSelector'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type Settings = { visible: SportKey[]; default: SportKey; yearWindow: number }
 const DEFAULT_SETTINGS: Settings = {
@@ -24,6 +25,7 @@ type Period = 'month' | 'year'
 type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
 
 export function CumulBlock({ sportOverviews, onHide }: Props) {
+  const L = useT().cockpit
   const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
   const [currentIdx, setCurrentIdx] = useState(() => {
     const s = readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS)
@@ -59,7 +61,7 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
       <div className="flex items-center justify-between mb-[6px]">
         <div className="flex items-center gap-1">
           <span className="text-[15px] font-semibold text-trail-muted">
-            Cumul km/{period === 'month' ? 'mois' : 'année'} —
+            {L.cumulHeader(period)}
           </span>
           <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
         </div>
@@ -77,14 +79,14 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
                   border:          `1px solid ${period === p ? cfg.color : colors.border}`,
                 }}
               >
-                {p === 'month' ? 'Mois' : 'Année'}
+                {L.periodLong[p]}
               </button>
             ))}
           </div>
           <button
             onClick={() => setShowModal(true)}
             className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
-            aria-label="Paramètres cumul km"
+            aria-label={L.aria.cumulSettings}
           >
             ⋮
           </button>
@@ -138,7 +140,7 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
             <button
               key={sportKey}
               onClick={() => setCurrentIdx(i)}
-              aria-label={`Sport ${i + 1}`}
+              aria-label={L.aria.sportN(i + 1)}
               className={`w-[6px] h-[6px] rounded-full transition-colors ${
                 i === safeIdx ? 'bg-trail-text' : 'bg-trail-border'
               }`}
@@ -149,7 +151,7 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
 
       {showModal && (
         <SportSettingsModal
-          title="Cumul km par mois"
+          title={L.modalTitle.cumul}
           allKeys={ALL_SPORT_KEYS}
           visible={settings.visible}
           defaultKey={settings.default}

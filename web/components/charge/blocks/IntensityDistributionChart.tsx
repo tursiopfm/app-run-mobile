@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import type { ChargeSportPayload, IntensityLabel } from '@/lib/analytics/charge-insights.types'
-import { charge as L } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 import { colors } from '@/lib/design/colors'
 
 type Win = '7' | '28' | '70'
@@ -18,6 +18,7 @@ const INTENSITY_COLORS: Record<IntensityLabel, string> = {
 }
 
 export function IntensityDistributionChart({ payload }: { payload: ChargeSportPayload }) {
+  const L = useT().charge
   const [win, setWin] = useState<Win>('28')
   const data = payload.intensityDistribution[win]
   const total = data.reduce((s, x) => s + x.ces, 0)
@@ -28,9 +29,9 @@ export function IntensityDistributionChart({ payload }: { payload: ChargeSportPa
   const intenseRatio = total > 0 ? intenseShare / total : 0
   const note =
     total === 0                ? null :
-    intenseRatio > 0.4          ? "Beaucoup de charge en intensité haute." :
-    intenseRatio < 0.1          ? "Majorité de charge en endurance fondamentale." :
-                                   "Mix équilibré entre endurance et intensité."
+    intenseRatio > 0.4          ? L.intensityNoteHigh :
+    intenseRatio < 0.1          ? L.intensityNoteEasy :
+                                   L.intensityNoteBalanced
 
   return (
     <BlockCard
@@ -45,7 +46,7 @@ export function IntensityDistributionChart({ payload }: { payload: ChargeSportPa
               onClick={() => setWin(w)}
               className={`text-[10px] px-1.5 py-0.5 rounded-[6px] ${win === w ? 'bg-trail-surface text-trail-text' : 'text-trail-muted'}`}
             >
-              {w === '7' ? '7j' : w === '28' ? '28j' : '10 sem.'}
+              {w === '7' ? L.windowWeek : w === '28' ? L.window28d : L.window10w}
             </button>
           ))}
         </div>
@@ -62,7 +63,7 @@ export function IntensityDistributionChart({ payload }: { payload: ChargeSportPa
                 <li key={x.label}>
                   <div className="flex items-center text-[12px] text-trail-text">
                     <span className="w-2.5 h-2.5 rounded-sm mr-2" style={{ backgroundColor: INTENSITY_COLORS[x.label] }} />
-                    <span className="flex-1">{x.label}</span>
+                    <span className="flex-1">{L.intensityLabels[x.label]}</span>
                     <span className="font-semibold">{pct}%</span>
                   </div>
                   <div className="mt-0.5 h-1.5 rounded-full bg-trail-surface overflow-hidden">

@@ -28,6 +28,8 @@ import { useActivityTypes } from '@/lib/plan/use-activity-types'
 import { resolveSessionMeta } from '@/lib/plan/session-meta'
 import { colors } from '@/lib/design/colors'
 import { BlockCard } from '@/components/blocks/BlockCard'
+import { useT } from '@/lib/i18n/I18nProvider'
+import type { Dict } from '@/lib/i18n/dictionaries/fr'
 
 // ─── Helpers date (semaine ISO, lundi → dimanche, UTC) ───────────────────────
 function toISO(d: Date): string {
@@ -68,16 +70,13 @@ function isoWeek(d: Date): number {
   return Math.ceil(((u.getTime() - y.getTime()) / 86_400_000 + 1) / 7)
 }
 
-const DOW_LABELS_FR = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
-const MONTHS_FR_SHORT = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
-
-function formatDowFR(iso: string): string {
-  return DOW_LABELS_FR[parseISO(iso).getUTCDay()]
+function formatDow(iso: string, dow: readonly string[]): string {
+  return dow[parseISO(iso).getUTCDay()]
 }
 
-function formatLongFR(iso: string): string {
+function formatLong(iso: string, months: readonly string[]): string {
   const d = parseISO(iso)
-  return `${d.getUTCDate()} ${MONTHS_FR_SHORT[d.getUTCMonth()]}`
+  return `${d.getUTCDate()} ${months[d.getUTCMonth()]}`
 }
 
 function fmt1(v: number): string {
@@ -123,31 +122,15 @@ function persistWeekTotals(weekStartISO: string, data: WeekTotals): void {
   } catch { /* quota / mode privé */ }
 }
 
-// ─── Textes explicatifs des mini-tuiles ──────────────────────────────────────
+// ─── Tile explanations ───────────────────────────────────────────────────────
 type TileKey = 'objectif' | 'planifie' | 'realise' | 'restant'
-const TILE_EXPLANATIONS: Record<TileKey, ReactNode> = {
-  objectif: (
-    <>
-      Cible hebdomadaire de la phase courante d&apos;entrainement.
-      <br />
-      Source : ton plan d&apos;entraînement.
-    </>
-  ),
-  planifie: (
-    <>
-      Somme des séances running planifiées cette semaine (km + D+). N&apos;inclut pas vélo/natation/renfo.
-      <br />
-      Source : séances du calendrier d&apos;entrainement (hebdomadaire ou mensuel).
-    </>
-  ),
-  realise: (
-    <>Activités running réalisées depuis le début de la semaine (km et D+).</>
-  ),
-  restant: (
-    <>
-      Ce qu&apos;il te reste à courir pour atteindre l&apos;objectif (Restant = Objectif − Réalisé).
-    </>
-  ),
+function getTileExpl(L: Dict['plan']): Record<TileKey, ReactNode> {
+  return {
+    objectif: <>{L.tileObjectifExpl}</>,
+    planifie: <>{L.tilePlanifieExpl}</>,
+    realise:  <>{L.tileRealiseExpl}</>,
+    restant:  <>{L.tileRestantExpl}</>,
+  }
 }
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -162,7 +145,8 @@ type ResumeSemaineBlockProps = {
 
 // ─── Composant principal ─────────────────────────────────────────────────────
 export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = {}) {
-  // Date du jour sélectionné (par défaut : aujourd'hui en UTC).
+  const L = useT().plan
+  const TILE_EXPLANATIONS = useMemo(() => getTileExpl(L), [L])
   const todayISO = useMemo(() => {
     const n = new Date()
     return toISO(new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate())))
@@ -343,36 +327,35 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
 
   return (
     <BlockCard
-      title="Résumé semaine"
-      helpTitle="Résumé semaine"
-      helpBody="Comparaison objectif vs prévu vs restant sur la semaine sélectionnée."
+      title={L.resumeTitle}
+      helpTitle={L.resumeTitle}
+      helpBody={L.resumeHelp}
     >
       <p className="text-[12px] text-trail-muted">
-        S{weekNumber} — {formatDM(weekStartISO)} au {formatDM(weekEndISO)}
+        {L.weekRange(weekNumber, formatDM(weekStartISO), formatDM(weekEndISO))}
       </p>
 
-      {/* ── Nav row : < jour > Aujourd'hui ──────────────────────────────── */}
       <div className="flex items-center gap-2 mt-3">
         <NavButton
           label="<"
-          ariaLabel="Semaine précédente"
+          ariaLabel={L.weekPrev}
           onClick={() => gotoOffsetWeeks(-1)}
         />
         <div
           className="flex-1 rounded-[10px] flex flex-col items-center py-2"
           style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}
         >
-          <span className="text-[11px] text-trail-muted">{formatDowFR(selectedDateISO)}</span>
+          <span className="text-[11px] text-trail-muted">{formatDow(selectedDateISO, L.dowLong)}</span>
           <span
             className="text-[18px] text-trail-text leading-tight"
             style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.02em' }}
           >
-            {formatLongFR(selectedDateISO)}
+            {formatLong(selectedDateISO, L.monthsShort)}
           </span>
         </div>
         <NavButton
           label=">"
-          ariaLabel="Semaine suivante"
+          ariaLabel={L.weekNext}
           onClick={() => gotoOffsetWeeks(1)}
         />
         <button
@@ -380,9 +363,9 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
           onClick={gotoToday}
           style={{ color: colors.chargeOrange }}
           className="flex-shrink-0 text-[12px] font-semibold bg-transparent border-none cursor-pointer px-1"
-          aria-label="Revenir à aujourd'hui"
+          aria-label={L.todayAria}
         >
-          Aujourd&apos;hui
+          {L.today}
         </button>
       </div>
 
@@ -391,9 +374,9 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
         <div className="flex gap-2">
           <MetricTile
             tileKey="objectif"
-            label="Objectif"
+            label={L.tileObjectif}
             main={`${fmt1(targets.km)} km`}
-            sub={`${Math.round(targets.dPlus)} m D+`}
+            sub={`${Math.round(targets.dPlus)} ${L.mDPlus}`}
             color={colors.chargeOrange}
             open={openTile === 'objectif'}
             onToggle={toggleTile}
@@ -401,9 +384,9 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
           {plannedSessionsCount > 0 && (
             <MetricTile
               tileKey="planifie"
-              label="Planifié"
+              label={L.tilePlanifie}
               main={`${fmt1(planned.km)} km`}
-              sub={`${Math.round(planned.dPlus)} m D+`}
+              sub={`${Math.round(planned.dPlus)} ${L.mDPlus}`}
               color={colors.seriesBlue}
               open={openTile === 'planifie'}
               onToggle={toggleTile}
@@ -411,18 +394,18 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
           )}
           <MetricTile
             tileKey="realise"
-            label="Réalisé"
+            label={L.tileRealise}
             main={`${fmt1(actual.km)} km`}
-            sub={`${Math.round(actual.dPlus)} m D+`}
+            sub={`${Math.round(actual.dPlus)} ${L.mDPlus}`}
             color={colors.greenOk}
             open={openTile === 'realise'}
             onToggle={toggleTile}
           />
           <MetricTile
             tileKey="restant"
-            label="Restant"
+            label={L.tileRestant}
             main={`${fmt1(remaining.km)} km`}
-            sub={`${Math.round(remaining.dPlus)} m D+`}
+            sub={`${Math.round(remaining.dPlus)} ${L.mDPlus}`}
             color={colors.seriesYellow}
             open={openTile === 'restant'}
             onToggle={toggleTile}
@@ -431,6 +414,7 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
         {openTile && (
           <TilePopover
             tileKey={openTile}
+            explanation={TILE_EXPLANATIONS[openTile]}
             color={
               openTile === 'objectif' ? colors.chargeOrange
               : openTile === 'planifie' ? colors.seriesBlue
@@ -438,10 +422,10 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
               :                            colors.seriesYellow
             }
             label={
-              openTile === 'objectif' ? 'Objectif'
-              : openTile === 'planifie' ? 'Planifié'
-              : openTile === 'realise'  ? 'Réalisé'
-              :                            'Restant'
+              openTile === 'objectif' ? L.tileObjectif
+              : openTile === 'planifie' ? L.tilePlanifie
+              : openTile === 'realise'  ? L.tileRealise
+              :                            L.tileRestant
             }
           />
         )}
@@ -450,14 +434,14 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
       {/* ── 3 progress bars : Réalisé vs Objectif ───────────────────────── */}
       <div className="mt-3 space-y-2">
         <ProgressLine
-          label="Volume semaine"
+          label={L.progressVolume}
           current={actual.km}
           target={targets.km}
           unit="km"
           color={colors.chargeOrange}
         />
         <ProgressLine
-          label="Dénivelé"
+          label={L.progressElevation}
           current={actual.dPlus}
           target={targets.dPlus}
           unit="m"
@@ -466,7 +450,7 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
       </div>
 
       {!loaded && (
-        <div className="text-center text-trail-muted text-[12px] mt-2" role="status">Chargement…</div>
+        <div className="text-center text-trail-muted text-[12px] mt-2" role="status">{L.loading}</div>
       )}
     </BlockCard>
   )
@@ -513,9 +497,7 @@ function MetricTile({
   open: boolean
   onToggle: (key: TileKey) => void
 }) {
-  // Sépare valeur et unité (ex: "80.0 km" → "80.0" + "km") pour rendre l'unité
-  // dans une typo plus petite, garantir qu'elle n'est jamais coupée par le truncate,
-  // et économiser de la largeur sur les tuiles étroites en mobile.
+  const L = useT().plan
   const firstSpace = main.indexOf(' ')
   const mainValue = firstSpace > 0 ? main.slice(0, firstSpace) : main
   const mainUnit  = firstSpace > 0 ? main.slice(firstSpace + 1) : ''
@@ -524,7 +506,7 @@ function MetricTile({
       type="button"
       onClick={() => onToggle(tileKey)}
       aria-expanded={open}
-      aria-label={`Explication ${label}`}
+      aria-label={L.explanationAria(label)}
       className="flex-1 min-w-0 text-left rounded-[10px] px-[6px] py-[8px] cursor-pointer"
       style={{
         backgroundColor: colors.surface,
@@ -543,11 +525,9 @@ function MetricTile({
   )
 }
 
-// Popover affiché sous la rangée de tuiles, pleine largeur du bloc. Évite le
-// débordement horizontal (Restant) et le chevauchement avec le bloc suivant.
 function TilePopover({
-  tileKey, color, label,
-}: { tileKey: TileKey; color: string; label: string }) {
+  color, label, explanation,
+}: { tileKey: TileKey; color: string; label: string; explanation: ReactNode }) {
   return (
     <div
       role="tooltip"
@@ -561,7 +541,7 @@ function TilePopover({
         {label}
       </p>
       <p className="text-[12px] text-trail-muted leading-[17px]">
-        {TILE_EXPLANATIONS[tileKey]}
+        {explanation}
       </p>
     </div>
   )

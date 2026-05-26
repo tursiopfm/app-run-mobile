@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
-import { charge as L } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 import { colors } from '@/lib/design/colors'
 import {
   kpiStatusFatigue,
@@ -17,6 +17,7 @@ import { FitnessHelpSheet } from '@/components/ui/FitnessHelpSheet'
 type HelpKey = 'fatigue' | 'fitness' | 'freshness' | null
 
 export function LoadStatusCard({ payload }: { payload: ChargeSportPayload }) {
+  const L = useT().charge
   const [openHelp, setOpenHelp] = useState<HelpKey>(null)
 
   const last = payload.dailyMetrics[payload.dailyMetrics.length - 1]

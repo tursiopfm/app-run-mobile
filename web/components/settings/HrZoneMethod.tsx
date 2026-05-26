@@ -4,10 +4,12 @@ import { useEffect } from 'react'
 import { colors } from '@/lib/design/colors'
 import { HR_METHODS } from '@/lib/health/hr-method-meta'
 import type { HrZoneMethod as Method } from '@/lib/health/hr-zones'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 const STORAGE_KEY = 'tc_hr_zone_method'
 
 export function HrZoneMethod({ value, onChange }: { value: Method; onChange: (m: Method) => void }) {
+  const methods = useT().settings.hrMethods
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved && HR_METHODS.find(m => m.value === saved)) {
@@ -45,13 +47,13 @@ export function HrZoneMethod({ value, onChange }: { value: Method; onChange: (m:
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[14px] font-semibold text-trail-text">{m.label}</span>
+                  <span className="text-[14px] font-semibold text-trail-text">{methods[m.value].label}</span>
                   <span className="text-[11px] font-bold px-[6px] py-[1px] rounded-full"
                     style={{ backgroundColor: m.badgeBg, color: m.color }}>
-                    {m.badge}
+                    {methods[m.value].badge}
                   </span>
                 </div>
-                <p className="text-[12px] text-trail-muted mt-[2px] leading-[16px]">{m.description}</p>
+                <p className="text-[12px] text-trail-muted mt-[2px] leading-[16px]">{methods[m.value].description}</p>
               </div>
             </div>
           </button>

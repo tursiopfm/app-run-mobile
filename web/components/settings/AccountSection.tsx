@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mail, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/database/supabase-client'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 export function AccountSection() {
   const router = useRouter()
+  const L = useT().settings
   const [email, setEmail] = useState<string | null>(null)
   const [loggingOut, setLoggingOut] = useState(false)
 
@@ -34,7 +36,7 @@ export function AccountSection() {
           <Mail size={14} className="text-trail-muted" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-trail-muted">Email</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-trail-muted">{L.emailLabel}</p>
           <p className="text-[13px] text-trail-text truncate">{email}</p>
         </div>
         <button
@@ -43,7 +45,7 @@ export function AccountSection() {
           className="flex items-center gap-[6px] px-3 py-[6px] rounded-full border border-red-500/25 text-red-400 text-[11px] font-semibold tracking-wide hover:bg-red-500/10 transition-colors disabled:opacity-50 flex-shrink-0"
         >
           <LogOut size={12} />
-          {loggingOut ? '…' : 'Déconnexion'}
+          {loggingOut ? '…' : L.logoutLabel}
         </button>
       </div>
     </div>

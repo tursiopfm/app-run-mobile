@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ActivityCard, ActivityRow } from '@/components/ui/ActivityCard'
 import { EditActivityModal } from '@/components/ui/EditActivityModal'
 import { colors } from '@/lib/design/colors'
-import { sportLabel } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 import {
   INTENSITY_OPTIONS,
   WORKOUT_TYPE_OPTIONS,
@@ -274,7 +274,14 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
   onNavigate: (id: string) => void
   onReset:    () => void
 }) {
+  const L = useT().activities
   const FIELDS: SearchField[] = ['Titre', 'Distance', 'Durée', 'D+']
+  const fieldLabel = (f: SearchField): string => (
+    f === 'Titre'    ? L.fieldTitle :
+    f === 'Distance' ? L.distanceLabel :
+    f === 'Durée'    ? L.durationLabel :
+                       L.dPlusLabel
+  )
   const si = inputStyle()
   const [visibleCount, setVisibleCount] = useState(SEARCH_RENDER_BATCH)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -320,14 +327,14 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
       >
         <button onClick={onClose} className="flex items-center gap-2" style={{ cursor: 'pointer' }}>
           <BackArrow />
-          <span className="text-[16px] font-semibold text-trail-text">Rechercher</span>
+          <span className="text-[16px] font-semibold text-trail-text">{L.headerSearch}</span>
         </button>
         <button
           onClick={onClose}
           className="text-[14px] font-bold"
           style={{ color: colors.chargeOrange, cursor: 'pointer' }}
         >
-          Appliquer
+          {L.apply}
         </button>
       </div>
 
@@ -339,18 +346,18 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
           className="rounded-[12px] border p-4 space-y-4"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
         >
-          <p className="text-[14px] font-semibold text-trail-text">Rechercher par</p>
+          <p className="text-[14px] font-semibold text-trail-text">{L.searchByLabel}</p>
 
           <div className="flex gap-2 flex-wrap">
             {FIELDS.map(f => (
-              <Chip key={f} label={f} active={state.field === f}
+              <Chip key={f} label={fieldLabel(f)} active={state.field === f}
                 onClick={() => setState({ ...state, field: f })} />
             ))}
           </div>
 
           {state.field === 'Titre' && (
             <div>
-              <p className="text-[12px] text-trail-muted mb-1">Titre de l&apos;activité</p>
+              <p className="text-[12px] text-trail-muted mb-1">{L.searchTitleLabel}</p>
               <input
                 autoFocus
                 type="text"
@@ -364,11 +371,11 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 
           {state.field === 'Distance' && (
             <div className="space-y-2">
-              <p className="text-[12px] text-trail-muted">Distance (km)</p>
+              <p className="text-[12px] text-trail-muted">{L.searchDistanceLabel}</p>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] text-trail-muted">De</span>
+                <span className="text-[11px] text-trail-muted">{L.fromLabel}</span>
                 <input type="text" value={state.distFrom} onChange={e => setState({ ...state, distFrom: e.target.value })} placeholder="km" className={inputCls} style={si} />
-                <span className="text-[11px] text-trail-muted">à</span>
+                <span className="text-[11px] text-trail-muted">{L.toLabel}</span>
                 <input type="text" value={state.distTo}   onChange={e => setState({ ...state, distTo: e.target.value })}   placeholder="km" className={inputCls} style={si} />
               </div>
             </div>
@@ -376,11 +383,11 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 
           {state.field === 'Durée' && (
             <div className="space-y-2">
-              <p className="text-[12px] text-trail-muted">Durée (h:mm:ss)</p>
+              <p className="text-[12px] text-trail-muted">{L.searchDurationLabel}</p>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] text-trail-muted">De</span>
+                <span className="text-[11px] text-trail-muted">{L.fromLabel}</span>
                 <input type="text" value={state.durFrom} onChange={e => setState({ ...state, durFrom: e.target.value })} placeholder="h:mm:ss" className={inputCls} style={si} />
-                <span className="text-[11px] text-trail-muted">à</span>
+                <span className="text-[11px] text-trail-muted">{L.toLabel}</span>
                 <input type="text" value={state.durTo}   onChange={e => setState({ ...state, durTo: e.target.value })}   placeholder="h:mm:ss" className={inputCls} style={si} />
               </div>
             </div>
@@ -388,11 +395,11 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 
           {state.field === 'D+' && (
             <div className="space-y-2">
-              <p className="text-[12px] text-trail-muted">Dénivelé positif (m)</p>
+              <p className="text-[12px] text-trail-muted">{L.searchElevationLabel}</p>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] text-trail-muted">De</span>
+                <span className="text-[11px] text-trail-muted">{L.fromLabel}</span>
                 <input type="text" value={state.dPlusFrom} onChange={e => setState({ ...state, dPlusFrom: e.target.value })} placeholder="m" className={inputCls} style={si} />
-                <span className="text-[11px] text-trail-muted">à</span>
+                <span className="text-[11px] text-trail-muted">{L.toLabel}</span>
                 <input type="text" value={state.dPlusTo}   onChange={e => setState({ ...state, dPlusTo: e.target.value })}   placeholder="m" className={inputCls} style={si} />
               </div>
             </div>
@@ -403,20 +410,20 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
             className="w-full py-2 rounded-[10px] border text-[13px] font-semibold"
             style={{ borderColor: colors.border, color: colors.subtleText, backgroundColor: 'transparent', cursor: 'pointer' }}
           >
-            Réinitialiser
+            {L.reset}
           </button>
         </div>
 
         {/* Live results */}
         {hasInput && (
           <>
-            <p className="text-[13px] text-trail-muted px-1">{results.length} résultat{results.length !== 1 ? 's' : ''}</p>
+            <p className="text-[13px] text-trail-muted px-1">{L.resultsCount(results.length)}</p>
             {results.length === 0 ? (
               <div
                 className="rounded-[12px] border p-[10px]"
                 style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
               >
-                <p className="text-[13px]" style={{ color: colors.subtleText }}>Aucune activité trouvée.</p>
+                <p className="text-[13px]" style={{ color: colors.subtleText }}>{L.noResults}</p>
               </div>
             ) : (
               <div className="space-y-[10px]">
@@ -443,6 +450,9 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
   onClose:    () => void
   onReset:    () => void
 }) {
+  const t = useT()
+  const sportLabel = t.sportLabel
+  const L = t.activities
   const si = inputStyle()
 
   const handleSort = (field: SortField, dir: SortDir) =>
@@ -460,21 +470,19 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
       >
         <button onClick={onClose} className="flex items-center gap-2" style={{ cursor: 'pointer' }}>
           <BackArrow />
-          <span className="text-[16px] font-semibold text-trail-text">Filtre</span>
+          <span className="text-[16px] font-semibold text-trail-text">{L.headerFilter}</span>
         </button>
       </div>
 
-      {/* Body — scrollable, boutons inclus dans le flux */}
       <div className="flex-1 overflow-y-auto p-3 max-w-lg mx-auto w-full space-y-2">
         <div
           className="rounded-[12px] border p-3 space-y-3"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
         >
-          <p className="text-[14px] font-bold text-trail-text">Trier et filtrer</p>
+          <p className="text-[14px] font-bold text-trail-text">{L.sortFilterTitle}</p>
 
-          {/* Activité */}
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">Activité</p>
+            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{L.activityFieldLabel}</p>
             <div className="flex items-center gap-2">
               <select
                 value={state.sport}
@@ -482,7 +490,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
                 className="rounded-[8px] border px-3 py-[5px] text-[13px] flex-1"
                 style={{ ...si, cursor: 'pointer' }}
               >
-                <option value="Toutes">Toutes</option>
+                <option value="Toutes">{L.allOption}</option>
                 {sportTypes.map(s => (
                   <option key={s} value={s}>{sportLabel[s] ?? s}</option>
                 ))}
@@ -491,12 +499,11 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
             </div>
           </div>
 
-          {/* Intensité */}
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">Intensité</p>
+            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{L.intensityFieldLabel}</p>
             <div className="flex gap-[6px] overflow-x-auto pb-1">
               <FilterChip
-                label="Toutes"
+                label={L.allOption}
                 active={state.intensity === 'Toutes'}
                 onClick={() => setState({ ...state, intensity: 'Toutes' })}
               />
@@ -505,7 +512,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
                 return (
                   <FilterChip
                     key={opt.key}
-                    label={INTENSITY_LEVEL_LABELS[level]}
+                    label={L.intensityLevelLabels[level]}
                     color={INTENSITY_LEVEL_COLORS[level]}
                     icon={<IntensityGauge level={level} size={20} idSuffix={`flt-${opt.key}`} />}
                     active={state.intensity === opt.key}
@@ -516,19 +523,18 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
             </div>
           </div>
 
-          {/* Type d'entraînement */}
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">Type d&apos;entraînement</p>
+            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{L.sessionTypeFieldLabel}</p>
             <div className="flex gap-[6px] overflow-x-auto pb-1">
               <FilterChip
-                label="Tous"
+                label={L.allMascAria}
                 active={state.workoutType === 'Toutes'}
                 onClick={() => setState({ ...state, workoutType: 'Toutes' })}
               />
               {WORKOUT_TYPE_OPTIONS.map(opt => (
                 <FilterChip
                   key={opt.value}
-                  label={SESSION_TYPE_LABELS[opt.value]}
+                  label={L.sessionTypeLabels[opt.value]}
                   color={SESSION_TYPE_COLORS[opt.value]}
                   icon={<TypeIcon type={opt.value} size={20} />}
                   active={state.workoutType === opt.value}
@@ -536,7 +542,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
                 />
               ))}
               <FilterChip
-                label="Non défini"
+                label={L.sessionTypeUndefined}
                 color="#6B7280"
                 icon={<UnknownTypeIcon size={20} />}
                 active={state.workoutType === '__none__'}
@@ -545,11 +551,10 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
             </div>
           </div>
 
-          {/* Date — calendrier natif */}
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">Date</p>
+            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{L.dateLabel}</p>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-trail-muted w-4 flex-shrink-0">De</span>
+              <span className="text-[11px] text-trail-muted w-4 flex-shrink-0">{L.fromLabel}</span>
               <input
                 type="date"
                 value={state.dateFrom}
@@ -557,7 +562,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
                 className={dateInputCls}
                 style={si}
               />
-              <span className="text-[11px] text-trail-muted flex-shrink-0">à</span>
+              <span className="text-[11px] text-trail-muted flex-shrink-0">{L.toLabel}</span>
               <input
                 type="date"
                 value={state.dateTo}
@@ -569,33 +574,29 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
             </div>
           </div>
 
-          {/* Distance */}
           <FilterRow
-            label="Distance"
+            label={L.distanceLabel}
             left={<input type="text" value={state.distFrom} onChange={e => setState({ ...state, distFrom: e.target.value })} placeholder="km" className={inputCls} style={si} />}
             right={<input type="text" value={state.distTo}   onChange={e => setState({ ...state, distTo: e.target.value })}   placeholder="km" className={inputCls} style={si} />}
             sortField="distance" activeField={af} activeDir={ad} onSort={handleSort}
           />
 
-          {/* Allure */}
           <FilterRow
-            label="Allure"
+            label={L.paceLabel}
             left={<input type="text" value={state.paceFrom} onChange={e => setState({ ...state, paceFrom: e.target.value })} placeholder="mm:ss" className={inputCls} style={si} />}
             right={<input type="text" value={state.paceTo}   onChange={e => setState({ ...state, paceTo: e.target.value })}   placeholder="mm:ss" className={inputCls} style={si} />}
             sortField="pace" activeField={af} activeDir={ad} onSort={handleSort}
           />
 
-          {/* Durée */}
           <FilterRow
-            label="Durée"
+            label={L.durationLabel}
             left={<input type="text" value={state.durFrom} onChange={e => setState({ ...state, durFrom: e.target.value })} placeholder="h:mm:ss" className={inputCls} style={si} />}
             right={<input type="text" value={state.durTo}   onChange={e => setState({ ...state, durTo: e.target.value })}   placeholder="h:mm:ss" className={inputCls} style={si} />}
             sortField="duration" activeField={af} activeDir={ad} onSort={handleSort}
           />
 
-          {/* D+ */}
           <FilterRow
-            label="D+"
+            label={L.dPlusLabel}
             left={<input type="text" value={state.dPlusFrom} onChange={e => setState({ ...state, dPlusFrom: e.target.value })} placeholder="m" className={inputCls} style={si} />}
             right={<input type="text" value={state.dPlusTo}   onChange={e => setState({ ...state, dPlusTo: e.target.value })}   placeholder="m" className={inputCls} style={si} />}
             sortField="dplus" activeField={af} activeDir={ad} onSort={handleSort}
@@ -608,14 +609,14 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
             className="flex-1 py-3 rounded-[12px] border text-[14px] font-semibold"
             style={{ borderColor: colors.border, color: colors.subtleText, backgroundColor: 'transparent', cursor: 'pointer' }}
           >
-            Réinitialiser
+            {L.reset}
           </button>
           <button
             onClick={onClose}
             className="flex-1 py-3 rounded-[12px] text-[14px] font-bold"
             style={{ backgroundColor: colors.chargeOrange, color: '#fff', cursor: 'pointer' }}
           >
-            Appliquer
+            {L.apply}
           </button>
         </div>
       </div>
@@ -643,6 +644,7 @@ export default function ActivitiesClient({
   hasMore:        boolean
   athleteProfile: AthleteHrProfile
 }) {
+  const L_main = useT().activities
   const [localActivities, setLocalActivities] = useState<ActivityRow[]>(initial)
   const [loadingMore,     setLoadingMore]     = useState<boolean>(hasMore)
   const [panel,           setPanel]           = useState<'none' | 'search' | 'filter'>('none')
@@ -891,20 +893,18 @@ export default function ActivitiesClient({
           </button>
         </div>
 
-        {/* Result count + background-load hint */}
         {(hasActiveSearch || hasActiveFilter) && (
           <p className="text-[13px] text-trail-muted px-1 mb-[6px]">
-            {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
-            {loadingMore ? ' (historique en cours de chargement…)' : ''}
+            {L_main.resultsCount(filtered.length)}
+            {loadingMore ? L_main.historyLoadingHint : ''}
           </p>
         )}
         {loadingMore && !(hasActiveSearch || hasActiveFilter) && (
           <p className="text-[12px] text-trail-muted px-1 mb-[6px]">
-            Chargement de l&apos;historique complet…
+            {L_main.historyLoading}
           </p>
         )}
 
-        {/* Activity list */}
         {filtered.length === 0 ? (
           <div
             className="rounded-[12px] border p-[10px]"
@@ -912,8 +912,8 @@ export default function ActivitiesClient({
           >
             <p className="text-[14px]" style={{ color: colors.subtleText }}>
               {localActivities.length === 0
-                ? 'Connecte Strava dans Réglages pour importer tes activités.'
-                : 'Aucune activité ne correspond aux filtres.'}
+                ? L_main.connectStravaImport
+                : L_main.noActivityMatch}
             </p>
           </div>
         ) : (

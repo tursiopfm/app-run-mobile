@@ -39,7 +39,6 @@ import {
 import { estimateCharge } from '@/lib/training/charge'
 import {
   INTENSITY_LEVEL_COLORS,
-  INTENSITY_LEVEL_LABELS,
 } from '@/lib/activities/indicators'
 import { useActivityTypes } from '@/lib/plan/use-activity-types'
 import { resolveSessionMeta } from '@/lib/plan/session-meta'
@@ -49,6 +48,8 @@ import { DurationDistanceToggle } from '@/components/plan/DurationDistanceToggle
 import { IntensityPaceToggle } from '@/components/plan/IntensityPaceToggle'
 import { PaceField } from '@/components/plan/PaceField'
 import { getDefaultIntensityMode } from '@/lib/plan/type-helpers'
+import { useT } from '@/lib/i18n/I18nProvider'
+import type { Dict } from '@/lib/i18n/dictionaries/fr'
 
 type Tab = 'general' | 'structure' | 'notes'
 
@@ -67,18 +68,13 @@ type Props = {
   onSaved: () => void
 }
 
-const ZONE_PRESETS: Record<ZoneKind, Omit<TrainingZone, 'id'>> = {
-  warmup:   { kind: 'warmup',   durationMin: 15, intensity: 2, label: 'Échauffement' },
-  main:     { kind: 'main',     durationMin: 30, intensity: 4, label: 'Bloc principal' },
-  rest:     { kind: 'rest',     durationMin: 5,  intensity: 1, label: 'Récup' },
-  cooldown: { kind: 'cooldown', durationMin: 10, intensity: 1, label: 'Retour calme' },
-}
-
-const ZONE_KIND_LABEL: Record<ZoneKind, string> = {
-  warmup:   'Échauffement',
-  main:     'Bloc principal',
-  rest:     'Récup',
-  cooldown: 'Retour calme',
+function buildZonePresets(L: Dict['plan']): Record<ZoneKind, Omit<TrainingZone, 'id'>> {
+  return {
+    warmup:   { kind: 'warmup',   durationMin: 15, intensity: 2, label: L.zonePresetLabels.warmup },
+    main:     { kind: 'main',     durationMin: 30, intensity: 4, label: L.zonePresetLabels.main },
+    rest:     { kind: 'rest',     durationMin: 5,  intensity: 1, label: L.zonePresetLabels.rest },
+    cooldown: { kind: 'cooldown', durationMin: 10, intensity: 1, label: L.zonePresetLabels.cooldown },
+  }
 }
 
 function makeId(): string {
@@ -116,6 +112,7 @@ function emptyDraft(initialDate: string | undefined): PlannedSession {
 export function SessionEditorModal({
   session, initialDate, open, matchedActivities, onUnlink, onClose, onSaved,
 }: Props) {
+  const L = useT().plan
   const isEdit = session !== null
   const [draft, setDraft] = useState<PlannedSession>(() => session ?? emptyDraft(initialDate))
   const [tab, setTab] = useState<Tab>('general')
@@ -196,7 +193,7 @@ export function SessionEditorModal({
       const copy: PlannedSession = {
         ...draft,
         id: makeId(),
-        title: draft.title.trim() || 'Séance',
+        title: draft.title.trim() || L.sessionDuplicateFallback,
         status: 'planned',
         linkedActivityId: undefined,
       }
@@ -217,7 +214,7 @@ export function SessionEditorModal({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label={isEdit ? 'Éditer la séance' : 'Créer une séance'}
+      aria-label={isEdit ? L.sessionAriaEdit : L.sessionAriaCreate}
     >
       <div
         className="bg-trail-card border border-trail-border rounded-t-[20px] md:rounded-[16px] w-full max-w-2xl max-h-[92vh] overflow-y-auto p-5 pb-8"
@@ -227,7 +224,7 @@ export function SessionEditorModal({
 
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-[16px] font-semibold text-trail-text">
-            {isEdit ? 'Modifier la séance' : 'Créer une séance'}
+            {isEdit ? L.sessionEditTitle : L.sessionCreateTitle}
           </h2>
         </div>
 
@@ -251,17 +248,17 @@ export function SessionEditorModal({
               <div className="min-w-0 flex-1">
                 <div className="text-[12px] font-semibold" style={{ color: colors.greenOk }}>
                   {matchedActivities.length === 1
-                    ? 'Activité réalisée'
-                    : `${matchedActivities.length} activités réalisées (cumul)`}
+                    ? L.sessionMatchedOne
+                    : L.sessionMatchedMany(matchedActivities.length)}
                 </div>
                 {matchedActivities.map(a => (
                   <Link
                     key={a.id}
                     href={`/activities/${a.id}`}
                     className="block text-[13px] text-trail-text hover:underline truncate"
-                    title={a.name || 'Voir l’activité'}
+                    title={a.name || L.sessionMatchedLinkAria}
                   >
-                    {a.name || 'Voir l’activité'}
+                    {a.name || L.sessionMatchedLinkAria}
                     {' '}
                     <span className="text-trail-muted text-[11px]">
                       ({a.distanceKm.toFixed(1)} km
@@ -277,10 +274,10 @@ export function SessionEditorModal({
                 onClick={() => onUnlink(draft.id, matchedActivities.map(a => a.id))}
                 className="flex-shrink-0 px-2 py-1 rounded-[8px] text-[12px] font-semibold text-trail-muted border border-trail-border hover:text-trail-text hover:border-trail-primary"
                 aria-label={matchedActivities.length === 1
-                  ? 'Délier cette activité de la séance planifiée'
-                  : 'Délier ces activités de la séance planifiée'}
+                  ? L.sessionUnlinkAriaOne
+                  : L.sessionUnlinkAriaMany}
               >
-                Délier
+                {L.sessionUnlink}
               </button>
             )}
           </div>
@@ -290,11 +287,11 @@ export function SessionEditorModal({
         <div
           className="flex items-stretch rounded-[10px] bg-trail-surface border border-trail-border overflow-hidden mb-4"
           role="tablist"
-          aria-label="Sections de la séance"
+          aria-label={L.sessionTabsAria}
         >
-          <TabButton active={tab === 'general'}   onClick={() => setTab('general')}   label="Général" />
-          <TabButton active={tab === 'structure'} onClick={() => setTab('structure')} label="Structure" />
-          <TabButton active={tab === 'notes'}     onClick={() => setTab('notes')}     label="Notes" />
+          <TabButton active={tab === 'general'}   onClick={() => setTab('general')}   label={L.sessionTabGeneral} />
+          <TabButton active={tab === 'structure'} onClick={() => setTab('structure')} label={L.sessionTabStructure} />
+          <TabButton active={tab === 'notes'}     onClick={() => setTab('notes')}     label={L.sessionTabNotes} />
         </div>
 
         {tab === 'general' && (
@@ -304,13 +301,14 @@ export function SessionEditorModal({
             onChargeEdit={() => setChargeOverridden(true)}
             visibleTypes={visibleTypes}
             types={types}
+            L={L}
           />
         )}
         {tab === 'structure' && (
-          <StructureTab draft={draft} setDraft={setDraft} intensityModeDisabled={intensityModeDisabled} />
+          <StructureTab draft={draft} setDraft={setDraft} intensityModeDisabled={intensityModeDisabled} L={L} />
         )}
         {tab === 'notes' && (
-          <NotesTab draft={draft} setDraft={setDraft} />
+          <NotesTab draft={draft} setDraft={setDraft} L={L} />
         )}
 
         {/* Footer */}
@@ -322,9 +320,9 @@ export function SessionEditorModal({
                 onClick={handleDuplicate}
                 disabled={saving}
                 className="px-3 py-2 text-[13px] font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
-                aria-label="Dupliquer la séance"
+                aria-label={L.sessionDuplicateAria}
               >
-                Dupliquer
+                {L.sessionDuplicate}
               </button>
             )}
             {isEdit && (
@@ -333,9 +331,9 @@ export function SessionEditorModal({
                 onClick={handleDelete}
                 disabled={saving}
                 className="px-3 py-2 text-[13px] font-semibold text-trail-danger hover:underline disabled:opacity-50"
-                aria-label="Supprimer la séance"
+                aria-label={L.sessionDeleteAria}
               >
-                Supprimer
+                {L.sessionDelete}
               </button>
             )}
           </div>
@@ -346,7 +344,7 @@ export function SessionEditorModal({
               disabled={saving}
               className="px-4 py-2 rounded-[10px] text-[14px] font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
             >
-              Annuler
+              {L.sessionCancel}
             </button>
             <button
               type="button"
@@ -354,7 +352,7 @@ export function SessionEditorModal({
               disabled={!canSave}
               className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-[14px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Enregistrer
+              {L.sessionSave}
             </button>
           </div>
         </div>
@@ -390,28 +388,29 @@ function TabButton({
 }
 
 function GeneralTab({
-  draft, setDraft, onChargeEdit, visibleTypes, types,
+  draft, setDraft, onChargeEdit, visibleTypes, types, L,
 }: {
   draft: PlannedSession
   setDraft: React.Dispatch<React.SetStateAction<PlannedSession>>
   onChargeEdit: () => void
   visibleTypes: ActivityType[]
   types: ActivityType[]
+  L: Dict['plan']
 }) {
   const intensityColor = INTENSITY_LEVEL_COLORS[draft.intensity]
   return (
     <div className="space-y-3">
-      <Field label="Titre" required>
+      <Field label={L.sessionTitleLabel} required>
         <input
           type="text"
           value={draft.title}
           onChange={e => setDraft({ ...draft, title: e.target.value })}
-          placeholder="Ex : SL 2h vallonnée"
+          placeholder={L.sessionTitlePh}
           className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
         />
       </Field>
 
-      <Field label="Type">
+      <Field label={L.sessionTypeLabel}>
         <div className="flex items-center gap-2">
           <select
             value={draft.type}
@@ -435,9 +434,8 @@ function GeneralTab({
             {(['run', 'bike', 'swim', 'other'] as const).map(cat => {
               const optionsInCat = visibleTypes.filter(t => (t.category ?? 'other') === cat)
               if (optionsInCat.length === 0) return null
-              const labels = { run: 'Course à pied', bike: 'Vélo', swim: 'Natation', other: 'Autre' } as const
               return (
-                <optgroup key={cat} label={labels[cat]}>
+                <optgroup key={cat} label={L.templateCatLabels[cat]}>
                   {optionsInCat.map(t => (
                     <option key={t.slug} value={t.slug}>{t.label}</option>
                   ))}
@@ -445,11 +443,11 @@ function GeneralTab({
               )
             })}
           </select>
-          <TypeBadge type={draft.type} types={types} />
+          <TypeBadge type={draft.type} types={types} L={L} />
         </div>
       </Field>
 
-      <Field label="Date" required>
+      <Field label={L.sessionDateLabel} required>
         <input
           type="date"
           value={draft.date}
@@ -459,10 +457,10 @@ function GeneralTab({
       </Field>
 
       <div className="grid grid-cols-3 gap-2">
-        <Field label="Durée">
+        <Field label={L.sessionFieldDuration}>
           <DurationField value={draft.duration} onChange={(d) => setDraft({ ...draft, duration: d })} />
         </Field>
-        <Field label="Distance (km)">
+        <Field label={L.sessionFieldDistance}>
           <input
             type="number"
             inputMode="decimal"
@@ -473,7 +471,7 @@ function GeneralTab({
             className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
           />
         </Field>
-        <Field label="D+ (m)">
+        <Field label={L.sessionFieldElevation}>
           <input
             type="number"
             inputMode="numeric"
@@ -485,7 +483,7 @@ function GeneralTab({
         </Field>
       </div>
 
-      <Field label={`Intensité — ${INTENSITY_LEVEL_LABELS[draft.intensity]}`}>
+      <Field label={L.sessionIntensityLabel(L.intensityLevels[draft.intensity])}>
         <input
           type="range"
           min={1}
@@ -495,11 +493,11 @@ function GeneralTab({
           onChange={e => setDraft({ ...draft, intensity: Number(e.target.value) as IntensityLevel })}
           className="w-full"
           style={{ accentColor: intensityColor }}
-          aria-label={`Intensité ${draft.intensity} sur 5 (${INTENSITY_LEVEL_LABELS[draft.intensity]})`}
+          aria-label={L.sessionIntensityAria(draft.intensity, L.intensityLevels[draft.intensity])}
         />
       </Field>
 
-      <Field label="Charge estimée (TSS)">
+      <Field label={L.sessionChargeLabel}>
         <input
           type="number"
           inputMode="numeric"
@@ -579,13 +577,15 @@ function flattenZonesForPreview(zones: SessionZone[]): TrainingZone[] {
 }
 
 function StructureTab({
-  draft, setDraft, intensityModeDisabled = false,
+  draft, setDraft, intensityModeDisabled = false, L,
 }: {
   draft: PlannedSession
   setDraft: React.Dispatch<React.SetStateAction<PlannedSession>>
   intensityModeDisabled?: boolean
+  L: Dict['plan']
 }) {
   const zones = draft.zones ?? []
+  const ZONE_PRESETS = buildZonePresets(L)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   )
@@ -627,7 +627,7 @@ function StructureTab({
             onClick={() => addZone(k)}
             className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
           >
-            + {ZONE_KIND_LABEL[k]}
+            + {L.zoneKindLabels[k]}
           </button>
         ))}
         <button
@@ -635,19 +635,19 @@ function StructureTab({
           onClick={() => setZones([...zones, makeDefaultRepeatZone()])}
           className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
         >
-          + Bloc Répéter
+          {L.sessionStructureAddRepeat}
         </button>
         <button
           type="button"
           onClick={() => addZone('cooldown')}
           className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
         >
-          + {ZONE_KIND_LABEL.cooldown}
+          + {L.zoneKindLabels.cooldown}
         </button>
       </div>
 
       {/* Aperçu barre composite */}
-      {zones.length > 0 && <ZonePreviewBar zones={flattenZonesForPreview(zones)} />}
+      {zones.length > 0 && <ZonePreviewBar zones={flattenZonesForPreview(zones)} L={L} />}
 
       {/* Liste sortable */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -671,12 +671,13 @@ function StructureTab({
                   onDelete={() => removeZone(z.id)}
                   sessionType={draft.type}
                   intensityModeDisabled={intensityModeDisabled}
+                  L={L}
                 />
               ),
             )}
             {zones.length === 0 && (
               <div className="text-center text-trail-muted text-[12px] py-4">
-                Ajoute des zones pour structurer la séance.
+                {L.sessionStructureEmpty}
               </div>
             )}
           </div>
@@ -687,13 +688,14 @@ function StructureTab({
 }
 
 function SortableZoneRow({
-  zone, onChange, onDelete, sessionType, intensityModeDisabled = false,
+  zone, onChange, onDelete, sessionType, intensityModeDisabled = false, L,
 }: {
   zone: TrainingZone
   onChange: (patch: Partial<TrainingZone>) => void
   onDelete: () => void
   sessionType: SessionType
   intensityModeDisabled?: boolean
+  L: Dict['plan']
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: zone.id })
   const color = INTENSITY_LEVEL_COLORS[zone.intensity]
@@ -713,7 +715,7 @@ function SortableZoneRow({
           type="button"
           {...attributes}
           {...listeners}
-          aria-label={`Réordonner la zone ${ZONE_KIND_LABEL[zone.kind]}`}
+          aria-label={L.sessionStructureReorderAria(L.zoneKindLabels[zone.kind])}
           className="cursor-grab active:cursor-grabbing select-none px-1 py-2 flex-shrink-0"
           style={{ touchAction: 'none' }}
         >
@@ -728,15 +730,15 @@ function SortableZoneRow({
                 style={{ backgroundColor: color }}
                 aria-hidden
               />
-              <span className="text-[11px] font-semibold text-trail-muted">{ZONE_KIND_LABEL[zone.kind]}</span>
+              <span className="text-[11px] font-semibold text-trail-muted">{L.zoneKindLabels[zone.kind]}</span>
             </div>
             <button
               type="button"
               onClick={onDelete}
               className="text-[11px] font-semibold text-trail-danger hover:underline"
-              aria-label="Supprimer la zone"
+              aria-label={L.sessionStructureDeleteAria}
             >
-              Suppr.
+              {L.sessionStructureDelete}
             </button>
           </div>
 
@@ -754,7 +756,7 @@ function SortableZoneRow({
                   value={Number.isFinite(zone.durationMin) ? zone.durationMin : 0}
                   onChange={e => onChange({ durationMin: Number(e.target.value) || 0 })}
                   placeholder="min"
-                  aria-label="Durée en minutes"
+                  aria-label={L.sessionDurationAria}
                   className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
                 />
               ) : (
@@ -770,7 +772,7 @@ function SortableZoneRow({
                     })
                   }
                   placeholder="400"
-                  aria-label="Distance en mètres"
+                  aria-label={L.sessionDistanceAria}
                   className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
                 />
               )}
@@ -785,11 +787,11 @@ function SortableZoneRow({
                 <select
                   value={zone.intensity}
                   onChange={e => onChange({ intensity: Number(e.target.value) as IntensityLevel })}
-                  aria-label="Niveau d'intensité"
+                  aria-label={L.sessionIntensityZoneAria}
                   className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
                 >
                   {[1, 2, 3, 4, 5].map(i => (
-                    <option key={i} value={i}>I{i} — {INTENSITY_LEVEL_LABELS[i as IntensityLevel]}</option>
+                    <option key={i} value={i}>{L.sessionIntensityOption(i, L.intensityLevels[i as IntensityLevel])}</option>
                   ))}
                 </select>
               ) : (
@@ -800,7 +802,7 @@ function SortableZoneRow({
               )}
             </div>
             {zone.kind === 'main' && (
-              <Field label="Répétitions">
+              <Field label={L.sessionStructureRepetitions}>
                 <input
                   type="number"
                   inputMode="numeric"
@@ -814,12 +816,12 @@ function SortableZoneRow({
           </div>
 
           <div className="mt-2">
-            <Field label="Label">
+            <Field label={L.sessionStructureLabel}>
               <input
                 type="text"
                 value={zone.label ?? ''}
                 onChange={e => onChange({ label: e.target.value })}
-                placeholder="Ex : 500m allure VMA"
+                placeholder={L.sessionStructureLabelPh}
                 className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
               />
             </Field>
@@ -830,7 +832,7 @@ function SortableZoneRow({
   )
 }
 
-function ZonePreviewBar({ zones }: { zones: TrainingZone[] }) {
+function ZonePreviewBar({ zones, L }: { zones: TrainingZone[]; L: Dict['plan'] }) {
   const totalSec = zones.reduce(
     (acc, z) => acc + (z.durationMin || 0) * (z.repeats ?? 1),
     0,
@@ -840,7 +842,7 @@ function ZonePreviewBar({ zones }: { zones: TrainingZone[] }) {
   return (
     <div className="rounded-[8px] bg-trail-surface border border-trail-border p-2">
       <div className="text-[10px] font-semibold text-trail-muted mb-1 uppercase tracking-wider">
-        Aperçu intensité
+        {L.sessionPreviewLabel}
       </div>
       <svg width="100%" height="30" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden>
         {(() => {
@@ -868,18 +870,19 @@ function ZonePreviewBar({ zones }: { zones: TrainingZone[] }) {
 }
 
 function NotesTab({
-  draft, setDraft,
+  draft, setDraft, L,
 }: {
   draft: PlannedSession
   setDraft: React.Dispatch<React.SetStateAction<PlannedSession>>
+  L: Dict['plan']
 }) {
   return (
-    <Field label="Notes">
+    <Field label={L.sessionNotesLabel}>
       <textarea
         rows={8}
         value={draft.notes ?? ''}
         onChange={e => setDraft({ ...draft, notes: e.target.value })}
-        placeholder="Consignes, stratégie, ressentis…"
+        placeholder={L.sessionNotesPh}
         className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary resize-none"
       />
     </Field>
@@ -904,7 +907,7 @@ function Field({
   )
 }
 
-function TypeBadge({ type, types }: { type: SessionType; types: ActivityType[] }) {
+function TypeBadge({ type, types, L }: { type: SessionType; types: ActivityType[]; L: Dict['plan'] }) {
   const meta = resolveSessionMeta(type, types)
   return (
     <div
@@ -920,7 +923,7 @@ function TypeBadge({ type, types }: { type: SessionType; types: ActivityType[] }
         gap: 6,
         boxSizing: 'border-box',
       }}
-      aria-label={`Type : ${meta.label}`}
+      aria-label={L.sessionTypeBadgeAria(meta.label)}
     >
       <span
         style={{

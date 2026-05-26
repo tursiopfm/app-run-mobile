@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { calculateHrZones, type HrZoneMethod, type CustomZoneInput } from '@/lib/health/hr-zones'
 import { colors } from '@/lib/design/colors'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
   method?:             HrZoneMethod
@@ -14,17 +15,9 @@ type Props = {
   customZones?:        CustomZoneInput[] | null
 }
 
-const METHOD_LABELS: Record<HrZoneMethod, string> = {
-  seuils:   'Seuils',
-  test30:   'Test 30min',
-  karvonen: 'Karvonen',
-  pct_max:  '% FC max',
-  auto:     'Estimation',
-  deduced:  'Déduites',
-  custom:   'Personnalisé',
-}
-
 export function HrZonesDisplay({ method: methodProp, maxHr, restingHr, aerobicThresholdHr, thresholdHr, birthYear: birthYearProp, customZones }: Props) {
+  const L = useT().settings
+  const METHOD_LABELS = L.hrMethodLabels
   const [methodLocal,    setMethodLocal]    = useState<HrZoneMethod>('seuils')
   const [birthYearLocal, setBirthYearLocal] = useState<number | null>(null)
 
@@ -43,7 +36,7 @@ export function HrZonesDisplay({ method: methodProp, maxHr, restingHr, aerobicTh
     return (
       <div className="rounded-[10px] px-[12px] py-[10px]" style={{ backgroundColor: colors.surface }}>
         <p className="text-[12px] text-trail-muted">
-          Données manquantes :{' '}
+          {L.hrZonesMissing}{' '}
           <span className="font-semibold text-trail-text">{result.missing.join(', ')}</span>
         </p>
       </div>
@@ -55,18 +48,18 @@ export function HrZonesDisplay({ method: methodProp, maxHr, restingHr, aerobicTh
       {/* Summary badges */}
       <div className="flex gap-[6px]">
         <div className="flex-1 rounded-[8px] px-[8px] py-[6px] text-center" style={{ backgroundColor: colors.surface }}>
-          <p className="text-[9px] text-trail-muted mb-[2px]">Méthode</p>
+          <p className="text-[9px] text-trail-muted mb-[2px]">{L.hrZonesMethodLabel}</p>
           <p className="text-[11px] font-bold" style={{ color: colors.chargeOrange }}>{METHOD_LABELS[method]}</p>
         </div>
         {result.confidence && (
           <div className="flex-1 rounded-[8px] px-[8px] py-[6px] text-center" style={{ backgroundColor: colors.surface }}>
-            <p className="text-[9px] text-trail-muted mb-[2px]">Fiabilité</p>
+            <p className="text-[9px] text-trail-muted mb-[2px]">{L.hrZonesConfidenceLabel}</p>
             <p className="text-[11px] font-bold" style={{ color: '#4caf50' }}>{result.confidence}</p>
           </div>
         )}
         {result.maxHrUsed && (
           <div className="flex-1 rounded-[8px] px-[8px] py-[6px] text-center" style={{ backgroundColor: colors.surface }}>
-            <p className="text-[9px] text-trail-muted mb-[2px]">FC max</p>
+            <p className="text-[9px] text-trail-muted mb-[2px]">{L.hrZonesMaxLabel}</p>
             <p className="text-[11px] font-bold text-trail-text">{result.maxHrUsed}</p>
           </div>
         )}

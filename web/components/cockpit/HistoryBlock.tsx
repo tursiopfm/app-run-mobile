@@ -8,6 +8,8 @@ import { readSportSettings } from '@/lib/design/sport-settings'
 import { SportSettingsModal } from './SportSettingsModal'
 import { SportsCarousel } from './SportsCarousel'
 import { colors } from '@/lib/design/colors'
+import { useT } from '@/lib/i18n/I18nProvider'
+import type { Dict } from '@/lib/i18n/dictionaries/fr'
 
 type Settings = { visible: SportKey[]; default: SportKey }
 const DEFAULT_SETTINGS: Settings = { visible: ['run', 'ride', 'swim', 'all'], default: 'run' }
@@ -16,10 +18,6 @@ const STORAGE_KEY = 'cockpit_history_settings'
 type Period = 'week' | 'month' | 'year'
 const MONTH_LETTERS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D']
 const DAY_ABBR = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
-const MONTH_NAMES_FR = [
-  'Janvier', 'Février', 'Mars',    'Avril', 'Mai',      'Juin',
-  'Juillet', 'Août',    'Septembre','Octobre','Novembre','Décembre',
-]
 
 type Pill = { label: string; km: number; dPlus: number }
 type PeriodView = {
@@ -85,6 +83,7 @@ function addDays(d: Date, n: number): Date {
 // ── Period views ──────────────────────────────────────────────────────────
 
 function buildWeekView(
+  L: Dict['cockpit'],
   daily: Map<string, { km: number; dPlus: number }>,
   offset: number,
   now: Date,
@@ -99,13 +98,14 @@ function buildWeekView(
   })
   return {
     pills,
-    periodLabel: `Sem. ${ddmm(monday)} → ${ddmm(sunday)}`,
+    periodLabel: L.weekPeriodLabel(ddmm(monday), ddmm(sunday)),
     hasPrev:     !!oldestDate && oldestDate < localDateKey(monday),
     ...sumPills(pills),
   }
 }
 
 function buildMonthView(
+  L: Dict['cockpit'],
   daily: Map<string, { km: number; dPlus: number }>,
   offset: number,
   now: Date,
@@ -143,7 +143,7 @@ function buildMonthView(
 
   return {
     pills,
-    periodLabel: `${MONTH_NAMES_FR[monthStart.getMonth()]} ${monthStart.getFullYear()}`,
+    periodLabel: `${L.monthNames[monthStart.getMonth()]} ${monthStart.getFullYear()}`,
     hasPrev:     !!oldestDate && oldestDate < localDateKey(monthStart),
     ...sumPills(pills),
   }
@@ -180,6 +180,7 @@ function buildYearView(
 }
 
 function computeView(
+  L: Dict['cockpit'],
   period: Period,
   offset: number,
   dailyHistory: DailyHistoryEntry[],
@@ -189,8 +190,8 @@ function computeView(
   const oldest = dailyHistory[0]?.date ?? null
   const now = new Date()
   switch (period) {
-    case 'week':  return buildWeekView (map, offset, now, oldest)
-    case 'month': return buildMonthView(map, offset, now, oldest)
+    case 'week':  return buildWeekView (L, map, offset, now, oldest)
+    case 'month': return buildMonthView(L, map, offset, now, oldest)
     case 'year':  return buildYearView (map, offset, now, oldest)
   }
 }
@@ -241,8 +242,7 @@ function HistoryPill({
 // ── HistoryBlock ──────────────────────────────────────────────────────────
 
 export function HistoryBlock({ sportOverviews, onHide }: Props) {
-  // Lazy-init des settings depuis LS — 1er render avec les préférences user,
-  // pas de flash entre le sport par défaut et celui choisi.
+  const L = useT().cockpit
   const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
   const [currentIdx, setCurrentIdx] = useState(() => {
     const s = readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS)
@@ -262,11 +262,11 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
   const sportViews = useMemo<Record<string, PeriodView>>(() => {
     const out: Record<string, PeriodView> = {}
     for (const k of visibleSports) {
-      out[k] = computeView(period, offset, sportOverviews[k].dailyHistory ?? [])
+      out[k] = computeView(L, period, offset, sportOverviews[k].dailyHistory ?? [])
     }
     return out
     // visibleSports membership is captured via its join key
-  }, [visibleSports.join(','), period, offset, sportOverviews])
+  }, [visibleSports.join(','), period, offset, sportOverviews, L])
 
   if (visibleSports.length === 0) return null
   const activeSport = visibleSports[safeIdx]
@@ -286,7 +286,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-[10px]">
         <div className="flex items-center gap-1.5">
-          <span className="text-[15px] font-semibold text-trail-muted">Historique —</span>
+          <span className="text-[15px] font-semibold text-trail-muted">{L.headerHistory}</span>
           <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
         </div>
         <div className="flex items-center gap-2">
@@ -303,7 +303,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
                   border:          `1px solid ${period === p ? cfg.color : colors.border}`,
                 }}
               >
-                {p === 'week' ? 'Sem.' : p === 'month' ? 'Mois' : 'An'}
+                {L.periodShort[p]}
               </button>
             ))}
           </div>
@@ -311,7 +311,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
           <button
             onClick={() => setShowModal(true)}
             className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
-            aria-label="Paramètres historique"
+            aria-label={L.aria.historySettings}
           >
             ⋮
           </button>
@@ -323,7 +323,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
         <button
           onClick={() => activeView.hasPrev && setOffset((o) => o - 1)}
           disabled={!activeView.hasPrev}
-          aria-label="Période précédente"
+          aria-label={L.aria.historyPrev}
           className="w-8 h-8 flex items-center justify-center rounded-full text-trail-text disabled:opacity-25 disabled:cursor-not-allowed hover:bg-trail-surface transition-colors"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -336,7 +336,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
         <button
           onClick={() => offset < 0 && setOffset((o) => o + 1)}
           disabled={offset >= 0}
-          aria-label="Période suivante"
+          aria-label={L.aria.historyNext}
           className="w-8 h-8 flex items-center justify-center rounded-full text-trail-text disabled:opacity-25 disabled:cursor-not-allowed hover:bg-trail-surface transition-colors"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -374,7 +374,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
                     ))
                   ) : (
                     <div className="flex-1 text-center text-[12px] text-trail-muted py-3">
-                      Aucune donnée
+                      {L.noData}
                     </div>
                   )}
                 </div>
@@ -393,7 +393,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
                         <span style={{ fontSize: 9, fontWeight: 400, color: colors.subtleText }}> km</span>
                       )}
                     </span>
-                    <span style={{ fontSize: 9, color: colors.subtleText }}>Total</span>
+                    <span style={{ fontSize: 9, color: colors.subtleText }}>{L.totalLabel}</span>
                   </div>
                   <div className="flex flex-col items-center gap-[1px]">
                     <span style={{ fontSize: 13, fontWeight: 800, color: '#4db6f0' }}>
@@ -402,11 +402,11 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
                         <span style={{ fontSize: 9, fontWeight: 400, color: colors.subtleText }}> m</span>
                       )}
                     </span>
-                    <span style={{ fontSize: 9, color: colors.subtleText }}>D+</span>
+                    <span style={{ fontSize: 9, color: colors.subtleText }}>{L.dPlusShort}</span>
                   </div>
                   <div className="flex flex-col items-center gap-[1px]">
                     <span style={{ fontSize: 13, fontWeight: 800, color: '#4caf50' }}>{durLabel}</span>
-                    <span style={{ fontSize: 9, color: colors.subtleText }}>Durée</span>
+                    <span style={{ fontSize: 9, color: colors.subtleText }}>{L.durationShort}</span>
                   </div>
                 </div>
               </>
@@ -422,7 +422,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
             <button
               key={sportKey}
               onClick={() => setCurrentIdx(i)}
-              aria-label={`Sport ${i + 1}`}
+              aria-label={L.aria.sportN(i + 1)}
               className={`w-[6px] h-[6px] rounded-full transition-colors ${
                 i === safeIdx ? 'bg-trail-text' : 'bg-trail-border'
               }`}
@@ -433,7 +433,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
 
       {showModal && (
         <SportSettingsModal
-          title="Historique"
+          title={L.modalTitle.history}
           allKeys={ALL_SPORT_KEYS}
           visible={settings.visible}
           defaultKey={settings.default}

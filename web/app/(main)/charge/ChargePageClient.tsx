@@ -6,7 +6,7 @@ import { BlockGrid, type BlockDef } from '@/components/blocks/BlockGrid'
 import { SportSegmentedTabs } from '@/components/charge/SportSegmentedTabs'
 import type { SportKey } from '@/lib/design/sports'
 import type { ChargePageData, ChargeSportFilterKey } from '@/lib/data/charge'
-import { charge as chargeLabels } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 import { LoadStatusCard } from '@/components/charge/blocks/LoadStatusCard'
 import { AcuteChronicCard } from '@/components/charge/blocks/AcuteChronicCard'
 import { FreshnessCard } from '@/components/charge/blocks/FreshnessCard'
@@ -34,15 +34,16 @@ function isSportKey(v: string): v is SportKey {
   return v === 'all' || v === 'run' || v === 'ride' || v === 'swim'
 }
 
-// Map block kebab-case ID to camelCase key in chargeLabels.blocks
-function blockLabel(id: string): string {
-  const camel = id.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
-  // Special: 'ramp-rate' → 'rampRate' but the label key is 'rampRateBlock' to avoid collision with the flat 'rampRate' vocabulary key
-  const key = camel === 'rampRate' ? 'rampRateBlock' : camel === 'heatmap28d' ? 'heatmap' : camel
-  return (chargeLabels.blocks as Record<string, string>)[key] ?? id
-}
-
 export function ChargePageClient({ data }: Props) {
+  const chargeLabels = useT().charge
+
+  // Map block kebab-case ID to camelCase key in chargeLabels.blocks
+  function blockLabel(id: string): string {
+    const camel = id.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+    const key = camel === 'rampRate' ? 'rampRateBlock' : camel === 'heatmap28d' ? 'heatmap' : camel
+    return (chargeLabels.blocks as Record<string, string>)[key] ?? id
+  }
+
   const [sport, setSport] = useState<SportKey>('all')
 
   useEffect(() => {
@@ -147,7 +148,7 @@ export function ChargePageClient({ data }: Props) {
       <div className="px-3 py-3 max-w-lg mx-auto">
         <SportSegmentedTabs sport={sport} onChange={handleSportChange} />
         <div className="rounded-[12px] bg-trail-card border border-trail-border p-4 text-center text-trail-muted text-[13px]">
-          {chargeLabels.noActivitiesForSport(sport === 'all' ? 'toute activité' : sport)}
+          {chargeLabels.noActivitiesForSport(sport === 'all' ? chargeLabels.allSport : sport)}
         </div>
       </div>
     )

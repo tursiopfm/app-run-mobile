@@ -1,7 +1,9 @@
+'use client'
+
 // Badge "État de forme" — seuils et libellés alignés sur l'onglet Charge
 // (kpiStatusFreshness + L.kpiStatus.freshness, source unique de vérité).
 
-import { charge as L } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 import { kpiStatusFreshness } from '@/lib/analytics/charge-kpi-status'
 
 type TsbBadgeProps = {
@@ -10,6 +12,7 @@ type TsbBadgeProps = {
 }
 
 export function TsbBadge({ tsb, onClick }: TsbBadgeProps) {
+  const L = useT().charge
   const { id, color } = kpiStatusFreshness(Math.round(tsb))
   const label = L.kpiStatus.freshness[id]
   const className =

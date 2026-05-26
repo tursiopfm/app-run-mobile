@@ -3,10 +3,12 @@
 import { useState, useRef, useEffect } from 'react'
 import type { StravaLap } from '@/lib/activities/detail'
 import { lapPaceSec, detectFastLaps, fmtPaceSec, fmtLapDist } from '@/lib/activities/detail'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 const GRID_COLS = '28px 1fr 52px 68px 36px'
 
 export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
+  const L = useT().activities
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -164,12 +166,12 @@ export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
           }}
         >
           {copyState === 'error'
-            ? 'Impossible de copier'
+            ? L.copyFailed
             : copyState === 'copied'
-            ? 'Copié !'
+            ? L.importCopied
             : hasFastLaps
-            ? `Copier les temps rapides (${fastSplits.size})`
-            : 'Aucun bloc rapide détecté'}
+            ? L.copyFastTimes(fastSplits.size)
+            : L.importNoBlock}
         </button>
       </div>
     </div>

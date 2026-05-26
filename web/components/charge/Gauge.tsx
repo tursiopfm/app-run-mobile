@@ -1,5 +1,7 @@
 'use client'
 
+import { useT } from '@/lib/i18n/I18nProvider'
+
 type Zone = { from: number; to: number; color: string; label?: string }
 
 type Props = {
@@ -13,6 +15,7 @@ type Props = {
 }
 
 export function Gauge({ value, previousValue, previousLabel, min, max, zones, height = 14 }: Props) {
+  const aria = useT().charge.helpSheet
   const clamped = Math.max(min, Math.min(max, value))
   const pct = ((clamped - min) / (max - min)) * 100
   const prevPct = previousValue !== undefined
@@ -50,7 +53,7 @@ export function Gauge({ value, previousValue, previousLabel, min, max, zones, he
             backgroundColor: 'rgba(255,255,255,0.55)',
             boxShadow: '0 0 0 1px rgba(0,0,0,0.45)',
           }}
-          aria-label={previousLabel ?? `Valeur précédente ${previousValue}`}
+          aria-label={previousLabel ?? aria.previousValueAria(previousValue ?? 0)}
         />
       )}
 
@@ -62,7 +65,7 @@ export function Gauge({ value, previousValue, previousLabel, min, max, zones, he
           bottom: 0,
           boxShadow: '0 0 0 1.5px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.45)',
         }}
-        aria-label={`Valeur ${value}`}
+        aria-label={aria.currentValueAria(value)}
       />
     </div>
   )

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useBlockContext } from '@/components/blocks/BlockGrid'
 import { BlockHelpSheet } from './BlockHelpSheet'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
   title:     string
@@ -14,6 +15,7 @@ type Props = {
 }
 
 export function BlockCard({ title, helpTitle, helpBody, children, rightSlot, titleClassName }: Props) {
+  const C = useT().common
   const { hideSelf } = useBlockContext()
   const [showHelp, setShowHelp] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
@@ -41,13 +43,13 @@ export function BlockCard({ title, helpTitle, helpBody, children, rightSlot, tit
         <div className="flex items-center gap-1">
           {rightSlot}
           <button
-            aria-label="Aide sur ce bloc"
+            aria-label={C.blockHelpAria}
             onClick={() => setShowHelp(true)}
             className="text-trail-muted hover:text-trail-text w-7 h-7 flex items-center justify-center text-[14px]"
           >ⓘ</button>
           <div className="relative" ref={menuRef}>
             <button
-              aria-label="Menu du bloc"
+              aria-label={C.blockMenuAria}
               onClick={() => setShowMenu(s => !s)}
               className="text-trail-muted hover:text-trail-text w-7 h-7 flex items-center justify-center text-[18px] leading-none"
             >⋮</button>
@@ -56,7 +58,7 @@ export function BlockCard({ title, helpTitle, helpBody, children, rightSlot, tit
                 <button
                   onClick={() => { setShowMenu(false); hideSelf() }}
                   className="w-full px-3 py-2 text-left text-[12px] text-trail-text hover:bg-trail-card"
-                >Masquer</button>
+                >{C.blockHide}</button>
               </div>
             )}
           </div>

@@ -34,7 +34,6 @@ import {
 } from '@/lib/plan/storage'
 import {
   INTENSITY_LEVEL_COLORS,
-  INTENSITY_LEVEL_LABELS,
 } from '@/lib/activities/indicators'
 import { DurationDistanceToggle } from '@/components/plan/DurationDistanceToggle'
 import { IntensityPaceToggle } from '@/components/plan/IntensityPaceToggle'
@@ -42,6 +41,8 @@ import { PaceField } from '@/components/plan/PaceField'
 import { getDefaultIntensityMode } from '@/lib/plan/type-helpers'
 import { DurationField } from '@/components/plan/DurationField'
 import { useActivityTypes } from '@/lib/plan/use-activity-types'
+import { useT } from '@/lib/i18n/I18nProvider'
+import type { Dict } from '@/lib/i18n/dictionaries/fr'
 import { resolveSessionMeta } from '@/lib/plan/session-meta'
 import type { ActivityType } from '@/types/activity-types'
 
@@ -54,18 +55,13 @@ type Props = {
   onSaved: () => void
 }
 
-const ZONE_PRESETS: Record<ZoneKind, Omit<TrainingZone, 'id'>> = {
-  warmup:   { kind: 'warmup',   durationMin: 15, intensity: 2, label: 'Échauffement' },
-  main:     { kind: 'main',     durationMin: 30, intensity: 4, label: 'Bloc principal' },
-  rest:     { kind: 'rest',     durationMin: 5,  intensity: 1, label: 'Récup' },
-  cooldown: { kind: 'cooldown', durationMin: 10, intensity: 1, label: 'Retour calme' },
-}
-
-const ZONE_KIND_LABEL: Record<ZoneKind, string> = {
-  warmup:   'Échauffement',
-  main:     'Bloc principal',
-  rest:     'Récup',
-  cooldown: 'Retour calme',
+function buildZonePresets(L: Dict['plan']): Record<ZoneKind, Omit<TrainingZone, 'id'>> {
+  return {
+    warmup:   { kind: 'warmup',   durationMin: 15, intensity: 2, label: L.zonePresetLabels.warmup },
+    main:     { kind: 'main',     durationMin: 30, intensity: 4, label: L.zonePresetLabels.main },
+    rest:     { kind: 'rest',     durationMin: 5,  intensity: 1, label: L.zonePresetLabels.rest },
+    cooldown: { kind: 'cooldown', durationMin: 10, intensity: 1, label: L.zonePresetLabels.cooldown },
+  }
 }
 
 function makeId(): string {
@@ -91,6 +87,7 @@ function emptyDraft(): SessionTemplate {
 }
 
 export function TemplateEditorModal({ template, open, onClose, onSaved }: Props) {
+  const L = useT().plan
   // isEdit = vrai uniquement pour un template custom existant (id non vide).
   // Un fork d'un template système arrive avec id='' → considéré comme création.
   const isEdit = template !== null && (template.id ?? '') !== ''
@@ -159,7 +156,7 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
       const copy: SessionTemplate = {
         ...draft,
         id: makeId(),
-        title: (draft.title.trim() || 'Template') + ' (copie)',
+        title: (draft.title.trim() || L.templateFallbackName) + L.templateDuplicateSuffix,
       }
       await saveCustomTemplate(copy)
       onSaved()
@@ -191,7 +188,7 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label={isEdit ? 'Éditer le template' : 'Créer un template'}
+      aria-label={isEdit ? L.templateAriaEdit : L.templateAriaCreate}
     >
       <div
         className="bg-trail-card border border-trail-border rounded-t-[20px] md:rounded-[16px] w-full max-w-2xl max-h-[92vh] overflow-y-auto p-5 pb-8"
@@ -200,17 +197,17 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
         <div className="w-10 h-1 rounded-full bg-trail-border mx-auto mb-4 md:hidden" />
 
         <h2 className="text-[16px] font-semibold text-trail-text mb-3">
-          {isEdit ? 'Modifier le template' : 'Nouveau template'}
+          {isEdit ? L.templateEditTitle : L.templateCreateTitle}
         </h2>
 
         <div
           className="flex items-stretch rounded-[10px] bg-trail-surface border border-trail-border overflow-hidden mb-4"
           role="tablist"
-          aria-label="Sections du template"
+          aria-label={L.templateTabsAria}
         >
-          <TabButton active={tab === 'general'}   onClick={() => setTab('general')}   label="Général" />
-          <TabButton active={tab === 'structure'} onClick={() => setTab('structure')} label="Structure" />
-          <TabButton active={tab === 'notes'}     onClick={() => setTab('notes')}     label="Description" />
+          <TabButton active={tab === 'general'}   onClick={() => setTab('general')}   label={L.templateTabGeneral} />
+          <TabButton active={tab === 'structure'} onClick={() => setTab('structure')} label={L.templateTabStructure} />
+          <TabButton active={tab === 'notes'}     onClick={() => setTab('notes')}     label={L.templateTabNotes} />
         </div>
 
         {tab === 'general' && (
@@ -223,10 +220,11 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
             onRemoveTag={removeTag}
             visibleTypes={visibleTypes}
             types={types}
+            L={L}
           />
         )}
-        {tab === 'structure' && <StructureTab draft={draft} setDraft={setDraft} intensityModeDisabled={intensityModeDisabled} />}
-        {tab === 'notes' && <NotesTab draft={draft} setDraft={setDraft} />}
+        {tab === 'structure' && <StructureTab draft={draft} setDraft={setDraft} intensityModeDisabled={intensityModeDisabled} L={L} />}
+        {tab === 'notes' && <NotesTab draft={draft} setDraft={setDraft} L={L} />}
 
         <div className="flex items-center justify-between gap-2 mt-6 flex-wrap">
           <div className="flex items-center gap-2">
@@ -237,7 +235,7 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
                 disabled={saving}
                 className="px-3 py-2 text-[13px] font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
               >
-                Dupliquer
+                {L.templateDuplicate}
               </button>
             )}
             {isEdit && (
@@ -247,7 +245,7 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
                 disabled={saving}
                 className="px-3 py-2 text-[13px] font-semibold text-trail-danger hover:underline disabled:opacity-50"
               >
-                Supprimer
+                {L.templateDelete}
               </button>
             )}
           </div>
@@ -258,7 +256,7 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
               disabled={saving}
               className="px-4 py-2 rounded-[10px] text-[14px] font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
             >
-              Annuler
+              {L.templateCancel}
             </button>
             <button
               type="button"
@@ -266,7 +264,7 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
               disabled={!canSave}
               className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-[14px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Enregistrer
+              {L.templateSave}
             </button>
           </div>
         </div>
@@ -302,7 +300,7 @@ function TabButton({
 }
 
 function GeneralTab({
-  draft, setDraft, tagInput, setTagInput, onAddTag, onRemoveTag, visibleTypes, types,
+  draft, setDraft, tagInput, setTagInput, onAddTag, onRemoveTag, visibleTypes, types, L,
 }: {
   draft: SessionTemplate
   setDraft: React.Dispatch<React.SetStateAction<SessionTemplate>>
@@ -312,21 +310,22 @@ function GeneralTab({
   onRemoveTag: (t: string) => void
   visibleTypes: ActivityType[]
   types: ActivityType[]
+  L: Dict['plan']
 }) {
   const intensityColor = INTENSITY_LEVEL_COLORS[draft.defaultIntensity]
   return (
     <div className="space-y-3">
-      <Field label="Titre" required>
+      <Field label={L.templateTitleLabel} required>
         <input
           type="text"
           value={draft.title}
           onChange={e => setDraft({ ...draft, title: e.target.value })}
-          placeholder="Ex : 10×400m VMA"
+          placeholder={L.templateTitlePh}
           className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
         />
       </Field>
 
-      <Field label="Type">
+      <Field label={L.templateTypeLabel}>
         <div className="flex items-center gap-2">
           <select
             value={draft.type}
@@ -350,9 +349,8 @@ function GeneralTab({
             {(['run', 'bike', 'swim', 'other'] as const).map(cat => {
               const optionsInCat = visibleTypes.filter(t => (t.category ?? 'other') === cat)
               if (optionsInCat.length === 0) return null
-              const labels = { run: 'Course à pied', bike: 'Vélo', swim: 'Natation', other: 'Autre' } as const
               return (
-                <optgroup key={cat} label={labels[cat]}>
+                <optgroup key={cat} label={L.templateCatLabels[cat]}>
                   {optionsInCat.map(t => (
                     <option key={t.slug} value={t.slug}>{t.label}</option>
                   ))}
@@ -360,18 +358,18 @@ function GeneralTab({
               )
             })}
           </select>
-          <TypeBadge type={draft.type} types={types} />
+          <TypeBadge type={draft.type} types={types} L={L} />
         </div>
       </Field>
 
       <div className="grid grid-cols-3 gap-2">
-        <Field label="Durée">
+        <Field label={L.templateFieldDuration}>
           <DurationField
             value={draft.defaultDuration}
             onChange={(d) => setDraft({ ...draft, defaultDuration: d })}
           />
         </Field>
-        <Field label="Distance (km)">
+        <Field label={L.templateFieldDistance}>
           <input
             type="number"
             inputMode="decimal"
@@ -382,7 +380,7 @@ function GeneralTab({
             className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
           />
         </Field>
-        <Field label="D+ (m)">
+        <Field label={L.templateFieldElevation}>
           <input
             type="number"
             inputMode="numeric"
@@ -394,7 +392,7 @@ function GeneralTab({
         </Field>
       </div>
 
-      <Field label={`Intensité — ${INTENSITY_LEVEL_LABELS[draft.defaultIntensity]}`}>
+      <Field label={L.templateIntensityLabel(L.intensityLevels[draft.defaultIntensity])}>
         <input
           type="range"
           min={1}
@@ -404,11 +402,11 @@ function GeneralTab({
           onChange={e => setDraft({ ...draft, defaultIntensity: Number(e.target.value) as IntensityLevel })}
           className="w-full"
           style={{ accentColor: intensityColor }}
-          aria-label={`Intensité ${draft.defaultIntensity} sur 5 (${INTENSITY_LEVEL_LABELS[draft.defaultIntensity]})`}
+          aria-label={L.templateIntensityAria(draft.defaultIntensity, L.intensityLevels[draft.defaultIntensity])}
         />
       </Field>
 
-      <Field label="Tags">
+      <Field label={L.templateTagsLabel}>
         <div className="space-y-2">
           <div className="flex flex-wrap gap-1">
             {(draft.tags ?? []).map(t => (
@@ -421,7 +419,7 @@ function GeneralTab({
                   type="button"
                   onClick={() => onRemoveTag(t)}
                   className="text-trail-muted hover:text-trail-danger text-[12px] leading-none"
-                  aria-label={`Retirer le tag ${t}`}
+                  aria-label={L.templateTagRemoveAria(t)}
                 >
                   ×
                 </button>
@@ -439,7 +437,7 @@ function GeneralTab({
                   onAddTag()
                 }
               }}
-              placeholder="Ex : VMA, piste"
+              placeholder={L.templateTagsPh}
               className="flex-1 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
             />
             <button
@@ -447,7 +445,7 @@ function GeneralTab({
               onClick={onAddTag}
               className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
             >
-              Ajouter
+              {L.templateTagAdd}
             </button>
           </div>
         </div>
@@ -519,13 +517,15 @@ function flattenZonesForPreview(zones: SessionZone[]): TrainingZone[] {
 }
 
 function StructureTab({
-  draft, setDraft, intensityModeDisabled = false,
+  draft, setDraft, intensityModeDisabled = false, L,
 }: {
   draft: SessionTemplate
   setDraft: React.Dispatch<React.SetStateAction<SessionTemplate>>
   intensityModeDisabled?: boolean
+  L: Dict['plan']
 }) {
   const zones = draft.defaultZones ?? []
+  const ZONE_PRESETS = buildZonePresets(L)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   )
@@ -566,7 +566,7 @@ function StructureTab({
             onClick={() => addZone(k)}
             className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
           >
-            + {ZONE_KIND_LABEL[k]}
+            + {L.zoneKindLabels[k]}
           </button>
         ))}
         <button
@@ -574,14 +574,14 @@ function StructureTab({
           onClick={() => setZones([...zones, makeDefaultRepeatZone()])}
           className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
         >
-          + Bloc Répéter
+          {L.templateZoneAddRepeat}
         </button>
         <button
           type="button"
           onClick={() => addZone('cooldown')}
           className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
         >
-          + {ZONE_KIND_LABEL.cooldown}
+          + {L.zoneKindLabels.cooldown}
         </button>
       </div>
 
@@ -608,12 +608,13 @@ function StructureTab({
                   onDelete={() => removeZone(z.id)}
                   sessionType={draft.type}
                   intensityModeDisabled={intensityModeDisabled}
+                  L={L}
                 />
               ),
             )}
             {zones.length === 0 && (
               <div className="text-center text-trail-muted text-[12px] py-4">
-                Ajoute des zones pour structurer le template.
+                {L.templateStructureEmpty}
               </div>
             )}
           </div>
@@ -624,13 +625,14 @@ function StructureTab({
 }
 
 function SortableZoneRow({
-  zone, onChange, onDelete, sessionType, intensityModeDisabled = false,
+  zone, onChange, onDelete, sessionType, intensityModeDisabled = false, L,
 }: {
   zone: TrainingZone
   onChange: (patch: Partial<TrainingZone>) => void
   onDelete: () => void
   sessionType: SessionType
   intensityModeDisabled?: boolean
+  L: Dict['plan']
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: zone.id })
   const color = INTENSITY_LEVEL_COLORS[zone.intensity]
@@ -650,7 +652,7 @@ function SortableZoneRow({
           type="button"
           {...attributes}
           {...listeners}
-          aria-label={`Réordonner la zone ${ZONE_KIND_LABEL[zone.kind]}`}
+          aria-label={L.templateZoneReorderAria(L.zoneKindLabels[zone.kind])}
           className="cursor-grab active:cursor-grabbing select-none px-1 py-2 flex-shrink-0"
           style={{ touchAction: 'none' }}
         >
@@ -665,15 +667,15 @@ function SortableZoneRow({
                 style={{ backgroundColor: color }}
                 aria-hidden
               />
-              <span className="text-[11px] font-semibold text-trail-muted">{ZONE_KIND_LABEL[zone.kind]}</span>
+              <span className="text-[11px] font-semibold text-trail-muted">{L.zoneKindLabels[zone.kind]}</span>
             </div>
             <button
               type="button"
               onClick={onDelete}
               className="text-[11px] font-semibold text-trail-danger hover:underline"
-              aria-label="Supprimer la zone"
+              aria-label={L.templateZoneDeleteAria}
             >
-              Suppr.
+              {L.templateZoneDelete}
             </button>
           </div>
 
@@ -691,7 +693,7 @@ function SortableZoneRow({
                   value={Number.isFinite(zone.durationMin) ? zone.durationMin : 0}
                   onChange={e => onChange({ durationMin: Number(e.target.value) || 0 })}
                   placeholder="min"
-                  aria-label="Durée en minutes"
+                  aria-label={L.templateZoneDurationAria}
                   className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
                 />
               ) : (
@@ -707,7 +709,7 @@ function SortableZoneRow({
                     })
                   }
                   placeholder="400"
-                  aria-label="Distance en mètres"
+                  aria-label={L.templateZoneDistanceAria}
                   className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
                 />
               )}
@@ -722,11 +724,11 @@ function SortableZoneRow({
                 <select
                   value={zone.intensity}
                   onChange={e => onChange({ intensity: Number(e.target.value) as IntensityLevel })}
-                  aria-label="Niveau d'intensité"
+                  aria-label={L.templateZoneIntensityAria}
                   className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
                 >
                   {[1, 2, 3, 4, 5].map(i => (
-                    <option key={i} value={i}>I{i} — {INTENSITY_LEVEL_LABELS[i as IntensityLevel]}</option>
+                    <option key={i} value={i}>{L.templateZoneIntensityOption(i, L.intensityLevels[i as IntensityLevel])}</option>
                   ))}
                 </select>
               ) : (
@@ -737,7 +739,7 @@ function SortableZoneRow({
               )}
             </div>
             {zone.kind === 'main' && (
-              <Field label="Répétitions">
+              <Field label={L.templateRepetitions}>
                 <input
                   type="number"
                   inputMode="numeric"
@@ -751,12 +753,12 @@ function SortableZoneRow({
           </div>
 
           <div className="mt-2">
-            <Field label="Label">
+            <Field label={L.templateLabelField}>
               <input
                 type="text"
                 value={zone.label ?? ''}
                 onChange={e => onChange({ label: e.target.value })}
-                placeholder="Ex : 500m allure VMA"
+                placeholder={L.templateLabelFieldPh}
                 className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
               />
             </Field>
@@ -768,6 +770,7 @@ function SortableZoneRow({
 }
 
 function ZonePreviewBar({ zones }: { zones: TrainingZone[] }) {
+  const L = useT().plan
   const totalSec = zones.reduce(
     (acc, z) => acc + (z.durationMin || 0) * (z.repeats ?? 1),
     0,
@@ -777,7 +780,7 @@ function ZonePreviewBar({ zones }: { zones: TrainingZone[] }) {
   return (
     <div className="rounded-[8px] bg-trail-surface border border-trail-border p-2">
       <div className="text-[10px] font-semibold text-trail-muted mb-1 uppercase tracking-wider">
-        Aperçu intensité
+        {L.templateZonePreview}
       </div>
       <svg width="100%" height="30" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden>
         {(() => {
@@ -805,18 +808,19 @@ function ZonePreviewBar({ zones }: { zones: TrainingZone[] }) {
 }
 
 function NotesTab({
-  draft, setDraft,
+  draft, setDraft, L,
 }: {
   draft: SessionTemplate
   setDraft: React.Dispatch<React.SetStateAction<SessionTemplate>>
+  L: Dict['plan']
 }) {
   return (
-    <Field label="Description">
+    <Field label={L.templateNotesLabel}>
       <textarea
         rows={8}
         value={draft.description ?? ''}
         onChange={e => setDraft({ ...draft, description: e.target.value })}
-        placeholder="Description générique du template (consignes, intentions). Non transmise aux séances créées depuis ce template — utilise les Notes de la séance pour les consignes spécifiques."
+        placeholder={L.templateNotesPh}
         className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary resize-none"
       />
     </Field>
@@ -841,7 +845,7 @@ function Field({
   )
 }
 
-function TypeBadge({ type, types }: { type: SessionType; types: ActivityType[] }) {
+function TypeBadge({ type, types, L }: { type: SessionType; types: ActivityType[]; L: Dict['plan'] }) {
   const meta = resolveSessionMeta(type, types)
   return (
     <div
@@ -857,7 +861,7 @@ function TypeBadge({ type, types }: { type: SessionType; types: ActivityType[] }
         gap: 6,
         boxSizing: 'border-box',
       }}
-      aria-label={`Type : ${meta.label}`}
+      aria-label={L.templateTypeBadgeAria(meta.label)}
     >
       <span
         style={{

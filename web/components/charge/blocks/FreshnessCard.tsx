@@ -6,20 +6,14 @@ import { Gauge } from '../Gauge'
 import { computeFreshness } from '@/lib/analytics/charge-insights'
 import { FRESHNESS } from '@/lib/analytics/charge-thresholds'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
-import { charge as L } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 import { colors } from '@/lib/design/colors'
 
-const ZONE_INTERPRET: Record<string, string> = {
-  'very-fresh':     "Tu es très frais. Attention au sous-entraînement si cette situation dure trop longtemps.",
-  fresh:            "Tu es bien reposé.",
-  balanced:         "Charge et forme équilibrées.",
-  'normal-fatigue': "Fatigue normale d'entraînement. Cohérent en phase de charge.",
-  'high-fatigue':   "Fatigue élevée. Pense à insérer une journée de récupération.",
-}
-
 export function FreshnessCard({ payload }: { payload: ChargeSportPayload }) {
+  const L = useT().charge
   const f = computeFreshness(payload.dailyMetrics)
   const zoneLabel = L.freshnessZone[f.zone]
+  const zoneInterpret: Record<string, string> = L.freshnessInterpret
 
   const min = -50, max = 30
   const zones = [
@@ -35,9 +29,9 @@ export function FreshnessCard({ payload }: { payload: ChargeSportPayload }) {
   const isDown      = delta < -1
   const TrendIcon   = isUp ? TrendingUp : isDown ? TrendingDown : Minus
   const trendColor  = isUp ? colors.greenOk : isDown ? colors.runRed : colors.subtleText
-  const qualifier   = isUp   ? "plus frais qu'il y a 7 jours"
-                    : isDown ? "plus fatigué qu'il y a 7 jours"
-                    :          'stable depuis 7 jours'
+  const qualifier   = isUp   ? L.freshnessDeltaFresher
+                    : isDown ? L.freshnessDeltaTired
+                    :          L.freshnessDeltaStable
   const previousTsb = f.tsb - f.deltaVsWeekAgo
 
   return (
@@ -59,12 +53,12 @@ export function FreshnessCard({ payload }: { payload: ChargeSportPayload }) {
       <Gauge
         value={f.tsb}
         previousValue={previousTsb}
-        previousLabel={`Il y a 7 jours : ${Math.round(previousTsb)}`}
+        previousLabel={L.freshnessSevenDaysAgo(Math.round(previousTsb))}
         min={min}
         max={max}
         zones={zones}
       />
-      <p className="mt-3 text-[11px] text-trail-muted leading-[16px]">{ZONE_INTERPRET[f.zone]}</p>
+      <p className="mt-3 text-[11px] text-trail-muted leading-[16px]">{zoneInterpret[f.zone]}</p>
     </BlockCard>
   )
 }

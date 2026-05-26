@@ -3,6 +3,8 @@ import './globals.css'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { InstallPrompt } from '@/components/ui/InstallPrompt'
 import { ServiceWorkerRegistrar } from '@/components/ui/ServiceWorkerRegistrar'
+import { I18nProvider } from '@/lib/i18n/I18nProvider'
+import { getServerLang } from '@/lib/i18n/server'
 
 export const metadata: Metadata = {
   title: 'Trail Cockpit',
@@ -33,17 +35,20 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const lang = getServerLang()
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="bg-trail-bg text-trail-text min-h-screen">
-        <ThemeProvider>
-          {children}
-          <ServiceWorkerRegistrar />
-          <InstallPrompt />
-        </ThemeProvider>
+        <I18nProvider initialLang={lang}>
+          <ThemeProvider>
+            {children}
+            <ServiceWorkerRegistrar />
+            <InstallPrompt />
+          </ThemeProvider>
+        </I18nProvider>
       </body>
     </html>
   )

@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { SPORT_CONFIG, type SportKey } from '@/lib/design/sports'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
   title:      string
@@ -16,6 +17,7 @@ type Props = {
 }
 
 export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave, onClose, onHide }: Props) {
+  const L = useT().cockpit.modal
   const [localVisible, setLocalVisible] = useState<SportKey[]>(visible)
   const [localDefault, setLocalDefault] = useState<SportKey>(defaultKey)
 
@@ -41,7 +43,7 @@ export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave
       >
         <h2 className="text-[16px] font-semibold text-trail-text mb-4">{title}</h2>
 
-        <p className="text-[12px] font-semibold text-trail-muted mb-2">Activités à afficher</p>
+        <p className="text-[12px] font-semibold text-trail-muted mb-2">{L.activitiesToShow}</p>
         <div className="space-y-2 mb-1">
           {allKeys.map((key) => {
             const cfg = SPORT_CONFIG[key]
@@ -59,10 +61,10 @@ export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave
             )
           })}
         </div>
-        <p className="text-[11px] text-trail-muted mb-4">Tout décocher masque ce bloc dans le Cockpit</p>
+        <p className="text-[11px] text-trail-muted mb-4">{L.uncheckAllHidesBlock}</p>
 
-        <p className="text-[12px] font-semibold text-trail-muted mb-1">Activité par défaut</p>
-        <p className="text-[11px] text-trail-muted mb-2">Affichée en premier dans le Cockpit</p>
+        <p className="text-[12px] font-semibold text-trail-muted mb-1">{L.defaultActivity}</p>
+        <p className="text-[11px] text-trail-muted mb-2">{L.shownFirst}</p>
         <div className="space-y-2 mb-5">
           {allKeys.map((key) => {
             const cfg = SPORT_CONFIG[key]
@@ -93,14 +95,14 @@ export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave
             onClick={() => { onHide?.(); onClose() }}
             className="w-full py-2 rounded-[10px] bg-red-600 text-white font-semibold text-[14px]"
           >
-            Masquer le bloc
+            {L.hideBlock}
           </button>
         ) : (
           <button
             onClick={() => onSave(localVisible, localDefault)}
             className="w-full py-2 rounded-[10px] bg-trail-primary text-white font-semibold text-[14px]"
           >
-            Fermer
+            {L.close}
           </button>
         )}
       </div>

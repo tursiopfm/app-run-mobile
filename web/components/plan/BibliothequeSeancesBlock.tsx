@@ -23,6 +23,8 @@ import { ActivityTypesPrefsModal } from './ActivityTypesPrefsModal'
 import { useActivityTypes } from '@/lib/plan/use-activity-types'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { useT } from '@/lib/i18n/I18nProvider'
+import type { Dict } from '@/lib/i18n/dictionaries/fr'
 
 // Nombre de templates affichés par défaut avant le bouton « Voir plus ».
 // Volontairement bas (2) pour éviter que le bloc Bibliothèque domine la page
@@ -30,6 +32,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 const COLLAPSED_TEMPLATES_COUNT = 2
 
 export function BibliothequeSeancesBlock() {
+  const L = useT().plan
   const [custom, setCustom] = useState<SessionTemplate[]>([])
   const [hiddenSystemIds, setHiddenSystemIds] = useState<string[]>([])
   const [search, setSearch] = useState('')
@@ -110,11 +113,9 @@ export function BibliothequeSeancesBlock() {
   function requestDelete(template: SessionTemplate) {
     const isCustomTpl = customIds.has(template.id)
     setPendingConfirm({
-      title: `Supprimer « ${template.title} » ?`,
-      message: isCustomTpl
-        ? 'Le template sera définitivement supprimé de ta bibliothèque.'
-        : 'Le template par défaut sera masqué de ta bibliothèque. Tu pourras le restaurer via l’icône ⓘ → « Réinitialiser les séances par défaut ».',
-      confirmLabel: 'Supprimer',
+      title: L.libDeleteTitle(template.title),
+      message: isCustomTpl ? L.libDeleteMsgCustom : L.libDeleteMsgSystem,
+      confirmLabel: L.libDeleteConfirm,
       destructive: true,
       onConfirm: async () => {
         if (isCustomTpl) {
@@ -130,9 +131,9 @@ export function BibliothequeSeancesBlock() {
 
   function requestResetDefaults() {
     setPendingConfirm({
-      title: 'Réinitialiser les séances par défaut ?',
-      message: 'Toutes les séances par défaut masquées seront restaurées dans ta bibliothèque. Tes séances personnalisées ne sont pas affectées.',
-      confirmLabel: 'Réinitialiser',
+      title: L.libResetDefaultsAria + ' ?',
+      message: L.libResetMsg,
+      confirmLabel: L.libResetConfirm,
       destructive: false,
       onConfirm: () => {
         unhideAllSystemTemplates()
@@ -144,29 +145,19 @@ export function BibliothequeSeancesBlock() {
 
   return (
     <BlockCard
-      title="Bibliothèque"
-      helpTitle="Bibliothèque de séances"
+      title={L.libTitle}
+      helpTitle={L.libTitle}
       helpBody={
         <>
           <p className="mb-2">
-            <strong className="text-trail-text">Ta bibliothèque personnelle</strong> de séances, organisée par type d&apos;activité.
+            <strong className="text-trail-text">{L.libHelpBodyTitle}</strong> {L.libHelpBodyIntro}
           </p>
           <ul className="space-y-1.5 list-disc list-outside pl-5">
-            <li>
-              <strong className="text-trail-text">Créer une séance</strong> — bouton «&nbsp;+ Nouveau&nbsp;» en haut → formulaire complet (type, durée, structure, notes).
-            </li>
-            <li>
-              <strong className="text-trail-text">Structure</strong> — décomposer en segments : échauffement, blocs «&nbsp;Répéter&nbsp;» avec séries/récup, retour au calme.
-            </li>
-            <li>
-              <strong className="text-trail-text">Ajouter au calendrier</strong> — appui long sur une séance puis glisser dans la semaine.
-            </li>
-            <li>
-              <strong className="text-trail-text">Personnaliser</strong> — pill «&nbsp;⚙ Personnalisé&nbsp;» en fin de barre pour cocher/décocher ou ajouter des activités (Tennis, Yoga…).
-            </li>
-            <li>
-              <strong className="text-trail-text">Supprimer une séance</strong> — croix ✕ en haut à droite de la carte (avec confirmation). Les séances par défaut sont masquées localement et peuvent être restaurées ci-dessous.
-            </li>
+            <li><strong className="text-trail-text">{L.libHelpBodyCreate}</strong> {L.libHelpBodyCreateD}</li>
+            <li><strong className="text-trail-text">{L.libHelpBodyStruct}</strong> {L.libHelpBodyStructD}</li>
+            <li><strong className="text-trail-text">{L.libHelpBodyAdd}</strong> {L.libHelpBodyAddD}</li>
+            <li><strong className="text-trail-text">{L.libHelpBodyPerso}</strong> {L.libHelpBodyPersoD}</li>
+            <li><strong className="text-trail-text">{L.libHelpBodyDelete}</strong> {L.libHelpBodyDeleteD}</li>
           </ul>
           <button
             type="button"
@@ -174,7 +165,7 @@ export function BibliothequeSeancesBlock() {
             disabled={hiddenSystemIds.length === 0}
             className="mt-4 w-full py-2 rounded-[10px] bg-trail-surface border border-trail-border text-[13px] font-semibold text-trail-text hover:border-trail-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Réinitialiser les séances par défaut
+            {L.libResetDefaults}
             {hiddenSystemIds.length > 0 && <span className="ml-1 text-trail-muted">({hiddenSystemIds.length})</span>}
           </button>
         </>
@@ -184,8 +175,8 @@ export function BibliothequeSeancesBlock() {
           type="button"
           onClick={openCreate}
           className="px-2 py-1 rounded-[8px] bg-trail-primary text-white text-[11px] font-semibold whitespace-nowrap"
-          aria-label="Créer un nouveau template de séance"
-        >+ Nouveau</button>
+          aria-label={L.libNewBtnAria}
+        >{L.libNewBtn}</button>
       }
     >
       {/* ── Filtres pills (collapsibles) ─────────────────────────────────── */}
@@ -197,6 +188,7 @@ export function BibliothequeSeancesBlock() {
         onSelectType={setSelectedType}
         onToggleExpand={() => setFiltersExpanded(e => !e)}
         onOpenPrefs={() => setPrefsModalOpen(true)}
+        L={L}
       />
 
       {/* ── Search ─────────────────────────────────────────────────────── */}
@@ -205,9 +197,9 @@ export function BibliothequeSeancesBlock() {
           type="search"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Rechercher…"
+          placeholder={L.libSearchPh}
           className="w-full px-3 py-2 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
-          aria-label="Rechercher dans la bibliothèque"
+          aria-label={L.libSearchAria}
         />
       </div>
 
@@ -224,11 +216,12 @@ export function BibliothequeSeancesBlock() {
             isCustom={customIds.has(t.id)}
             onClick={() => openEdit(t)}
             onDelete={() => requestDelete(t)}
+            L={L}
           />
         ))}
         {filtered.length === 0 && (
           <div className="col-span-full text-center text-trail-muted text-[12px] py-4">
-            Aucun template ne correspond.
+            {L.libNoMatch}
           </div>
         )}
       </div>
@@ -239,9 +232,7 @@ export function BibliothequeSeancesBlock() {
           aria-expanded={showAllTemplates}
           className="mt-2 w-full py-2 rounded-[8px] border border-trail-border bg-trail-surface text-trail-muted hover:text-trail-text hover:border-trail-primary text-[12px] font-semibold transition-colors"
         >
-          {showAllTemplates
-            ? '↑ Voir moins'
-            : `↓ Voir ${filtered.length - COLLAPSED_TEMPLATES_COUNT} template${filtered.length - COLLAPSED_TEMPLATES_COUNT > 1 ? 's' : ''} de plus`}
+          {showAllTemplates ? L.libShowLess : L.libShowMore(filtered.length - COLLAPSED_TEMPLATES_COUNT)}
         </button>
       )}
 
@@ -344,7 +335,7 @@ function FilterPill({
 // l'orientation visuelle.
 function FilterBar({
   visibleTypes, types, selectedType, filtersExpanded,
-  onSelectType, onToggleExpand, onOpenPrefs,
+  onSelectType, onToggleExpand, onOpenPrefs, L,
 }: {
   visibleTypes: { slug: string; label: string }[]
   types: ActivityType[]
@@ -353,6 +344,7 @@ function FilterBar({
   onSelectType: (slug: string | 'all') => void
   onToggleExpand: () => void
   onOpenPrefs: () => void
+  L: Dict['plan']
 }) {
   const hasActiveFilter = selectedType !== 'all'
   const activeType = hasActiveFilter ? visibleTypes.find(t => t.slug === selectedType) : null
@@ -361,7 +353,7 @@ function FilterBar({
   const peekActiveOnly = !filtersExpanded && activeType
 
   return (
-    <div role="tablist" aria-label="Filtrer par type">
+    <div role="tablist" aria-label={L.libFilterByTypeAria}>
       {/* Rangée 1 : pills clés toujours visibles + toggle + peek du filtre actif */}
       <div
         className="flex items-center gap-2 overflow-x-auto md:overflow-visible -mx-1 px-1"
@@ -370,7 +362,7 @@ function FilterBar({
         <FilterPill
           active={selectedType === 'all'}
           onClick={() => onSelectType('all')}
-          label="Tous"
+          label={L.libFilterAll}
         />
 
         {/* Peek du filtre actif quand collapsed (sinon on perd l'orientation) */}
@@ -388,9 +380,10 @@ function FilterBar({
           expanded={filtersExpanded}
           count={visibleTypes.length}
           onClick={onToggleExpand}
+          L={L}
         />
 
-        <FilterPill onClick={onOpenPrefs} label="⚙ Personnalisé" isCustom />
+        <FilterPill onClick={onOpenPrefs} label={L.libFilterCustom} isCustom />
       </div>
 
       {/* Rangée 2 : tous les types visibles, scrollable horizontalement avec
@@ -422,14 +415,14 @@ function FilterBar({
 // Toggle pill avec chevron qui pivote 180° à l'ouverture. Bordure trail-primary
 // discrète + badge count quand collapsed (typo plus petite pour discrétion).
 function ExpandToggle({
-  expanded, count, onClick,
-}: { expanded: boolean; count: number; onClick: () => void }) {
+  expanded, count, onClick, L,
+}: { expanded: boolean; count: number; onClick: () => void; L: Dict['plan'] }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-expanded={expanded}
-      aria-label={expanded ? 'Réduire les filtres' : `Voir tous les filtres (${count})`}
+      aria-label={expanded ? L.libFilterCollapseAria : L.libFilterExpandAria(count)}
       className="group flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full border border-trail-primary/40 bg-trail-primary/5 text-trail-primary text-[12px] font-semibold hover:bg-trail-primary/15 hover:border-trail-primary/70 transition-colors"
     >
       <svg
@@ -455,13 +448,14 @@ function ExpandToggle({
 }
 
 function TemplateCard({
-  template, types, isCustom, onClick, onDelete,
+  template, types, isCustom, onClick, onDelete, L,
 }: {
   template: SessionTemplate
   types: ActivityType[]
   isCustom: boolean
   onClick: () => void
   onDelete: () => void
+  L: Dict['plan']
 }) {
   const meta = resolveSessionMeta(template.type, types)
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -484,7 +478,7 @@ function TemplateCard({
       onClick={onClick}
       role="button"
       tabIndex={0}
-      aria-label={`Template ${template.title} — cliquer pour éditer, glisser vers un jour pour planifier`}
+      aria-label={L.libTemplateCardAria(template.title)}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
     >
       <button
@@ -494,7 +488,7 @@ function TemplateCard({
           onDelete()
         }}
         onPointerDown={(e) => e.stopPropagation()}
-        aria-label={`Supprimer le template ${template.title}`}
+        aria-label={L.libTemplateDeleteAria(template.title)}
         className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-trail-card border border-trail-border text-trail-muted hover:text-trail-danger hover:border-trail-danger text-[11px] leading-none z-10"
       >
         ✕
@@ -513,17 +507,17 @@ function TemplateCard({
         {template.defaultDistance != null && <span>{template.defaultDistance} km</span>}
         {template.defaultElevation != null && <span>{template.defaultElevation} m D+</span>}
       </div>
-      <IntensityBar level={template.defaultIntensity} />
+      <IntensityBar level={template.defaultIntensity} L={L} />
     </div>
   )
 }
 
-function IntensityBar({ level }: { level: 1 | 2 | 3 | 4 | 5 }) {
+function IntensityBar({ level, L }: { level: 1 | 2 | 3 | 4 | 5; L: Dict['plan'] }) {
   const color = INTENSITY_LEVEL_COLORS[level]
   return (
     <div
       className="mt-2 flex gap-[2px]"
-      aria-label={`Intensité ${level} sur 5`}
+      aria-label={L.libIntensityBarAria(level)}
     >
       {[1, 2, 3, 4, 5].map(i => (
         <span

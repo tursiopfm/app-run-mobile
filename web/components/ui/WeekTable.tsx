@@ -1,7 +1,9 @@
+'use client'
+
 // Mirror of WeekTable composable from ui/components/WeekTable.kt
 // Horizontally scrollable table: session names | day columns | total column.
 
-import { weekTable as labels } from '@/lib/design/labels'
+import { useT } from '@/lib/i18n/I18nProvider'
 import { weekTable as layout  } from '@/lib/design/layout'
 
 export type DaySession = {
@@ -23,6 +25,7 @@ function fmt(v: number): string {
 }
 
 export function WeekTable({ sessions, className = '' }: WeekTableProps) {
+  const labels = useT().weekTable
   const totalKm   = sessions.reduce((s, r) => s + r.volumeKm, 0)
   const totalDPlus= sessions.reduce((s, r) => s + r.dPlus, 0)
 

@@ -20,6 +20,8 @@ import { CSS } from '@dnd-kit/utilities'
 import { RepeatStepEditor } from './RepeatStepEditor'
 import { formatPace } from '@/lib/plan/pace-format'
 import type { RepeatZone, RepeatStep, SessionType, IntensityLevel } from '@/types/plan'
+import { useT } from '@/lib/i18n/I18nProvider'
+import type { Dict } from '@/lib/i18n/dictionaries/fr'
 
 type Props = {
   zone: RepeatZone
@@ -30,6 +32,7 @@ type Props = {
 }
 
 export function RepeatZoneCard({ zone, sessionType, intensityModeDisabled = false, onChange, onDelete }: Props) {
+  const L = useT().plan
   const [editingStepId, setEditingStepId] = useState<string | null>(null)
 
   const sensors = useSensors(
@@ -77,7 +80,7 @@ export function RepeatZoneCard({ zone, sessionType, intensityModeDisabled = fals
         {/* Header */}
         <div className="flex items-center gap-2 mb-3">
           <span className="text-trail-muted cursor-grab select-none" aria-hidden>⋮⋮</span>
-          <span className="text-[13px] font-semibold text-trail-text">Répéter</span>
+          <span className="text-[13px] font-semibold text-trail-text">{L.repeatZoneTitle}</span>
           <input
             type="number"
             inputMode="numeric"
@@ -85,14 +88,14 @@ export function RepeatZoneCard({ zone, sessionType, intensityModeDisabled = fals
             max={50}
             value={zone.repeats}
             onChange={(e) => onChange({ ...zone, repeats: Math.max(1, Number(e.target.value) || 1) })}
-            aria-label="Répéter (nombre de fois)"
+            aria-label={L.repeatZoneRepeatsAria}
             className="w-14 px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] text-center focus:outline-none focus:border-trail-primary"
           />
-          <span className="text-[13px] text-trail-muted">fois</span>
+          <span className="text-[13px] text-trail-muted">{L.repeatZoneRepeatsTimes}</span>
           <button
             type="button"
             onClick={onDelete}
-            aria-label="Supprimer ce bloc"
+            aria-label={L.repeatZoneDeleteAria}
             className="ml-auto text-trail-danger text-[12px] font-semibold hover:underline"
           >
             🗑
@@ -107,6 +110,7 @@ export function RepeatZoneCard({ zone, sessionType, intensityModeDisabled = fals
                 <SortableStepRow
                   key={step.id}
                   step={step}
+                  L={L}
                   onEdit={() => setEditingStepId(step.id)}
                   onDelete={() => deleteStep(step.id)}
                 />
@@ -121,19 +125,18 @@ export function RepeatZoneCard({ zone, sessionType, intensityModeDisabled = fals
           onClick={addStep}
           className="mt-3 text-[12px] font-semibold text-trail-primary hover:underline"
         >
-          + Ajouter une étape
+          {L.repeatZoneAddStep}
         </button>
 
-        {/* Skip last recovery */}
         <label className="mt-3 flex items-center gap-2 text-[12px] text-trail-text">
           <input
             type="checkbox"
             checked={!!zone.skipLastRecovery}
             onChange={(e) => onChange({ ...zone, skipLastRecovery: e.target.checked })}
-            aria-label="Ignorer la dernière récupération"
+            aria-label={L.repeatZoneSkipLastAria}
           />
-          <span title="Si activé, la séance se termine sur la dernière étape d'effort sans inclure la récupération finale.">
-            Ignorer la dernière récupération
+          <span title={L.repeatZoneSkipLastTitle}>
+            {L.repeatZoneSkipLastLabel}
           </span>
         </label>
       </div>
@@ -153,10 +156,12 @@ export function RepeatZoneCard({ zone, sessionType, intensityModeDisabled = fals
 
 function SortableStepRow({
   step,
+  L,
   onEdit,
   onDelete,
 }: {
   step: RepeatStep
+  L: Dict['plan']
   onEdit: () => void
   onDelete: () => void
 }) {
@@ -167,13 +172,13 @@ function SortableStepRow({
     touchAction: 'pan-y' as const,
   }
 
-  const defaultLabel = step.stepKind === 'effort' ? 'Course à pied' : 'Récupération'
+  const defaultLabel = step.stepKind === 'effort' ? L.repeatStepDefaultLabelEffort : L.repeatStepDefaultLabelRecovery
   const valueText = step.mode === 'distance'
     ? `${step.distanceM ?? 0} m`
     : `${step.durationMin ?? 0} min`
   const intensityText = step.intensityMode === 'pace'
     ? `${formatPace(step.paceSecPerKm ?? null) || '—'} /km`
-    : intensityLabelFromLevel(step.intensity)
+    : intensityLabelFromLevel(step.intensity, L)
 
   return (
     <div
@@ -202,12 +207,12 @@ function SortableStepRow({
         onClick={onEdit}
         className="text-[12px] font-semibold text-trail-primary hover:underline"
       >
-        Modifier étape
+        {L.repeatStepEditBtn}
       </button>
       <button
         type="button"
         onClick={onDelete}
-        aria-label="Supprimer l'étape"
+        aria-label={L.repeatStepDeleteAria}
         className="text-trail-danger text-[12px] font-semibold hover:underline"
       >
         🗑
@@ -216,14 +221,7 @@ function SortableStepRow({
   )
 }
 
-function intensityLabelFromLevel(level: IntensityLevel | undefined): string {
+function intensityLabelFromLevel(level: IntensityLevel | undefined, L: Dict['plan']): string {
   if (!level) return '—'
-  const map: Record<IntensityLevel, string> = {
-    1: 'Récup',
-    2: 'Endurance',
-    3: 'Tempo',
-    4: 'Seuil',
-    5: 'VMA',
-  }
-  return map[level]
+  return L.repeatStepIntensityShort[level]
 }

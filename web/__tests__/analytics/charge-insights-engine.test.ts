@@ -83,7 +83,7 @@ describe('computeLoadInsights — status branches', () => {
 })
 
 describe('computeLoadInsights — notes', () => {
-  it('adds "beaucoup chargé en course" when run/total > 0.7', () => {
+  it('adds run-heavy note when run/total > 0.7', () => {
     const r = computeLoadInsights(payload({
       historyDays: 60,
       dailyMetrics: metricsWithTsb(0, 50),
@@ -93,25 +93,25 @@ describe('computeLoadInsights — notes', () => {
         '70': { run: 200, ride: 50, swim: 30, other: 20, total: 300 },
       },
     }))
-    expect(r.notes.some(n => n.toLowerCase().includes('course'))).toBe(true)
+    expect(r.notes.some(n => n.code === 'run-heavy')).toBe(true)
   })
 
-  it('adds note about activities without CES when noCesActivities28d > 0', () => {
+  it('adds no-ces note carrying the count when noCesActivities28d > 0', () => {
     const r = computeLoadInsights(payload({ noCesActivities28d: 3, historyDays: 60 }))
-    expect(r.notes.some(n => n.includes('3'))).toBe(true)
+    expect(r.notes.some(n => n.code === 'no-ces' && n.n === 3)).toBe(true)
   })
 
-  it('adds "concentrée sur peu de jours" when activeDays7d <= 2 and sum7d > 0', () => {
+  it('adds concentrated note when activeDays7d <= 2 and sum7d > 0', () => {
     const r = computeLoadInsights(payload({
       historyDays: 60,
       dailyLoads: Array.from({ length: 28 }, (_, i) => ({ date: '', ces: i >= 26 ? 200 : 0 })),
       activeDays7d: 2,
     }))
-    expect(r.notes.some(n => n.toLowerCase().includes('concentr'))).toBe(true)
+    expect(r.notes.some(n => n.code === 'concentrated')).toBe(true)
   })
 
-  it('adds "peu variée" when monotony >= 2.0', () => {
+  it('adds monotonous note when monotony >= 2.0', () => {
     const r = computeLoadInsights(payload({ historyDays: 60, monotony7d: 2.5 }))
-    expect(r.notes.some(n => n.toLowerCase().includes('vari'))).toBe(true)
+    expect(r.notes.some(n => n.code === 'monotonous')).toBe(true)
   })
 })

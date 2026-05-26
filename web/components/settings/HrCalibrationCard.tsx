@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { colors } from '@/lib/design/colors'
 import type { HrZoneMethod as Method } from '@/lib/health/hr-zones'
 import { requiredFieldsFor } from '@/lib/health/hr-method-meta'
+import { useT } from '@/lib/i18n/I18nProvider'
 import { HrZoneMethod } from './HrZoneMethod'
 import { HrCardioFields, type CardioState, type DeducedValues } from './HrCardioFields'
 import { HrSourcesPanel } from './HrSourcesPanel'
@@ -22,6 +23,7 @@ export function HrCalibrationCard({
   athleteData:     StravaAthleteData
   methodUpdatedAt: string | null
 }) {
+  const L = useT().settings
   const [method, setMethod] = useState<Method>(initialMethod)
   const [state,  setState]  = useState<CardioState>(initial)
   const [status, setStatus] = useState<Status>('idle')
@@ -105,12 +107,12 @@ export function HrCalibrationCard({
   return (
     <div className="space-y-[10px]">
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[10px]">
-        <p className="text-[14px] font-bold text-trail-text">Méthode de calcul des zones</p>
+        <p className="text-[14px] font-bold text-trail-text">{L.hrMethodCardTitle}</p>
         <HrZoneMethod value={method} onChange={setMethod} />
       </div>
 
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[8px]">
-        <p className="text-[14px] font-bold text-trail-text">Données cardio</p>
+        <p className="text-[14px] font-bold text-trail-text">{L.hrDataCardTitle}</p>
         <HrCardioFields
           method={method}
           state={state}
@@ -132,10 +134,10 @@ export function HrCalibrationCard({
           cursor:  status === 'saving' ? 'not-allowed' : 'pointer',
         }}
       >
-        {status === 'saving' ? 'Enregistrement…'
-          : status === 'saved' ? '✓ Enregistré'
-          : status === 'error' ? 'Erreur — champs requis manquants ou échec'
-          : 'Enregistrer le profil'}
+        {status === 'saving' ? L.hrSaveSaving
+          : status === 'saved' ? L.hrSaveSaved
+          : status === 'error' ? L.hrSaveErrorMissing
+          : L.hrSaveCta}
       </button>
 
       <HrSourcesPanel
@@ -152,7 +154,7 @@ export function HrCalibrationCard({
       />
 
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[10px]">
-        <p className="text-[14px] font-bold text-trail-text">Zones FC utilisées</p>
+        <p className="text-[14px] font-bold text-trail-text">{L.hrZonesCardTitle}</p>
         <HrZonesDisplay
           method={method}
           maxHr={method === 'deduced' ? (deduced.maxHrObserved ?? state.max_hr) : state.max_hr}
