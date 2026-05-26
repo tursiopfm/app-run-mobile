@@ -4,9 +4,7 @@
 // Le drag est consommé par PlanSessionsDndProvider parent (data.type = 'session-template').
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useDraggable } from '@dnd-kit/core'
 import type { SessionTemplate } from '@/types/plan'
-import type { ActivityType } from '@/types/activity-types'
 import { SESSION_TEMPLATES } from '@/lib/training/session-templates'
 import {
   deleteCustomTemplate,
@@ -16,15 +14,14 @@ import {
   TEMPLATES_CHANGED,
   unhideAllSystemTemplates,
 } from '@/lib/plan/storage'
-import { INTENSITY_LEVEL_COLORS } from '@/lib/activities/indicators'
-import { resolveSessionMeta } from '@/lib/plan/session-meta'
 import { TemplateEditorModal } from './TemplateEditorModal'
 import { ActivityTypesPrefsModal } from './ActivityTypesPrefsModal'
 import { useActivityTypes } from '@/lib/plan/use-activity-types'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useT } from '@/lib/i18n/I18nProvider'
-import type { Dict } from '@/lib/i18n/dictionaries/fr'
+import { TemplateCard } from '@/components/plan/library/TemplateCard'
+import { FilterBar } from '@/components/plan/library/FilterBar'
 
 // Nombre de templates affichés par défaut avant le bouton « Voir plus ».
 // Volontairement bas (2) pour éviter que le bloc Bibliothèque domine la page
@@ -182,6 +179,7 @@ export function BibliothequeSeancesBlock() {
     >
       {/* ── Filtres pills (collapsibles) ─────────────────────────────────── */}
       <FilterBar
+        variant="full"
         visibleTypes={visibleTypes}
         types={types}
         selectedType={selectedType}
@@ -189,7 +187,6 @@ export function BibliothequeSeancesBlock() {
         onSelectType={setSelectedType}
         onToggleExpand={() => setFiltersExpanded(e => !e)}
         onOpenPrefs={() => setPrefsModalOpen(true)}
-        L={L}
       />
 
       {/* ── Search ─────────────────────────────────────────────────────── */}
@@ -215,9 +212,9 @@ export function BibliothequeSeancesBlock() {
             template={t}
             types={types}
             isCustom={customIds.has(t.id)}
+            mode="drag"
             onClick={() => openEdit(t)}
             onDelete={() => requestDelete(t)}
-            L={L}
           />
         ))}
         {filtered.length === 0 && (
@@ -275,262 +272,3 @@ export function BibliothequeSeancesBlock() {
   )
 }
 
-// ─── Sous-composants ────────────────────────────────────────────────────────
-// Calcule la luminance perçue d'un hex (#RRGGBB) pour décider texte noir/blanc.
-function pickTextColor(hex?: string): string {
-  if (!hex) return '#fff'
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex)
-  if (!m) return '#fff'
-  const v = parseInt(m[1], 16)
-  const r = (v >> 16) & 0xff
-  const g = (v >> 8) & 0xff
-  const b = v & 0xff
-  const lum = 0.299 * r + 0.587 * g + 0.114 * b
-  return lum > 150 ? '#000' : '#fff'
-}
-
-function FilterPill({
-  active, onClick, label, isCustom, color,
-}: {
-  active?: boolean
-  onClick: () => void
-  label: string
-  isCustom?: boolean
-  color?: string
-}) {
-  let cls = 'flex-shrink-0 px-3 py-1 rounded-full text-[12px] font-semibold whitespace-nowrap transition-colors'
-  let inlineStyle: React.CSSProperties = { scrollSnapAlign: 'start' }
-
-  if (isCustom) {
-    cls += ' border border-trail-border bg-transparent text-trail-muted hover:text-trail-text hover:border-trail-primary'
-  } else if (active && color) {
-    cls += ' border'
-    inlineStyle = {
-      ...inlineStyle,
-      backgroundColor: color,
-      borderColor: color,
-      color: pickTextColor(color),
-    }
-  } else if (active) {
-    cls += ' bg-trail-primary text-white border border-trail-primary'
-  } else {
-    cls += ' bg-trail-surface border border-trail-border text-trail-muted hover:text-trail-text'
-  }
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={!!active}
-      onClick={onClick}
-      style={inlineStyle}
-      className={cls}
-    >
-      {label}
-    </button>
-  )
-}
-
-// Barre de filtres avec collapse/expand fluide. Tous + ⚙ Personnalisé toujours
-// visibles; toggle central avec chevron animé + badge count. Si un filtre custom
-// est actif et qu'on collapse, on garde ce filtre visible pour ne pas perdre
-// l'orientation visuelle.
-function FilterBar({
-  visibleTypes, types, selectedType, filtersExpanded,
-  onSelectType, onToggleExpand, onOpenPrefs, L,
-}: {
-  visibleTypes: { slug: string; label: string }[]
-  types: ActivityType[]
-  selectedType: string | 'all'
-  filtersExpanded: boolean
-  onSelectType: (slug: string | 'all') => void
-  onToggleExpand: () => void
-  onOpenPrefs: () => void
-  L: Dict['plan']
-}) {
-  const activityLabels = useT().activities.sessionTypeLabels as Record<string, string>
-  const typeLabel = (slug: string, fallback: string) => activityLabels[slug] ?? fallback
-  const hasActiveFilter = selectedType !== 'all'
-  const activeType = hasActiveFilter ? visibleTypes.find(t => t.slug === selectedType) : null
-  // Pill orpheline (active mais retirée du visible-set) : on l'affiche tout de
-  // même en peek si filtersExpanded=false, sinon elle disparaît visuellement.
-  const peekActiveOnly = !filtersExpanded && activeType
-
-  return (
-    <div role="tablist" aria-label={L.libFilterByTypeAria}>
-      {/* Rangée 1 : pills clés toujours visibles + toggle + peek du filtre actif */}
-      <div
-        className="flex items-center gap-2 overflow-x-auto md:overflow-visible -mx-1 px-1"
-        style={{ scrollSnapType: 'x mandatory' }}
-      >
-        <FilterPill
-          active={selectedType === 'all'}
-          onClick={() => onSelectType('all')}
-          label={L.libFilterAll}
-        />
-
-        {/* Peek du filtre actif quand collapsed (sinon on perd l'orientation) */}
-        {peekActiveOnly && activeType && (
-          <FilterPill
-            key={`peek-${activeType.slug}`}
-            active
-            onClick={() => onSelectType(activeType.slug)}
-            label={typeLabel(activeType.slug, activeType.label)}
-            color={resolveSessionMeta(activeType.slug, types).color}
-          />
-        )}
-
-        <ExpandToggle
-          expanded={filtersExpanded}
-          count={visibleTypes.length}
-          onClick={onToggleExpand}
-          L={L}
-        />
-
-        <FilterPill onClick={onOpenPrefs} label={L.libFilterCustom} isCustom />
-      </div>
-
-      {/* Rangée 2 : tous les types visibles, scrollable horizontalement avec
-          scrollbar visible. Trick grid-template-rows 0fr ↔ 1fr pour animer
-          l'ouverture sans figer la hauteur. */}
-      <div
-        className="grid transition-[grid-template-rows] duration-300 ease-out"
-        style={{ gridTemplateRows: filtersExpanded ? '1fr' : '0fr' }}
-        aria-hidden={!filtersExpanded}
-      >
-        <div className="overflow-hidden">
-          <div className="filter-bar-scroll mt-2 flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-            {visibleTypes.map(t => (
-              <FilterPill
-                key={t.slug}
-                active={selectedType === t.slug}
-                onClick={() => onSelectType(t.slug)}
-                label={typeLabel(t.slug, t.label)}
-                color={resolveSessionMeta(t.slug, types).color}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Toggle pill avec chevron qui pivote 180° à l'ouverture. Bordure trail-primary
-// discrète + badge count quand collapsed (typo plus petite pour discrétion).
-function ExpandToggle({
-  expanded, count, onClick, L,
-}: { expanded: boolean; count: number; onClick: () => void; L: Dict['plan'] }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-expanded={expanded}
-      aria-label={expanded ? L.libFilterCollapseAria : L.libFilterExpandAria(count)}
-      className="group flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full border border-trail-primary/40 bg-trail-primary/5 text-trail-primary text-[12px] font-semibold hover:bg-trail-primary/15 hover:border-trail-primary/70 transition-colors"
-    >
-      <svg
-        width="12"
-        height="12"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="transition-transform duration-300"
-        style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-        aria-hidden
-      >
-        <polyline points="9 6 15 12 9 18" />
-      </svg>
-      {!expanded && (
-        <span className="text-[10px] opacity-80 tabular-nums">{count}</span>
-      )}
-    </button>
-  )
-}
-
-function TemplateCard({
-  template, types, isCustom, onClick, onDelete, L,
-}: {
-  template: SessionTemplate
-  types: ActivityType[]
-  isCustom: boolean
-  onClick: () => void
-  onDelete: () => void
-  L: Dict['plan']
-}) {
-  const meta = resolveSessionMeta(template.type, types)
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `template-${template.id}`,
-    data: { type: 'session-template', template },
-  })
-
-  return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      // pan-y (et non 'none') laisse passer le scroll vertical natif. Le drag
-      // touch reste OK car TouchSensor s'arme au long-press immobile (250 ms),
-      // moment où dnd-kit prend le pointer-capture qui surclasse touch-action.
-      style={{ opacity: isDragging ? 0.4 : 1, touchAction: 'pan-y' }}
-      className={`relative rounded-[8px] border bg-trail-surface p-2 cursor-pointer transition-colors ${
-        isCustom ? 'border-trail-primary/30 hover:border-trail-primary' : 'border-trail-border hover:border-trail-primary/40'
-      }`}
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      aria-label={L.libTemplateCardAria(L.sessionTemplates[template.id]?.title ?? template.title)}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
-    >
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation()
-          onDelete()
-        }}
-        onPointerDown={(e) => e.stopPropagation()}
-        aria-label={L.libTemplateDeleteAria(L.sessionTemplates[template.id]?.title ?? template.title)}
-        className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-trail-card border border-trail-border text-trail-muted hover:text-trail-danger hover:border-trail-danger text-[11px] leading-none z-10"
-      >
-        ✕
-      </button>
-      <p className="text-[10px] font-semibold text-trail-muted uppercase tracking-wider pr-6">
-        {meta.label}
-      </p>
-      <h4
-        className="mt-1 text-[14px] text-trail-text leading-tight"
-        style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.02em' }}
-      >
-        {L.sessionTemplates[template.id]?.title ?? template.title}
-      </h4>
-      <div className="mt-1 flex flex-wrap gap-x-2 gap-y-[2px] text-[10px] text-trail-muted">
-        {template.defaultDuration > 0 && <span>{template.defaultDuration} min</span>}
-        {template.defaultDistance != null && <span>{template.defaultDistance} km</span>}
-        {template.defaultElevation != null && <span>{template.defaultElevation} m D+</span>}
-      </div>
-      <IntensityBar level={template.defaultIntensity} L={L} />
-    </div>
-  )
-}
-
-function IntensityBar({ level, L }: { level: 1 | 2 | 3 | 4 | 5; L: Dict['plan'] }) {
-  const color = INTENSITY_LEVEL_COLORS[level]
-  return (
-    <div
-      className="mt-2 flex gap-[2px]"
-      aria-label={L.libIntensityBarAria(level)}
-    >
-      {[1, 2, 3, 4, 5].map(i => (
-        <span
-          key={i}
-          className="w-2 h-2 rounded-[2px]"
-          style={{
-            backgroundColor: i <= level ? color : 'var(--trail-border)',
-          }}
-        />
-      ))}
-    </div>
-  )
-}
