@@ -13,15 +13,24 @@ export type MorningLastActivity = {
   ces:             number | null
 }
 
+export type MorningMonthlyVolume = { km: number; dPlus: number }
+
 export type MorningReportData = {
-  charge:        ChargePageData
-  lastActivity:  MorningLastActivity | null
-  generatedAt:   string
+  charge:         ChargePageData
+  lastActivity:   MorningLastActivity | null
+  monthlyVolume:  MorningMonthlyVolume
+  generatedAt:    string
 }
 
 export async function getMorningReportData(userId: string): Promise<MorningReportData> {
   const supabase = await createClient()
-  const [charge, lastActRes] = await Promise.all([
+
+  const startOfMonth = new Date()
+  startOfMonth.setDate(1)
+  startOfMonth.setHours(0, 0, 0, 0)
+  const startOfMonthISO = startOfMonth.toISOString()
+
+  const [charge, lastActRes, monthRes] = await Promise.all([
     getChargePageData(userId),
     supabase
       .from('activities')
@@ -29,9 +38,15 @@ export async function getMorningReportData(userId: string): Promise<MorningRepor
       .eq('athlete_id', userId)
       .order('start_time', { ascending: false })
       .limit(1),
+    supabase
+      .from('activities')
+      .select('distance_m, elevation_gain_m, manual_distance_m, manual_elevation_gain_m')
+      .eq('athlete_id', userId)
+      .gte('start_time', startOfMonthISO),
   ])
 
   if (lastActRes.error) throw lastActRes.error
+  if (monthRes.error)   throw monthRes.error
 
   const row = lastActRes.data?.[0]
   const lastActivity: MorningLastActivity | null = row ? {
@@ -46,5 +61,26 @@ export async function getMorningReportData(userId: string): Promise<MorningRepor
     ces:            row.ces,
   } : null
 
-  return { charge, lastActivity, generatedAt: new Date().toISOString() }
+  type MonthRow = {
+    distance_m: number | null
+    elevation_gain_m: number | null
+    manual_distance_m: number | null
+    manual_elevation_gain_m: number | null
+  }
+
+  const monthRows = (monthRes.data ?? []) as MonthRow[]
+  const monthAgg = monthRows.reduce(
+    (acc, r) => {
+      const dist  = r.manual_distance_m       ?? r.distance_m       ?? 0
+      const dPlus = r.manual_elevation_gain_m ?? r.elevation_gain_m ?? 0
+      return { km: acc.km + dist / 1000, dPlus: acc.dPlus + dPlus }
+    },
+    { km: 0, dPlus: 0 },
+  )
+  const monthlyVolume: MorningMonthlyVolume = {
+    km:    Math.round(monthAgg.km),
+    dPlus: Math.round(monthAgg.dPlus),
+  }
+
+  return { charge, lastActivity, monthlyVolume, generatedAt: new Date().toISOString() }
 }
