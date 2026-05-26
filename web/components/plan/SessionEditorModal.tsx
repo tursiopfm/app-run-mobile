@@ -23,6 +23,7 @@ import type {
   PlannedSession,
   RepeatStep,
   RepeatZone,
+  SessionTemplate,
   SessionType,
   SessionZone,
   TrainingZone,
@@ -64,6 +65,8 @@ type Props = {
   matchedActivities?: MatchableActivity[] | null
   /** Délier les activités matchées — les paires sont gardées en LS pour ne plus être proposées. */
   onUnlink?: (sessionId: string, activityIds: string[]) => void
+  /** Si fourni et session===null, initialise le draft depuis le template + bandeau "Pré-rempli depuis". Ignoré en mode édition. */
+  prefillTemplate?: SessionTemplate | null
   onClose: () => void
   onSaved: () => void
 }
@@ -109,12 +112,32 @@ function emptyDraft(initialDate: string | undefined): PlannedSession {
   }
 }
 
+function draftFromTemplate(tpl: SessionTemplate, initialDate: string | undefined): PlannedSession {
+  return {
+    id: '',
+    planId: '',
+    date: initialDate ?? todayISO(),
+    type: tpl.type,
+    title: tpl.title,
+    duration: tpl.defaultDuration,
+    distance: tpl.defaultDistance,
+    elevation: tpl.defaultElevation,
+    intensity: tpl.defaultIntensity,
+    estimatedCharge: estimateCharge(tpl.defaultDuration, tpl.defaultIntensity, tpl.defaultElevation),
+    zones: undefined,
+    notes: undefined,
+    status: 'planned',
+  }
+}
+
 export function SessionEditorModal({
-  session, initialDate, open, matchedActivities, onUnlink, onClose, onSaved,
+  session, initialDate, open, prefillTemplate, matchedActivities, onUnlink, onClose, onSaved,
 }: Props) {
   const L = useT().plan
   const isEdit = session !== null
-  const [draft, setDraft] = useState<PlannedSession>(() => session ?? emptyDraft(initialDate))
+  const [draft, setDraft] = useState<PlannedSession>(
+    () => session ?? (prefillTemplate ? draftFromTemplate(prefillTemplate, initialDate) : emptyDraft(initialDate))
+  )
   const [tab, setTab] = useState<Tab>('general')
   const [saving, setSaving] = useState(false)
   const [chargeOverridden, setChargeOverridden] = useState(false)
@@ -123,12 +146,13 @@ export function SessionEditorModal({
 
   useEffect(() => {
     if (open) {
-      const base = session ?? emptyDraft(initialDate)
+      const base = session
+        ?? (prefillTemplate ? draftFromTemplate(prefillTemplate, initialDate) : emptyDraft(initialDate))
       setDraft(base)
       setTab('general')
       setChargeOverridden(isEdit) // En édition, on respecte la valeur stockée tant qu'on ne change rien.
     }
-  }, [open, session, initialDate, isEdit])
+  }, [open, session, initialDate, isEdit, prefillTemplate])
 
   // Échap ferme.
   useEffect(() => {
@@ -280,6 +304,23 @@ export function SessionEditorModal({
                 {L.sessionUnlink}
               </button>
             )}
+          </div>
+        )}
+
+        {!isEdit && prefillTemplate && (
+          <div
+            className="flex items-center gap-2 mb-3 p-2 rounded-[10px] border border-dashed"
+            style={{
+              backgroundColor: `${colors.chargeOrange}1A`,
+              borderColor: `${colors.chargeOrange}66`,
+              color: colors.chargeOrange,
+            }}
+            role="status"
+          >
+            <span aria-hidden>✨</span>
+            <span className="text-[12px] font-semibold">
+              {L.addPrefillBanner(L.sessionTemplates[prefillTemplate.id]?.title ?? prefillTemplate.title)}
+            </span>
           </div>
         )}
 
