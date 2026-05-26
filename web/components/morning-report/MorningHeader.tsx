@@ -8,23 +8,20 @@ type Props = {
   totalWeeks?: number | null
 }
 
-const DAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
+const DAYS = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
 const MONTHS = ['janv.', 'févr.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
 
-function formatDate(d: Date): { weekday: string; date: string } {
-  return {
-    weekday: DAYS[d.getDay()],
-    date:    `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`,
-  }
+function formatDate(d: Date): string {
+  return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`
 }
 
 export function MorningHeader({ date, raceName, daysToRace, weekIndex, totalWeeks }: Props) {
-  const f = formatDate(date)
+  const dateLabel = formatDate(date)
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.15em] text-trail-muted">{f.date}</p>
+          <p className="text-[10px] uppercase tracking-[0.15em] text-trail-muted">{dateLabel}</p>
           <h1
             className="text-[26px] leading-none mt-1 text-trail-text"
             style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.02em' }}
