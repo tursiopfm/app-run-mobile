@@ -4,6 +4,8 @@ import { useEffect } from 'react'
 import type { MorningReportData } from '@/lib/data/morning-report'
 import { useMorningReportSeen } from '@/lib/hooks/useMorningReportSeen'
 import { MorningHeader } from '@/components/morning-report/MorningHeader'
+import { FormStatusBlock } from '@/components/morning-report/FormStatusBlock'
+import { FitnessFatigue10dChart } from '@/components/morning-report/FitnessFatigue10dChart'
 
 function todayISO(): string {
   const d = new Date()
@@ -16,13 +18,13 @@ export function MorningReportClient({ data }: { data: MorningReportData }) {
 
   useEffect(() => { markSeen() }, [markSeen])
 
-  // Note: data is currently unused after removing the debug pane.
-  // It will be consumed by upcoming blocks (Form, Yesterday, etc.) in later tasks.
-  void data
+  const all = data.charge.perSport.all
 
   return (
     <div className="max-w-[420px] mx-auto p-3 sm:p-5 space-y-3">
       <MorningHeader date={new Date()} />
+      <FormStatusBlock payload={all} />
+      <FitnessFatigue10dChart dailyMetrics={all.dailyMetrics} />
     </div>
   )
 }
