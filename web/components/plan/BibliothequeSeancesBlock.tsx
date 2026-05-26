@@ -347,6 +347,8 @@ function FilterBar({
   onOpenPrefs: () => void
   L: Dict['plan']
 }) {
+  const activityLabels = useT().activities.sessionTypeLabels as Record<string, string>
+  const typeLabel = (slug: string, fallback: string) => activityLabels[slug] ?? fallback
   const hasActiveFilter = selectedType !== 'all'
   const activeType = hasActiveFilter ? visibleTypes.find(t => t.slug === selectedType) : null
   // Pill orpheline (active mais retirée du visible-set) : on l'affiche tout de
@@ -372,7 +374,7 @@ function FilterBar({
             key={`peek-${activeType.slug}`}
             active
             onClick={() => onSelectType(activeType.slug)}
-            label={activeType.label}
+            label={typeLabel(activeType.slug, activeType.label)}
             color={resolveSessionMeta(activeType.slug, types).color}
           />
         )}
@@ -402,7 +404,7 @@ function FilterBar({
                 key={t.slug}
                 active={selectedType === t.slug}
                 onClick={() => onSelectType(t.slug)}
-                label={t.label}
+                label={typeLabel(t.slug, t.label)}
                 color={resolveSessionMeta(t.slug, types).color}
               />
             ))}

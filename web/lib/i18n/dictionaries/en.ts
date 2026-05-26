@@ -569,6 +569,8 @@ export const en: Dict = {
     mapUnavailable:           'Map unavailable',
     splitsBest:               (pace: string) => `★ Best ${pace}`,
     splitsCount:              'segments',
+    hrAvgLabel:               'HR avg',
+    hrMaxLabel:               'HR max',
     fracBlocksCount:          'blocks',
     fracFastDetected:         (n: number) => `${n} fast block${n > 1 ? 's' : ''} detected`,
     fracColDistance:          'Distance',

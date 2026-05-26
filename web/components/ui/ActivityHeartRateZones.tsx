@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { calculateHrZones, distributeTimeInZones, type HrZoneMethod } from '@/lib/health/hr-zones'
 import { fmtDurationSec } from '@/lib/activities/detail'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 type AthleteHrProfile = {
   max_hr?:               number | null
@@ -25,6 +26,9 @@ export function ActivityHeartRateZones({
   movingTimeSec:   number
   athleteProfile?: AthleteHrProfile | null
 }) {
+  const t = useT()
+  const L = t.activities
+  const ZONE_NAMES_DICT = [t.hrZones.z1Name, t.hrZones.z2Name, t.hrZones.z3Name, t.hrZones.z4Name, t.hrZones.z5Name]
   const [method, setMethod] = useState<HrZoneMethod>('pct_max')
 
   useEffect(() => {
@@ -55,10 +59,10 @@ export function ActivityHeartRateZones({
     <div>
       <div className="flex gap-4 mb-4">
         <span className="text-xs text-gray-400">
-          FC moy: <span className="text-white">{avgHr}</span> bpm
+          {L.hrAvgLabel}: <span className="text-white">{avgHr}</span> bpm
         </span>
         <span className="text-xs text-gray-400">
-          FC max: <span className="text-white">{maxHr}</span> bpm
+          {L.hrMaxLabel}: <span className="text-white">{maxHr}</span> bpm
         </span>
       </div>
 
@@ -67,7 +71,7 @@ export function ActivityHeartRateZones({
         return (
           <div key={zone.zone} className="flex items-center gap-2 py-1.5">
             <span className="w-28 text-xs shrink-0" style={{ color: zone.color }}>
-              Z{zone.zone} {zone.name}
+              Z{zone.zone} {ZONE_NAMES_DICT[zone.zone - 1] ?? zone.name}
             </span>
             <div className="flex-1 bg-gray-800 rounded-full h-2">
               <div

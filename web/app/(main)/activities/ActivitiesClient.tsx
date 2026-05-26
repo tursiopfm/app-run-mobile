@@ -249,13 +249,14 @@ function FilterRow({
   activeDir:   SortDir
   onSort:      (f: SortField, d: SortDir) => void
 }) {
+  const L = useT().activities
   return (
     <div>
       <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{label}</p>
       <div className="flex items-center gap-2">
-        <span className="text-[11px] text-trail-muted w-4 flex-shrink-0">De</span>
+        <span className="text-[11px] text-trail-muted w-4 flex-shrink-0">{L.fromLabel}</span>
         {left}
-        <span className="text-[11px] text-trail-muted flex-shrink-0">à</span>
+        <span className="text-[11px] text-trail-muted flex-shrink-0">{L.toLabel}</span>
         {right}
         <SortButtons field={sortField} activeField={activeField} activeDir={activeDir} onSort={onSort} />
       </div>

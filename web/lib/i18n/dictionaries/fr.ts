@@ -246,6 +246,8 @@ export type Dict = {
     mapUnavailable: string
     splitsBest: (pace: string) => string
     splitsCount: string
+    hrAvgLabel: string
+    hrMaxLabel: string
     fracBlocksCount: string
     fracFastDetected: (n: number) => string
     fracColDistance: string
@@ -1470,6 +1472,8 @@ export const fr: Dict = {
     mapUnavailable:           'Carte non disponible',
     splitsBest:               (pace: string) => `★ Meilleur ${pace}`,
     splitsCount:              'segments',
+    hrAvgLabel:               'FC moy',
+    hrMaxLabel:               'FC max',
     fracBlocksCount:          'blocs',
     fracFastDetected:         (n: number) => `${n} bloc${n > 1 ? 's' : ''} rapide${n > 1 ? 's' : ''} détecté${n > 1 ? 's' : ''}`,
     fracColDistance:          'Distance',
