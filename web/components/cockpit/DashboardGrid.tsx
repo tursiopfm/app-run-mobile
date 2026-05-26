@@ -36,7 +36,7 @@ function BlockWithHide({ children }: { children: (onHide: () => void) => React.R
 export function DashboardGrid({ sportOverviews, weekSessions, latestPerSport, weekActivities, athleteProfile }: Props) {
   const L = useT().cockpit.blockLabel
   const blocks: BlockDef[] = [
-    { id: 'morningReport', label: (L as Record<string, string>).morningReport ?? 'Rapport matinal', emoji: '📋', render: () => <MorningReportTile /> },
+    { id: 'morningReport', label: L.morningReport, emoji: '📋', render: () => <MorningReportTile /> },
     { id: 'activities',     label: L.activities,     emoji: '🏅', render: () => <BlockWithHide>{(onHide) => <ActivitiesBlock      sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
     { id: 'lastActivity',   label: L.lastActivity,   emoji: '🥇', render: () => <BlockWithHide>{(onHide) => <LastActivityBlock    latestPerSport={latestPerSport} athleteProfile={athleteProfile} onHide={onHide} />}</BlockWithHide> },
     { id: 'goals',          label: L.goals,          emoji: '🎯', render: () => <BlockWithHide>{(onHide) => <GoalsBlock           sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },

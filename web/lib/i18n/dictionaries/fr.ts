@@ -40,7 +40,7 @@ export type Dict = {
     cumulHeader: (period: 'month' | 'year') => string
 
     blockLabel: Record<
-      'activities' | 'lastActivity' | 'goals' | 'weekly' | 'charge' | 'history'
+      'morningReport' | 'activities' | 'lastActivity' | 'goals' | 'weekly' | 'charge' | 'history'
       | 'cumul' | 'intensity' | 'week' | 'weekActivities',
       string
     >
@@ -1119,6 +1119,7 @@ export const fr: Dict = {
 
     // Block labels (in DashboardGrid)
     blockLabel: {
+      morningReport:  'Rapport matinal',
       activities:     'Activités',
       lastActivity:   'Dernière activité',
       goals:          'Objectifs',

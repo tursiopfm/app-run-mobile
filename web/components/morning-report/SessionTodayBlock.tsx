@@ -47,7 +47,7 @@ export function SessionTodayBlock() {
         <h3 className="text-[15px] font-semibold text-trail-muted">Séance du jour</h3>
       </div>
       {session === undefined && <p className="text-[12px] text-trail-muted">Chargement…</p>}
-      {session === null && <p className="text-[12px] text-trail-muted">Pas de séance prévue aujourd'hui.</p>}
+      {session === null && <p className="text-[12px] text-trail-muted">Pas de séance prévue aujourd&apos;hui.</p>}
       {session && (
         <>
           <h2

@@ -96,6 +96,7 @@ export const en: Dict = {
     cumulHeader: (period: 'month' | 'year') => `Cumulative km/${period === 'month' ? 'month' : 'year'} —`,
 
     blockLabel: {
+      morningReport:  'Morning report',
       activities:     'Activities',
       lastActivity:   'Last activity',
       goals:          'Goals',
