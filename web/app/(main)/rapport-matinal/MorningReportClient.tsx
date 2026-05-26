@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import type { MorningReportData } from '@/lib/data/morning-report'
 import { useMorningReportSeen } from '@/lib/hooks/useMorningReportSeen'
+import { MorningHeader } from '@/components/morning-report/MorningHeader'
 
 function todayISO(): string {
   const d = new Date()
@@ -15,20 +16,13 @@ export function MorningReportClient({ data }: { data: MorningReportData }) {
 
   useEffect(() => { markSeen() }, [markSeen])
 
-  const last = data.charge.perSport.all.dailyMetrics.at(-1)
+  // Note: data is currently unused after removing the debug pane.
+  // It will be consumed by upcoming blocks (Form, Yesterday, etc.) in later tasks.
+  void data
 
   return (
     <div className="max-w-[420px] mx-auto p-3 sm:p-5 space-y-3">
-      <p className="text-[11px] text-trail-muted">Rapport matinal — squelette</p>
-      <pre className="text-[10px] text-trail-muted whitespace-pre-wrap">
-        {JSON.stringify({
-          generatedAt: data.generatedAt,
-          atl: Math.round(last?.atl ?? 0),
-          ctl: Math.round(last?.ctl ?? 0),
-          tsb: Math.round(last?.tsb ?? 0),
-          lastActivityName: data.lastActivity?.name ?? null,
-        }, null, 2)}
-      </pre>
+      <MorningHeader date={new Date()} />
     </div>
   )
 }
