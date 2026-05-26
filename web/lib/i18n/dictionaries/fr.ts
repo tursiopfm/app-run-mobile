@@ -772,6 +772,18 @@ export type Dict = {
     repeatStepDeleteAria: string
     repeatStepIntensityShort: Record<1 | 2 | 3 | 4 | 5, string>
 
+    // SessionAddSheet (picker d'ajout)
+    addTitle: string
+    addCreateBtn: string
+    addOrLibrary: string
+    addSearchPh: string
+    addNoMatch: string
+    addReset: string
+    addEmpty: string
+    addPrefillBanner: (templateTitle: string) => string
+    addCloseAria: string
+    addPickAria: (templateTitle: string) => string
+
     sessionEditTitle: string
     sessionCreateTitle: string
     sessionAriaEdit: string
@@ -2661,6 +2673,18 @@ export const fr: Dict = {
       4: 'Seuil',
       5: 'VMA',
     },
+
+    // SessionAddSheet
+    addTitle:            'Ajouter une séance',
+    addCreateBtn:        '+ Créer une nouvelle séance',
+    addOrLibrary:        'Ou choisir dans la bibliothèque',
+    addSearchPh:         'Rechercher une séance…',
+    addNoMatch:          'Aucune séance ne correspond',
+    addReset:            'Réinitialiser les filtres',
+    addEmpty:            'Aucune séance dans ta bibliothèque',
+    addPrefillBanner:    (t: string) => `✨ Pré-rempli depuis ${t}`,
+    addCloseAria:        'Fermer le sélecteur',
+    addPickAria:         (t: string) => `Choisir le template ${t}`,
 
     sessionEditTitle:                  'Modifier la séance',
     sessionCreateTitle:                'Créer une séance',

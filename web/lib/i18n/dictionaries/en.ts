@@ -1569,6 +1569,18 @@ export const en: Dict = {
       5: 'VO2max',
     },
 
+    // SessionAddSheet
+    addTitle:            'Add a session',
+    addCreateBtn:        '+ Create new session',
+    addOrLibrary:        'Or pick from library',
+    addSearchPh:         'Search a session…',
+    addNoMatch:          'No session matches',
+    addReset:            'Reset filters',
+    addEmpty:            'Your library is empty',
+    addPrefillBanner:    (t: string) => `✨ Prefilled from ${t}`,
+    addCloseAria:        'Close picker',
+    addPickAria:         (t: string) => `Pick template ${t}`,
+
     sessionEditTitle:                  'Edit session',
     sessionCreateTitle:                'Create session',
     sessionAriaEdit:                   'Edit session',
