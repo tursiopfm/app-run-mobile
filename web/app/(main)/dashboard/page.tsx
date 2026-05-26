@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getServerUser } from '@/lib/database/get-user'
 import { DashboardGrid } from '@/components/cockpit/DashboardGrid'
+import { MorningReportAutoOpen } from '@/components/morning-report/MorningReportAutoOpen'
 import { getDashboardData } from '@/lib/data/dashboard'
 import { createClient } from '@/lib/database/supabase-server'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
@@ -76,6 +77,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="px-2 py-2 max-w-lg mx-auto">
+      <MorningReportAutoOpen />
       <DashboardGrid
         sportOverviews={sportOverviews}
         weekSessions={weekSessions}
