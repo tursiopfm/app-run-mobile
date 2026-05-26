@@ -11,6 +11,7 @@ import { HistoryBlock }          from './HistoryBlock'
 import { CumulBlock }            from './CumulBlock'
 import { IntensityBlock }        from './IntensityBlock'
 import { WeekBlock }             from './WeekBlock'
+import { MorningReportTile }     from './MorningReportTile'
 import type { SportOverview, DaySession } from '@/lib/data/dashboard'
 import type { SportKey } from '@/lib/design/sports'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
@@ -24,7 +25,7 @@ type Props = {
   athleteProfile: AthleteHrProfile
 }
 
-const DEFAULT_ORDER = ['activities', 'charge', 'lastActivity', 'goals', 'weekly', 'history', 'cumul', 'intensity', 'week', 'weekActivities']
+const DEFAULT_ORDER = ['morningReport', 'activities', 'charge', 'lastActivity', 'goals', 'weekly', 'history', 'cumul', 'intensity', 'week', 'weekActivities']
 const DEFAULT_HIDDEN: string[] = []
 
 function BlockWithHide({ children }: { children: (onHide: () => void) => React.ReactNode }) {
@@ -35,6 +36,7 @@ function BlockWithHide({ children }: { children: (onHide: () => void) => React.R
 export function DashboardGrid({ sportOverviews, weekSessions, latestPerSport, weekActivities, athleteProfile }: Props) {
   const L = useT().cockpit.blockLabel
   const blocks: BlockDef[] = [
+    { id: 'morningReport', label: L.morningReport, emoji: '📋', render: () => <MorningReportTile /> },
     { id: 'activities',     label: L.activities,     emoji: '🏅', render: () => <BlockWithHide>{(onHide) => <ActivitiesBlock      sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
     { id: 'lastActivity',   label: L.lastActivity,   emoji: '🥇', render: () => <BlockWithHide>{(onHide) => <LastActivityBlock    latestPerSport={latestPerSport} athleteProfile={athleteProfile} onHide={onHide} />}</BlockWithHide> },
     { id: 'goals',          label: L.goals,          emoji: '🎯', render: () => <BlockWithHide>{(onHide) => <GoalsBlock           sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
