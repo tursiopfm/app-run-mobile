@@ -23,19 +23,13 @@ function todayISO(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-function locationLabelFor(source: 'geo' | 'cache' | 'fallback' | undefined): string | null {
-  if (!source) return null
-  if (source === 'fallback') return 'Annecy'
-  return 'Ma position'
-}
-
 export function MorningReportClient({ data }: { data: MorningReportData }) {
   const today = todayISO()
   const { markSeen } = useMorningReportSeen(today)
   const coords = useUserLocation()
   const weather = useWeather(coords)
 
-  const locationLabel = locationLabelFor(coords?.source)
+  const locationLabel = coords?.city ?? null
 
   const weatherProps =
     weather.status === 'ready' ? { status: 'ready' as const, data: weather.data, locationLabel } :
