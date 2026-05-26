@@ -3,22 +3,24 @@
 import { useEffect, useState } from 'react'
 import { getPlannedSessions } from '@/lib/plan/storage'
 import type { PlannedSession } from '@/types/plan'
+import { SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
 
 function todayISO(): string {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-const TYPE_LABEL: Record<string, string> = {
-  endurance:     'Endurance fondamentale',
-  seuil_tempo:   'Seuil / Tempo',
-  vma:           'VMA',
-  cotes:         'Côtes',
-  sortie_longue: 'Sortie longue',
-  recuperation:  'Récupération',
-  repos:         'Repos',
-  competition:   'Compétition',
-  autre:         'Autre',
+const EXTRA_PLAN_LABELS: Record<string, string> = {
+  recuperation: 'Récupération',
+  repos:        'Repos',
+  competition:  'Compétition',
+  autre:        'Autre',
+}
+
+function labelForType(type: string): string {
+  return (SESSION_TYPE_LABELS as Record<string, string>)[type]
+      ?? EXTRA_PLAN_LABELS[type]
+      ?? type
 }
 
 export function SessionTodayBlock() {
@@ -54,7 +56,7 @@ export function SessionTodayBlock() {
           >
             {session.title}
           </h2>
-          <p className="text-[12px] text-trail-muted mt-1">{TYPE_LABEL[session.type] ?? session.type}</p>
+          <p className="text-[12px] text-trail-muted mt-1">{labelForType(session.type)}</p>
           <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-trail-border">
             <Kpi label="Durée"    value={`${session.duration}'`} />
             <Kpi label="Distance" value={session.distance ? `${session.distance} km` : '—'} />
