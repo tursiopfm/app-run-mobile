@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import type { MorningReportData } from '@/lib/data/morning-report'
 import { useMorningReportSeen } from '@/lib/hooks/useMorningReportSeen'
-import { MorningHeader } from '@/components/morning-report/MorningHeader'
+import { MorningHeaderLoader } from '@/components/morning-report/MorningHeaderLoader'
 import { SessionTodayBlock } from '@/components/morning-report/SessionTodayBlock'
 import { FormStatusBlock } from '@/components/morning-report/FormStatusBlock'
 import { FitnessFatigue10dChart } from '@/components/morning-report/FitnessFatigue10dChart'
@@ -28,7 +28,7 @@ export function MorningReportClient({ data }: { data: MorningReportData }) {
 
   return (
     <div className="max-w-[420px] mx-auto p-3 sm:p-5 space-y-3">
-      <MorningHeader date={new Date()} />
+      <MorningHeaderLoader />
       <SessionTodayBlock />
       <FormStatusBlock payload={all} />
       <FitnessFatigue10dChart dailyMetrics={all.dailyMetrics} />
@@ -36,7 +36,7 @@ export function MorningReportClient({ data }: { data: MorningReportData }) {
         <WeatherCurrentBlock />
         <WeatherDayBlock />
       </div>
-      <MonthlyVolumeBlock km={0} dPlus={0} />
+      <MonthlyVolumeBlock km={data.monthlyVolume.km} dPlus={data.monthlyVolume.dPlus} />
       <CoachAiBlock />
       <YesterdayBlock act={data.lastActivity} />
     </div>
