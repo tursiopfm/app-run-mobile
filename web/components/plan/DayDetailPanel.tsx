@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { PlannedSession } from '@/types/plan'
+import type { PlannedSession, SessionTemplate } from '@/types/plan'
 import { getPlannedSessions, isRaceMirrorSession } from '@/lib/plan/storage'
 import { resolveSessionMeta } from '@/lib/plan/session-meta'
 import { useActivityTypes } from '@/lib/plan/use-activity-types'
 import { SessionEditorModal } from './SessionEditorModal'
+import { SessionAddSheet } from './SessionAddSheet'
 import { formatDurationHHmm } from '@/lib/training/duration'
 import { useT } from '@/lib/i18n/I18nProvider'
 
@@ -33,6 +34,8 @@ export function DayDetailPanel({ dateISO, onClose, reloadKey, onSessionsChanged 
   const [loaded, setLoaded] = useState(false)
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingSession, setEditingSession] = useState<PlannedSession | null>(null)
+  const [addSheetOpen, setAddSheetOpen] = useState(false)
+  const [prefillTemplate, setPrefillTemplate] = useState<SessionTemplate | null>(null)
   const { types } = useActivityTypes()
 
   useEffect(() => {
@@ -56,7 +59,20 @@ export function DayDetailPanel({ dateISO, onClose, reloadKey, onSessionsChanged 
   }
 
   function openCreate() {
+    setAddSheetOpen(true)
+  }
+
+  function handlePickTemplate(t: SessionTemplate) {
+    setAddSheetOpen(false)
     setEditingSession(null)
+    setPrefillTemplate(t)
+    setEditorOpen(true)
+  }
+
+  function handleCreateBlank() {
+    setAddSheetOpen(false)
+    setEditingSession(null)
+    setPrefillTemplate(null)
     setEditorOpen(true)
   }
 
@@ -132,8 +148,16 @@ export function DayDetailPanel({ dateISO, onClose, reloadKey, onSessionsChanged 
         session={editingSession}
         initialDate={dateISO}
         open={editorOpen}
-        onClose={() => setEditorOpen(false)}
+        onClose={() => { setEditorOpen(false); setPrefillTemplate(null) }}
         onSaved={() => { setEditorOpen(false); onSessionsChanged() }}
+        prefillTemplate={prefillTemplate}
+      />
+      <SessionAddSheet
+        open={addSheetOpen}
+        dateISO={dateISO}
+        onClose={() => setAddSheetOpen(false)}
+        onPickTemplate={handlePickTemplate}
+        onCreateBlank={handleCreateBlank}
       />
     </div>
   )
