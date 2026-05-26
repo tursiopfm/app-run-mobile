@@ -20,8 +20,10 @@ jest.mock('@/lib/data/charge', () => ({
 const mockCreateClient = createClient as jest.Mock
 
 describe('getMorningReportData', () => {
+  beforeEach(() => { jest.clearAllMocks() })
+
   it('agrège charge + dernière activité', async () => {
-    mockCreateClient.mockReturnValue({
+    mockCreateClient.mockResolvedValue({
       from: jest.fn().mockReturnValue({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
@@ -42,10 +44,14 @@ describe('getMorningReportData', () => {
     expect(data.charge.perSport.all.dailyMetrics).toHaveLength(90)
     expect(data.lastActivity?.id).toBe('a1')
     expect(data.lastActivity?.movingTimeSec).toBe(4500)
+    expect(data.lastActivity?.sportType).toBe('Run')
+    expect(data.lastActivity?.ces).toBe(58)
+    expect(typeof data.generatedAt).toBe('string')
+    expect(data.generatedAt.length).toBeGreaterThan(0)
   })
 
   it('retourne lastActivity null si aucune activité', async () => {
-    mockCreateClient.mockReturnValue({
+    mockCreateClient.mockResolvedValue({
       from: jest.fn().mockReturnValue({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({

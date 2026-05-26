@@ -31,6 +31,8 @@ export async function getMorningReportData(userId: string): Promise<MorningRepor
       .limit(1),
   ])
 
+  if (lastActRes.error) throw lastActRes.error
+
   const row = lastActRes.data?.[0]
   const lastActivity: MorningLastActivity | null = row ? {
     id:             row.id,
