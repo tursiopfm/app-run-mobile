@@ -791,7 +791,7 @@ export const SESSION_TEMPLATES: SessionTemplate[] = [
     defaultDistance: 20,
     defaultIntensity: 2,
     description: 'Trajet vélo modéré, récupération active.',
-    tags: ['velotaf', 'transport', 'recup'],
+    tags: ['velotaf', 'transport', 'récup'],
     defaultZones: [main(60, 2)],
   },
   {
