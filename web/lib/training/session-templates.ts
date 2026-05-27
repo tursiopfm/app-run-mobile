@@ -45,9 +45,11 @@ function cooldown(durationMin: number = 10): TrainingZone {
   }
 }
 
-function main(durationMin: number, intensity: IntensityLevel, label?: string): TrainingZone {
+// Note : passer un `id` explicite quand un template contient plusieurs `main()`
+// avec mêmes (intensity, durationMin) (sinon collision sur React keys + dnd-kit).
+function main(durationMin: number, intensity: IntensityLevel, label?: string, id?: string): TrainingZone {
   return {
-    id: `main-${intensity}-${durationMin}`,
+    id: id ?? `main-${intensity}-${durationMin}`,
     kind: 'main',
     mode: 'duration',
     durationMin,
@@ -238,9 +240,9 @@ export const SESSION_TEMPLATES: SessionTemplate[] = [
     description: 'SL trail : 60min EF + 60min relances en côtes (Z3) + 60min EF.',
     tags: ['spécifique', 'long', 'trail'],
     defaultZones: [
-      main(60, 2, '60min EF'),
+      main(60, 2, '60min EF', 'main-ef-1'),
       main(60, 3, '60min relances Z3'),
-      main(60, 2, '60min retour EF'),
+      main(60, 2, '60min retour EF', 'main-ef-2'),
     ],
   },
   {

@@ -175,6 +175,15 @@ C:\Users\Franc\app-run-mobile\backend\strava-oauth> npm run dev
 C:\Users\Franc\app-run-mobile\web> npm run dev
 ```
 
+### Plan/bibliothèque — durcissement post-refonte
+- **Quoi** : suite à la refonte 2026-05-27 de `SESSION_TEMPLATES` (50 séances), plusieurs items à durcir :
+  1. Hide le pill "Musculation" du FilterBar quand 0 template système (les muscu sont fusionnées dans renfo) — sauf si l'user a des templates custom de type 'musculation'.
+  2. Deep-clone défensif de `template.defaultZones` à `PlanClient.tsx:126` et `SessionEditorModal.tsx:127` (actuellement assigné par référence — latent footgun si un futur éditeur fait du mutate in-place).
+  3. Resserrer les signatures `effortStep`/`recoveryStep` en discriminated union pour que TypeScript exige `durationMin` ou `distanceM` à la compilation.
+  4. Choisir une durée par défaut stable pour `cr-cible` (actuellement 240min/4h — arbitraire).
+- **Pourquoi** : finitions remontées en review finale, non-bloquantes pour le PR.
+- **Identifié** : 2026-05-27
+
 ---
 
 ## Modèle de fiche pour un nouvel item

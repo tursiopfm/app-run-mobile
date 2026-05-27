@@ -96,6 +96,21 @@ describe('SESSION_TEMPLATES', () => {
     }
   })
 
+  it('a tous les zone/step IDs uniques dans chaque defaultZones', () => {
+    // Garde-fou contre les collisions d'ID (cf. main(60, 2) appelé 2× dans un
+    // même template → React duplicate-key + dnd-kit indéterministe).
+    for (const t of SESSION_TEMPLATES) {
+      const ids: string[] = []
+      for (const z of t.defaultZones ?? []) {
+        ids.push(z.id)
+        if (isRepeatZone(z)) {
+          ids.push(...z.steps.map(s => s.id))
+        }
+      }
+      expect(new Set(ids).size).toBe(ids.length)
+    }
+  })
+
   it('a des RepeatZone bien formés (repeats ≥ 2, ≥ 1 step, mode/distance/durée cohérents)', () => {
     for (const t of SESSION_TEMPLATES) {
       for (const z of t.defaultZones ?? []) {
