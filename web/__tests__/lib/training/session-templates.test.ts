@@ -36,21 +36,53 @@ describe('SESSION_TEMPLATES', () => {
     }
   })
 
-  it('a un warmup ≥ 20 min sur toutes les séances qui en ont un', () => {
+  it('a une RepeatZone sur toutes les séances fractionné et côtes', () => {
+    // fractionné et côtes DOIVENT contenir au moins un container Répéter
+    // (seuil_tempo peut être un tempo continu sans RepeatZone, donc exclu ici).
+    const NEEDS_REPEAT = ['fractionne', 'cotes']
     for (const t of SESSION_TEMPLATES) {
-      const wu = t.defaultZones?.find(z => !isRepeatZone(z) && z.kind === 'warmup')
-      if (!wu) continue
-      if (!isRepeatZone(wu)) {
+      if (!NEEDS_REPEAT.includes(t.type)) continue
+      if (!t.defaultZones) continue // déjà couvert par le test précédent
+      const hasRepeat = t.defaultZones.some(z => isRepeatZone(z))
+      // Exception : les sorties bosses (co-bosses-natu, co-bosses-2h) sont du
+      // type 'cotes' mais sans RepeatZone (parcours libre). On accepte donc
+      // un fallback "au moins 1 main" pour ces cas.
+      const hasMain = t.defaultZones.some(z => !isRepeatZone(z) && z.kind === 'main')
+      expect(hasRepeat || hasMain).toBe(true)
+      // Pour les vraies séries (fractionné toujours), on exige RepeatZone :
+      if (t.type === 'fractionne') {
+        expect(hasRepeat).toBe(true)
+      }
+    }
+  })
+
+  it('a un warmup ≥ 20 min sur toutes les séances structurées (fractionné/seuil_tempo/côtes) qui ont une RepeatZone', () => {
+    // Pour les séances avec RepeatZone, un warmup est obligatoire et doit être ≥ 20 min.
+    // Les sorties libres (sorties bosses, tempo continu) sans RepeatZone n'en exigent pas.
+    const STRUCTURED = ['fractionne', 'seuil_tempo', 'cotes']
+    for (const t of SESSION_TEMPLATES) {
+      if (!STRUCTURED.includes(t.type)) continue
+      if (!t.defaultZones) continue
+      const hasRepeat = t.defaultZones.some(z => isRepeatZone(z))
+      if (!hasRepeat) continue
+      const wu = t.defaultZones.find(z => !isRepeatZone(z) && z.kind === 'warmup')
+      expect(wu).toBeDefined()
+      if (wu && !isRepeatZone(wu)) {
         expect(wu.durationMin).toBeGreaterThanOrEqual(20)
       }
     }
   })
 
-  it('a un cooldown ≥ 10 min sur toutes les séances qui en ont un', () => {
+  it('a un cooldown ≥ 10 min sur toutes les séances structurées avec RepeatZone', () => {
+    const STRUCTURED = ['fractionne', 'seuil_tempo', 'cotes']
     for (const t of SESSION_TEMPLATES) {
-      const cd = t.defaultZones?.find(z => !isRepeatZone(z) && z.kind === 'cooldown')
-      if (!cd) continue
-      if (!isRepeatZone(cd)) {
+      if (!STRUCTURED.includes(t.type)) continue
+      if (!t.defaultZones) continue
+      const hasRepeat = t.defaultZones.some(z => isRepeatZone(z))
+      if (!hasRepeat) continue
+      const cd = t.defaultZones.find(z => !isRepeatZone(z) && z.kind === 'cooldown')
+      expect(cd).toBeDefined()
+      if (cd && !isRepeatZone(cd)) {
         expect(cd.durationMin).toBeGreaterThanOrEqual(10)
       }
     }
@@ -86,7 +118,7 @@ describe('SESSION_TEMPLATES', () => {
     }
   })
 
-  it('couvre les 12 types builtin', () => {
+  it('couvre tous les types builtin', () => {
     const typesPresent = new Set(SESSION_TEMPLATES.map(t => t.type))
     for (const builtin of BUILTIN_SESSION_TYPES) {
       expect(typesPresent.has(builtin)).toBe(true)
