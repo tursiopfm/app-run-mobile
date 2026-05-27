@@ -205,7 +205,7 @@ export function BibliothequeSeancesBlock() {
       {/* Par défaut on affiche les 2 premiers templates pour ne pas exploser
           la hauteur du bloc. Bouton « Voir plus » apparaît dès qu'il y a
           plus de 2 résultats. */}
-      <div className="mt-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+      <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-2">
         {(showAllTemplates ? filtered : filtered.slice(0, COLLAPSED_TEMPLATES_COUNT)).map(t => (
           <TemplateCard
             key={t.id}

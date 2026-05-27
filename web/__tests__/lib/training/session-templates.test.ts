@@ -118,9 +118,14 @@ describe('SESSION_TEMPLATES', () => {
     }
   })
 
-  it('couvre tous les types builtin', () => {
+  it('couvre tous les types builtin (sauf musculation, fusionné avec renfo)', () => {
+    // Les séances de musculation sont classées sous type='renfo' dans la
+    // bibliothèque système (cf. muscu-jambes, muscu-haut-corps). Le type
+    // 'musculation' reste valide pour les templates custom et les activités
+    // existantes — il n'est juste plus utilisé dans le catalogue par défaut.
     const typesPresent = new Set(SESSION_TEMPLATES.map(t => t.type))
     for (const builtin of BUILTIN_SESSION_TYPES) {
+      if (builtin === 'musculation') continue
       expect(typesPresent.has(builtin)).toBe(true)
     }
   })

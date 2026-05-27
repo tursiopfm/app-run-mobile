@@ -847,7 +847,7 @@ export const SESSION_TEMPLATES: SessionTemplate[] = [
     defaultZones: [main(60, 2)],
   },
 
-  // === Renfo / Musculation (4) ===
+  // === Renfo (4) — inclut musculation jambes/haut corps ===
   {
     id: 'renfo-30min-trail',
     type: 'renfo',
@@ -868,20 +868,20 @@ export const SESSION_TEMPLATES: SessionTemplate[] = [
   },
   {
     id: 'muscu-jambes',
-    type: 'musculation',
+    type: 'renfo',
     title: 'Muscu jambes',
     defaultDuration: 60,
     defaultIntensity: 4,
     description: 'Squat, presse, fentes, mollets. Charges modérées, séries longues.',
-    tags: ['musculation', 'jambes'],
+    tags: ['musculation', 'jambes', 'renfo'],
   },
   {
     id: 'muscu-haut-corps',
-    type: 'musculation',
+    type: 'renfo',
     title: 'Muscu haut du corps',
     defaultDuration: 45,
     defaultIntensity: 3,
     description: 'Pectoraux, dos, épaules, biceps, triceps. Travail complémentaire.',
-    tags: ['musculation', 'haut du corps'],
+    tags: ['musculation', 'haut du corps', 'renfo'],
   },
 ]
