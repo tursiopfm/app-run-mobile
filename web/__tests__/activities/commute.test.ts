@@ -127,25 +127,49 @@ describe('matchCommute', () => {
     expect(matchCommute({ sportType: 'Run', geo }, [makeRoute()])).toBeNull()
   })
 
-  it('fallback heure quand pas de géo (matin → outbound)', () => {
+  it('route avec géo + activité SANS GPS → null (pas de fallback heure)', () => {
+    // Sans le strict, un treadmill 5 km à 8 h serait classé Runtaf aller.
     const geo = extractCommuteGeo({
       distance: 5000,
       start_latlng: [],
       end_latlng: [],
       start_date_local: '2026-05-28T08:00:00Z',
     })
-    const m = matchCommute({ sportType: 'Run', geo }, [makeRoute()])
+    expect(matchCommute({ sportType: 'Run', geo }, [makeRoute()])).toBeNull()
+  })
+
+  it('route avec géo + départ GPS loin de home/office → null (pas de fallback heure)', () => {
+    // Régression #1 : un footing matinal à l'autre bout de la ville ne doit pas être Runtaf.
+    const geo = extractCommuteGeo({
+      distance: 5000,
+      start_latlng: [48.9000, 2.5000], // ~9 km de home, ~6 km de office → > geoTolM
+      end_latlng: [48.9100, 2.5100],
+      start_date_local: '2026-05-28T08:00:00Z',
+    })
+    expect(matchCommute({ sportType: 'Run', geo }, [makeRoute()])).toBeNull()
+  })
+
+  it('route sans géo (home/office null) → fallback heure (matin → outbound)', () => {
+    const geo = extractCommuteGeo({
+      distance: 5000,
+      start_latlng: [],
+      end_latlng: [],
+      start_date_local: '2026-05-28T08:00:00Z',
+    })
+    const route = makeRoute({ homeLat: null, homeLng: null, officeLat: null, officeLng: null })
+    const m = matchCommute({ sportType: 'Run', geo }, [route])
     expect(m?.direction).toBe('outbound')
   })
 
-  it('fallback heure quand pas de géo (soir → return)', () => {
+  it('route sans géo (home/office null) → fallback heure (soir → return)', () => {
     const geo = extractCommuteGeo({
       distance: 5000,
       start_latlng: [],
       end_latlng: [],
       start_date_local: '2026-05-28T18:30:00Z',
     })
-    const m = matchCommute({ sportType: 'Run', geo }, [makeRoute()])
+    const route = makeRoute({ homeLat: null, homeLng: null, officeLat: null, officeLng: null })
+    const m = matchCommute({ sportType: 'Run', geo }, [route])
     expect(m?.direction).toBe('return')
   })
 

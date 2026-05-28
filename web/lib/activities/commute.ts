@@ -110,27 +110,28 @@ export function matchCommute(
 }
 
 function resolveDirection(geo: CommuteGeo, route: CommuteRoute): CommuteDirection | null {
-  // 1) Géoloc d'abord
-  if (
-    geo.start != null &&
+  const routeHasGeo =
     route.homeLat != null &&
     route.homeLng != null &&
     route.officeLat != null &&
     route.officeLng != null
-  ) {
-    const dHome = haversineMeters(geo.start, [route.homeLat, route.homeLng])
-    const dOffice = haversineMeters(geo.start, [route.officeLat, route.officeLng])
+
+  // Route avec Home/Office (cas standard) : géo strict, pas de fallback heure si géo non concluante
+  // (sinon n'importe quelle activité de la bonne distance et bon créneau horaire est classée trajet).
+  if (routeHasGeo) {
+    if (geo.start == null) return null
+    const dHome = haversineMeters(geo.start, [route.homeLat!, route.homeLng!])
+    const dOffice = haversineMeters(geo.start, [route.officeLat!, route.officeLng!])
     if (dHome <= route.geoTolM && dHome <= dOffice) return 'outbound'
     if (dOffice <= route.geoTolM) return 'return'
-    // géo non concluante → fallback heure
+    return null
   }
 
-  // 2) Fallback heure
+  // Route sans Home/Office (cas dégénéré, ne devrait pas arriver via l'UI) : fallback heure pur.
   if (geo.localHour != null) {
     return geo.localHour < route.hourSplit ? 'outbound' : 'return'
   }
 
-  // Ni géo ni heure → pas de match
   return null
 }
 

@@ -102,21 +102,52 @@ export async function assignCommuteName(opts: AssignOpts): Promise<AssignResult>
   const year = new Date(activity.startTime).getUTCFullYear()
   const dayKey = activity.startTime.slice(0, 10)
 
-  // 4. Charger toutes les activités du même trajet/an pour calculer seq + jumeau
+  // 4. Charger toutes les activités candidates pour calculer seq + jumeau :
+  //    (a) celles déjà liées à cette route ;
+  //    (b) celles dont le nom commence par `${year}#` et dont le suffixe correspond
+  //        aux gabarits de la route (titres posés manuellement avant la création du trajet).
   const yearStart = `${year}-01-01`
   const yearEnd = `${year + 1}-01-01`
-  const { data: siblings, error: sibErr } = await supabase
-    .from('activities')
-    .select('id, name, start_time, commute_seq')
-    .eq('user_id', userId)
-    .eq('commute_route_id', route.id)
-    .gte('start_time', yearStart)
-    .lt('start_time', yearEnd)
-    .is('deleted_at', null)
-  if (sibErr) throw new Error(`siblings load: ${sibErr.message}`)
 
-  type Sib = { id: string; name: string | null; start_time: string; commute_seq: number | null }
-  const rows: Sib[] = siblings ?? []
+  type Sib = {
+    id: string
+    name: string | null
+    start_time: string
+    commute_seq: number | null
+    commute_route_id: string | null
+  }
+
+  const [linkedRes, numberedRes] = await Promise.all([
+    supabase
+      .from('activities')
+      .select('id, name, start_time, commute_seq, commute_route_id')
+      .eq('user_id', userId)
+      .eq('commute_route_id', route.id)
+      .gte('start_time', yearStart)
+      .lt('start_time', yearEnd)
+      .is('deleted_at', null),
+    supabase
+      .from('activities')
+      .select('id, name, start_time, commute_seq, commute_route_id')
+      .eq('user_id', userId)
+      .gte('start_time', yearStart)
+      .lt('start_time', yearEnd)
+      .is('deleted_at', null)
+      .ilike('name', `${year}#%`),
+  ])
+  if (linkedRes.error) throw new Error(`siblings load: ${linkedRes.error.message}`)
+  if (numberedRes.error) throw new Error(`numbered load: ${numberedRes.error.message}`)
+
+  const outboundSuffix = ` ${route.outboundTitle}`
+  const returnSuffix = ` ${route.returnTitle}`
+  const byId = new Map<string, Sib>()
+  for (const r of (linkedRes.data ?? []) as Sib[]) byId.set(r.id, r)
+  for (const r of (numberedRes.data ?? []) as Sib[]) {
+    if (byId.has(r.id)) continue
+    if (!r.name) continue
+    if (r.name.endsWith(outboundSuffix) || r.name.endsWith(returnSuffix)) byId.set(r.id, r)
+  }
+  const rows: Sib[] = [...byId.values()]
 
   let seq: number | null = null
 
