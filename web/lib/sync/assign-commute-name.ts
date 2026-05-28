@@ -1,0 +1,186 @@
+// Orchestration DB + Strava pour l'attribution automatique du titre des trajets
+// domicile-travail. Appelable depuis le webhook (edge, client service) ou une route API.
+
+import {
+  type CommuteRoute,
+  buildCommuteTitle,
+  extractCommuteGeo,
+  matchCommute,
+  parseCommuteSeq,
+} from '@/lib/activities/commute'
+
+// Type minimal compatible avec les clients Supabase utilisés (service + SSR).
+// On reste volontairement structurel pour éviter de coupler edge/SSR.
+export type SupabaseLike = {
+  from: (table: string) => any
+}
+
+type CommuteRouteRow = {
+  id: string
+  user_id: string
+  sport_type: string
+  label: string
+  ref_distance_m: number
+  distance_tol_pct: number
+  home_lat: number | null
+  home_lng: number | null
+  office_lat: number | null
+  office_lng: number | null
+  geo_tol_m: number
+  outbound_title: string
+  return_title: string
+  hour_split: number
+  active: boolean
+}
+
+export function rowToCommuteRoute(row: CommuteRouteRow): CommuteRoute {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    sportType: row.sport_type,
+    label: row.label,
+    refDistanceM: Number(row.ref_distance_m),
+    distanceTolPct: Number(row.distance_tol_pct),
+    homeLat: row.home_lat != null ? Number(row.home_lat) : null,
+    homeLng: row.home_lng != null ? Number(row.home_lng) : null,
+    officeLat: row.office_lat != null ? Number(row.office_lat) : null,
+    officeLng: row.office_lng != null ? Number(row.office_lng) : null,
+    geoTolM: Number(row.geo_tol_m),
+    outboundTitle: row.outbound_title,
+    returnTitle: row.return_title,
+    hourSplit: Number(row.hour_split),
+    active: row.active,
+  }
+}
+
+type ActivityForAssign = {
+  id: string
+  providerActivityId: string
+  sportType: string
+  name: string | null
+  startTime: string
+  rawPayload: unknown
+}
+
+type AssignOpts = {
+  supabase: SupabaseLike
+  userId: string
+  activity: ActivityForAssign
+  routes?: CommuteRoute[]
+  updateStrava?: (activityId: string, name: string) => Promise<void>
+}
+
+type AssignResult = { matched: boolean; renamed: boolean; seq?: number }
+
+const MANUAL_TITLE_RE = /^\d{4}#\d+/
+
+export async function assignCommuteName(opts: AssignOpts): Promise<AssignResult> {
+  const { supabase, userId, activity } = opts
+
+  // 1. Charger les routes actives si non fournies
+  let routes: CommuteRoute[]
+  if (opts.routes) {
+    routes = opts.routes
+  } else {
+    const { data, error } = await supabase
+      .from('commute_routes')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('active', true)
+    if (error) throw new Error(`commute_routes load: ${error.message}`)
+    routes = (data ?? []).map((r: CommuteRouteRow) => rowToCommuteRoute(r))
+  }
+
+  // 2. Détection
+  const geo = extractCommuteGeo(activity.rawPayload)
+  const match = matchCommute({ sportType: activity.sportType, geo }, routes)
+  if (!match) return { matched: false, renamed: false }
+
+  const route = match.route
+
+  // 3. Année + clé du jour
+  const year = new Date(activity.startTime).getUTCFullYear()
+  const dayKey = activity.startTime.slice(0, 10)
+
+  // 4. Charger toutes les activités du même trajet/an pour calculer seq + jumeau
+  const yearStart = `${year}-01-01`
+  const yearEnd = `${year + 1}-01-01`
+  const { data: siblings, error: sibErr } = await supabase
+    .from('activities')
+    .select('id, name, start_time, commute_seq')
+    .eq('user_id', userId)
+    .eq('commute_route_id', route.id)
+    .gte('start_time', yearStart)
+    .lt('start_time', yearEnd)
+    .is('deleted_at', null)
+  if (sibErr) throw new Error(`siblings load: ${sibErr.message}`)
+
+  type Sib = { id: string; name: string | null; start_time: string; commute_seq: number | null }
+  const rows: Sib[] = siblings ?? []
+
+  let seq: number | null = null
+
+  // Jumeau du jour (même trajet, même date) → partage le N entre aller et retour
+  const twin = rows.find(
+    (r) => r.id !== activity.id && r.commute_seq != null && r.start_time.slice(0, 10) === dayKey,
+  )
+  if (twin && twin.commute_seq != null) {
+    seq = twin.commute_seq
+  } else {
+    // Max des seq existants : colonne commute_seq + seq parseables depuis les titres manuels
+    let maxSeq = 0
+    for (const r of rows) {
+      if (r.id === activity.id) continue
+      if (r.commute_seq != null && r.commute_seq > maxSeq) maxSeq = r.commute_seq
+      const parsed = parseCommuteSeq(r.name, year)
+      if (parsed != null && parsed > maxSeq) maxSeq = parsed
+    }
+    seq = maxSeq + 1
+  }
+
+  // 5. Titre cible
+  const title = buildCommuteTitle(route, match.direction, year, seq)
+
+  // 6. Garde-fous sur le rename
+  let renamed = false
+  let seqToWrite = seq
+  const currentName = activity.name
+
+  if (currentName === title) {
+    // Déjà le bon titre → on écrit juste les colonnes commute_*
+    renamed = false
+  } else if (currentName && MANUAL_TITLE_RE.test(currentName)) {
+    // Titre manuel existant (`YYYY#N ...`) différent → ne pas écraser le nom
+    renamed = false
+    const existingSeq = parseCommuteSeq(currentName, year)
+    if (existingSeq != null) seqToWrite = existingSeq
+  } else {
+    renamed = true
+  }
+
+  // 7. Update activities
+  const update: Record<string, unknown> = {
+    commute_route_id: route.id,
+    commute_seq: seqToWrite,
+    commute_direction: match.direction,
+  }
+  if (renamed) update.name = title
+
+  const { error: updErr } = await supabase
+    .from('activities')
+    .update(update)
+    .eq('id', activity.id)
+    .eq('user_id', userId)
+  if (updErr) throw new Error(`activity update: ${updErr.message}`)
+
+  // 8. Strava best-effort
+  if (renamed && opts.updateStrava) {
+    try {
+      await opts.updateStrava(activity.providerActivityId, title)
+    } catch (err) {
+      console.warn('[commute] strava rename failed', activity.providerActivityId, String(err))
+    }
+  }
+
+  return { matched: true, renamed, seq: seqToWrite ?? undefined }
+}

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { fetchStravaActivity } from '@/lib/providers/strava/api'
+import { fetchStravaActivity, updateStravaActivityName } from '@/lib/providers/strava/api'
 import { stravaToNormalized } from '@/lib/providers/strava/mapper'
+import { assignCommuteName } from '@/lib/sync/assign-commute-name'
 import { computeCesResult } from '@/lib/analytics/effort-score'
 import type { StravaWebhookEvent } from '@/lib/providers/strava/webhook'
 import type { ActivityInput, UserProfileForCes } from '@/lib/analytics/types'
@@ -142,8 +143,30 @@ async function processActivityEvent(event: StravaWebhookEvent): Promise<string |
   const profile: UserProfileForCes = profileRow ?? {}
 
   const normalized = stravaToNormalized(userId, stravaActivity)
-  await upsertActivity(supabase, normalized, profile)
+  const upserted = await upsertActivity(supabase, normalized, profile)
   console.log('[webhook-ok]', event.object_id)
+
+  // Auto-détection trajet domicile-travail (best-effort : ne doit jamais faire échouer le webhook)
+  if (upserted?.id) {
+    try {
+      await assignCommuteName({
+        supabase,
+        userId,
+        activity: {
+          id: upserted.id,
+          providerActivityId: String(event.object_id),
+          sportType: normalized.sportType,
+          name: normalized.name,
+          startTime: normalized.startTime,
+          rawPayload: stravaActivity,
+        },
+        updateStrava: (id, name) => updateStravaActivityName(accessToken, Number(id), name),
+      })
+    } catch (err) {
+      console.warn('[webhook-commute-err]', event.object_id, String(err))
+    }
+  }
+
   return userId
 }
 
@@ -192,7 +215,7 @@ async function upsertActivity(
     .select('id, provider_activity_id')
 
   if (error) throw new Error(`Activity upsert failed: ${error.message}`)
-  if (!rows?.length) return
+  if (!rows?.length) return null
 
   await supabase.from('activity_metrics').upsert([
     { activity_id: rows[0].id, metric_key: 'ces',              metric_value: ces.ces },
@@ -200,6 +223,8 @@ async function upsertActivity(
     { activity_id: rows[0].id, metric_key: 'muscle_load',      metric_value: ces.muscleLoad },
     { activity_id: rows[0].id, metric_key: 'intensity_factor', metric_value: ces.intensityFactor },
   ], { onConflict: 'activity_id,metric_key' })
+
+  return { id: rows[0].id as string, name: act.name }
 }
 
 type ConnectionRow = { access_token: string; refresh_token: string; token_expires_at: string }

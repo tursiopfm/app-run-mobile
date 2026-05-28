@@ -1,5 +1,6 @@
-import { Plug2, Palette, Sparkles, LifeBuoy, User } from 'lucide-react'
+import { Plug2, Palette, Sparkles, LifeBuoy, User, Route } from 'lucide-react'
 import { StravaSection } from '@/components/settings/StravaSection'
+import { CommuteRoutesSection } from '@/components/settings/CommuteRoutesSection'
 import { AccountSection } from '@/components/settings/AccountSection'
 import { AppearanceSection } from '@/components/settings/AppearanceSection'
 import { HelpAboutSection } from '@/components/settings/HelpAboutSection'
@@ -160,6 +161,18 @@ export default async function SettingsPage() {
             maxHr={maxHr}
             thresholdHr={thresholdHr}
           />
+        </SectionCard>
+      </section>
+
+      {/* ── Trajets domicile-travail ── */}
+      <section>
+        <SectionHeader
+          icon={Route}
+          title="Trajets domicile-travail"
+          subtitle="Auto-détection & nommage Runtaf / Vélotaf"
+        />
+        <SectionCard>
+          <CommuteRoutesSection />
         </SectionCard>
       </section>
 

@@ -53,6 +53,24 @@ export async function fetchStravaActivity(
   return res.json() as Promise<StravaActivity>
 }
 
+// Renomme une activité sur Strava (best-effort). Lève si !res.ok — l'appelant catche.
+export async function updateStravaActivityName(
+  accessToken: string,
+  activityId: number,
+  name: string
+): Promise<void> {
+  const body = new URLSearchParams({ name })
+  const res = await fetch(`${STRAVA_BASE}/activities/${activityId}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body,
+  })
+  if (!res.ok) throw new Error(`Strava update name error: ${res.status}`)
+}
+
 export async function fetchStravaActivities(
   accessToken: string,
   options: FetchActivitiesOptions = {}
