@@ -147,7 +147,7 @@ export async function assignCommuteName(opts: AssignOpts): Promise<AssignResult>
     if (!r.name) continue
     if (r.name.endsWith(outboundSuffix) || r.name.endsWith(returnSuffix)) byId.set(r.id, r)
   }
-  const rows: Sib[] = [...byId.values()]
+  const rows: Sib[] = Array.from(byId.values())
 
   let seq: number | null = null
 
