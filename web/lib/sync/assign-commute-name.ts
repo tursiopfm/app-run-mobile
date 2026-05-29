@@ -156,7 +156,7 @@ export async function assignCommuteName(opts: AssignOpts): Promise<AssignResult>
   }
   const rows: Sib[] = Array.from(byId.values())
 
-  const seq: number = pickCommuteSeq(
+  const { seq, source } = pickCommuteSeq(
     rows.map((r) => ({
       id: r.id,
       name: r.name,
@@ -175,15 +175,20 @@ export async function assignCommuteName(opts: AssignOpts): Promise<AssignResult>
   let renamed = false
   let seqToWrite = seq
   const currentName = activity.name
+  const parsedCurrent = currentName ? parseCommuteSeq(currentName, year) : null
 
   if (currentName === title) {
-    // Déjà le bon titre → on écrit juste les colonnes commute_*
     renamed = false
   } else if (currentName && MANUAL_TITLE_RE.test(currentName)) {
-    // Titre manuel existant (`YYYY#N ...`) différent → ne pas écraser le nom
-    renamed = false
-    const existingSeq = parseCommuteSeq(currentName, year)
-    if (existingSeq != null) seqToWrite = existingSeq
+    // Titre `YYYY#N …` existant. Par défaut on le préserve. Exception : on a un
+    // jumeau du jour avec un N différent → ce titre est forcément faux (deux
+    // commutes du même jour partagent le même N), on corrige.
+    if (source === 'twin' && parsedCurrent != null && parsedCurrent !== seq) {
+      renamed = true
+    } else {
+      renamed = false
+      if (parsedCurrent != null) seqToWrite = parsedCurrent
+    }
   } else {
     renamed = true
   }

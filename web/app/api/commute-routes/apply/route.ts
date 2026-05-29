@@ -30,11 +30,20 @@ export async function POST() {
     return NextResponse.json({ matched: 0, renamed: 0 })
   }
 
+  // Restreint à l'année courante : le compteur #N est par année, et le but de
+  // l'apply est d'amorcer le compteur de l'année en cours. Les commutes des
+  // années précédentes restent inchangés (titres et colonnes commute_*).
+  const year = new Date().getUTCFullYear()
+  const yearStart = `${year}-01-01`
+  const yearEnd = `${year + 1}-01-01`
+
   const { data: acts, error: actErr } = await supabase
     .from('activities')
     .select('id, provider_activity_id, sport_type, manual_sport_type, name, start_time, raw_payload')
     .eq('user_id', user.id)
     .is('deleted_at', null)
+    .gte('start_time', yearStart)
+    .lt('start_time', yearEnd)
     .order('start_time', { ascending: true })
   if (actErr) return NextResponse.json({ error: actErr.message }, { status: 500 })
 

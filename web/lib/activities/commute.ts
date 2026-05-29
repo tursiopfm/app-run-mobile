@@ -179,6 +179,12 @@ export type CommuteCandidate = {
   commuteSeq: number | null
 }
 
+export type PickSeqResult = {
+  seq: number
+  /** 'twin' = jumeau du jour trouvé ; 'max' = max + 1 ; 'fresh' = aucun candidat. */
+  source: 'twin' | 'max' | 'fresh'
+}
+
 /**
  * Calcule le N d'une activité de trajet à partir des candidats déjà connus.
  * - Jumeau du jour (même date) → on réutilise son N (colonne `commute_seq` OU
@@ -192,20 +198,27 @@ export function pickCommuteSeq(
   activityId: string,
   dayKey: string,
   year: number,
-): number {
+): PickSeqResult {
   for (const c of candidates) {
     if (c.id === activityId) continue
     if (c.startTime.slice(0, 10) !== dayKey) continue
-    if (c.commuteSeq != null) return c.commuteSeq
+    if (c.commuteSeq != null) return { seq: c.commuteSeq, source: 'twin' }
     const parsed = parseCommuteSeq(c.name, year)
-    if (parsed != null) return parsed
+    if (parsed != null) return { seq: parsed, source: 'twin' }
   }
   let max = 0
+  let any = false
   for (const c of candidates) {
     if (c.id === activityId) continue
-    if (c.commuteSeq != null && c.commuteSeq > max) max = c.commuteSeq
+    if (c.commuteSeq != null) {
+      any = true
+      if (c.commuteSeq > max) max = c.commuteSeq
+    }
     const parsed = parseCommuteSeq(c.name, year)
-    if (parsed != null && parsed > max) max = parsed
+    if (parsed != null) {
+      any = true
+      if (parsed > max) max = parsed
+    }
   }
-  return max + 1
+  return { seq: max + 1, source: any ? 'max' : 'fresh' }
 }

@@ -278,35 +278,33 @@ describe('pickCommuteSeq', () => {
     ...over,
   })
 
-  it('jumeau du jour avec commute_seq posée → réutilise', () => {
+  it('jumeau du jour avec commute_seq posée → source=twin', () => {
     const candidates = [mk({ id: 'twin', commuteSeq: 21 })]
-    expect(pickCommuteSeq(candidates, 'self', '2026-05-28', 2026)).toBe(21)
+    expect(pickCommuteSeq(candidates, 'self', '2026-05-28', 2026)).toEqual({ seq: 21, source: 'twin' })
   })
 
-  it('régression : jumeau du jour avec titre manuel `2026#21 …` (commute_seq null) → réutilise 21', () => {
-    // C'est le cas Franck : l'aller du matin a été nommé à la main avant la
-    // feature, sa colonne commute_seq est null, mais son titre porte le N.
+  it('régression : jumeau du jour avec titre manuel (commute_seq null) → source=twin', () => {
     const candidates = [
       mk({ id: 'aller', name: '2026#21 🏠 Home🏃‍♂️➡️🏃Office 🏢', startTime: '2026-05-28T07:45:00Z' }),
     ]
-    expect(pickCommuteSeq(candidates, 'retour', '2026-05-28', 2026)).toBe(21)
+    expect(pickCommuteSeq(candidates, 'retour', '2026-05-28', 2026)).toEqual({ seq: 21, source: 'twin' })
   })
 
-  it('pas de jumeau du jour → max(seq) + 1 (mélange colonne + titre)', () => {
+  it('pas de jumeau → max + 1 (source=max)', () => {
     const candidates = [
       mk({ id: 'a', commuteSeq: 18, startTime: '2026-05-26T07:45:00Z' }),
       mk({ id: 'b', name: '2026#20 🏠 X', startTime: '2026-05-27T07:45:00Z' }),
     ]
-    expect(pickCommuteSeq(candidates, 'self', '2026-05-28', 2026)).toBe(21)
+    expect(pickCommuteSeq(candidates, 'self', '2026-05-28', 2026)).toEqual({ seq: 21, source: 'max' })
   })
 
-  it('aucun candidat → 1', () => {
-    expect(pickCommuteSeq([], 'self', '2026-05-28', 2026)).toBe(1)
+  it('aucun candidat → seq=1 source=fresh', () => {
+    expect(pickCommuteSeq([], 'self', '2026-05-28', 2026)).toEqual({ seq: 1, source: 'fresh' })
   })
 
   it('ignore l\'activité elle-même', () => {
     const candidates = [mk({ id: 'self', commuteSeq: 99 })]
-    expect(pickCommuteSeq(candidates, 'self', '2026-05-28', 2026)).toBe(1)
+    expect(pickCommuteSeq(candidates, 'self', '2026-05-28', 2026)).toEqual({ seq: 1, source: 'fresh' })
   })
 })
 
