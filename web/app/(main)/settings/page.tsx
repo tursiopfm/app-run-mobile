@@ -1,6 +1,6 @@
 import { Plug2, Palette, Sparkles, LifeBuoy, User, Route } from 'lucide-react'
 import { StravaSection } from '@/components/settings/StravaSection'
-import { CommuteRoutesSection } from '@/components/settings/CommuteRoutesSection'
+import { CommuteRoutesTeaser } from '@/components/settings/CommuteRoutesTeaser'
 import { AccountSection } from '@/components/settings/AccountSection'
 import { AppearanceSection } from '@/components/settings/AppearanceSection'
 import { HelpAboutSection } from '@/components/settings/HelpAboutSection'
@@ -75,6 +75,9 @@ export default async function SettingsPage() {
   let hrMethod:    HrZoneMethod | null = null
   let maxHr:       number | null = null
   let thresholdHr: number | null = null
+  let commuteCount = 0
+  let commuteActiveCount = 0
+  let commuteLabels: string[] = []
 
   if (user) {
     const { data: profile } = await supabase
@@ -110,6 +113,18 @@ export default async function SettingsPage() {
     }
 
     avatarUrl ??= profile?.avatar_url ?? null
+
+    const { data: commuteRows } = await supabase
+      .from('commute_routes')
+      .select('label, active')
+      .eq('user_id', user.id)
+
+    if (commuteRows) {
+      const rows = commuteRows as { label: string; active: boolean }[]
+      commuteCount = rows.length
+      commuteActiveCount = rows.filter(r => r.active).length
+      commuteLabels = rows.filter(r => r.active).map(r => r.label)
+    }
   }
 
   return (
@@ -164,15 +179,19 @@ export default async function SettingsPage() {
         </SectionCard>
       </section>
 
-      {/* ── Trajets domicile-travail ── */}
+      {/* ── Automatisations ── */}
       <section>
         <SectionHeader
           icon={Route}
-          title="Trajets domicile-travail"
-          subtitle="Auto-détection & nommage Runtaf / Vélotaf"
+          title="Automatisations"
+          subtitle="Détection et renommage automatiques d'activités"
         />
         <SectionCard>
-          <CommuteRoutesSection />
+          <CommuteRoutesTeaser
+            routesCount={commuteCount}
+            activeCount={commuteActiveCount}
+            labels={commuteLabels}
+          />
         </SectionCard>
       </section>
 
