@@ -3,6 +3,8 @@ import { createClient } from '@/lib/database/supabase-server'
 import { extractWaypoints, type ExtractInput } from '@/lib/race-import/extract'
 import { fetchRaceHtml } from '@/lib/race-import/fetch-url'
 import { parsePdfText } from '@/lib/race-import/parse-pdf'
+import { findParserForUrl } from '@/lib/race-import/sources'
+import '@/lib/race-import/sources/livetrail'  // side-effect: registerParser
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -55,6 +57,20 @@ export async function POST(request: Request) {
 
       if (source === 'url') {
         if (!body.url) throw new Error('URL manquante')
+
+        // Tenter d'abord un parser site-spécifique (extraction déterministe, 0 LLM).
+        const parser = findParserForUrl(body.url)
+        if (parser) {
+          try {
+            const data = await parser.parse(body.url)
+            return NextResponse.json({ data })
+          } catch (err) {
+            // Parser a échoué → on log et on tombe sur le fallback LLM ci-dessous.
+            console.warn(`[race-import] parser ${parser.id} failed:`, (err as Error).message)
+          }
+        }
+
+        // Fallback : fetch HTML + LLM (comportement original).
         const html = await fetchRaceHtml(body.url)
         input = { html }
       } else if (source === 'text') {
