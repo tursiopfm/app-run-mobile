@@ -104,6 +104,7 @@ export function CommuteRoutesSection() {
   const [applying, setApplying] = useState(false)
   const [applyResult, setApplyResult] = useState<{ matched: number; renamed: number } | null>(null)
   const [applyError, setApplyError] = useState(false)
+  const [writeToStrava, setWriteToStrava] = useState(true)
 
   async function loadRoutes() {
     setLoading(true)
@@ -152,7 +153,11 @@ export function CommuteRoutesSection() {
     setApplyError(false)
     setApplyResult(null)
     try {
-      const res = await fetch('/api/commute-routes/apply', { method: 'POST' })
+      const res = await fetch('/api/commute-routes/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ writeToStrava }),
+      })
       if (!res.ok) throw new Error('apply')
       const data = await res.json() as { matched: number; renamed: number }
       setApplyResult(data)
@@ -210,9 +215,25 @@ export function CommuteRoutesSection() {
       <div className="rounded-[12px] bg-trail-surface border border-trail-border p-[12px] space-y-[8px]">
         <p className="text-[13px] font-bold text-trail-text">Appliquer à l&apos;historique</p>
         <p className="text-[11px] text-trail-muted leading-[15px]">
-          Détecte et renomme les activités déjà importées qui correspondent à tes trajets.
-          <span className="text-amber-400"> Attention : les titres sont aussi réécrits sur Strava.</span>
+          Détecte les activités déjà importées qui correspondent à tes trajets et leur attribue le bon numéro.
         </p>
+
+        <label className="flex items-start gap-[8px] cursor-pointer select-none rounded-[8px] bg-trail-card border border-trail-border px-[10px] py-[8px]">
+          <input
+            type="checkbox"
+            checked={writeToStrava}
+            onChange={e => setWriteToStrava(e.target.checked)}
+            disabled={applying}
+            className="mt-[2px] w-[14px] h-[14px] accent-trail-primary cursor-pointer"
+          />
+          <span className="flex-1">
+            <span className="block text-[12px] font-semibold text-trail-text">Réécrire aussi les titres sur Strava</span>
+            <span className="block text-[10px] text-trail-muted leading-[14px] mt-[2px]">
+              Coche pour pousser les titres sur Strava. Décoche pour ne mettre à jour que la base de TrailCockpit (les titres Strava restent tels quels).
+            </span>
+          </span>
+        </label>
+
         <button
           type="button"
           onClick={handleApply}

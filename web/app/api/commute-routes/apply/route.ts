@@ -13,10 +13,19 @@ export const maxDuration = 300
 // Application rétroactive : reparcourt tout l'historique du user dans l'ordre
 // chronologique et attribue les titres de trajet. Réutilise assignCommuteName,
 // donc les seq déjà posés et les titres manuels (`YYYY#N ...`) sont préservés.
-export async function POST() {
+// Body : { writeToStrava?: boolean } — défaut true (réécrit aussi sur Strava).
+export async function POST(req: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  let writeToStrava = true
+  try {
+    const body = (await req.json()) as { writeToStrava?: boolean } | null
+    if (body && typeof body.writeToStrava === 'boolean') writeToStrava = body.writeToStrava
+  } catch {
+    // pas de body → on garde le défaut true
+  }
 
   const { data: routeRows, error: routeErr } = await supabase
     .from('commute_routes')
@@ -48,10 +57,12 @@ export async function POST() {
   if (actErr) return NextResponse.json({ error: actErr.message }, { status: 500 })
 
   let token: string | null = null
-  try {
-    token = await getValidStravaToken(user.id)
-  } catch {
-    token = null // pas de connexion Strava → on met quand même à jour la base
+  if (writeToStrava) {
+    try {
+      token = await getValidStravaToken(user.id)
+    } catch {
+      token = null // pas de connexion Strava → on met quand même à jour la base
+    }
   }
 
   let matched = 0
