@@ -151,3 +151,41 @@ export function parseCommuteSeq(name: string | null, year: number): number | nul
   const m = name.match(new RegExp(`^${year}#(\\d+)`))
   return m ? parseInt(m[1], 10) : null
 }
+
+export type CommuteCandidate = {
+  id: string
+  name: string | null
+  startTime: string
+  commuteSeq: number | null
+}
+
+/**
+ * Calcule le N d'une activité de trajet à partir des candidats déjà connus.
+ * - Jumeau du jour (même date) → on réutilise son N (colonne `commute_seq` OU
+ *   N parsé depuis son titre `${year}#N …`). Important : le jumeau peut avoir
+ *   été nommé à la main avant que la feature existe, sa colonne est null mais
+ *   son titre porte le N.
+ * - Sinon : max(N connus ou parsés) + 1.
+ */
+export function pickCommuteSeq(
+  candidates: CommuteCandidate[],
+  activityId: string,
+  dayKey: string,
+  year: number,
+): number {
+  for (const c of candidates) {
+    if (c.id === activityId) continue
+    if (c.startTime.slice(0, 10) !== dayKey) continue
+    if (c.commuteSeq != null) return c.commuteSeq
+    const parsed = parseCommuteSeq(c.name, year)
+    if (parsed != null) return parsed
+  }
+  let max = 0
+  for (const c of candidates) {
+    if (c.id === activityId) continue
+    if (c.commuteSeq != null && c.commuteSeq > max) max = c.commuteSeq
+    const parsed = parseCommuteSeq(c.name, year)
+    if (parsed != null && parsed > max) max = parsed
+  }
+  return max + 1
+}

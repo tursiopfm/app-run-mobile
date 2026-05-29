@@ -1,11 +1,13 @@
 // web/__tests__/activities/commute.test.ts
 import {
+  type CommuteCandidate,
   type CommuteRoute,
   buildCommuteTitle,
   extractCommuteGeo,
   haversineMeters,
   matchCommute,
   parseCommuteSeq,
+  pickCommuteSeq,
 } from '@/lib/activities/commute'
 
 // Trajet de référence : Paris (home) → ~5 km à l'est (office).
@@ -226,6 +228,46 @@ describe('buildCommuteTitle', () => {
     expect(buildCommuteTitle(makeRoute(), 'return', 2026, 21)).toBe(
       '2026#21 🏢 Office🏃‍♂️➡️🏃Home 🏠',
     )
+  })
+})
+
+describe('pickCommuteSeq', () => {
+  const mk = (over: Partial<CommuteCandidate> & { id: string }): CommuteCandidate => ({
+    name: null,
+    startTime: '2026-05-28T07:00:00Z',
+    commuteSeq: null,
+    ...over,
+  })
+
+  it('jumeau du jour avec commute_seq posée → réutilise', () => {
+    const candidates = [mk({ id: 'twin', commuteSeq: 21 })]
+    expect(pickCommuteSeq(candidates, 'self', '2026-05-28', 2026)).toBe(21)
+  })
+
+  it('régression : jumeau du jour avec titre manuel `2026#21 …` (commute_seq null) → réutilise 21', () => {
+    // C'est le cas Franck : l'aller du matin a été nommé à la main avant la
+    // feature, sa colonne commute_seq est null, mais son titre porte le N.
+    const candidates = [
+      mk({ id: 'aller', name: '2026#21 🏠 Home🏃‍♂️➡️🏃Office 🏢', startTime: '2026-05-28T07:45:00Z' }),
+    ]
+    expect(pickCommuteSeq(candidates, 'retour', '2026-05-28', 2026)).toBe(21)
+  })
+
+  it('pas de jumeau du jour → max(seq) + 1 (mélange colonne + titre)', () => {
+    const candidates = [
+      mk({ id: 'a', commuteSeq: 18, startTime: '2026-05-26T07:45:00Z' }),
+      mk({ id: 'b', name: '2026#20 🏠 X', startTime: '2026-05-27T07:45:00Z' }),
+    ]
+    expect(pickCommuteSeq(candidates, 'self', '2026-05-28', 2026)).toBe(21)
+  })
+
+  it('aucun candidat → 1', () => {
+    expect(pickCommuteSeq([], 'self', '2026-05-28', 2026)).toBe(1)
+  })
+
+  it('ignore l\'activité elle-même', () => {
+    const candidates = [mk({ id: 'self', commuteSeq: 99 })]
+    expect(pickCommuteSeq(candidates, 'self', '2026-05-28', 2026)).toBe(1)
   })
 })
 

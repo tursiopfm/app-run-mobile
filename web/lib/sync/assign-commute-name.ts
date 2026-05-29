@@ -7,6 +7,7 @@ import {
   extractCommuteGeo,
   matchCommute,
   parseCommuteSeq,
+  pickCommuteSeq,
 } from '@/lib/activities/commute'
 
 // Type minimal compatible avec les clients Supabase utilisés (service + SSR).
@@ -149,25 +150,17 @@ export async function assignCommuteName(opts: AssignOpts): Promise<AssignResult>
   }
   const rows: Sib[] = Array.from(byId.values())
 
-  let seq: number | null = null
-
-  // Jumeau du jour (même trajet, même date) → partage le N entre aller et retour
-  const twin = rows.find(
-    (r) => r.id !== activity.id && r.commute_seq != null && r.start_time.slice(0, 10) === dayKey,
+  const seq: number = pickCommuteSeq(
+    rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      startTime: r.start_time,
+      commuteSeq: r.commute_seq,
+    })),
+    activity.id,
+    dayKey,
+    year,
   )
-  if (twin && twin.commute_seq != null) {
-    seq = twin.commute_seq
-  } else {
-    // Max des seq existants : colonne commute_seq + seq parseables depuis les titres manuels
-    let maxSeq = 0
-    for (const r of rows) {
-      if (r.id === activity.id) continue
-      if (r.commute_seq != null && r.commute_seq > maxSeq) maxSeq = r.commute_seq
-      const parsed = parseCommuteSeq(r.name, year)
-      if (parsed != null && parsed > maxSeq) maxSeq = parsed
-    }
-    seq = maxSeq + 1
-  }
 
   // 5. Titre cible
   const title = buildCommuteTitle(route, match.direction, year, seq)
