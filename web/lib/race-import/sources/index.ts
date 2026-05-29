@@ -1,11 +1,11 @@
 // Point d'extension futur pour parsers site-spécifiques.
-// Phase 1 : aucun parser concret enregistré, défaut LLM partout.
+// Les parsers concrets s'enregistrent via registerParser() au load (effet de bord d'import).
 import type { ExtractedRaceData } from '@/types/plan'
 
 export interface RaceParser {
   id: string
   match(url: string): boolean
-  parse(html: string): Promise<ExtractedRaceData>
+  parse(url: string): Promise<ExtractedRaceData>
 }
 
 const REGISTRY: RaceParser[] = []
