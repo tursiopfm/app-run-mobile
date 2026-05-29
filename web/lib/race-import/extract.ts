@@ -7,6 +7,11 @@ import {
   rawToExtractedRaceData,
   validateExtractedRaceData,
 } from './schema'
+import { stripHtmlForLlm } from './strip-html'
+
+// Cap conservateur sous le Tier 1 OpenAI (30k TPM sur gpt-4o).
+// 60k chars ≈ 15k tokens, laisse de la marge pour le prompt système + sortie.
+const MAX_INPUT_CHARS = 60_000
 
 export type ExtractInput =
   | { text: string }
@@ -49,11 +54,12 @@ export async function extractWaypoints(
       },
     ]
   } else if ('html' in i) {
-    userContent = `Contenu HTML :\n\n${i.html.slice(0, 200_000)}`
+    const cleaned = stripHtmlForLlm(i.html).slice(0, MAX_INPUT_CHARS)
+    userContent = `Contenu de la page (HTML nettoyé) :\n\n${cleaned}`
   } else if ('pdfText' in i) {
-    userContent = `Texte extrait d'un PDF :\n\n${i.pdfText.slice(0, 200_000)}`
+    userContent = `Texte extrait d'un PDF :\n\n${i.pdfText.slice(0, MAX_INPUT_CHARS)}`
   } else {
-    userContent = `Texte fourni :\n\n${(i as any).text.slice(0, 200_000)}`
+    userContent = `Texte fourni :\n\n${(i as any).text.slice(0, MAX_INPUT_CHARS)}`
   }
 
   const response = await client.chat.completions.create({
