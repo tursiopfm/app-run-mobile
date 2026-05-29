@@ -187,3 +187,34 @@ export interface SessionTemplate {
   description: string
   tags?: string[]            // ex : ['VMA', 'piste', 'court']
 }
+
+// === Waypoints d'une course objectif (ravitos, points de passage, BH) ===
+export type CutoffKind = 'clock_time' | 'elapsed' | 'unknown'
+
+export type WaypointType =
+  | 'depart'
+  | 'ravito'
+  | 'pointage'
+  | 'arrivee'
+  | 'autre'
+
+export interface RaceWaypoint {
+  id: string
+  raceId: string
+  orderIndex: number
+  name: string
+  km: number
+  kmInter: number | null
+  dPlus: number | null
+  dMoins: number | null
+  cutoffRaw: string | null
+  cutoffKind: CutoffKind | null
+  type: WaypointType
+}
+
+// Sortie brute du LLM (sans id ni raceId).
+export interface ExtractedRaceData {
+  raceName: string | null
+  editionYear: number | null
+  waypoints: Array<Omit<RaceWaypoint, 'id' | 'raceId'>>
+}
