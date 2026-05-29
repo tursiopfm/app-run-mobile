@@ -18,8 +18,8 @@ describe('rawToExtractedRaceData (snake → camel)', () => {
           d_plus: 0,
           d_moins: 0,
           cutoff_raw: '09:00',
-          cutoff_kind: 'clock_time',
-          type: 'depart',
+          cutoff_kind: 'clock_time' as const,
+          type: 'depart' as const,
         },
       ],
     }
@@ -52,8 +52,8 @@ describe('rawToExtractedRaceData (snake → camel)', () => {
           d_plus: null,
           d_moins: null,
           cutoff_raw: null,
-          cutoff_kind: 'unknown',
-          type: 'depart',
+          cutoff_kind: 'unknown' as const,
+          type: 'depart' as const,
         },
       ],
     }
