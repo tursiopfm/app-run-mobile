@@ -6,6 +6,9 @@ import type { Race } from '@/types/plan'
 import { getRaces, deleteRace, peekRaces } from '@/lib/plan/storage'
 import { RaceEditorModal } from '@/components/plan/RaceEditorModal'
 import { EditButton } from '@/components/plan/EditButton'
+import { WaypointsTable } from '@/components/plan/WaypointsTable'
+import { RaceImportSheet } from '@/components/plan/RaceImportSheet'
+import type { RaceWaypoint } from '@/types/plan'
 import { colors } from '@/lib/design/colors'
 
 function formatLongDate(iso: string): string {
@@ -28,11 +31,18 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   const [loaded, setLoaded] = useState(initial !== null)
   const [editorOpen, setEditorOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [waypoints, setWaypoints] = useState<RaceWaypoint[]>([])
+  const [importOpen, setImportOpen] = useState(false)
 
   const reload = useCallback(async () => {
     const list = await getRaces()
     setRace(list.find(r => r.id === raceId) ?? null)
     setLoaded(true)
+    const wpsRes = await fetch(`/api/races/${raceId}/waypoints`)
+    if (wpsRes.ok) {
+      const body = await wpsRes.json()
+      setWaypoints(body.waypoints ?? [])
+    }
   }, [raceId])
 
   useEffect(() => { void reload() }, [reload])
@@ -115,12 +125,31 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
         </div>
       </div>
 
-      <Section title="Barrières horaires">
-        <p className="text-[12px] text-trail-muted">Bientôt — saisie des barrières par km / poste de ravito.</p>
-      </Section>
-
-      <Section title="Plan de course">
-        <p className="text-[12px] text-trail-muted">Bientôt — allure cible, stratégie ravito, vêtements.</p>
+      <Section title="Tableau de course">
+        {waypoints.length === 0 ? (
+          <button
+            type="button"
+            onClick={() => setImportOpen(true)}
+            className="text-[12px] text-trail-primary underline"
+          >
+            Importer le tableau (URL / PDF / Image / Texte)
+          </button>
+        ) : (
+          <>
+            <WaypointsTable
+              waypoints={waypoints.map(({ id: _id, raceId: _rid, ...rest }) => rest)}
+              onChange={() => { /* phase 1 : édition uniquement via re-import */ }}
+              readOnly
+            />
+            <button
+              type="button"
+              onClick={() => setImportOpen(true)}
+              className="mt-2 text-[12px] text-trail-primary underline"
+            >
+              Ré-importer
+            </button>
+          </>
+        )}
       </Section>
 
       <Section title="Profil de la course">
@@ -148,6 +177,12 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
         {deleting ? 'Suppression…' : 'Supprimer cette course'}
       </button>
 
+      <RaceImportSheet
+        raceId={race.id}
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onSaved={(wps) => { setWaypoints(wps); setImportOpen(false) }}
+      />
       <RaceEditorModal
         race={race}
         open={editorOpen}

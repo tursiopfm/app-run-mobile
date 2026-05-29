@@ -168,7 +168,7 @@ export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
         {status === 'preview' && (
           <>
             <p className="text-[12px] text-trail-muted">
-              Vérifie les chiffres, corrige ce qui doit l'être, puis sauvegarde.
+              Vérifie les chiffres, corrige ce qui doit l&apos;être, puis sauvegarde.
             </p>
             <WaypointsTable
               waypoints={draft}
