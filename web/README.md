@@ -37,6 +37,7 @@ STRAVA_REDIRECT_URI=http://localhost:3000/api/strava/callback
 STRAVA_WEBHOOK_VERIFY_TOKEN=trail_cockpit_webhook_secret
 APP_URL=http://localhost:3000
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+OPENAI_API_KEY=sk-...
 ```
 
 3. Démarrer :

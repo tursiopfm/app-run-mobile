@@ -1,6 +1,6 @@
 # Spec — Import + édition du tableau de course (onglet Plan)
 
-> **Status: Spec** · 2026-05-29 · Phase 1 (sans projection ETA)
+> **Status: Implémenté** · 2026-05-29 · Code: `web/lib/race-import/`, `web/app/api/race-import/`, `web/app/api/races/[id]/waypoints/`, `web/components/plan/{WaypointsTable,RaceImportSheet}.tsx`
 
 ## Contexte
 
