@@ -37,6 +37,7 @@ const COMMUTE_SPORTS = [...RUN_SPORTS, ...RIDE_SPORTS]
 
 // Préfixe d'exemple pour les aperçus de titres ("2026#21 …").
 const PREVIEW_PREFIX = `${new Date().getFullYear()}#21 `
+const CHIP_LABEL     = `${new Date().getFullYear()}#N`
 
 function sportIcon(sportType: string) {
   if (RIDE_SPORTS.includes(sportType)) return Bike
@@ -520,30 +521,53 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
         </p>
       </div>
 
-      {/* Gabarits de titre */}
-      <div className="space-y-[8px]">
-        <div>
-          <FieldLabel>Titre aller</FieldLabel>
-          <TextInput value={outboundTitle} onChange={setOutboundTitle} />
+      {/* Titres générés sur Strava — pastille N° auto + champ suffixe éditable */}
+      <div className="space-y-[10px]">
+        <FieldLabel>Titres générés sur Strava</FieldLabel>
+
+        {/* Aller */}
+        <div className="space-y-[6px]">
+          <div className="flex items-center gap-[6px] text-[11px] text-trail-muted">
+            <span className="w-[8px] h-[8px] rounded-full bg-trail-primary" aria-hidden />
+            <span className="font-bold uppercase tracking-wider text-trail-text">Aller</span>
+            <span className="text-[10px]">matin · départ Home</span>
+          </div>
+          <div className="flex items-stretch gap-[6px]">
+            <div
+              className="flex items-center px-[10px] rounded-[8px] bg-trail-surface border border-trail-border text-[12px] font-bold tracking-wide text-trail-muted whitespace-nowrap select-none"
+              title="Numéro auto-incrémenté par jour"
+            >
+              {CHIP_LABEL}
+            </div>
+            <div className="flex-1">
+              <TextInput value={outboundTitle} onChange={setOutboundTitle} />
+            </div>
+          </div>
         </div>
-        <div>
-          <FieldLabel>Titre retour</FieldLabel>
-          <TextInput value={returnTitle} onChange={setReturnTitle} />
+
+        {/* Retour */}
+        <div className="space-y-[6px]">
+          <div className="flex items-center gap-[6px] text-[11px] text-trail-muted">
+            <span className="w-[8px] h-[8px] rounded-full bg-sky-400" aria-hidden />
+            <span className="font-bold uppercase tracking-wider text-trail-text">Retour</span>
+            <span className="text-[10px]">soir · départ Office</span>
+          </div>
+          <div className="flex items-stretch gap-[6px]">
+            <div
+              className="flex items-center px-[10px] rounded-[8px] bg-trail-surface border border-trail-border text-[12px] font-bold tracking-wide text-trail-muted whitespace-nowrap select-none"
+              title="Numéro auto-incrémenté par jour"
+            >
+              {CHIP_LABEL}
+            </div>
+            <div className="flex-1">
+              <TextInput value={returnTitle} onChange={setReturnTitle} />
+            </div>
+          </div>
         </div>
+
         <p className="text-[10px] text-trail-muted/80 leading-[14px]">
-          Ne saisis que la partie après le numéro. Ex aller : <span className="text-trail-text">🏠 Home🏃‍♂️➡️🏃Office 🏢</span> — le préfixe <span className="text-trail-text">{PREVIEW_PREFIX.trim()} </span> est ajouté automatiquement.
+          Le préfixe <span className="text-trail-text">{CHIP_LABEL}</span> est ajouté automatiquement. Aller et retour du même jour partagent le même N.
         </p>
-        {/* Aperçu live */}
-        <div className="grid grid-cols-1 gap-[4px] text-[12px]">
-          <div className="rounded-[8px] bg-trail-surface px-2 py-[6px]">
-            <p className="text-[10px] uppercase tracking-wider text-trail-muted">Aperçu aller</p>
-            <p className="text-[13px] text-trail-text truncate">{PREVIEW_PREFIX}{outboundTitle}</p>
-          </div>
-          <div className="rounded-[8px] bg-trail-surface px-2 py-[6px]">
-            <p className="text-[10px] uppercase tracking-wider text-trail-muted">Aperçu retour</p>
-            <p className="text-[13px] text-trail-text truncate">{PREVIEW_PREFIX}{returnTitle}</p>
-          </div>
-        </div>
       </div>
 
       {/* Options avancées repliées */}
