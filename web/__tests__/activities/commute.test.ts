@@ -1,11 +1,11 @@
 // web/__tests__/activities/commute.test.ts
+import type { CommuteCandidate, CommuteRoute } from '@/lib/activities/commute'
 import {
-  type CommuteCandidate,
-  type CommuteRoute,
   buildCommuteTitle,
   extractCommuteGeo,
   haversineMeters,
   matchCommute,
+  matchCommuteByTitle,
   parseCommuteSeq,
   pickCommuteSeq,
 } from '@/lib/activities/commute'
@@ -214,6 +214,45 @@ describe('matchCommute', () => {
     })
     const m = matchCommute({ sportType: 'run', geo }, [makeRoute({ sportType: 'Run' })])
     expect(m?.direction).toBe('outbound')
+  })
+})
+
+describe('matchCommuteByTitle', () => {
+  const route = makeRoute()
+
+  it('aller : suffixe outboundTitle → outbound', () => {
+    const m = matchCommuteByTitle('2026#21 🏠 Home🏃‍♂️➡️🏃Office 🏢', [route], 2026)
+    expect(m?.direction).toBe('outbound')
+    expect(m?.route.id).toBe(route.id)
+  })
+
+  it('retour : suffixe returnTitle → return', () => {
+    const m = matchCommuteByTitle('2026#21 🏢 Office🏃‍♂️➡️🏃Home 🏠', [route], 2026)
+    expect(m?.direction).toBe('return')
+  })
+
+  it('régression : matche même sans GPS ni bon sport_type (cas historique)', () => {
+    // L'historique de Franck contient des trajets nommés à la main mais qui
+    // n'auraient pas matché par géo/sport → le titre suffit à les identifier.
+    const m = matchCommuteByTitle('2026#5 🏠 Home🏃‍♂️➡️🏃Office 🏢', [route], 2026)
+    expect(m?.direction).toBe('outbound')
+  })
+
+  it('année différente → null', () => {
+    expect(matchCommuteByTitle('2025#21 🏠 Home🏃‍♂️➡️🏃Office 🏢', [route], 2026)).toBeNull()
+  })
+
+  it('pas de préfixe YYYY# → null', () => {
+    expect(matchCommuteByTitle('Sortie matinale', [route], 2026)).toBeNull()
+  })
+
+  it('suffixe ne correspond à aucune route → null', () => {
+    expect(matchCommuteByTitle('2026#21 Footing récup', [route], 2026)).toBeNull()
+  })
+
+  it('route inactive ignorée', () => {
+    const inactive = makeRoute({ active: false })
+    expect(matchCommuteByTitle('2026#21 🏠 Home🏃‍♂️➡️🏃Office 🏢', [inactive], 2026)).toBeNull()
   })
 })
 

@@ -145,6 +145,26 @@ export function buildCommuteTitle(
   return `${year}#${seq} ${direction === 'outbound' ? route.outboundTitle : route.returnTitle}`
 }
 
+/**
+ * Identifie un trajet d'après le **titre** d'une activité déjà nommée
+ * `${year}#N {outboundTitle|returnTitle}`. Permet de récupérer les commutes
+ * historiques nommés à la main, même quand ils n'ont pas de GPS exploitable.
+ */
+export function matchCommuteByTitle(
+  name: string | null,
+  routes: CommuteRoute[],
+  year: number,
+): CommuteMatch | null {
+  if (!name) return null
+  if (parseCommuteSeq(name, year) == null) return null
+  for (const route of routes) {
+    if (!route.active) continue
+    if (name.endsWith(` ${route.outboundTitle}`)) return { route, direction: 'outbound' }
+    if (name.endsWith(` ${route.returnTitle}`)) return { route, direction: 'return' }
+  }
+  return null
+}
+
 /** Si `name` commence par `${year}#N`, retourne N, sinon null. */
 export function parseCommuteSeq(name: string | null, year: number): number | null {
   if (!name) return null

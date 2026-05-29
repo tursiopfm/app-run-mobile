@@ -6,6 +6,7 @@ import {
   buildCommuteTitle,
   extractCommuteGeo,
   matchCommute,
+  matchCommuteByTitle,
   parseCommuteSeq,
   pickCommuteSeq,
 } from '@/lib/activities/commute'
@@ -93,15 +94,20 @@ export async function assignCommuteName(opts: AssignOpts): Promise<AssignResult>
   }
 
   // 2. Détection
+  // 2a. Année + clé du jour (calculées d'abord, utilisées par le matching titre)
+  const year = new Date(activity.startTime).getUTCFullYear()
+  const dayKey = activity.startTime.slice(0, 10)
+
+  // 2b. Matching titre en priorité (récupère les commutes nommés à la main,
+  //     même sans GPS exploitable et avec sport_type bruts différents).
+  // 2c. Fallback : matching géo strict pour les activités non titrées.
   const geo = extractCommuteGeo(activity.rawPayload)
-  const match = matchCommute({ sportType: activity.sportType, geo }, routes)
+  const match =
+    matchCommuteByTitle(activity.name, routes, year) ??
+    matchCommute({ sportType: activity.sportType, geo }, routes)
   if (!match) return { matched: false, renamed: false }
 
   const route = match.route
-
-  // 3. Année + clé du jour
-  const year = new Date(activity.startTime).getUTCFullYear()
-  const dayKey = activity.startTime.slice(0, 10)
 
   // 4. Charger toutes les activités candidates pour calculer seq + jumeau :
   //    (a) celles déjà liées à cette route ;

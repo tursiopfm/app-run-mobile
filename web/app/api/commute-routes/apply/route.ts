@@ -32,7 +32,7 @@ export async function POST() {
 
   const { data: acts, error: actErr } = await supabase
     .from('activities')
-    .select('id, provider_activity_id, sport_type, name, start_time, raw_payload')
+    .select('id, provider_activity_id, sport_type, manual_sport_type, name, start_time, raw_payload')
     .eq('user_id', user.id)
     .is('deleted_at', null)
     .order('start_time', { ascending: true })
@@ -55,7 +55,7 @@ export async function POST() {
       activity: {
         id: a.id,
         providerActivityId: String(a.provider_activity_id),
-        sportType: a.sport_type,
+        sportType: a.manual_sport_type ?? a.sport_type,
         name: a.name,
         startTime: a.start_time,
         rawPayload: a.raw_payload,
