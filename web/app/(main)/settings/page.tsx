@@ -78,11 +78,12 @@ export default async function SettingsPage() {
   let commuteCount = 0
   let commuteActiveCount = 0
   let commuteLabels: string[] = []
+  let planAutoPushTitle = true
 
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('first_name,last_name,avatar_url,max_hr,threshold_hr,hr_zone_method')
+      .select('first_name,last_name,avatar_url,max_hr,threshold_hr,hr_zone_method,plan_auto_push_title')
       .eq('id', user.id)
       .single()
 
@@ -91,6 +92,7 @@ export default async function SettingsPage() {
     hrMethod    = (profile?.hr_zone_method as HrZoneMethod | null) ?? null
     maxHr       = profile?.max_hr       ?? null
     thresholdHr = profile?.threshold_hr ?? null
+    planAutoPushTitle = profile?.plan_auto_push_title ?? true
 
     const { data: connection } = await supabase
       .from('provider_connections')
@@ -152,7 +154,11 @@ export default async function SettingsPage() {
         />
         <SectionCard>
           <AccountSection />
-          <StravaSection isConnected={stravaConnected} athleteName={stravaAthleteName} />
+          <StravaSection
+            isConnected={stravaConnected}
+            athleteName={stravaAthleteName}
+            planAutoPushTitle={planAutoPushTitle}
+          />
         </SectionCard>
       </section>
 

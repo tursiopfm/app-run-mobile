@@ -373,6 +373,8 @@ export type Dict = {
     syncErrorPrefix: (msg: string) => string
     syncErrorNetwork: string; syncErrorUnknown: string
     stravaConnectMyAccount: string
+    planAutoPushTitleLabel: string
+    planAutoPushTitleHint: string
 
     defaultAthleteName: string
     memberSince: (date: string) => string
@@ -1952,6 +1954,8 @@ export const fr: Dict = {
     syncErrorNetwork:    'Erreur réseau',
     syncErrorUnknown:    'inconnue',
     stravaConnectMyAccount: 'Connecter mon compte Strava',
+    planAutoPushTitleLabel: 'Pousser auto le titre de séance sur Strava',
+    planAutoPushTitleHint:  'Quand une activité Strava matche une séance planifiée, son titre est remplacé par le titre de la séance',
 
     // IdentityPreview
     defaultAthleteName: 'Athlète',

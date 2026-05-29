@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { fetchStravaActivity, updateStravaActivityName } from '@/lib/providers/strava/api'
 import { stravaToNormalized } from '@/lib/providers/strava/mapper'
 import { assignCommuteName } from '@/lib/sync/assign-commute-name'
+import { maybePushPlanTitleToStrava } from '@/lib/plan/push-title'
 import { computeCesResult } from '@/lib/analytics/effort-score'
 import type { StravaWebhookEvent } from '@/lib/providers/strava/webhook'
 import type { ActivityInput, UserProfileForCes } from '@/lib/analytics/types'
@@ -164,6 +165,20 @@ async function processActivityEvent(event: StravaWebhookEvent): Promise<string |
       })
     } catch (err) {
       console.warn('[webhook-commute-err]', event.object_id, String(err))
+    }
+  }
+
+  // Push auto du titre d'une séance planifiée matchée (best-effort, ne doit pas faire échouer le webhook)
+  if (upserted?.id) {
+    try {
+      await maybePushPlanTitleToStrava({
+        supabase,
+        userId,
+        accessToken,
+        newActivityId: upserted.id,
+      })
+    } catch (err) {
+      console.warn('[webhook-plan-push-err]', event.object_id, String(err))
     }
   }
 

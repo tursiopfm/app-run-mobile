@@ -13,6 +13,7 @@ export async function PATCH(req: NextRequest) {
     'ftp_watts', 'weight_kg', 'year_goal_km', 'birth_year',
     'threshold_pace_run_sec_per_km', 'threshold_pace_trail_sec_per_km',
     'hr_zone_method', 'hr_zones_custom', 'hr_method_updated_at',
+    'plan_auto_push_title',
   ]
   const update: Record<string, unknown> = {}
   for (const key of allowed) {

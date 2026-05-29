@@ -8,14 +8,17 @@ import { useT } from '@/lib/i18n/I18nProvider'
 type Props = {
   isConnected: boolean
   athleteName?: string | null
+  planAutoPushTitle: boolean
 }
 
-export function StravaSection({ isConnected, athleteName }: Props) {
+export function StravaSection({ isConnected, athleteName, planAutoPushTitle }: Props) {
   const router = useRouter()
   const L = useT().settings
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<string | null>(null)
   const [disconnecting, setDisconnecting] = useState(false)
+  const [autoPush, setAutoPush] = useState<boolean>(planAutoPushTitle)
+  const [autoPushSaving, setAutoPushSaving] = useState(false)
 
   async function handleSync() {
     setSyncing(true)
@@ -43,6 +46,27 @@ export function StravaSection({ isConnected, athleteName }: Props) {
       router.refresh()
     } catch {
       setDisconnecting(false)
+    }
+  }
+
+  async function handleToggleAutoPush() {
+    if (autoPushSaving) return
+    const next = !autoPush
+    setAutoPush(next) // optimistic
+    setAutoPushSaving(true)
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan_auto_push_title: next }),
+      })
+      if (!res.ok) {
+        setAutoPush(!next) // rollback
+      }
+    } catch {
+      setAutoPush(!next) // rollback
+    } finally {
+      setAutoPushSaving(false)
     }
   }
 
@@ -103,6 +127,38 @@ export function StravaSection({ isConnected, athleteName }: Props) {
           <Activity size={13} />
           {L.stravaConnectMyAccount}
         </a>
+      )}
+
+      {isConnected && (
+        <div className="flex items-start gap-3 px-1 py-[6px]">
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-semibold text-trail-text leading-tight">
+              {L.planAutoPushTitleLabel}
+            </p>
+            <p className="text-[11px] text-trail-muted leading-[15px] mt-[2px]">
+              {L.planAutoPushTitleHint}
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={autoPush}
+            aria-label={L.planAutoPushTitleLabel}
+            onClick={handleToggleAutoPush}
+            disabled={autoPushSaving}
+            className={
+              'relative inline-flex flex-shrink-0 h-[22px] w-[40px] items-center rounded-full transition-colors disabled:opacity-60 ' +
+              (autoPush ? 'bg-trail-primary' : 'bg-trail-border')
+            }
+          >
+            <span
+              className={
+                'inline-block h-[18px] w-[18px] rounded-full bg-white shadow transition-transform ' +
+                (autoPush ? 'translate-x-[20px]' : 'translate-x-[2px]')
+              }
+            />
+          </button>
+        </div>
       )}
 
       {syncMsg && (

@@ -874,6 +874,8 @@ export const en: Dict = {
     syncErrorNetwork:    'Network error',
     syncErrorUnknown:    'unknown',
     stravaConnectMyAccount: 'Connect my Strava account',
+    planAutoPushTitleLabel: 'Auto-push session title to Strava',
+    planAutoPushTitleHint:  'When a Strava activity matches a planned session, its title is replaced by the session title',
 
     defaultAthleteName: 'Athlete',
     memberSince: (date: string) => `Member since ${date}`,
