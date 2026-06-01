@@ -55,6 +55,7 @@ export default async function DashboardPage() {
     latestPerSport,
     { data: weekRows },
     { data: athleteProfile },
+    { data: stravaConnection },
   ] = await Promise.all([
     getDashboardData(user.id),
     fetchLatestPerSport(supabase, user.id),
@@ -68,10 +69,20 @@ export default async function DashboardPage() {
       .order('start_time', { ascending: false }),
     supabase
       .from('profiles')
-      .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year')
+      .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year, onboarding_skipped')
       .eq('id', user.id)
       .maybeSingle(),
+    supabase
+      .from('provider_connections')
+      .select('user_id')
+      .eq('user_id', user.id)
+      .eq('provider', 'strava')
+      .maybeSingle(),
   ])
+
+  if (!stravaConnection && !athleteProfile?.onboarding_skipped) {
+    redirect('/onboarding')
+  }
 
   const weekActivities = (weekRows ?? []) as ActivityRow[]
 
