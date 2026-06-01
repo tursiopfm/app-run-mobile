@@ -8,6 +8,20 @@ export function stravaBasicAuthHeader(): string {
   return `Basic ${btoa(creds)}`
 }
 
+// Destinations de redirection après le callback OAuth, selon l'origine du flux.
+// `from === 'onboarding'` ramène sur le dashboard (succès) ou réaffiche
+// l'onboarding (erreur) ; sinon retour aux Réglages (comportement historique).
+export function stravaCallbackRedirects(
+  from: string | undefined,
+  appUrl: string,
+): { okUrl: string; errUrl: string } {
+  const onboarding = from === 'onboarding'
+  return {
+    okUrl:  onboarding ? `${appUrl}/dashboard?strava=connected` : `${appUrl}/settings?strava=connected`,
+    errUrl: onboarding ? `${appUrl}/onboarding?strava=error`    : `${appUrl}/settings?strava=error`,
+  }
+}
+
 export function buildStravaAuthUrl(redirectUri: string, state: string): string {
   const url = new URL('https://www.strava.com/oauth/authorize')
   url.searchParams.set('client_id',       process.env.STRAVA_CLIENT_ID!)

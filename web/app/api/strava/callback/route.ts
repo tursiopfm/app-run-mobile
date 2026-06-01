@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { waitUntil } from '@vercel/functions'
-import { exchangeStravaCode } from '@/lib/providers/strava/auth'
+import { exchangeStravaCode, stravaCallbackRedirects } from '@/lib/providers/strava/auth'
 import { createClient } from '@/lib/database/supabase-server'
 
 const APP_URL = process.env.APP_URL ?? 'http://localhost:3000'
@@ -16,8 +16,7 @@ export async function GET(request: NextRequest) {
   const savedState  = cookieStore.get('strava_oauth_state')?.value
   const from        = cookieStore.get('strava_from')?.value
 
-  const okUrl  = from === 'onboarding' ? `${APP_URL}/dashboard?strava=connected` : `${APP_URL}/settings?strava=connected`
-  const errUrl = from === 'onboarding' ? `${APP_URL}/onboarding?strava=error`    : `${APP_URL}/settings?strava=error`
+  const { okUrl, errUrl } = stravaCallbackRedirects(from, APP_URL)
 
   cookieStore.delete('strava_from')
 
