@@ -14,15 +14,21 @@ export async function GET(request: NextRequest) {
 
   const cookieStore = await cookies()
   const savedState  = cookieStore.get('strava_oauth_state')?.value
+  const from        = cookieStore.get('strava_from')?.value
+
+  const okUrl  = from === 'onboarding' ? `${APP_URL}/dashboard?strava=connected` : `${APP_URL}/settings?strava=connected`
+  const errUrl = from === 'onboarding' ? `${APP_URL}/onboarding?strava=error`    : `${APP_URL}/settings?strava=error`
+
+  cookieStore.delete('strava_from')
 
   if (!state || !savedState || state !== savedState) {
     cookieStore.delete('strava_oauth_state')
-    return NextResponse.redirect(`${APP_URL}/settings?strava=error`)
+    return NextResponse.redirect(errUrl)
   }
   cookieStore.delete('strava_oauth_state')
 
   if (error || !code) {
-    return NextResponse.redirect(`${APP_URL}/settings?strava=error`)
+    return NextResponse.redirect(errUrl)
   }
 
   const supabase = await createClient()
@@ -68,9 +74,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.redirect(`${APP_URL}/settings?strava=connected`)
+    return NextResponse.redirect(okUrl)
   } catch (e) {
     console.error('Strava callback error:', e)
-    return NextResponse.redirect(`${APP_URL}/settings?strava=error`)
+    return NextResponse.redirect(errUrl)
   }
 }
