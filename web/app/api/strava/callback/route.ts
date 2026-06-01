@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   const savedState  = cookieStore.get('strava_oauth_state')?.value
   const from        = cookieStore.get('strava_from')?.value
 
-  const { okUrl, errUrl } = stravaCallbackRedirects(from, APP_URL)
+  const { okUrl, errUrl, alreadyLinkedUrl } = stravaCallbackRedirects(from, APP_URL)
 
   cookieStore.delete('strava_from')
 
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     const tokens = await exchangeStravaCode(code)
 
     const now = new Date().toISOString()
-    await supabase.from('provider_connections').upsert({
+    const { error: upsertError } = await supabase.from('provider_connections').upsert({
       user_id:         user.id,
       provider:        'strava',
       provider_user_id:String(tokens.athlete.id),
@@ -58,6 +58,13 @@ export async function GET(request: NextRequest) {
       import_last_error: null,
       import_updated_at: null,
     }, { onConflict: 'user_id,provider' })
+
+    if (upsertError) {
+      console.error('Strava connection upsert error:', upsertError)
+      // 23505 = violation de l'index unique (provider, provider_user_id) :
+      // cet athlète Strava est déjà rattaché à un autre compte Trail Cockpit.
+      return NextResponse.redirect(upsertError.code === '23505' ? alreadyLinkedUrl : errUrl)
+    }
 
     // Trigger immédiat du premier tick d'import (background via waitUntil).
     // L'user voit les premières activités dès l'arrivée sur le dashboard,

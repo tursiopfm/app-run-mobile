@@ -3,7 +3,11 @@ import { getServerUser } from '@/lib/database/get-user'
 import { createClient } from '@/lib/database/supabase-server'
 import { OnboardingStrava } from '@/components/onboarding/OnboardingStrava'
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams: { strava?: string }
+}) {
   const user = await getServerUser()
   if (!user) redirect('/login')
 
@@ -24,5 +28,5 @@ export default async function OnboardingPage() {
 
   if (connection || profile?.onboarding_skipped) redirect('/dashboard')
 
-  return <OnboardingStrava />
+  return <OnboardingStrava status={searchParams?.strava} />
 }

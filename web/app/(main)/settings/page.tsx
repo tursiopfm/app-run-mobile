@@ -57,8 +57,16 @@ function buildRoadmap(L: ReturnType<typeof getServerT>['settings']) {
   ]
 }
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: { strava?: string }
+}) {
   const settingsLabels = getServerT().settings
+  const stravaNotice =
+    searchParams?.strava === 'already_linked' || searchParams?.strava === 'error'
+      ? searchParams.strava
+      : undefined
   const ROADMAP = buildRoadmap(settingsLabels)
   const user = await getServerUser()
   const supabase = await createClient()
@@ -154,6 +162,7 @@ export default async function SettingsPage() {
             isConnected={stravaConnected}
             athleteName={stravaAthleteName}
             planAutoPushTitle={planAutoPushTitle}
+            notice={stravaNotice}
           />
         </SectionCard>
       </section>

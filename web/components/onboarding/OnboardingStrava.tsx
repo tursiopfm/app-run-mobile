@@ -5,10 +5,15 @@ import { useRouter } from 'next/navigation'
 import { Activity } from 'lucide-react'
 import { useT } from '@/lib/i18n/I18nProvider'
 
-export function OnboardingStrava() {
+export function OnboardingStrava({ status }: { status?: string }) {
   const O = useT().onboarding
   const router = useRouter()
   const [skipping, setSkipping] = useState(false)
+
+  const errorMsg =
+    status === 'already_linked' ? O.errorAlreadyLinked
+    : status === 'error'        ? O.errorGeneric
+    : null
 
   async function handleSkip() {
     setSkipping(true)
@@ -35,6 +40,12 @@ export function OnboardingStrava() {
           <h1 className="text-2xl font-bold text-trail-text">{O.title}</h1>
           <p className="text-sm text-trail-muted leading-relaxed">{O.subtitle}</p>
         </div>
+
+        {errorMsg && (
+          <p role="alert" className="text-sm text-red-400 bg-red-500/10 border border-red-500/25 rounded-xl px-3 py-2.5">
+            {errorMsg}
+          </p>
+        )}
 
         <a
           href="/api/strava/connect?from=onboarding"

@@ -14,11 +14,13 @@ export function stravaBasicAuthHeader(): string {
 export function stravaCallbackRedirects(
   from: string | undefined,
   appUrl: string,
-): { okUrl: string; errUrl: string } {
+): { okUrl: string; errUrl: string; alreadyLinkedUrl: string } {
   const onboarding = from === 'onboarding'
+  const base = onboarding ? '/onboarding' : '/settings'
   return {
-    okUrl:  onboarding ? `${appUrl}/dashboard?strava=connected` : `${appUrl}/settings?strava=connected`,
-    errUrl: onboarding ? `${appUrl}/onboarding?strava=error`    : `${appUrl}/settings?strava=error`,
+    okUrl:            onboarding ? `${appUrl}/dashboard?strava=connected` : `${appUrl}/settings?strava=connected`,
+    errUrl:           `${appUrl}${base}?strava=error`,
+    alreadyLinkedUrl: `${appUrl}${base}?strava=already_linked`,
   }
 }
 

@@ -9,11 +9,17 @@ type Props = {
   isConnected: boolean
   athleteName?: string | null
   planAutoPushTitle: boolean
+  notice?: string
 }
 
-export function StravaSection({ isConnected, athleteName, planAutoPushTitle }: Props) {
+export function StravaSection({ isConnected, athleteName, planAutoPushTitle, notice }: Props) {
   const router = useRouter()
   const L = useT().settings
+  const O = useT().onboarding
+  const noticeMsg =
+    notice === 'already_linked' ? O.errorAlreadyLinked
+    : notice === 'error'        ? O.errorGeneric
+    : null
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<string | null>(null)
   const [disconnecting, setDisconnecting] = useState(false)
@@ -72,6 +78,11 @@ export function StravaSection({ isConnected, athleteName, planAutoPushTitle }: P
 
   return (
     <div className="rounded-[10px] bg-trail-surface px-3 py-[10px] space-y-[10px]">
+      {noticeMsg && (
+        <p role="alert" className="text-[12px] text-red-400 bg-red-500/10 border border-red-500/25 rounded-[8px] px-3 py-2">
+          {noticeMsg}
+        </p>
+      )}
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-[10px] bg-[#FC4C02]/15 border border-[#FC4C02]/30 flex items-center justify-center flex-shrink-0">
           <Activity size={14} className="text-[#FC4C02]" />

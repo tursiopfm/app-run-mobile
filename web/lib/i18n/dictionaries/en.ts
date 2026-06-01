@@ -1704,6 +1704,8 @@ export const en: Dict = {
     subtitle:   'Automatically import your activities to kick-start your training cockpit.',
     connectCta: 'Connect my Strava account',
     later:      'Later',
+    errorAlreadyLinked: 'This Strava account is already connected to another Trail Cockpit account.',
+    errorGeneric:       'Strava connection failed. Please try again.',
   },
 
   install: {

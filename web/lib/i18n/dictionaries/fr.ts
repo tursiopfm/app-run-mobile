@@ -874,6 +874,8 @@ export type Dict = {
     subtitle: string
     connectCta: string
     later: string
+    errorAlreadyLinked: string
+    errorGeneric: string
   }
   install: {
     title: string
@@ -2821,6 +2823,8 @@ export const fr: Dict = {
     subtitle:   "Importez automatiquement vos activités pour démarrer votre cockpit d'entraînement.",
     connectCta: 'Connecter mon compte Strava',
     later:      'Plus tard',
+    errorAlreadyLinked: 'Ce compte Strava est déjà connecté à un autre compte Trail Cockpit.',
+    errorGeneric:       'La connexion Strava a échoué. Réessaie.',
   },
 
   // --- PWA install prompt ---
