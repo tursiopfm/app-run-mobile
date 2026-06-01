@@ -869,6 +869,12 @@ export type Dict = {
     featCoach: string; featCoachDesc: string
     featUltra: string; featUltraDesc: string
   }
+  onboarding: {
+    title: string
+    subtitle: string
+    connectCta: string
+    later: string
+  }
   install: {
     title: string
     closeAria: string
@@ -2808,6 +2814,13 @@ export const fr: Dict = {
     featEffort:       'Effort',     featEffortDesc: 'Score effort multi-sports',
     featCoach:        'Coach',      featCoachDesc:  'Analyse IA de vos séances',
     featUltra:        'Ultra',      featUltraDesc:  'Préparation ultra trails',
+  },
+
+  onboarding: {
+    title:      'Connectez Strava',
+    subtitle:   "Importez automatiquement vos activités pour démarrer votre cockpit d'entraînement.",
+    connectCta: 'Connecter mon compte Strava',
+    later:      'Plus tard',
   },
 
   // --- PWA install prompt ---
