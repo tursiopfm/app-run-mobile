@@ -53,6 +53,11 @@
 ### Carte Goals
 - [ ] Vérifier que "Distance hebdo" est bien renommé "Km semaine" et "Distance annuelle" en "Km année"
 
+### Tests composants i18n — wrapper I18nProvider manquant
+- **Quoi** : ~57 tests Jest échouent avec `useI18n must be used inside <I18nProvider>` (ex. `AccountSection`, `PaceField`…). Ces tests rendent des composants qui appellent `useT()` sans wrapper `<I18nProvider initialLang="fr">`. Ajouter un helper de rendu partagé (`renderWithI18n`) et l'utiliser dans ces suites.
+- **Pourquoi** : suite Jest rouge de base → masque les régressions réelles, rend le `npm test` peu fiable comme garde-fou.
+- **Identifié** : 2026-06-01 (découvert pendant la feature onboarding Strava)
+
 ## Priorité basse
 
 ### Détail activité

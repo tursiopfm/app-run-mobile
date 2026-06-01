@@ -1,6 +1,11 @@
 # Onboarding — page « Connecter Strava » après inscription
 
-> **Status: Spécifié** · 2026-06-01 · Code: _(à venir)_
+> **Status: Implémenté** · 2026-06-01 · Code: `web/app/onboarding/page.tsx`, `web/components/onboarding/OnboardingStrava.tsx`, gate `web/app/(main)/dashboard/page.tsx`, OAuth `web/app/api/strava/{connect,callback}/route.ts` (helper `stravaCallbackRedirects` dans `lib/providers/strava/auth.ts`), migrations `026`+`027`.
+
+## Drift notes
+
+- Backfill `027` ajouté (hors spec initiale) : les comptes existants sont marqués `onboarding_skipped=true` pour que le gate ne cible que les comptes créés après la mise en ligne (décision Franck 2026-06-01).
+- Tests livrés : `OnboardingStrava` (composant) + `stravaCallbackRedirects` (logique de redirection extraite dans un helper pur). Les redirections des server components (`onboarding/page`, gate dashboard) restent vérifiées manuellement — pas de harness de test RSC dans le repo.
 
 ## Objectif
 
