@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createServiceClient } from '@/lib/database/supabase-server'
+import { stravaBasicAuthHeader } from './auth'
 
 const STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token'
 const BUFFER_MS = 300 * 1000 // refresh 5 minutes before expiry
@@ -31,10 +32,11 @@ async function _refreshToken(
 ): Promise<string> {
   const res = await fetch(STRAVA_TOKEN_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: stravaBasicAuthHeader(),
+    },
     body: JSON.stringify({
-      client_id: process.env.STRAVA_CLIENT_ID,
-      client_secret: process.env.STRAVA_CLIENT_SECRET,
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
     }),

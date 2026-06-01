@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { fetchStravaActivity, updateStravaActivityName } from '@/lib/providers/strava/api'
+import { stravaBasicAuthHeader } from '@/lib/providers/strava/auth'
 import { stravaToNormalized } from '@/lib/providers/strava/mapper'
 import { assignCommuteName } from '@/lib/sync/assign-commute-name'
 import { maybePushPlanTitleToStrava } from '@/lib/plan/push-title'
@@ -254,10 +255,11 @@ async function resolveAccessToken(
 
   const res = await fetch('https://www.strava.com/oauth/token', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: stravaBasicAuthHeader(),
+    },
     body: JSON.stringify({
-      client_id:     process.env.STRAVA_CLIENT_ID,
-      client_secret: process.env.STRAVA_CLIENT_SECRET,
       grant_type:    'refresh_token',
       refresh_token: conn.refresh_token,
     }),

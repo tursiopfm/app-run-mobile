@@ -14,7 +14,7 @@ describe('fetchStravaActivities', () => {
     const activities = await fetchStravaActivities('my_token')
     expect(activities).toHaveLength(1)
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('https://www.strava.com/api/v3/athlete/activities'),
+      expect.stringContaining('https://www.api-v3.strava.com/athlete/activities'),
       expect.objectContaining({ headers: { Authorization: 'Bearer my_token' } })
     )
   })

@@ -1,5 +1,13 @@
 const STRAVA_SCOPES = 'activity:read_all,activity:write,profile:read_all'
 
+// Strava exige depuis le 2026-06-01 que les identifiants client soient passés
+// dans l'en-tête Authorization: Basic (et non plus dans le body du form).
+// btoa (et non Buffer) pour rester compatible avec le runtime Edge du webhook.
+export function stravaBasicAuthHeader(): string {
+  const creds = `${process.env.STRAVA_CLIENT_ID}:${process.env.STRAVA_CLIENT_SECRET}`
+  return `Basic ${btoa(creds)}`
+}
+
 export function buildStravaAuthUrl(redirectUri: string, state: string): string {
   const url = new URL('https://www.strava.com/oauth/authorize')
   url.searchParams.set('client_id',       process.env.STRAVA_CLIENT_ID!)
@@ -14,16 +22,31 @@ export function buildStravaAuthUrl(redirectUri: string, state: string): string {
 export async function exchangeStravaCode(code: string): Promise<StravaTokenResponse> {
   const res = await fetch('https://www.strava.com/oauth/token', {
     method:  'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: stravaBasicAuthHeader(),
+    },
     body: new URLSearchParams({
-      client_id:     process.env.STRAVA_CLIENT_ID!,
-      client_secret: process.env.STRAVA_CLIENT_SECRET!,
       code,
       grant_type: 'authorization_code',
     }),
   })
   if (!res.ok) throw new Error(`Strava token exchange: ${res.status} ${await res.text()}`)
   return res.json()
+}
+
+// Révoque un token côté Strava via le nouvel endpoint oauth/revoke
+// (oauth/deauthorize est retiré le 2027-06-01). Lève si !res.ok, l'appelant catche.
+export async function revokeStravaToken(token: string): Promise<void> {
+  const res = await fetch('https://www.strava.com/oauth/revoke', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: stravaBasicAuthHeader(),
+    },
+    body: new URLSearchParams({ token }),
+  })
+  if (!res.ok) throw new Error(`Strava revoke error: ${res.status}`)
 }
 
 export type StravaTokenResponse = {

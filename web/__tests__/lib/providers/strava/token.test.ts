@@ -1,10 +1,13 @@
 import { getValidStravaToken } from '@/lib/providers/strava/token'
-import { createClient } from '@/lib/database/supabase-server'
+import { createServiceClient } from '@/lib/database/supabase-server'
 
-jest.mock('@/lib/database/supabase-server', () => ({ createClient: jest.fn() }))
-const mockCreateClient = createClient as jest.Mock
+jest.mock('@/lib/database/supabase-server', () => ({ createServiceClient: jest.fn() }))
+const mockCreateClient = createServiceClient as jest.Mock
 
 global.fetch = jest.fn()
+
+process.env.STRAVA_CLIENT_ID = '12345'
+process.env.STRAVA_CLIENT_SECRET = 'secret'
 
 function makeSupabaseMock(singleResult: { data: unknown; error: unknown }) {
   const mockSingle = jest.fn().mockResolvedValue(singleResult)
@@ -38,7 +41,7 @@ describe('getValidStravaToken', () => {
       data: { access_token: 'valid', refresh_token: 'r', token_expires_at: future },
       error: null,
     })
-    mockCreateClient.mockResolvedValue(client)
+    mockCreateClient.mockReturnValue(client)
 
     const token = await getValidStravaToken('user-1')
     expect(token).toBe('valid')
@@ -51,7 +54,7 @@ describe('getValidStravaToken', () => {
       data: { access_token: 'old', refresh_token: 'old_r', token_expires_at: past },
       error: null,
     })
-    mockCreateClient.mockResolvedValue(client)
+    mockCreateClient.mockReturnValue(client)
     ;(fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: () =>
@@ -67,13 +70,22 @@ describe('getValidStravaToken', () => {
     expect(token).toBe('new_token')
     expect(fetch).toHaveBeenCalledWith(
       'https://www.strava.com/oauth/token',
-      expect.objectContaining({ method: 'POST' })
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          Authorization: `Basic ${btoa('12345:secret')}`,
+        }),
+      })
     )
+    // Les credentials client ne doivent plus transiter par le body.
+    const body = (fetch as jest.Mock).mock.calls[0][1].body as string
+    expect(body).not.toContain('client_id')
+    expect(body).not.toContain('client_secret')
   })
 
   it('throws when no Strava connection found', async () => {
     const { client } = makeSupabaseMock({ data: null, error: { message: 'not found' } })
-    mockCreateClient.mockResolvedValue(client)
+    mockCreateClient.mockReturnValue(client)
 
     await expect(getValidStravaToken('user-1')).rejects.toThrow(
       'No Strava connection found for user'

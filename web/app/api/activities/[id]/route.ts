@@ -66,7 +66,7 @@ export async function DELETE(
     try {
       const accessToken = await getValidStravaToken(user.id)
       const stravaRes = await fetch(
-        `https://www.strava.com/api/v3/activities/${activity.provider_activity_id}`,
+        `https://www.api-v3.strava.com/activities/${activity.provider_activity_id}`,
         { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } },
       )
       console.log('[delete] strava_status=', stravaRes.status)

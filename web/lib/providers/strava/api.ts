@@ -1,6 +1,6 @@
 import type { StravaActivity } from './mapper'
 
-const STRAVA_BASE = 'https://www.strava.com/api/v3'
+const STRAVA_BASE = 'https://www.api-v3.strava.com'
 const PER_PAGE = 200
 
 export type FetchActivitiesOptions = {
