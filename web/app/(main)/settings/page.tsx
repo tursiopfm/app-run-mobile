@@ -44,19 +44,15 @@ function buildRoadmap(L: ReturnType<typeof getServerT>['settings']) {
   return [
     {
       group: L.roadmap.intelligence,
-      items: [L.roadmapItems.coachAi, L.roadmapItems.hrZones],
+      items: [L.roadmapItems.coachAi],
     },
     {
       group: L.roadmap.personalization,
-      items: [L.roadmapItems.planEditable, L.roadmapItems.dataCockpit],
+      items: [L.roadmapItems.dataCockpit],
     },
     {
       group: L.roadmap.raceManagement,
-      items: [L.roadmapItems.raceCalendar, L.roadmapItems.raceTable],
-    },
-    {
-      group: L.roadmap.physiology,
-      items: [L.roadmapItems.effortIndicators],
+      items: [L.roadmapItems.raceTable],
     },
   ]
 }
