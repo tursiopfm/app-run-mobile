@@ -1704,6 +1704,13 @@ export const en: Dict = {
     featUltra:        'Ultra',      featUltraDesc:  'Ultra trail preparation',
   },
 
+  onboarding: {
+    title:      'Connect Strava',
+    subtitle:   'Automatically import your activities to kick-start your training cockpit.',
+    connectCta: 'Connect my Strava account',
+    later:      'Later',
+  },
+
   install: {
     title:          'Install Trail Cockpit',
     closeAria:      'Close',
