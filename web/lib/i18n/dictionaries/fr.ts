@@ -354,9 +354,9 @@ export type Dict = {
     profilePageTitle: string; profilePageIntro: string
     identityPageTitle: string; identityPageIntro: string
 
-    roadmap: Record<'intelligence' | 'personalization' | 'raceManagement' | 'physiology', string>
+    roadmap: Record<'intelligence' | 'personalization' | 'raceManagement', string>
     roadmapItems: Record<
-      'coachAi' | 'hrZones' | 'planEditable' | 'dataCockpit' | 'raceCalendar' | 'raceTable' | 'effortIndicators',
+      'coachAi' | 'dataCockpit' | 'raceTable',
       string
     >
 
@@ -1922,16 +1922,11 @@ export const fr: Dict = {
       intelligence:      'Intelligence',
       personalization:   'Personnalisation',
       raceManagement:    'Gestion de course',
-      physiology:        'Indicateurs physiologiques',
     },
     roadmapItems: {
       coachAi:           'Coach IA personnalisé (résumé hebdo, conseil du jour)',
-      hrZones:           'Zones cardiaques configurables (manuel · déduit · mixte)',
-      planEditable:      'Plan d’entraînement personnalisable manuellement',
       dataCockpit:       'Data cockpit entièrement personnalisables',
-      raceCalendar:      'Définir son calendrier de course',
       raceTable:         'Tableau de plan de course (ravito, BH, temps de passage)',
-      effortIndicators:  'Amélioration des indicateurs d’effort et de fatigue',
     },
 
     // HelpAboutSection

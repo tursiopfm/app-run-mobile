@@ -839,16 +839,11 @@ export const en: Dict = {
       intelligence:      'Intelligence',
       personalization:   'Personalisation',
       raceManagement:    'Race management',
-      physiology:        'Physiological indicators',
     },
     roadmapItems: {
       coachAi:           'Personalised AI coach (weekly summary, tip of the day)',
-      hrZones:           'Configurable heart-rate zones (manual · derived · mixed)',
-      planEditable:      'Manually customisable training plan',
       dataCockpit:       'Fully customisable cockpit data',
-      raceCalendar:      'Define your race calendar',
       raceTable:         'Race plan table (aid stations, BHs, pacing)',
-      effortIndicators:  'Improved effort and fatigue indicators',
     },
 
     helpSupport:         'Support',
