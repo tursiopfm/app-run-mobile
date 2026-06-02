@@ -65,7 +65,6 @@ export function FormStatusBlock({ payload }: { payload: ChargeSportPayload }) {
           label={L.recentFatigue}
           labelColor={colors.chargeOrange}
           statusLabel={L.kpiStatus.fatigue[fatigueStatus.id]}
-          statusColor={fatigueStatus.color}
           hint={FATIGUE_HINT[fatigueStatus.id]}
           onClick={() => setOpenHelp('fatigue')}
         />
@@ -73,7 +72,6 @@ export function FormStatusBlock({ payload }: { payload: ChargeSportPayload }) {
           label={L.baseFitness}
           labelColor={colors.seriesBlue}
           statusLabel={L.kpiStatus.fitness[fitnessStatus.id]}
-          statusColor={fitnessStatus.color}
           hint={FITNESS_HINT[fitnessStatus.id]}
           onClick={() => setOpenHelp('fitness')}
         />
@@ -81,7 +79,6 @@ export function FormStatusBlock({ payload }: { payload: ChargeSportPayload }) {
           label={L.freshness}
           labelColor={colors.seriesYellow}
           statusLabel={L.kpiStatus.freshness[freshnessStatus.id]}
-          statusColor={freshnessStatus.color}
           hint={FRESHNESS_HINT[freshnessStatus.id]}
           onClick={() => setOpenHelp('freshness')}
         />
@@ -103,12 +100,11 @@ type KpiCellProps = {
   label:       string
   labelColor:  string
   statusLabel: string
-  statusColor: string
   hint:        string
   onClick:     () => void
 }
 
-function KpiCell({ label, labelColor, statusLabel, statusColor, hint, onClick }: KpiCellProps) {
+function KpiCell({ label, labelColor, statusLabel, hint, onClick }: KpiCellProps) {
   return (
     <button
       type="button"
@@ -117,7 +113,7 @@ function KpiCell({ label, labelColor, statusLabel, statusColor, hint, onClick }:
       className="rounded-[10px] bg-trail-surface px-2 py-2.5 text-center hover:brightness-110 transition cursor-pointer w-full"
     >
       <p className="text-[11px] font-semibold" style={{ color: labelColor }}>{label}</p>
-      <p className="text-[14px] font-black mt-1.5 leading-[17px]" style={{ color: statusColor }}>
+      <p className="text-[14px] font-black mt-1.5 leading-[17px] text-trail-text">
         {statusLabel}
       </p>
       <p className="text-[10px] font-medium mt-1 text-trail-muted leading-[13px]">
