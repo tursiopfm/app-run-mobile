@@ -39,8 +39,9 @@ export function fmtDurationSec(sec: number | null): string {
   if (!sec) return '—'
   const h = Math.floor(sec / 3600)
   const m = Math.floor((sec % 3600) / 60)
-  if (h > 0) return `${h}h${String(m).padStart(2, '0')}`
-  return `${m}min`
+  const s = Math.round(sec % 60)
+  if (h > 0) return `${h}h${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  return `${m}:${String(s).padStart(2, '0')}`
 }
 
 // ── Split utilities ───────────────────────────────────────────────────────────

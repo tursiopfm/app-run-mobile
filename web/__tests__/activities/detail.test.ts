@@ -29,10 +29,10 @@ describe('fmtPaceSec', () => {
 
 // ── fmtDurationSec ────────────────────────────────────────────────────────────
 describe('fmtDurationSec', () => {
-  it('formats seconds as Xh YYmin', () => {
-    expect(fmtDurationSec(7362)).toBe('2h02')   // 2h 2min 42s → display 2h02
-    expect(fmtDurationSec(5400)).toBe('1h30')
-    expect(fmtDurationSec(600)).toBe('10min')
+  it('formats seconds as Xh MM:SS', () => {
+    expect(fmtDurationSec(7362)).toBe('2h02:42')
+    expect(fmtDurationSec(5400)).toBe('1h30:00')
+    expect(fmtDurationSec(600)).toBe('10:00')
   })
   it('returns — for null or 0', () => {
     expect(fmtDurationSec(null)).toBe('—')
