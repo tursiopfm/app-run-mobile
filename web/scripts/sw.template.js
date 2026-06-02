@@ -40,6 +40,10 @@ self.addEventListener('fetch', (event) => {
     return  // pas de respondWith → fetch direct par le browser
   }
 
+  // RSC payloads (?rsc=...) : streams dynamiques, jamais mis en cache.
+  // Cloner un RSC stream pendant sa lecture cause "Error in input stream".
+  if (url.searchParams.has('_rsc') || url.searchParams.has('rsc')) return
+
   // Assets Next.js hashés : cache-first (URL garantit la fraîcheur)
   if (isHashedAsset(url)) {
     event.respondWith(
