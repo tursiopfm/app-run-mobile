@@ -223,6 +223,27 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                       const now = new Date()
                       const start = new Date(now.getFullYear(), 0, 1)
                       const dayOfYear = Math.ceil((now.getTime() - start.getTime()) / 86400000)
+
+                      if (tgt.yearKm === 0) {
+                        const projectedKm = dayOfYear > 0 ? (sov.ytdKm / dayOfYear) * 365 : 0
+                        return (
+                          <div>
+                            <GoalProgressRow
+                              label={L.kmYear}
+                              current={sov.ytdKm}
+                              target={projectedKm}
+                              unit="km"
+                              color="#4ADE80"
+                            />
+                            {projectedKm > 0 && (
+                              <p className="text-[12px] text-right mt-[3px] text-trail-muted italic">
+                                {L.goalEdit.projection(projectedKm)}
+                              </p>
+                            )}
+                          </div>
+                        )
+                      }
+
                       const expectedKm = (tgt.yearKm * dayOfYear) / 365
                       const diff = sov.ytdKm - expectedKm
                       const diffLabel = L.goalEdit.vsGoal(diff)
@@ -327,6 +348,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                 onChange={(v) => setDraft((g) => ({ ...g, yearKm: v }))}
                 unit="km"
               />
+              <p className="text-[11px] text-trail-muted -mt-2 ml-0.5">{L.goalEdit.yearKmHint}</p>
             </div>
             <div className="flex justify-end gap-3 mt-5">
               <button

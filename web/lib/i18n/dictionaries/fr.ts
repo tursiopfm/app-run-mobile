@@ -78,6 +78,8 @@ export type Dict = {
       cancel:       string
       save:         string
       vsGoal:       (diff: number) => string
+      yearKmHint:   string
+      projection:   (km: number) => string
     }
 
     chartTabs: Record<'vol' | 'ratio', string>
@@ -1221,6 +1223,8 @@ export const fr: Dict = {
       cancel:       'Annuler',
       save:         'Valider',
       vsGoal:       (diff: number) => `${diff >= 0 ? '+' : ''}${Math.round(diff)} km vs objectif`,
+      yearKmHint:   '0 = pas d\'objectif → projection auto selon votre volume',
+      projection:   (km: number) => `~${Math.round(km / 10) * 10} km en fin d'année au rythme actuel`,
     },
 
     // Chart tabs

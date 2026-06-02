@@ -170,6 +170,8 @@ export const en: Dict = {
       cancel:       'Cancel',
       save:         'Save',
       vsGoal:       (diff: number) => `${diff >= 0 ? '+' : ''}${Math.round(diff)} km vs goal`,
+      yearKmHint:   '0 = no goal → auto projection based on your volume',
+      projection:   (km: number) => `~${Math.round(km / 10) * 10} km end of year at current pace`,
     },
 
     chartTabs: { vol: 'Vol.', ratio: 'Ratio' },
