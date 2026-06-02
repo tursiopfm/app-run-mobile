@@ -142,11 +142,25 @@ function buildMonthView(
     weekStart = addDays(weekStart, 7)
   }
 
+  // Totals reflect the COMPLETE calendar month (1st → last day), not just the
+  // full Monday-started weeks shown as pills above. Otherwise the days before
+  // the first Monday (and any month-edge days) are dropped from the summary.
+  const ym = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}`
+  let monthKm = 0
+  let monthDPlus = 0
+  daily.forEach((v, date) => {
+    if (date.slice(0, 7) === ym) {
+      monthKm    += v.km
+      monthDPlus += v.dPlus
+    }
+  })
+
   return {
     pills,
     periodLabel: `${L.monthNames[monthStart.getMonth()]} ${monthStart.getFullYear()}`,
     hasPrev:     !!oldestDate && oldestDate < localDateKey(monthStart),
-    ...sumPills(pills),
+    totalKm:     Math.round(monthKm * 10) / 10,
+    totalDPlus:  Math.round(monthDPlus),
   }
 }
 
