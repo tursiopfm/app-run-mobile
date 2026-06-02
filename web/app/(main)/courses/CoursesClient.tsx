@@ -1211,7 +1211,14 @@ export default function CoursesClient({
       {view === 'Races' ? (
         <BlockGrid storageKey="courses" defaultOrder={DEFAULT_ORDER} blocks={blocks} />
       ) : (
-        <RecordsView records={SAMPLE_RECORDS} />
+        <div
+          className="rounded-[12px] border p-8 flex flex-col items-center justify-center text-center"
+          style={{ backgroundColor: colors.cardBg, borderColor: colors.border, minHeight: 200 }}
+        >
+          <span className="text-[32px] mb-3">🏆</span>
+          <p className="text-[16px] font-bold text-trail-text mb-2">Records</p>
+          <p className="text-[14px]" style={{ color: colors.subtleText }}>Bientôt disponible</p>
+        </div>
       )}
 
       {panel === 'search' && (
