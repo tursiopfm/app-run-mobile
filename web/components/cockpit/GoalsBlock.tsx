@@ -227,20 +227,13 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                       if (tgt.yearKm === 0) {
                         const projectedKm = dayOfYear > 0 ? (sov.ytdKm / dayOfYear) * 365 : 0
                         return (
-                          <div>
-                            <GoalProgressRow
-                              label={L.kmYear}
-                              current={sov.ytdKm}
-                              target={projectedKm}
-                              unit="km"
-                              color="#4ADE80"
-                            />
-                            {projectedKm > 0 && (
-                              <p className="text-[12px] text-right mt-[3px] text-trail-muted italic">
-                                {L.goalEdit.projection(projectedKm)}
-                              </p>
-                            )}
-                          </div>
+                          <GoalProgressRow
+                            label={L.kmYear}
+                            current={sov.ytdKm}
+                            target={projectedKm}
+                            unit="km"
+                            color="#4ADE80"
+                          />
                         )
                       }
 
