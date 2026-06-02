@@ -1,11 +1,14 @@
 const STRAVA_SCOPES = 'activity:read_all,activity:write,profile:read_all'
 
-// Strava exige depuis le 2026-06-01 que les identifiants client soient passés
-// dans l'en-tête Authorization: Basic (et non plus dans le body du form).
-// btoa (et non Buffer) pour rester compatible avec le runtime Edge du webhook.
-export function stravaBasicAuthHeader(): string {
-  const creds = `${process.env.STRAVA_CLIENT_ID}:${process.env.STRAVA_CLIENT_SECRET}`
-  return `Basic ${btoa(creds)}`
+// Strava attend les identifiants client dans le BODY du form (champs
+// client_id / client_secret), PAS dans un en-tête Authorization: Basic —
+// l'endpoint oauth/token rejette le Basic avec « client_id invalid »
+// (vérifié contre l'API live le 2026-06-02). À spreader dans le URLSearchParams.
+export function stravaClientCreds(): { client_id: string; client_secret: string } {
+  return {
+    client_id:     process.env.STRAVA_CLIENT_ID ?? '',
+    client_secret: process.env.STRAVA_CLIENT_SECRET ?? '',
+  }
 }
 
 // Destinations de redirection après le callback OAuth, selon l'origine du flux.
@@ -38,11 +41,9 @@ export function buildStravaAuthUrl(redirectUri: string, state: string): string {
 export async function exchangeStravaCode(code: string): Promise<StravaTokenResponse> {
   const res = await fetch('https://www.strava.com/oauth/token', {
     method:  'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: stravaBasicAuthHeader(),
-    },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
+      ...stravaClientCreds(),
       code,
       grant_type: 'authorization_code',
     }),
@@ -56,11 +57,8 @@ export async function exchangeStravaCode(code: string): Promise<StravaTokenRespo
 export async function revokeStravaToken(token: string): Promise<void> {
   const res = await fetch('https://www.strava.com/oauth/revoke', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: stravaBasicAuthHeader(),
-    },
-    body: new URLSearchParams({ token }),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ ...stravaClientCreds(), token }),
   })
   if (!res.ok) throw new Error(`Strava revoke error: ${res.status}`)
 }

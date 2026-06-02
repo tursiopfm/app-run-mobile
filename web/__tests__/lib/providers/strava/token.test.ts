@@ -70,17 +70,15 @@ describe('getValidStravaToken', () => {
     expect(token).toBe('new_token')
     expect(fetch).toHaveBeenCalledWith(
       'https://www.strava.com/oauth/token',
-      expect.objectContaining({
-        method: 'POST',
-        headers: expect.objectContaining({
-          Authorization: `Basic ${btoa('12345:secret')}`,
-        }),
-      })
+      expect.objectContaining({ method: 'POST' })
     )
-    // Les credentials client ne doivent plus transiter par le body.
-    const body = (fetch as jest.Mock).mock.calls[0][1].body as string
-    expect(body).not.toContain('client_id')
-    expect(body).not.toContain('client_secret')
+    // Strava rejette le header Basic sur oauth/token : les identifiants client
+    // doivent transiter dans le body (form-urlencoded).
+    const body = (fetch as jest.Mock).mock.calls[0][1].body.toString() as string
+    expect(body).toContain('client_id=12345')
+    expect(body).toContain('client_secret=secret')
+    expect(body).toContain('grant_type=refresh_token')
+    expect(body).toContain('refresh_token=old_r')
   })
 
   it('throws when no Strava connection found', async () => {
