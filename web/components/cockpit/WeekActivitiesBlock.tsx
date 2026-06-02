@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
 import { colors } from '@/lib/design/colors'
@@ -38,7 +39,26 @@ function fmtDPlus(m: number | null): string {
 
 export function WeekActivitiesBlock({ activities, onHide }: Props) {
   const router = useRouter()
-  const L = useT().cockpit
+  const t = useT()
+  const L = t.cockpit
+  const C = t.common
+  const [showMenu, setShowMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showMenu) return
+    function handle(e: MouseEvent | TouchEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handle)
+    document.addEventListener('touchstart', handle)
+    return () => {
+      document.removeEventListener('mousedown', handle)
+      document.removeEventListener('touchstart', handle)
+    }
+  }, [showMenu])
 
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
@@ -48,13 +68,23 @@ export function WeekActivitiesBlock({ activities, onHide }: Props) {
           <span className="text-[15px] font-semibold text-trail-text">{L.weekActivitiesSuffix}</span>
         </div>
         {onHide && (
-          <button
-            onClick={onHide}
-            className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
-            aria-label={L.aria.weekActivitiesHide}
-          >
-            ⋮
-          </button>
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setShowMenu(s => !s)}
+              className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
+              aria-label={C.blockMenuAria}
+            >
+              ⋮
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 mt-1 w-32 rounded-[8px] bg-trail-surface border border-trail-border shadow-lg z-30">
+                <button
+                  onClick={() => { setShowMenu(false); onHide() }}
+                  className="w-full px-3 py-2 text-left text-[12px] text-trail-text hover:bg-trail-card"
+                >{C.blockHide}</button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
