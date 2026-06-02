@@ -228,7 +228,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                         const projectedKm = dayOfYear > 0 ? (sov.ytdKm / dayOfYear) * 365 : 0
                         return (
                           <GoalProgressRow
-                            label={L.kmYear}
+                            label={`${L.kmYear} (Projection)`}
                             current={sov.ytdKm}
                             target={projectedKm}
                             unit="km"
