@@ -1,6 +1,8 @@
 import type { StravaActivity } from './mapper'
 
-const STRAVA_BASE = 'https://www.api-v3.strava.com'
+// API data v3 : la base live reste www.strava.com/api/v3 (le host
+// www.api-v3.strava.com n'existe pas → "fetch failed"). Vérifié le 2026-06-02.
+const STRAVA_BASE = 'https://www.strava.com/api/v3'
 const PER_PAGE = 200
 
 export type FetchActivitiesOptions = {
