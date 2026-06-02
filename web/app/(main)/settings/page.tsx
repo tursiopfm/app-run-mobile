@@ -96,7 +96,7 @@ export default async function SettingsPage({
     hrMethod    = (profile?.hr_zone_method as HrZoneMethod | null) ?? null
     maxHr       = profile?.max_hr       ?? null
     thresholdHr = profile?.threshold_hr ?? null
-    planAutoPushTitle = profile?.plan_auto_push_title ?? true
+    planAutoPushTitle = profile?.plan_auto_push_title ?? false
 
     const { data: connection } = await supabase
       .from('provider_connections')
