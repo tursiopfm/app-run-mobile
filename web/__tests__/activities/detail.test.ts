@@ -6,6 +6,7 @@ import {
   splitPaceSec,
   lapPaceSec,
   detectFastLaps,
+  analyzeFractionne,
   fmtLapDist,
 } from '@/lib/activities/detail'
 
@@ -165,6 +166,69 @@ describe('detectFastLaps', () => {
     const fast = detectFastLaps(laps)
     expect(fast.has(2)).toBe(true)
     expect(fast.has(1)).toBe(false)
+  })
+})
+
+// ── analyzeFractionne ───────────────────────────────────────────────────────────
+// Real session reported by Franck: "Frac 3×2000 + 1000 r=1'30".
+// The 2 000 m reps are auto-lapped into 2×1 km; laps 18 (4:58) and 19 (4:23) are
+// the cool-down and must NOT be flagged fast.
+function lap(split: number, distance: number, moving: number): StravaLap {
+  return makeLap({ split, distance, moving_time: moving, average_speed: distance / moving })
+}
+const realSession: StravaLap[] = [
+  lap(1, 1000, 354), lap(2, 1000, 352), lap(3, 1000, 348),
+  lap(4, 1000, 335), lap(5, 1000, 333), lap(6, 731, 245),  // warm-up
+  lap(7, 1020, 229), lap(8, 1020, 228),                    // effort 1 (2 000 m)
+  lap(9, 228, 93),                                          // recovery
+  lap(10, 1000, 222), lap(11, 1000, 221),                  // effort 2 (2 000 m)
+  lap(12, 207, 99),                                         // recovery
+  lap(13, 1010, 215), lap(14, 999, 214),                   // effort 3 (2 000 m)
+  lap(15, 233, 114),                                        // recovery
+  lap(16, 1010, 201),                                       // effort 4 (1 000 m)
+  lap(17, 1000, 361), lap(18, 1000, 298), lap(19, 122, 32),// cool-down
+]
+
+describe('analyzeFractionne', () => {
+  it('does NOT flag the cool-down jog laps (18 at 4:58, 19 at 4:23)', () => {
+    const fast = detectFastLaps(realSession)
+    expect(fast.has(18)).toBe(false)
+    expect(fast.has(19)).toBe(false)
+    // the 7 genuine effort laps are flagged
+    for (const k of [7, 8, 10, 11, 13, 14, 16]) expect(fast.has(k)).toBe(true)
+  })
+
+  it('reconstructs 4 efforts, grouping the 2×1 km reps', () => {
+    const a = analyzeFractionne(realSession)
+    expect(a.isInterval).toBe(true)
+    expect(a.efforts).toHaveLength(4)
+    expect(a.efforts[0].laps).toHaveLength(2)   // 2 000 m = 2 laps merged
+    expect(a.efforts[3].laps).toHaveLength(1)   // 1 000 m = single lap
+    expect(a.structureLabel).toBe('3 × 2 000 m + 1 000 m')
+  })
+
+  it('detects warm-up, 3 recoveries and cool-down phases', () => {
+    const a = analyzeFractionne(realSession)
+    expect(a.warmup?.laps).toHaveLength(6)
+    expect(a.cooldown?.laps).toHaveLength(3)
+    expect(a.items.filter(it => it.type === 'recovery')).toHaveLength(3)
+  })
+
+  it('computes a sensible average effort pace (~3:35/km)', () => {
+    const a = analyzeFractionne(realSession)
+    expect(a.avgEffortPaceSec).toBeGreaterThan(210)
+    expect(a.avgEffortPaceSec).toBeLessThan(225)
+  })
+
+  it('returns isInterval=false for a steady run', () => {
+    const steady = [
+      makeLap({ split: 1, average_speed: 2.5 }),
+      makeLap({ split: 2, average_speed: 2.52 }),
+      makeLap({ split: 3, average_speed: 2.48 }),
+    ]
+    const a = analyzeFractionne(steady)
+    expect(a.isInterval).toBe(false)
+    expect(a.efforts).toHaveLength(0)
   })
 })
 

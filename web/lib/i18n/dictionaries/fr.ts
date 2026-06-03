@@ -257,6 +257,13 @@ export type Dict = {
     fracColPace: string
     fracColElevation: string
     fracFastBadge: string
+    fracPhaseWarmup: string
+    fracPhaseRecovery: string
+    fracPhaseCooldown: string
+    fracRecoveryShort: string
+    fracMainBlock: (n: number) => string
+    fracAvgEffort: string
+    fracTapDetail: string
 
     popupClose: string; popupCloseAria: string
     popupChargeTitle: string; popupChargeIntro: string
@@ -1656,6 +1663,13 @@ export const fr: Dict = {
     fracColPace:              'Allure',
     fracColElevation:         'D+',
     fracFastBadge:            'RAPIDE',
+    fracPhaseWarmup:          'Échauffement',
+    fracPhaseRecovery:        'Récupération',
+    fracPhaseCooldown:        'Retour au calme',
+    fracRecoveryShort:        'récup',
+    fracMainBlock:            (n: number) => `Bloc principal · ${n} effort${n > 1 ? 's' : ''}`,
+    fracAvgEffort:            'moy. effort',
+    fracTapDetail:            'détail des laps',
 
     // Popups
     popupClose:          'Fermer',

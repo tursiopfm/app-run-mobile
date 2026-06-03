@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fractionné — détection blocs / phases / regroupement (3 mockups)</title>
+<style>
+  :root{
+    --bg:#0A0F0E; --card:#162420; --card2:#11201C; --border:#1E3530;
+    --muted:#8BA8A3; --text:#E2ECE9;
+    --fast:#e8651a; --fast2:#ff7043; --fastbg:rgba(232,101,26,0.10); --fastbg2:rgba(232,101,26,0.18);
+    --warm:#3aa0c9; --warmbg:rgba(58,160,201,0.12);
+    --cool:#46c08a; --coolbg:rgba(70,192,138,0.12);
+    --rec:#7d938e; --recbg:rgba(125,147,142,0.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%, #11211c 0%, var(--bg) 60%);
+    color:var(--text);
+    font-family:-apple-system,'Inter','Segoe UI',sans-serif;
+    padding:32px 20px 80px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page-head{max-width:1280px;margin:0 auto 30px}
+  .page-head h1{font-size:22px;font-weight:800;letter-spacing:-0.3px;margin-bottom:8px}
+  .page-head p{color:var(--muted);font-size:13.5px;line-height:1.6;max-width:900px}
+  .page-head p b{color:var(--text)}
+  .page-head .pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .pill{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:999px;border:1px solid var(--border);background:var(--card)}
+  .pill b{color:var(--fast)}
+  .bugbox{margin-top:14px;max-width:900px;background:rgba(232,101,26,0.07);border:1px solid rgba(232,101,26,0.3);border-radius:12px;padding:11px 14px;font-size:12.5px;line-height:1.6;color:var(--muted)}
+  .bugbox b{color:var(--fast)}
+  .ok{color:var(--cool);font-weight:700}
+
+  .row{display:flex;gap:26px;justify-content:center;align-items:flex-start;flex-wrap:wrap;max-width:1320px;margin:0 auto}
+  .frame-wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+  .frame-cap{text-align:center;max-width:392px}
+  .frame-cap .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--fast);color:#fff;font-weight:800;font-size:13px;margin-bottom:8px}
+  .frame-cap h2{font-size:16px;font-weight:800;margin-bottom:5px}
+  .frame-cap p{font-size:12.5px;color:var(--muted);line-height:1.55}
+
+  .phone{
+    width:392px;background:var(--bg);border:1px solid var(--border);border-radius:30px;
+    padding:16px 14px 22px;box-shadow:0 24px 60px rgba(0,0,0,0.55);
+  }
+  .sec-title{display:flex;align-items:center;justify-content:space-between;margin:2px 4px 6px}
+  .sec-title .t{font-size:14px;font-weight:800}
+  .sec-title .meta{font-size:11.5px;color:var(--muted)}
+  .frac-detected{font-size:11.5px;font-weight:800;color:var(--fast)}
+  .struct{font-size:11px;color:var(--muted);margin:0 4px 14px}
+  .struct b{color:var(--fast)}
+
+  .tag{font-size:9.5px;font-weight:800;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;text-transform:uppercase;display:inline-block}
+  .tag.fast{color:var(--fast);background:var(--fastbg2)}
+  .tag.warm{color:var(--warm);background:var(--warmbg)}
+  .tag.cool{color:var(--cool);background:var(--coolbg)}
+  .tag.rec{color:var(--rec);background:var(--recbg)}
+  .chev{transition:transform .18s ease;display:inline-block;color:var(--muted);font-size:10px}
+  .open > .chev,.open .chev.self{transform:rotate(90deg)}
+  .mono{font-variant-numeric:tabular-nums}
+
+  /* ============ MOCKUP 1 — TIMELINE PAR PHASES ============ */
+  .m1 .phase{margin-bottom:9px}
+  .m1 .phase-head{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:11px;border:1px solid var(--border)}
+  .m1 .phase-head .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .m1 .phase-head .lbl{font-size:12px;font-weight:800;letter-spacing:0.2px}
+  .m1 .phase-head .sub{font-size:10.5px;color:var(--muted);margin-left:auto;font-weight:600}
+  .m1 .warmH{background:var(--warmbg);cursor:pointer} .m1 .warmH .lbl{color:var(--warm)}
+  .m1 .coolH{background:var(--coolbg);cursor:pointer} .m1 .coolH .lbl{color:var(--cool)}
+  .m1 .blockH{background:var(--fastbg)} .m1 .blockH .lbl{color:var(--fast)}
+  .m1 .subreps{margin:6px 0 0;padding-left:4px;display:none}
+  .m1 .subreps.open{display:block}
+  .m1 .reps{margin-top:6px}
+  .m1 .rep{display:grid;grid-template-columns:26px 1fr auto auto;align-items:center;gap:9px;padding:8px 9px;border-radius:9px;margin-bottom:5px;background:var(--fastbg);border:1px solid rgba(232,101,26,0.22);cursor:pointer}
+  .m1 .rep .n{width:21px;height:21px;border-radius:50%;background:var(--fastbg2);border:1px solid rgba(232,101,26,0.5);color:var(--fast);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .m1 .rep .d{font-size:12.5px;font-weight:700}
+  .m1 .rep .d small{display:block;font-size:9.5px;color:var(--muted);font-weight:600;margin-top:1px}
+  .m1 .rep .tm{font-size:11px;color:var(--muted);font-weight:600}
+  .m1 .rep .p{font-size:14px;font-weight:900;color:var(--fast);min-width:62px;text-align:right}
+  .m1 .rep .p small{font-size:9px;color:var(--muted);font-weight:600}
+  .m1 .recline{display:flex;align-items:center;gap:8px;padding:4px 10px 9px 30px;font-size:10.5px;color:var(--rec)}
+  .m1 .recline .l{flex:1;height:1px;background:repeating-linear-gradient(90deg,var(--border) 0 4px,transparent 4px 8px)}
+  .m1 .kidlaps{margin:2px 0 7px 30px;display:none}
+  .m1 .kidlaps.open{display:block}
+  .m1 .kid{display:grid;grid-template-columns:1fr auto auto;gap:10px;padding:4px 0;font-size:11px;color:var(--muted)}
+  .m1 .kid .kp{color:var(--fast2);font-weight:700;min-width:54px;text-align:right}
+
+  /* ============ MOCKUP 2 — TABLEAU GARMIN parent/enfant ============ */
+  .m2 .thead,.m2 .trow{display:grid;grid-template-columns:26px 1fr 52px 58px 22px;align-items:center;gap:4px}
+  .m2 .thead{padding:4px 6px 8px;border-bottom:1px solid var(--border)}
+  .m2 .thead span{font-size:9.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+  .m2 .thead span:nth-child(3),.m2 .thead span:nth-child(4){text-align:right}
+  .m2 .trow{padding:9px 6px;border-bottom:1px solid var(--border)}
+  .m2 .trow .idx{font-size:11px;font-weight:800;color:var(--muted);display:flex;align-items:center;gap:3px}
+  .m2 .trow .dist{font-size:12px;font-weight:700}
+  .m2 .trow .dist small{color:var(--muted);font-weight:600;font-size:10px}
+  .m2 .trow .time{font-size:11.5px;color:var(--muted);text-align:right;font-weight:600}
+  .m2 .trow .pace{font-size:13px;font-weight:800;text-align:right}
+  .m2 .trow .ar{text-align:right}
+  .m2 .trow.parent{cursor:pointer;background:var(--fastbg);border-left:3px solid var(--fast);border-radius:9px;margin:6px 0;padding-left:7px}
+  .m2 .trow.parent .pace{color:var(--fast)}
+  .m2 .trow.parent .idx{color:var(--fast)}
+  .m2 .trow.warm,.m2 .trow.cool{cursor:pointer;border-radius:9px;padding-left:7px;margin:6px 0}
+  .m2 .trow.warm{background:var(--warmbg);border-left:3px solid var(--warm)}
+  .m2 .trow.cool{background:var(--coolbg);border-left:3px solid var(--cool)}
+  .m2 .trow.warm .pace{color:var(--warm)} .m2 .trow.cool .pace{color:var(--cool)}
+  .m2 .child{display:none}
+  .m2 .child.open{display:block}
+  .m2 .trow.kid{background:rgba(232,101,26,0.04);padding-left:18px}
+  .m2 .trow.kid .dist{font-weight:600;font-size:11.5px}
+  .m2 .trow.kid .pace{color:var(--fast2);font-weight:700;font-size:12px}
+  .m2 .trow.kid.rec .pace{color:var(--rec);font-weight:600}
+  .m2 .trow.kid.rec .dist{color:var(--rec)}
+  .m2 .trow.wkid{background:rgba(58,160,201,0.05);padding-left:18px}
+  .m2 .trow.wkid .dist{font-weight:600;font-size:11.5px}
+  .m2 .trow.wkid .pace{color:var(--warm);font-weight:600;font-size:12px}
+
+  /* ============ MOCKUP 3 — CARTES EFFORT + BARRES ============ */
+  .m3 .hero{background:linear-gradient(135deg,rgba(232,101,26,0.18),rgba(232,101,26,0.03));border:1px solid rgba(232,101,26,0.35);border-radius:16px;padding:14px 16px;margin-bottom:13px}
+  .m3 .hero .big{font-size:20px;font-weight:900;letter-spacing:-0.4px}
+  .m3 .hero .big b{color:var(--fast)}
+  .m3 .hero .sub{font-size:11px;color:var(--muted);margin-top:3px}
+  .m3 .bars{display:flex;align-items:flex-end;gap:9px;height:68px;margin-top:16px;padding-top:14px}
+  .m3 .barcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
+  .m3 .bar{width:100%;background:linear-gradient(180deg,var(--fast2),var(--fast));border-radius:5px 5px 0 0;position:relative;min-height:6px}
+  .m3 .bar .v{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:9.5px;font-weight:800;color:var(--fast);white-space:nowrap}
+  .m3 .barcol .bl{font-size:9.5px;color:var(--muted);font-weight:700}
+  .m3 .barcol .bd{font-size:8.5px;color:var(--muted)}
+  .m3 .pcard{border:1px solid var(--border);border-radius:13px;padding:11px 13px;margin-bottom:9px;background:var(--card)}
+  .m3 .pcard.warm{border-left:3px solid var(--warm)}
+  .m3 .pcard.cool{border-left:3px solid var(--cool)}
+  .m3 .pcard.work{border-left:3px solid var(--fast);cursor:pointer}
+  .m3 .pcard-top{display:flex;align-items:center;justify-content:space-between}
+  .m3 .pcard-top .l{display:flex;align-items:center;gap:8px}
+  .m3 .pcard-top .nm{font-size:12.5px;font-weight:800}
+  .m3 .pcard-top .pc{font-size:14px;font-weight:900;font-variant-numeric:tabular-nums}
+  .m3 .pcard.warm .pc{color:var(--warm)} .m3 .pcard.cool .pc{color:var(--cool)} .m3 .pcard.work .pc{color:var(--fast)}
+  .m3 .pcard .meta{font-size:10.5px;color:var(--muted);margin-top:2px}
+  .m3 .work-detail{display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:6px}
+  .m3 .work-detail.open{display:block}
+  .m3 .wd-row{display:grid;grid-template-columns:24px 1fr auto auto;align-items:center;gap:9px;padding:6px 0;font-size:11.5px}
+  .m3 .wd-row + .wd-row{border-top:1px solid var(--border)}
+  .m3 .wd-row .n{width:19px;height:19px;border-radius:50%;background:var(--fastbg2);color:var(--fast);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .m3 .wd-row .rp{color:var(--fast);font-weight:800;font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+  .m3 .wd-row.rec .n{background:var(--recbg);color:var(--rec)}
+  .m3 .wd-row.rec,.m3 .wd-row.rec .rp{color:var(--rec);font-weight:600}
+
+  .copybtn{width:100%;margin-top:16px;padding:11px;border-radius:11px;border:1px solid rgba(232,101,26,0.4);background:rgba(232,101,26,0.16);color:var(--fast);font-size:12.5px;font-weight:800;cursor:pointer}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:0 auto 28px;max-width:760px}
+  .legend .li{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+  .legend .sw{width:11px;height:11px;border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>Fractionné — détection des blocs, phases &amp; regroupement</h1>
+  <p>
+    Les 3 maquettes utilisent <b>ta séance réelle</b> (capture 1) : <b>« Frac 3×2000 + 1000 r=1'30 »</b>, 15,6 km.
+    Structure reconstruite : <b>échauffement progressif</b> (5,7 km) → <b>3 × 2000 m + 1 × 1000 m</b> (récups entre) → <b>retour au calme</b>.
+  </p>
+  <div class="bugbox">
+    <b>Le bug (capture 1)</b> : le bloc 18 (4:58/km) et le bloc 19 (4:23/km) sont marqués <b>RAPIDE</b> à tort → « 9 blocs rapides » alors qu'il n'y a que 7 vrais laps d'effort (3:20–3:45).
+    <span class="ok">→ Corrigé</span> : la tolérance n'est plus calée sur la médiane (tirée par les récups lentes) mais sur le <b>cluster rapide</b> détecté par écart — on s'arrête net au saut 3:45 → 4:23. Le retour au calme n'est plus jamais flagué.
+    En plus : les reps de 2000 m (laps 7+8, 10+11, 13+14) sont <b>cumulés</b> comme sur Garmin.
+  </div>
+  <div class="pills">
+    <span class="pill"><b>Fix tolérance</b> · cluster par écart, plus la médiane</span>
+    <span class="pill"><b>Regroupement</b> · 2000 m = 2 laps cumulés, flèche pour déplier</span>
+    <span class="pill"><b>Phases</b> · Échauffement · Récupération · Retour au calme</span>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="li"><span class="sw" style="background:#3aa0c9"></span> Échauffement</div>
+  <div class="li"><span class="sw" style="background:#e8651a"></span> Bloc rapide (effort)</div>
+  <div class="li"><span class="sw" style="background:#7d938e"></span> Récupération</div>
+  <div class="li"><span class="sw" style="background:#46c08a"></span> Retour au calme</div>
+</div>
+
+<div class="row">
+
+  <!-- ===================== MOCKUP 1 — TIMELINE ===================== -->
+  <div class="frame-wrap">
+    <div class="phone m1">
+      <div class="sec-title">
+        <span class="t">Splits fractionné</span>
+        <span class="frac-detected">4 blocs d'effort</span>
+      </div>
+      <div class="struct"><b>3 × 2000 m + 1 000 m</b> · récup 1'30</div>
+
+      <!-- Échauffement repliable -->
+      <div class="phase">
+        <div class="phase-head warmH" onclick="tog(this,'m1warm')">
+          <span class="chev self">▶</span>
+          <span class="dot" style="background:var(--warm)"></span>
+          <span class="lbl">Échauffement</span>
+          <span class="sub">5,73 km · 32:47 · 5:43/km</span>
+        </div>
+        <div class="subreps" id="m1warm">
+          <div class="kidlaps open" style="margin-top:6px">
+            <div class="kid"><span>1 · 1,00 km</span><span>5:54</span><span class="kp" style="color:var(--warm)">5:55</span></div>
+            <div class="kid"><span>2 · 1,00 km</span><span>5:52</span><span class="kp" style="color:var(--warm)">5:52</span></div>
+            <div class="kid"><span>3 · 1,00 km</span><span>5:48</span><span class="kp" style="color:var(--warm)">5:48</span></div>
+            <div class="kid"><span>4 · 1,00 km</span><span>5:35</span><span class="kp" style="color:var(--warm)">5:34</span></div>
+            <div class="kid"><span>5 · 1,00 km</span><span>5:33</span><span class="kp" style="color:var(--warm)">5:33</span></div>
+            <div class="kid"><span>6 · 731 m</span><span>4:05</span><span class="kp" style="color:var(--warm)">5:34</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloc principal -->
+      <div class="phase">
+        <div class="phase-head blockH">
+          <span class="dot" style="background:var(--fast)"></span>
+          <span class="lbl">Bloc principal</span>
+          <span class="sub">4 efforts · ~7 km</span>
+        </div>
+        <div class="reps">
+          <!-- Rep 1 (2000m = 2 laps) -->
+          <div class="rep" onclick="tog(this,'m1r1')">
+            <span class="n">1</span>
+            <span class="d">2,04 km <small>2 × 1 km · clique pour détail</small></span>
+            <span class="tm">7:37</span>
+            <span class="p">3:44<small>/km</small> <span class="chev self">▶</span></span>
+          </div>
+          <div class="kidlaps" id="m1r1">
+            <div class="kid"><span>1,02 km</span><span>3:49</span><span class="kp">3:45/km</span></div>
+            <div class="kid"><span>1,02 km</span><span>3:48</span><span class="kp">3:44/km</span></div>
+          </div>
+          <div class="recline"><span>récup 228 m · 6:47/km</span><span class="l"></span><span>1:33</span></div>
+
+          <!-- Rep 2 -->
+          <div class="rep" onclick="tog(this,'m1r2')">
+            <span class="n">2</span>
+            <span class="d">2,00 km <small>2 × 1 km · clique pour détail</small></span>
+            <span class="tm">7:23</span>
+            <span class="p">3:42<small>/km</small> <span class="chev self">▶</span></span>
+          </div>
+          <div class="kidlaps" id="m1r2">
+            <div class="kid"><span>1,00 km</span><span>3:42</span><span class="kp">3:42/km</span></div>
+            <div class="kid"><span>1,00 km</span><span>3:41</span><span class="kp">3:41/km</span></div>
+          </div>
+          <div class="recline"><span>récup 207 m · 7:58/km</span><span class="l"></span><span>1:39</span></div>
+
+          <!-- Rep 3 -->
+          <div class="rep" onclick="tog(this,'m1r3')">
+            <span class="n">3</span>
+            <span class="d">2,01 km <small>2 × 1 km · clique pour détail</small></span>
+            <span class="tm">7:09</span>
+            <span class="p">3:34<small>/km</small> <span class="chev self">▶</span></span>
+          </div>
+          <div class="kidlaps" id="m1r3">
+            <div class="kid"><span>1,01 km</span><span>3:35</span><span class="kp">3:34/km</span></div>
+            <div class="kid"><span>999 m</span><span>3:34</span><span class="kp">3:34/km</span></div>
+          </div>
+          <div class="recline"><span>récup 233 m · 8:10/km</span><span class="l"></span><span>1:54</span></div>
+
+          <!-- Rep 4 (1000m = 1 lap) -->
+          <div class="rep" style="cursor:default">
+            <span class="n">4</span>
+            <span class="d">1,01 km <small>1 000 m</small></span>
+            <span class="tm">3:21</span>
+            <span class="p">3:20<small>/km</small></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Retour au calme repliable -->
+      <div class="phase">
+        <div class="phase-head coolH" onclick="tog(this,'m1cool')">
+          <span class="chev self">▶</span>
+          <span class="dot" style="background:var(--cool)"></span>
+          <span class="lbl">Retour au calme</span>
+          <span class="sub">2,12 km · 11:31 · 5:26/km</span>
+        </div>
+        <div class="subreps" id="m1cool">
+          <div class="kidlaps open" style="margin-top:6px">
+            <div class="kid"><span>17 · 1,00 km</span><span>6:01</span><span class="kp" style="color:var(--cool)">6:01</span></div>
+            <div class="kid"><span>18 · 1,00 km</span><span>4:58</span><span class="kp" style="color:var(--cool)">4:58</span></div>
+            <div class="kid"><span>19 · 122 m</span><span>0:32</span><span class="kp" style="color:var(--cool)">4:23</span></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="copybtn">Copier les blocs (7:37 / 7:23 / 7:09 / 3:21)</button>
+    </div>
+
+    <div class="frame-cap">
+      <span class="num">1</span>
+      <h2>Timeline par phases</h2>
+      <p>Échauffement &amp; retour au calme repliés en tête/pied. Au centre, les 4 efforts en grosses cartes (allure bien lisible), récups en pointillés. Chaque 2000 m se déplie en ses 2 km. Le plus orienté « lecture de séance ».</p>
+    </div>
+  </div>
+
+  <!-- ===================== MOCKUP 2 — TABLEAU GARMIN ===================== -->
+  <div class="frame-wrap">
+    <div class="phone m2">
+      <div class="sec-title">
+        <span class="t">Splits fractionné</span>
+        <span class="meta"><span class="frac-detected">3 × 2000 + 1000</span></span>
+      </div>
+      <div class="struct">19 blocs · <b>4 efforts détectés</b></div>
+
+      <div class="thead">
+        <span>Int.</span><span>Distance</span><span>Temps</span><span>Allure</span><span></span>
+      </div>
+
+      <!-- Échauffement repliable -->
+      <div class="trow warm" onclick="tog(this,'m2warm')">
+        <span class="idx"><span class="chev self">▶</span></span>
+        <span class="dist"><span class="tag warm">Échauf.</span> 5,73 km</span>
+        <span class="time mono">32:47</span>
+        <span class="pace mono">5:43</span>
+        <span class="ar"></span>
+      </div>
+      <div class="child" id="m2warm">
+        <div class="trow wkid"><span class="idx">1</span><span class="dist">1,00 km</span><span class="time mono">5:54</span><span class="pace mono">5:55</span><span></span></div>
+        <div class="trow wkid"><span class="idx">2</span><span class="dist">1,00 km</span><span class="time mono">5:52</span><span class="pace mono">5:52</span><span></span></div>
+        <div class="trow wkid"><span class="idx">3</span><span class="dist">1,00 km</span><span class="time mono">5:48</span><span class="pace mono">5:48</span><span></span></div>
+        <div class="trow wkid"><span class="idx">4</span><span class="dist">1,00 km</span><span class="time mono">5:35</span><span class="pace mono">5:34</span><span></span></div>
+        <div class="trow wkid"><span class="idx">5</span><span class="dist">1,00 km</span><span class="time mono">5:33</span><span class="pace mono">5:33</span><span></span></div>
+        <div class="trow wkid"><span class="idx">6</span><span class="dist">731 m</span><span class="time mono">4:05</span><span class="pace mono">5:34</span><span></span></div>
+      </div>
+
+      <!-- Rep 1 (expanded by default, like Garmin) -->
+      <div class="trow parent open" onclick="tog(this,'m2g1')">
+        <span class="idx"><span class="chev self">▶</span>1</span>
+        <span class="dist">2,04 km <span class="tag fast">rapide</span></span>
+        <span class="time mono">7:37</span>
+        <span class="pace mono">3:44</span>
+        <span class="ar"></span>
+      </div>
+      <div class="child open" id="m2g1">
+        <div class="trow kid"><span class="idx">7</span><span class="dist">1,02 km</span><span class="time mono">3:49</span><span class="pace mono">3:45</span><span></span></div>
+        <div class="trow kid"><span class="idx">8</span><span class="dist">1,02 km</span><span class="time mono">3:48</span><span class="pace mono">3:44</span><span></span></div>
+        <div class="trow kid rec"><span class="idx">9</span><span class="dist">récup · 228 m</span><span class="time mono">1:33</span><span class="pace mono">6:47</span><span></span></div>
+      </div>
+
+      <!-- Rep 2 -->
+      <div class="trow parent" onclick="tog(this,'m2g2')">
+        <span class="idx"><span class="chev self">▶</span>2</span>
+        <span class="dist">2,00 km <span class="tag fast">rapide</span></span>
+        <span class="time mono">7:23</span>
+        <span class="pace mono">3:42</span>
+        <span class="ar"></span>
+      </div>
+      <div class="child" id="m2g2">
+        <div class="trow kid"><span class="idx">10</span><span class="dist">1,00 km</span><span class="time mono">3:42</span><span class="pace mono">3:42</span><span></span></div>
+        <div class="trow kid"><span class="idx">11</span><span class="dist">1,00 km</span><span class="time mono">3:41</span><span class="pace mono">3:41</span><span></span></div>
+        <div class="trow kid rec"><span class="idx">12</span><span class="dist">récup · 207 m</span><span class="time mono">1:39</span><span class="pace mono">7:58</span><span></span></div>
+      </div>
+
+      <!-- Rep 3 -->
+      <div class="trow parent" onclick="tog(this,'m2g3')">
+        <span class="idx"><span class="chev self">▶</span>3</span>
+        <span class="dist">2,01 km <span class="tag fast">rapide</span></span>
+        <span class="time mono">7:09</span>
+        <span class="pace mono">3:34</span>
+        <span class="ar"></span>
+      </div>
+      <div class="child" id="m2g3">
+        <div class="trow kid"><span class="idx">13</span><span class="dist">1,01 km</span><span class="time mono">3:35</span><span class="pace mono">3:34</span><span></span></div>
+        <div class="trow kid"><span class="idx">14</span><span class="dist">999 m</span><span class="time mono">3:34</span><span class="pace mono">3:34</span><span></span></div>
+        <div class="trow kid rec"><span class="idx">15</span><span class="dist">récup · 233 m</span><span class="time mono">1:54</span><span class="pace mono">8:10</span><span></span></div>
+      </div>
+
+      <!-- Rep 4 (single lap) -->
+      <div class="trow parent" style="cursor:default">
+        <span class="idx" style="padding-left:13px">4</span>
+        <span class="dist">1,01 km <span class="tag fast">rapide</span></span>
+        <span class="time mono">3:21</span>
+        <span class="pace mono">3:20</span>
+        <span class="ar"></span>
+      </div>
+
+      <!-- Retour au calme repliable -->
+      <div class="trow cool" onclick="tog(this,'m2cool')">
+        <span class="idx"><span class="chev self">▶</span></span>
+        <span class="dist"><span class="tag cool">Calme</span> 2,12 km</span>
+        <span class="time mono">11:31</span>
+        <span class="pace mono">5:26</span>
+        <span class="ar"></span>
+      </div>
+      <div class="child" id="m2cool">
+        <div class="trow wkid" style="background:rgba(70,192,138,0.05)"><span class="idx">17</span><span class="dist">1,00 km</span><span class="time mono">6:01</span><span class="pace mono" style="color:var(--cool)">6:01</span><span></span></div>
+        <div class="trow wkid" style="background:rgba(70,192,138,0.05)"><span class="idx">18</span><span class="dist">1,00 km</span><span class="time mono">4:58</span><span class="pace mono" style="color:var(--cool)">4:58</span><span></span></div>
+        <div class="trow wkid" style="background:rgba(70,192,138,0.05)"><span class="idx">19</span><span class="dist">122 m</span><span class="time mono">0:32</span><span class="pace mono" style="color:var(--cool)">4:23</span><span></span></div>
+      </div>
+
+      <button class="copybtn">Copier les temps rapides (4)</button>
+    </div>
+
+    <div class="frame-cap">
+      <span class="num">2</span>
+      <h2>Tableau « à la Garmin »</h2>
+      <p>La copie quasi exacte de ta capture 2 : colonnes Int. / Distance / Temps / Allure, échauffement + retour au calme repliables, chaque rep numérotée et cumulée, dépliable vers ses 2 km + la récup. Familier et dense.</p>
+    </div>
+  </div>
+
+  <!-- ===================== MOCKUP 3 — CARTES + BARRES ===================== -->
+  <div class="frame-wrap">
+    <div class="phone m3">
+      <div class="sec-title">
+        <span class="t">Splits fractionné</span>
+        <span class="frac-detected">séance détectée</span>
+      </div>
+      <div class="struct" style="margin-bottom:10px"></div>
+
+      <div class="hero">
+        <div class="big"><b>3 × 2000 m</b> + 1 000 m</div>
+        <div class="sub">récup 1'30 · allure moy. effort 3:35/km · progression négative ✦</div>
+        <div class="bars">
+          <div class="barcol"><div class="bar" style="height:58%"><span class="v">3:44</span></div><span class="bl">1</span><span class="bd">2 km</span></div>
+          <div class="barcol"><div class="bar" style="height:64%"><span class="v">3:42</span></div><span class="bl">2</span><span class="bd">2 km</span></div>
+          <div class="barcol"><div class="bar" style="height:82%"><span class="v">3:34</span></div><span class="bl">3</span><span class="bd">2 km</span></div>
+          <div class="barcol"><div class="bar" style="height:100%"><span class="v">3:20</span></div><span class="bl">4</span><span class="bd">1 km</span></div>
+        </div>
+      </div>
+
+      <div class="pcard warm">
+        <div class="pcard-top">
+          <span class="l"><span class="tag warm">Échauffement</span><span class="nm">5,73 km</span></span>
+          <span class="pc">5:43</span>
+        </div>
+        <div class="meta">32:47 · mise en route progressive 5:55 → 5:34</div>
+      </div>
+
+      <div class="pcard work open" onclick="tog(this,'m3w')">
+        <div class="pcard-top">
+          <span class="l"><span class="chev self">▶</span><span class="nm">Bloc principal · 4 efforts</span></span>
+          <span class="pc">3:35</span>
+        </div>
+        <div class="meta">3 × 2000 m + 1 000 m · clique pour le détail des laps</div>
+        <div class="work-detail" id="m3w">
+          <div class="wd-row"><span class="n">1</span><span>2,04 km <span style="color:var(--muted)">(2×1 km)</span></span><span class="mono">7:37</span><span class="rp mono">3:44/km</span></div>
+          <div class="wd-row rec"><span class="n">r</span><span>récup 228 m</span><span class="mono">1:33</span><span class="rp mono">6:47/km</span></div>
+          <div class="wd-row"><span class="n">2</span><span>2,00 km <span style="color:var(--muted)">(2×1 km)</span></span><span class="mono">7:23</span><span class="rp mono">3:42/km</span></div>
+          <div class="wd-row rec"><span class="n">r</span><span>récup 207 m</span><span class="mono">1:39</span><span class="rp mono">7:58/km</span></div>
+          <div class="wd-row"><span class="n">3</span><span>2,01 km <span style="color:var(--muted)">(2×1 km)</span></span><span class="mono">7:09</span><span class="rp mono">3:34/km</span></div>
+          <div class="wd-row rec"><span class="n">r</span><span>récup 233 m</span><span class="mono">1:54</span><span class="rp mono">8:10/km</span></div>
+          <div class="wd-row"><span class="n">4</span><span>1,01 km <span style="color:var(--muted)">(1 000 m)</span></span><span class="mono">3:21</span><span class="rp mono">3:20/km</span></div>
+        </div>
+      </div>
+
+      <div class="pcard cool">
+        <div class="pcard-top">
+          <span class="l"><span class="tag cool">Retour au calme</span><span class="nm">2,12 km</span></span>
+          <span class="pc">5:26</span>
+        </div>
+        <div class="meta">11:31 · footing de récupération</div>
+      </div>
+
+      <button class="copybtn">Copier les temps rapides (4)</button>
+    </div>
+
+    <div class="frame-cap">
+      <span class="num">3</span>
+      <h2>Cartes effort + barres</h2>
+      <p>Résumé en tête (« 3 × 2000 + 1000 ») avec mini-graphe : on <b>voit</b> la progression négative 3:44 → 3:20. Chaque phase est une carte ; le bloc d'effort se déplie en détail. Le plus « valorisant / dashboard », mais le plus haut.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function tog(el, id){
+    var box = document.getElementById(id);
+    var open = box.classList.toggle('open');
+    el.classList.toggle('open', open);
+  }
+</script>
+</body>
+</html>

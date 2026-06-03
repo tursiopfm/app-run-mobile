@@ -581,6 +581,13 @@ export const en: Dict = {
     fracColPace:              'Pace',
     fracColElevation:         'Elev',
     fracFastBadge:            'FAST',
+    fracPhaseWarmup:          'Warm-up',
+    fracPhaseRecovery:        'Recovery',
+    fracPhaseCooldown:        'Cool-down',
+    fracRecoveryShort:        'rec.',
+    fracMainBlock:            (n: number) => `Main set · ${n} effort${n > 1 ? 's' : ''}`,
+    fracAvgEffort:            'avg effort',
+    fracTapDetail:            'lap detail',
 
     popupClose:          'Close',
     popupCloseAria:      'Close',

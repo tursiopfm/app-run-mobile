@@ -1,6 +1,10 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { ActivityFractionneSplits } from '@/components/ui/ActivityFractionneSplits'
+import { I18nProvider } from '@/lib/i18n/I18nProvider'
 import type { StravaLap } from '@/lib/activities/detail'
+
+const renderFr = (ui: React.ReactElement) =>
+  render(<I18nProvider initialLang="fr">{ui}</I18nProvider>)
 
 function makeLap(overrides: Partial<StravaLap> & { split: number }): StravaLap {
   return {
@@ -16,7 +20,7 @@ function makeLap(overrides: Partial<StravaLap> & { split: number }): StravaLap {
   }
 }
 
-// Workout laps: echauffement / fast / short recovery / fast / cooldown
+// warm-up / fast / short recovery / fast / cool-down → 2 efforts, 1 recovery
 const workoutLaps: StravaLap[] = [
   makeLap({ split: 1, distance: 3360, moving_time: 1187, average_speed: 3360 / 1187 }),
   makeLap({ split: 2, distance: 3080, moving_time: 922,  average_speed: 3080 / 922 }),
@@ -33,61 +37,48 @@ const uniformLaps: StravaLap[] = [
 ]
 
 describe('ActivityFractionneSplits', () => {
-  it('renders one row per lap (lap numbers 1–5)', () => {
-    render(<ActivityFractionneSplits laps={workoutLaps} />)
-    expect(screen.getAllByText('1')[0]).toBeInTheDocument()
-    expect(screen.getAllByText('2')[0]).toBeInTheDocument()
-    expect(screen.getAllByText('3')[0]).toBeInTheDocument()
-    expect(screen.getAllByText('4')[0]).toBeInTheDocument()
-    expect(screen.getAllByText('5')[0]).toBeInTheDocument()
+  it('shows the detected workout structure label', () => {
+    renderFr((<ActivityFractionneSplits laps={workoutLaps} />))
+    // 2 efforts of ~3 080 m → rounded to 3 100 m
+    expect(screen.getByText('2 × 3 100 m')).toBeInTheDocument()
   })
 
-  it('formats distance >= 1000m as km', () => {
-    render(<ActivityFractionneSplits laps={workoutLaps} />)
-    expect(screen.getByText('3.36 km')).toBeInTheDocument()
-    expect(screen.getAllByText('3.08 km')).toHaveLength(2)
-    expect(screen.getByText('1.92 km')).toBeInTheDocument()
+  it('labels warm-up and cool-down phases', () => {
+    renderFr((<ActivityFractionneSplits laps={workoutLaps} />))
+    expect(screen.getByText('Échauffement')).toBeInTheDocument()
+    expect(screen.getByText('Retour au calme')).toBeInTheDocument()
   })
 
-  it('formats distance < 1000m as meters', () => {
-    render(<ActivityFractionneSplits laps={workoutLaps} />)
-    expect(screen.getByText('220 m')).toBeInTheDocument()
+  it('shows the main set with the number of efforts', () => {
+    renderFr((<ActivityFractionneSplits laps={workoutLaps} />))
+    expect(screen.getByText('Bloc principal · 2 efforts')).toBeInTheDocument()
   })
 
-  it('formats lap time as mm:ss', () => {
-    render(<ActivityFractionneSplits laps={workoutLaps} />)
-    // lap 2: moving_time=922s → 15:22
-    expect(screen.getByText('15:22')).toBeInTheDocument()
-    // lap 4: moving_time=930s → 15:30
-    expect(screen.getByText('15:30')).toBeInTheDocument()
+  it('shows recovery rows in the expanded detail', () => {
+    renderFr((<ActivityFractionneSplits laps={workoutLaps} />))
+    // recovery row appears in the expanded detail (e.g. "récup 220 m")
+    expect(screen.getByText(/récup 220 m/)).toBeInTheDocument()
   })
 
-  it('shows RAPIDE badge on fast laps (2 and 4)', () => {
-    render(<ActivityFractionneSplits laps={workoutLaps} />)
-    const badges = screen.getAllByText('RAPIDE')
-    expect(badges).toHaveLength(2)
+  it('copy button is enabled when an interval session is detected', () => {
+    renderFr((<ActivityFractionneSplits laps={workoutLaps} />))
+    expect(screen.getByRole('button')).not.toBeDisabled()
   })
 
-  it('copy button is enabled when fast laps detected', () => {
-    render(<ActivityFractionneSplits laps={workoutLaps} />)
-    const btn = screen.getByRole('button')
-    expect(btn).not.toBeDisabled()
+  it('copy button is disabled for a steady run (no efforts)', () => {
+    renderFr((<ActivityFractionneSplits laps={uniformLaps} />))
+    expect(screen.getByRole('button')).toBeDisabled()
   })
 
-  it('copy button is disabled when no fast laps (uniform pace)', () => {
-    render(<ActivityFractionneSplits laps={uniformLaps} />)
-    const btn = screen.getByRole('button')
-    expect(btn).toBeDisabled()
-  })
-
-  it('copies fast lap times (mm:ss) to clipboard on click', async () => {
+  it('copies the effort times (mm:ss) to clipboard on click', async () => {
     const writeText = jest.fn().mockResolvedValue(undefined)
     Object.assign(navigator, { clipboard: { writeText } })
 
-    render(<ActivityFractionneSplits laps={workoutLaps} />)
+    renderFr((<ActivityFractionneSplits laps={workoutLaps} />))
     fireEvent.click(screen.getByRole('button'))
 
     await waitFor(() => {
+      // effort 1 = 922 s → 15:22, effort 2 = 930 s → 15:30
       expect(writeText).toHaveBeenCalledWith('15:22/15:30')
     })
   })
@@ -96,7 +87,7 @@ describe('ActivityFractionneSplits', () => {
     const writeText = jest.fn().mockResolvedValue(undefined)
     Object.assign(navigator, { clipboard: { writeText } })
 
-    render(<ActivityFractionneSplits laps={workoutLaps} />)
+    renderFr((<ActivityFractionneSplits laps={workoutLaps} />))
     fireEvent.click(screen.getByRole('button'))
 
     await waitFor(() => {
@@ -108,7 +99,7 @@ describe('ActivityFractionneSplits', () => {
     const writeText = jest.fn().mockRejectedValue(new Error('Permission denied'))
     Object.assign(navigator, { clipboard: { writeText } })
 
-    render(<ActivityFractionneSplits laps={workoutLaps} />)
+    renderFr((<ActivityFractionneSplits laps={workoutLaps} />))
     fireEvent.click(screen.getByRole('button'))
 
     await waitFor(() => {

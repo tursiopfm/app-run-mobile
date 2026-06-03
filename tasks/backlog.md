@@ -5,6 +5,11 @@
 
 ## Priorité haute
 
+### Tests composants activité — wrap I18nProvider manquant
+- **Quoi** : `__tests__/activities/ActivitySplits.test.tsx` et `ActivityHeartRateZones.test.tsx` rendent leur composant sans `<I18nProvider>`, donc `useT()` throw `useI18n must be used inside <I18nProvider>` → 2 suites rouges. Fix = wrapper avec `<I18nProvider initialLang="fr">` (cf. `ActivityFractionneSplits.test.tsx`).
+- **Pourquoi** : suite de tests `__tests__/activities/` rouge en permanence, masque de vraies régressions.
+- **Identifié** : 2026-06-03
+
 ### Coach IA fonctionnel
 - **Quoi** : remplacer le skeleton actuel par un vrai assistant (OpenAI ou Claude) qui lit `coach_messages` (Supabase) et propose des séances en fonction de la fatigue/objectifs.
 - **Pourquoi** : sortir l'onglet Coach du mode "placeholder" et donner de la valeur réelle.
