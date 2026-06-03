@@ -88,7 +88,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="px-2 py-2 max-w-lg mx-auto">
-      <MorningReportAutoOpen />
+      <MorningReportAutoOpen createdAt={user.created_at} />
       <DashboardGrid
         sportOverviews={sportOverviews}
         weekSessions={weekSessions}
