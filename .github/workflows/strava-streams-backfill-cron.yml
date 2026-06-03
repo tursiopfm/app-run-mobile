@@ -1,0 +1,32 @@
+name: Strava Streams Backfill Cron
+
+# Déclenche /api/cron/strava-streams-backfill toutes les 10 minutes.
+# Récupère les streams temporels (FC/altitude/vitesse/pente) des activités Strava
+# qui n'en ont pas encore, par lots (BATCH=40), en s'arrêtant au rate-limit Strava (429).
+# Réutilise le même secret GitHub que le cron d'import — pas besoin de le connaître.
+# Initialement, ~11k activités à rattraper (plusieurs jours, limité par le quota Strava/jour).
+# Une fois l'historique rempli, il ne fait que rattraper les nouvelles activités.
+# Déclenchable manuellement depuis l'onglet Actions (workflow_dispatch).
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Vercel cron endpoint
+        run: |
+          response=$(curl -sS -w "\n%{http_code}" -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://trailcockpit.run/api/cron/strava-streams-backfill)
+          body=$(echo "$response" | sed '$d')
+          status=$(echo "$response" | tail -n1)
+          echo "HTTP $status"
+          echo "Response: $body"
+          if [ "$status" != "200" ]; then
+            echo "::error::Cron endpoint returned non-200 status"
+            exit 1
+          fi
