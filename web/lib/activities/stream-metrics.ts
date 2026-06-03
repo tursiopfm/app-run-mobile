@@ -69,3 +69,21 @@ export function gradeAdjustedPaceSec(velocity: number[], grade: number[]): numbe
   if (meanGaV <= 0) return null
   return Math.round(1000 / meanGaV)
 }
+
+export type StreamMetrics = {
+  elevationLossM:    number | null
+  decouplingPct:     number | null
+  gradeAdjustedPaceS: number | null
+}
+
+export function computeStreamMetrics(s: StreamSet): StreamMetrics {
+  return {
+    elevationLossM: s.altitude && s.altitude.length >= 2 ? elevationLoss(s.altitude) : null,
+    decouplingPct:
+      s.velocity && s.heartrate && s.time
+        ? decouplingPct(s.velocity, s.heartrate, s.time)
+        : null,
+    gradeAdjustedPaceS:
+      s.velocity && s.grade ? gradeAdjustedPaceSec(s.velocity, s.grade) : null,
+  }
+}

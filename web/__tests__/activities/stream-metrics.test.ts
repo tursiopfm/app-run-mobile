@@ -1,4 +1,4 @@
-import { elevationLoss, gradeAdjustedPaceSec, decouplingPct } from '@/lib/activities/stream-metrics'
+import { elevationLoss, gradeAdjustedPaceSec, decouplingPct, computeStreamMetrics } from '@/lib/activities/stream-metrics'
 
 describe('elevationLoss', () => {
   it('somme les descentes au-delà du seuil de bruit et ignore le jitter', () => {
@@ -45,5 +45,27 @@ describe('decouplingPct', () => {
   it('null si pas de FC', () => {
     const time = Array.from({ length: 1300 }, (_, i) => i)
     expect(decouplingPct(time.map(() => 3), [], time)).toBeNull()
+  })
+})
+
+describe('computeStreamMetrics', () => {
+  it('combine les 3 métriques quand les streams sont complets', () => {
+    const time = Array.from({ length: 1300 }, (_, i) => i)
+    const m = computeStreamMetrics({
+      time,
+      altitude: time.map((_, i) => (i < 650 ? i * 0.1 : 65 - (i - 650) * 0.1)),
+      heartrate: time.map((_, i) => (i < 650 ? 150 : 160)),
+      velocity: time.map(() => 3),
+      grade: time.map((_, i) => (i < 650 ? 5 : -5)),
+    })
+    expect(m.elevationLossM).toBeGreaterThan(0)
+    expect(m.decouplingPct).toBeGreaterThan(0)
+    expect(m.gradeAdjustedPaceS).toBeGreaterThan(0)
+  })
+  it('renvoie null par métrique manquante', () => {
+    const m = computeStreamMetrics({ altitude: [10, 5] })
+    expect(m.elevationLossM).toBe(5)
+    expect(m.decouplingPct).toBeNull()
+    expect(m.gradeAdjustedPaceS).toBeNull()
   })
 })
