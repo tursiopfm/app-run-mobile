@@ -21,3 +21,23 @@ export function elevationLoss(altitude: number[], minDelta = 1): number {
   }
   return Math.round(loss)
 }
+
+// Allure plate équivalente (sec/km) : chaque pas, vitesse × facteur Minetti
+// (pente en %, convertie en décimal), moyennée puis inversée.
+export function gradeAdjustedPaceSec(velocity: number[], grade: number[]): number | null {
+  if (!velocity || !grade || velocity.length === 0 || grade.length === 0) return null
+  let sum = 0
+  let n = 0
+  const len = Math.min(velocity.length, grade.length)
+  for (let i = 0; i < len; i++) {
+    const v = velocity[i]
+    const g = grade[i]
+    if (v == null || g == null || v <= 0) continue
+    sum += v * gradeAdjustmentFactor(g / 100)
+    n++
+  }
+  if (n === 0) return null
+  const meanGaV = sum / n
+  if (meanGaV <= 0) return null
+  return Math.round(1000 / meanGaV)
+}
