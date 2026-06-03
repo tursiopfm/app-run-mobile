@@ -7,6 +7,13 @@ const MUSCLE_LOAD_RATIO = 0.6
 const CES_VERSION = 'v2.0'
 const KCARDIO_BETA = 0.01   // gonflement par % de découplage positif
 const KCARDIO_CAP  = 1.15   // plafond du correctif cardio
+const KDESCENT_CAP = 0.5
+
+function calcDescentFactor(a: ActivityInput, cfg: SportConfig, sm?: CesStreamMetrics): number | null {
+  if (sm?.elevationLossM == null || cfg.descentSensitivity <= 0 || !a.distanceMeters || a.distanceMeters <= 0) return null
+  const per100m = (sm.elevationLossM / a.distanceMeters) * 100
+  return 1 + Math.min(KDESCENT_CAP, per100m * cfg.descentSensitivity * 0.01)
+}
 
 const SPORT_CONFIGS = {
   run:          { sportBase: 100, sportFactor: 1.00, defaultIF: 0.75, minIF: 0.4, maxIF: 1.3, elevationSensitivity: 8,  descentSensitivity: 6,  thresholdPaceSecPerKm: 300, thresholdPower: null },
@@ -105,6 +112,11 @@ function calcIF(
     return { value: clamp(runThreshold / pace, cfg.minIF, cfg.maxIF), source: `Allure seuil ${userSet ? 'utilisateur' : 'défaut'} ${runThreshold}s/km`, model: 'pace_threshold' }
   }
 
+  // Fallback FC pur (sports sans allure seuil ni puissance) : % de réserve cardiaque.
+  if (a.averageHeartrate != null && profile.max_hr && profile.resting_hr && profile.max_hr > profile.resting_hr) {
+    const hrRel = (a.averageHeartrate - profile.resting_hr) / (profile.max_hr - profile.resting_hr)
+    return { value: clamp(hrRel / 0.85, cfg.minIF, cfg.maxIF), source: 'FC relative (réserve)', model: 'hr_proxy' }
+  }
   return { value: cfg.defaultIF, source: 'Facteur par défaut', model: 'legacy' }
 }
 
@@ -164,7 +176,12 @@ export function computeCesResult(a: ActivityInput, profile: UserProfileForCes = 
   return {
     ces,
     cardioLoad:      Math.round(baseScore * cfg.sportFactor * kCardio),
-    muscleLoad:      Math.round(finalScore * MUSCLE_LOAD_RATIO),
+    muscleLoad:      (() => {
+                       const kDescent = calcDescentFactor(a, cfg, streamMetrics)
+                       return kDescent != null
+                         ? Math.round(baseScore * cfg.sportFactor * kDescent)
+                         : Math.round(finalScore * MUSCLE_LOAD_RATIO)
+                     })(),
     label:           effortLabel(ces),
     intensityFactor: Math.round(ifResult.value * 100) / 100,
     model:           ifResult.model,

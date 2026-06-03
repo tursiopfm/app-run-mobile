@@ -93,6 +93,27 @@ describe('CES K_cardio (découplage)', () => {
   })
 })
 
+describe('Fallback FC + muscleLoad descente', () => {
+  it('rando sans allure seuil : IF via FC (hr_proxy)', () => {
+    const hike = {
+      id: 'h1', rawSportType: 'Hike', name: 'Rando', startDate: '2026-06-01T07:00:00Z',
+      movingTimeSeconds: 7200, distanceMeters: 10000, elevationGainMeters: 600, averageHeartrate: 140,
+    }
+    const r = computeCesResult(hike, { max_hr: 195, resting_hr: 54 })
+    expect(r.model).toBe('hr_proxy')
+    expect(r.intensityFactor).toBeGreaterThan(0.5)
+  })
+  it('trail : muscleLoad augmente avec le D-', () => {
+    const trail = {
+      id: 't3', rawSportType: 'TrailRun', name: 'Descente', startDate: '2026-06-03T07:00:00Z',
+      movingTimeSeconds: 6778, distanceMeters: 13010, elevationGainMeters: 533,
+    }
+    const flat = computeCesResult(trail, {}, { gradeAdjustedPaceS: 430, elevationLossM: 0 })
+    const steep = computeCesResult(trail, {}, { gradeAdjustedPaceS: 430, elevationLossM: 544 })
+    expect(steep.muscleLoad).toBeGreaterThan(flat.muscleLoad)
+  })
+})
+
 describe('CES v2 — profile-aware', () => {
   const BASE_RUN: ActivityInput = {
     id: '1', rawSportType: 'Run', name: 'Run', startDate: '2026-05-08',
