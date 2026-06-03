@@ -11,6 +11,13 @@ describe('downsampleStreams', () => {
     const s = { altitude: [1, 2, 3] }
     expect(downsampleStreams(s, 5)).toEqual(s)
   })
+  it('ajoute le dernier point quand il n\'est pas sur une frontière de fenêtre', () => {
+    // time 0..6, fenêtre 5s : le loop garde [0,5], puis on ajoute l'index final 6
+    const time = [0, 1, 2, 3, 4, 5, 6]
+    const ds = downsampleStreams({ time, altitude: time.map((t) => t * 2) }, 5)
+    expect(ds.time).toEqual([0, 5, 6])
+    expect(ds.altitude).toEqual([0, 10, 12])
+  })
 })
 
 describe('pack/unpack', () => {
@@ -19,6 +26,11 @@ describe('pack/unpack', () => {
     const packed = packStreams(s)
     expect(typeof packed).toBe('string')
     expect(unpackStreams(packed)).toEqual(s)
+  })
+  it('round-trip après downsample, même avec des champs absents', () => {
+    const sparse = { time: [0, 1, 2, 3, 4, 5], altitude: [10, 11, 12, 13, 14, 15] }
+    const ds = downsampleStreams(sparse, 5)
+    expect(unpackStreams(packStreams(ds))).toEqual(ds)
   })
 })
 

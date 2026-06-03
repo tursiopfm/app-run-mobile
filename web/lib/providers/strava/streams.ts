@@ -1,3 +1,4 @@
+// Server-only : utilise zlib (Node) + le token Strava. Ne pas importer côté client.
 import { gzipSync, gunzipSync } from 'zlib'
 import type { StreamSet } from '@/lib/activities/stream-metrics'
 
