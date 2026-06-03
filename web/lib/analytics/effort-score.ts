@@ -1,25 +1,25 @@
 import type {
   ActivityInput, CesResult, CesConfidence, CesModel,
-  EffortLabel, SportCategory, SportConfig, UserProfileForCes,
+  EffortLabel, SportCategory, SportConfig, UserProfileForCes, CesStreamMetrics,
 } from './types'
 
 const MUSCLE_LOAD_RATIO = 0.6
 const CES_VERSION = 'v2.0'
 
 const SPORT_CONFIGS = {
-  run:          { sportBase: 100, sportFactor: 1.00, defaultIF: 0.75, minIF: 0.4, maxIF: 1.3, elevationSensitivity: 8,  thresholdPaceSecPerKm: 300, thresholdPower: null },
-  trail_run:    { sportBase: 100, sportFactor: 1.15, defaultIF: 0.75, minIF: 0.4, maxIF: 1.3, elevationSensitivity: 12, thresholdPaceSecPerKm: 330, thresholdPower: null },
-  walk:         { sportBase:  60, sportFactor: 0.50, defaultIF: 0.50, minIF: 0.3, maxIF: 0.8, elevationSensitivity: 10, thresholdPaceSecPerKm: null, thresholdPower: null },
-  hike:         { sportBase:  60, sportFactor: 0.65, defaultIF: 0.55, minIF: 0.3, maxIF: 0.9, elevationSensitivity: 14, thresholdPaceSecPerKm: null, thresholdPower: null },
-  road_ride:    { sportBase:  80, sportFactor: 0.75, defaultIF: 0.70, minIF: 0.3, maxIF: 1.2, elevationSensitivity: 5,  thresholdPaceSecPerKm: null, thresholdPower: 220 },
-  gravel_ride:  { sportBase:  80, sportFactor: 0.85, defaultIF: 0.70, minIF: 0.3, maxIF: 1.2, elevationSensitivity: 7,  thresholdPaceSecPerKm: null, thresholdPower: 220 },
-  mountain_bike:{ sportBase:  90, sportFactor: 1.00, defaultIF: 0.75, minIF: 0.4, maxIF: 1.3, elevationSensitivity: 9,  thresholdPaceSecPerKm: null, thresholdPower: 220 },
-  indoor_ride:  { sportBase:  80, sportFactor: 0.70, defaultIF: 0.70, minIF: 0.3, maxIF: 1.2, elevationSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: 220 },
-  swim:         { sportBase: 120, sportFactor: 1.10, defaultIF: 0.75, minIF: 0.4, maxIF: 1.2, elevationSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: null },
-  strength:     { sportBase:  80, sportFactor: 0.90, defaultIF: 0.70, minIF: 0.4, maxIF: 1.1, elevationSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: null },
-  mobility:     { sportBase:  40, sportFactor: 0.40, defaultIF: 0.50, minIF: 0.2, maxIF: 0.7, elevationSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: null },
-  cardio_other: { sportBase:  80, sportFactor: 0.80, defaultIF: 0.65, minIF: 0.3, maxIF: 1.1, elevationSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: null },
-  other:        { sportBase:  70, sportFactor: 0.70, defaultIF: 0.60, minIF: 0.3, maxIF: 1.0, elevationSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: null },
+  run:          { sportBase: 100, sportFactor: 1.00, defaultIF: 0.75, minIF: 0.4, maxIF: 1.3, elevationSensitivity: 8,  descentSensitivity: 6,  thresholdPaceSecPerKm: 300, thresholdPower: null },
+  trail_run:    { sportBase: 100, sportFactor: 1.15, defaultIF: 0.75, minIF: 0.4, maxIF: 1.3, elevationSensitivity: 12, descentSensitivity: 14, thresholdPaceSecPerKm: 330, thresholdPower: null },
+  walk:         { sportBase:  60, sportFactor: 0.50, defaultIF: 0.50, minIF: 0.3, maxIF: 0.8, elevationSensitivity: 10, descentSensitivity: 8,  thresholdPaceSecPerKm: null, thresholdPower: null },
+  hike:         { sportBase:  60, sportFactor: 0.65, defaultIF: 0.55, minIF: 0.3, maxIF: 0.9, elevationSensitivity: 14, descentSensitivity: 16, thresholdPaceSecPerKm: null, thresholdPower: null },
+  road_ride:    { sportBase:  80, sportFactor: 0.75, defaultIF: 0.70, minIF: 0.3, maxIF: 1.2, elevationSensitivity: 5,  descentSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: 220 },
+  gravel_ride:  { sportBase:  80, sportFactor: 0.85, defaultIF: 0.70, minIF: 0.3, maxIF: 1.2, elevationSensitivity: 7,  descentSensitivity: 4,  thresholdPaceSecPerKm: null, thresholdPower: 220 },
+  mountain_bike:{ sportBase:  90, sportFactor: 1.00, defaultIF: 0.75, minIF: 0.4, maxIF: 1.3, elevationSensitivity: 9,  descentSensitivity: 10, thresholdPaceSecPerKm: null, thresholdPower: 220 },
+  indoor_ride:  { sportBase:  80, sportFactor: 0.70, defaultIF: 0.70, minIF: 0.3, maxIF: 1.2, elevationSensitivity: 0,  descentSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: 220 },
+  swim:         { sportBase: 120, sportFactor: 1.10, defaultIF: 0.75, minIF: 0.4, maxIF: 1.2, elevationSensitivity: 0,  descentSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: null },
+  strength:     { sportBase:  80, sportFactor: 0.90, defaultIF: 0.70, minIF: 0.4, maxIF: 1.1, elevationSensitivity: 0,  descentSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: null },
+  mobility:     { sportBase:  40, sportFactor: 0.40, defaultIF: 0.50, minIF: 0.2, maxIF: 0.7, elevationSensitivity: 0,  descentSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: null },
+  cardio_other: { sportBase:  80, sportFactor: 0.80, defaultIF: 0.65, minIF: 0.3, maxIF: 1.1, elevationSensitivity: 0,  descentSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: null },
+  other:        { sportBase:  70, sportFactor: 0.70, defaultIF: 0.60, minIF: 0.3, maxIF: 1.0, elevationSensitivity: 0,  descentSensitivity: 0,  thresholdPaceSecPerKm: null, thresholdPower: null },
 } as const satisfies Record<SportCategory, SportConfig>
 
 export function normalizeSportType(rawSportType: string, name?: string): SportCategory {

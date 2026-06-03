@@ -8,6 +8,7 @@ export type EffortLabel =
 
 export type CesModel =
   | 'power'
+  | 'pace_gap'
   | 'pace_threshold'
   | 'pace_effort_distance'
   | 'hr_proxy'
@@ -42,6 +43,13 @@ export type UserProfileForCes = {
   threshold_pace_trail_sec_per_km?: number | null
 }
 
+// Métriques dérivées des streams (SP-1), passées optionnellement au calcul CES.
+export type CesStreamMetrics = {
+  gradeAdjustedPaceS?: number | null
+  decouplingPct?:      number | null
+  elevationLossM?:     number | null
+}
+
 export type CesResult = {
   // Champs originaux (compatibilité)
   ces:             number
@@ -70,6 +78,7 @@ export type SportConfig = {
   minIF:                 number
   maxIF:                 number
   elevationSensitivity:  number
+  descentSensitivity:    number
   thresholdPaceSecPerKm: number | null
   thresholdPower:        number | null
 }
