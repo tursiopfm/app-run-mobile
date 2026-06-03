@@ -22,6 +22,34 @@ export function elevationLoss(altitude: number[], minDelta = 1): number {
   return Math.round(loss)
 }
 
+// Découplage aérobie (%) : chute de l'efficience EF = output/FC entre la 1re et
+// la 2e moitié. Positif = la FC a dérivé vers le haut. null si pas de FC ou < minDurationSec.
+export function decouplingPct(
+  output: number[],
+  hr: number[],
+  time: number[],
+  minDurationSec = 1200,
+): number | null {
+  if (!output || !hr || output.length === 0 || hr.length !== output.length) return null
+  const dur = time && time.length >= 2 ? time[time.length - 1] - time[0] : output.length
+  if (dur < minDurationSec) return null
+
+  const ef = (o: number[], h: number[]): number | null => {
+    let so = 0, sh = 0, n = 0
+    for (let i = 0; i < o.length; i++) {
+      if (o[i] > 0 && h[i] > 0) { so += o[i]; sh += h[i]; n++ }
+    }
+    if (n === 0 || sh === 0) return null
+    return (so / n) / (sh / n)
+  }
+
+  const mid = Math.floor(output.length / 2)
+  const ef1 = ef(output.slice(0, mid), hr.slice(0, mid))
+  const ef2 = ef(output.slice(mid), hr.slice(mid))
+  if (ef1 == null || ef2 == null || ef1 === 0) return null
+  return Math.round(((ef1 - ef2) / ef1) * 1000) / 10
+}
+
 // Allure plate équivalente (sec/km) : chaque pas, vitesse × facteur Minetti
 // (pente en %, convertie en décimal), moyennée puis inversée.
 export function gradeAdjustedPaceSec(velocity: number[], grade: number[]): number | null {

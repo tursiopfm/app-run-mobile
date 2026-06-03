@@ -1,4 +1,4 @@
-import { elevationLoss, gradeAdjustedPaceSec } from '@/lib/activities/stream-metrics'
+import { elevationLoss, gradeAdjustedPaceSec, decouplingPct } from '@/lib/activities/stream-metrics'
 
 describe('elevationLoss', () => {
   it('somme les descentes au-delà du seuil de bruit et ignore le jitter', () => {
@@ -27,5 +27,23 @@ describe('gradeAdjustedPaceSec', () => {
   it('null si vitesse ou pente absente', () => {
     expect(gradeAdjustedPaceSec([], [])).toBeNull()
     expect(gradeAdjustedPaceSec(undefined as unknown as number[], [0])).toBeNull()
+  })
+})
+
+describe('decouplingPct', () => {
+  it('positif quand la FC dérive vers le haut à output constant', () => {
+    const time = Array.from({ length: 1300 }, (_, i) => i)
+    const out  = time.map(() => 3)
+    const hr   = time.map((_, i) => (i < 650 ? 150 : 160))
+    const d = decouplingPct(out, hr, time)!
+    expect(d).toBeGreaterThan(5.5)
+    expect(d).toBeLessThan(7)
+  })
+  it('null si durée trop courte', () => {
+    expect(decouplingPct([3, 3], [150, 160], [0, 100])).toBeNull()
+  })
+  it('null si pas de FC', () => {
+    const time = Array.from({ length: 1300 }, (_, i) => i)
+    expect(decouplingPct(time.map(() => 3), [], time)).toBeNull()
   })
 })
