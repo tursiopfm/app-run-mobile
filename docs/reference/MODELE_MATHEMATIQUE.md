@@ -351,7 +351,11 @@ Fichier : `web/lib/analytics/effort-score.ts` — `computeCesResult()`.
 
 ### 6.2 Facteur d'Intensité (IF) — CES v2 profile-aware
 
-Depuis CES v2, l'IF privilégie les valeurs du **profil utilisateur** avant de retomber sur les défauts. `calcIF()` retourne `value`, `source` lisible et `model: 'power' | 'pace_threshold' | 'legacy'`.
+Depuis CES v2, l'IF privilégie les valeurs du **profil utilisateur** avant de retomber sur les défauts. `calcIF()` retourne `value`, `source` lisible et `model: 'power' | 'pace_gap' | 'pace_threshold' | 'hr_proxy' | 'legacy'`.
+
+> **SP-2 (modèle en couches sur streams, livré 2026-06-04).** Quand les métriques de streams sont disponibles (`computeCesResult(a, profile, streamMetrics?)`), l'IF run/trail est calculé sur l'**allure ajustée pente par segment** (`grade_adjusted_pace_s`, modèle `pace_gap`) au lieu de l'allure moyenne — et le **FacteurDénivelé est alors neutralisé** (le D+ est déjà dans la GAP, anti double-comptage). S'ajoutent : un **K_cardio** borné (`clamp(1 + 0,01·max(0, decoupling_pct), 1, 1,15)`, multiplicateur hors IF², capte la dérive cardiaque) et une **charge musculaire descente** (`muscleLoad = baseScore·sportFactor·(1 + min(0,5, (D-/dist·100)·descentSens·0,01))` via `elevation_loss_m`). Sans streams → fallback exact au calcul ci-dessous. Spec : `docs/superpowers/specs/2026-06-03-ces-layered-model-design.md`. Le découplage est calculé sur la **vitesse ajustée pente** (sinon aberrant sur trail). **Le modèle SP-2 ne s'applique qu'au recalcul** (`recalculateUserEffortScores`, qui lit les streams stockés) — une nouvelle activité passe en SP-2 au prochain recalcul après backfill de ses streams.
+
+**Fallback FC pur (`hr_proxy`, SP-2) :** pour les sports sans allure seuil ni puissance (marche, rando, natation, cardio_other…) avec FC moyenne + `max_hr`/`resting_hr` au profil, l'IF = `clamp(HR_relative / 0,85, minIF, maxIF)`. Remplace l'ancien `defaultIF` (`legacy`) pour ces sports.
 
 **Vélo (road / gravel / mtb / indoor)** — priorité décroissante :
 
@@ -573,14 +577,12 @@ Un CES élevé fait monter l'ATL même si l'intensité physiologique était faib
 
 ## 8. Calcul FC relative (Karvonen normalisé)
 
-> ⚠️ **Non implémenté à date (vérifié 2026-06-03).** La formule ci-dessous est une **spec cible**.
-> Dans `effort-score.ts`, `calcIF()` n'a **aucune branche FC** : la cascade réelle est
-> `puissance/FTP (vélo) → allure/allure_seuil (run/trail) → cfg.defaultIF (model 'legacy')`.
-> Quand ni puissance ni allure ne sont disponibles (walk, hike, swim sans allure seuil, cardio_other…),
-> l'IF retombe sur `defaultIF` constant — **jamais** sur la FC. Le « coefficient cardio » (`K_cardio`, §10)
-> et l'« IF FC fallback » restent donc à brancher.
+> ✅ **Branché en SP-2 (2026-06-04).** `calcIF()` a désormais une branche FC (`hr_proxy`) : pour les
+> sports sans allure seuil ni puissance (walk, hike, swim, cardio_other…) avec FC moyenne + `max_hr`/`resting_hr`,
+> l'IF est dérivé de la FC relative au lieu du `defaultIF` constant. Le **K_cardio** (via `decoupling_pct`)
+> est aussi branché (cf. §6.2). Cascade réelle : `puissance/FTP → GAP/allure_seuil (run/trail) → FC relative (hr_proxy) → defaultIF (legacy)`.
 
-Formule cible — % de réserve cardiaque utilisé :
+% de réserve cardiaque utilisé :
 
 ```
 HR_relative = (avgHr − restingHr) / (maxHr − restingHr)
@@ -588,10 +590,10 @@ HR_relative = (avgHr − restingHr) / (maxHr − restingHr)
 
 Représente le % de réserve cardiaque utilisé. À IF = 1,0 (seuil), `HR_relative` typique ≈ 0,80 – 0,85.
 
-**IF FC fallback (cible, non branché) :**
+**IF FC fallback (branché, `hr_proxy`) :**
 
 ```
-IF_FC = clamp(HR_relative / 0.85, 0.30, 1.25)
+IF_FC = clamp(HR_relative / 0.85, cfg.minIF, cfg.maxIF)
 ```
 
 ---
