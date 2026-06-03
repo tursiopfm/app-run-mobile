@@ -74,17 +74,15 @@ export function ObjectifCourseBlock({ onChange }: Props) {
   }
 
   // Tri : prochaine course principale mise en avant, puis les autres par date asc.
+  // Les courses passées (date < aujourd'hui) sont exclues : une fois terminée,
+  // une course disparaît du bloc Objectif.
   const { mainRace, otherRaces } = useMemo(() => {
     const todayISO = new Date().toISOString().slice(0, 10)
-    const upcomingMains = races
-      .filter(r => r.isMain && r.date >= todayISO)
+    const upcoming = races
+      .filter(r => r.date >= todayISO)
       .sort((a, b) => a.date.localeCompare(b.date))
-    const main = upcomingMains[0]
-      ?? [...races].reverse().find(r => r.isMain)
-      ?? null
-    const others = races
-      .filter(r => r.id !== main?.id)
-      .sort((a, b) => a.date.localeCompare(b.date))
+    const main = upcoming.find(r => r.isMain) ?? null
+    const others = upcoming.filter(r => r.id !== main?.id)
     return { mainRace: main, otherRaces: others }
   }, [races])
 
@@ -100,7 +98,8 @@ export function ObjectifCourseBlock({ onChange }: Props) {
     )
   }
 
-  if (races.length === 0) {
+  // Aucune course à venir (liste vide OU uniquement des courses passées) → état vide.
+  if (!mainRace && otherRaces.length === 0) {
     return (
       <BlockCard
         title={L.objectifTitle}
