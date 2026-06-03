@@ -5,6 +5,8 @@ import type {
 
 const MUSCLE_LOAD_RATIO = 0.6
 const CES_VERSION = 'v2.0'
+const KCARDIO_BETA = 0.01   // gonflement par % de découplage positif
+const KCARDIO_CAP  = 1.15   // plafond du correctif cardio
 
 const SPORT_CONFIGS = {
   run:          { sportBase: 100, sportFactor: 1.00, defaultIF: 0.75, minIF: 0.4, maxIF: 1.3, elevationSensitivity: 8,  descentSensitivity: 6,  thresholdPaceSecPerKm: 300, thresholdPower: null },
@@ -51,6 +53,11 @@ function effortLabel(ces: number): EffortLabel {
   if (ces <= 130) return 'intense'
   if (ces <= 180) return 'very_hard'
   return 'extreme'
+}
+
+function calcKCardio(sm?: CesStreamMetrics): number {
+  if (sm?.decouplingPct == null) return 1.0
+  return clamp(1 + KCARDIO_BETA * Math.max(0, sm.decouplingPct), 1.0, KCARDIO_CAP)
 }
 
 type IFResult = {
@@ -147,15 +154,16 @@ export function computeCesResult(a: ActivityInput, profile: UserProfileForCes = 
   const cfg           = SPORT_CONFIGS[sport]
   const ifResult      = calcIF(a, cfg, sport, profile, streamMetrics)
   const elevFactor    = ifResult.model === 'pace_gap' ? 1.0 : calcElevationFactor(a, cfg)
+  const kCardio       = calcKCardio(streamMetrics)
   const baseScore     = durationHours * cfg.sportBase * (ifResult.value * ifResult.value)
-  const finalScore    = baseScore * cfg.sportFactor * elevFactor
+  const finalScore    = baseScore * cfg.sportFactor * elevFactor * kCardio
   const ces           = Math.round(finalScore)
 
   const { confidence, warnings } = buildConfidenceAndWarnings(sport, ifResult, a, profile)
 
   return {
     ces,
-    cardioLoad:      Math.round(baseScore * cfg.sportFactor),
+    cardioLoad:      Math.round(baseScore * cfg.sportFactor * kCardio),
     muscleLoad:      Math.round(finalScore * MUSCLE_LOAD_RATIO),
     label:           effortLabel(ces),
     intensityFactor: Math.round(ifResult.value * 100) / 100,

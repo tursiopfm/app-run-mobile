@@ -75,6 +75,24 @@ describe('CES GAP-IF (streams présents)', () => {
   })
 })
 
+describe('CES K_cardio (découplage)', () => {
+  const trail = {
+    id: 't2', rawSportType: 'TrailRun', name: 'Boucle', startDate: '2026-05-30T07:00:00Z',
+    movingTimeSeconds: 19701, distanceMeters: 42900, elevationGainMeters: 267, averageHeartrate: 135,
+  }
+  it('un découplage positif gonfle le CES de façon bornée', () => {
+    const base = computeCesResult(trail, {}, { gradeAdjustedPaceS: 474 })
+    const drift = computeCesResult(trail, {}, { gradeAdjustedPaceS: 474, decouplingPct: 8.6 })
+    expect(drift.ces).toBeGreaterThan(base.ces)
+    expect(drift.ces / base.ces).toBeLessThan(1.16)
+  })
+  it('un découplage ≤ 0 ne pénalise pas (K_cardio = 1)', () => {
+    const neg = computeCesResult(trail, {}, { gradeAdjustedPaceS: 474, decouplingPct: -20 })
+    const none = computeCesResult(trail, {}, { gradeAdjustedPaceS: 474 })
+    expect(neg.ces).toBe(none.ces)
+  })
+})
+
 describe('CES v2 — profile-aware', () => {
   const BASE_RUN: ActivityInput = {
     id: '1', rawSportType: 'Run', name: 'Run', startDate: '2026-05-08',
