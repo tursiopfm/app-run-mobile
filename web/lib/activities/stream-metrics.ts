@@ -5,7 +5,7 @@ export type StreamSet = {
   altitude?:  number[]   // m
   heartrate?: number[]   // bpm
   velocity?:  number[]   // m/s (velocity_smooth)
-  distance?:  number[]   // m cumulés
+  distance?:  number[]   // m cumulés — persisté dans le payload brut, pas (encore) consommé par les métriques
   grade?:     number[]   // % (grade_smooth)
 }
 
@@ -31,6 +31,7 @@ export function decouplingPct(
   minDurationSec = 1200,
 ): number | null {
   if (!output || !hr || output.length === 0 || hr.length !== output.length) return null
+  // Durée = bornes du stream time ; fallback = nb d'échantillons (≈ secondes pour un stream 1 Hz, défaut Strava).
   const dur = time && time.length >= 2 ? time[time.length - 1] - time[0] : output.length
   if (dur < minDurationSec) return null
 
@@ -39,7 +40,7 @@ export function decouplingPct(
     for (let i = 0; i < o.length; i++) {
       if (o[i] > 0 && h[i] > 0) { so += o[i]; sh += h[i]; n++ }
     }
-    if (n === 0 || sh === 0) return null
+    if (n === 0) return null
     return (so / n) / (sh / n)
   }
 
@@ -60,7 +61,7 @@ export function gradeAdjustedPaceSec(velocity: number[], grade: number[]): numbe
   for (let i = 0; i < len; i++) {
     const v = velocity[i]
     const g = grade[i]
-    if (v == null || g == null || v <= 0) continue
+    if (v == null || g == null || Number.isNaN(v) || Number.isNaN(g) || v <= 0) continue
     sum += v * gradeAdjustmentFactor(g / 100)
     n++
   }

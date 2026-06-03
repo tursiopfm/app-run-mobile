@@ -11,6 +11,9 @@ describe('elevationLoss', () => {
     expect(elevationLoss([42], 1)).toBe(0)
     expect(elevationLoss([], 1)).toBe(0)
   })
+  it('compte une descente monotone simple', () => {
+    expect(elevationLoss([100, 0], 1)).toBe(100)
+  })
 })
 
 describe('gradeAdjustedPaceSec', () => {
@@ -28,6 +31,9 @@ describe('gradeAdjustedPaceSec', () => {
     expect(gradeAdjustedPaceSec([], [])).toBeNull()
     expect(gradeAdjustedPaceSec(undefined as unknown as number[], [0])).toBeNull()
   })
+  it('null si toutes les vitesses sont nulles', () => {
+    expect(gradeAdjustedPaceSec([0, 0, 0], [0, 0, 0])).toBeNull()
+  })
 })
 
 describe('decouplingPct', () => {
@@ -36,8 +42,7 @@ describe('decouplingPct', () => {
     const out  = time.map(() => 3)
     const hr   = time.map((_, i) => (i < 650 ? 150 : 160))
     const d = decouplingPct(out, hr, time)!
-    expect(d).toBeGreaterThan(5.5)
-    expect(d).toBeLessThan(7)
+    expect(d).toBe(6.3)
   })
   it('null si durée trop courte', () => {
     expect(decouplingPct([3, 3], [150, 160], [0, 100])).toBeNull()
@@ -45,6 +50,11 @@ describe('decouplingPct', () => {
   it('null si pas de FC', () => {
     const time = Array.from({ length: 1300 }, (_, i) => i)
     expect(decouplingPct(time.map(() => 3), [], time)).toBeNull()
+  })
+  it('utilise le nb d\'échantillons comme durée quand time est absent', () => {
+    const out = Array.from({ length: 1300 }, () => 3)
+    const hr  = out.map((_, i) => (i < 650 ? 150 : 160))
+    expect(decouplingPct(out, hr, [])).toBe(6.3)
   })
 })
 
