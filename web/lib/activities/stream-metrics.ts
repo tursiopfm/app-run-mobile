@@ -71,6 +71,22 @@ export function gradeAdjustedPaceSec(velocity: number[], grade: number[]): numbe
   return Math.round(1000 / meanGaV)
 }
 
+// Vitesse plate équivalente par échantillon (m/s) : vitesse × facteur Minetti.
+// Sert d'output au découplage pour neutraliser l'effet du terrain (sinon la
+// vitesse brute, pilotée par la pente, crée un faux découplage sur trail).
+export function gradeAdjustedVelocity(velocity: number[], grade: number[]): number[] {
+  const len = Math.min(velocity.length, grade.length)
+  const out: number[] = []
+  for (let i = 0; i < len; i++) {
+    const v = velocity[i]
+    const g = grade[i]
+    out.push(v != null && g != null && !Number.isNaN(v) && !Number.isNaN(g) && v > 0
+      ? v * gradeAdjustmentFactor(g / 100)
+      : 0)
+  }
+  return out
+}
+
 export type StreamMetrics = {
   elevationLossM:    number | null
   decouplingPct:     number | null
@@ -78,11 +94,15 @@ export type StreamMetrics = {
 }
 
 export function computeStreamMetrics(s: StreamSet): StreamMetrics {
+  // Découplage : output = vitesse AJUSTÉE pente si pente dispo (anti-artefact terrain),
+  // sinon vitesse brute (terrain plat supposé).
+  const decoupOutput =
+    s.velocity && s.grade ? gradeAdjustedVelocity(s.velocity, s.grade) : s.velocity
   return {
     elevationLossM: s.altitude && s.altitude.length >= 2 ? elevationLoss(s.altitude) : null,
     decouplingPct:
-      s.velocity && s.heartrate && s.time
-        ? decouplingPct(s.velocity, s.heartrate, s.time)
+      decoupOutput && s.heartrate && s.time
+        ? decouplingPct(decoupOutput, s.heartrate, s.time)
         : null,
     gradeAdjustedPaceS:
       s.velocity && s.grade ? gradeAdjustedPaceSec(s.velocity, s.grade) : null,

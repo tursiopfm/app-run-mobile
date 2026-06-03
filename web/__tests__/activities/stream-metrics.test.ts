@@ -1,4 +1,4 @@
-import { elevationLoss, gradeAdjustedPaceSec, decouplingPct, computeStreamMetrics } from '@/lib/activities/stream-metrics'
+import { elevationLoss, gradeAdjustedPaceSec, decouplingPct, computeStreamMetrics, gradeAdjustedVelocity } from '@/lib/activities/stream-metrics'
 
 describe('elevationLoss', () => {
   it('somme les descentes au-delà du seuil de bruit et ignore le jitter', () => {
@@ -55,6 +55,26 @@ describe('decouplingPct', () => {
     const out = Array.from({ length: 1300 }, () => 3)
     const hr  = out.map((_, i) => (i < 650 ? 150 : 160))
     expect(decouplingPct(out, hr, [])).toBe(6.3)
+  })
+})
+
+describe('gradeAdjustedVelocity', () => {
+  it('aplatit la vitesse selon la pente (montée → vitesse équivalente plus rapide)', () => {
+    const out = gradeAdjustedVelocity([3, 3], [0, 10])
+    expect(out[0]).toBeCloseTo(3, 5)
+    expect(out[1]).toBeGreaterThan(3)
+  })
+})
+
+describe('decoupling sur vitesse ajustée pente (anti-artefact terrain)', () => {
+  it('un trail où la 2e moitié descend ne crée PAS de faux découplage', () => {
+    const n = 1300
+    const time = Array.from({ length: n }, (_, i) => i)
+    const velocity = time.map((_, i) => (i < n / 2 ? 2 : 4))    // brute: lent montée, rapide descente
+    const grade    = time.map((_, i) => (i < n / 2 ? 6 : -6))   // ±6% : Minetti neutralise l'artefact (−100% brut → ~−6% ajusté)
+    const heartrate = time.map(() => 150)
+    const d = computeStreamMetrics({ time, velocity, grade, heartrate }).decouplingPct!
+    expect(Math.abs(d)).toBeLessThan(8)   // pas d'aberration type -100%
   })
 })
 
