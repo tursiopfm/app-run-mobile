@@ -56,6 +56,25 @@ describe('computeCesResult', () => {
   })
 })
 
+describe('CES GAP-IF (streams présents)', () => {
+  const trail = {
+    id: 't1', rawSportType: 'TrailRun', name: 'Côte', startDate: '2026-06-03T07:00:00Z',
+    movingTimeSeconds: 7307, distanceMeters: 9300, elevationGainMeters: 1003, averageHeartrate: 139,
+  }
+  it('utilise grade_adjusted_pace_s pour l\'IF et neutralise le FacteurDénivelé', () => {
+    const r = computeCesResult(trail, {}, { gradeAdjustedPaceS: 488 })
+    expect(r.model).toBe('pace_gap')
+    expect(r.intensityFactor).toBeGreaterThan(0.6)
+    expect(r.intensityFactor).toBeLessThan(0.75)
+    expect(r.components.elevationFactor).toBe(1)
+  })
+  it('sans streams, retombe sur l\'allure moyenne (model pace_threshold) + FacteurDénivelé', () => {
+    const r = computeCesResult(trail, {})
+    expect(r.model).toBe('pace_threshold')
+    expect(r.components.elevationFactor).toBeGreaterThan(1)
+  })
+})
+
 describe('CES v2 — profile-aware', () => {
   const BASE_RUN: ActivityInput = {
     id: '1', rawSportType: 'Run', name: 'Run', startDate: '2026-05-08',

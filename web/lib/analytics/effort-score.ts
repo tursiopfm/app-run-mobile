@@ -64,8 +64,9 @@ function calcIF(
   cfg:     SportConfig,
   sport:   SportCategory,
   profile: UserProfileForCes,
+  sm?:     CesStreamMetrics,
 ): IFResult {
-  // Cycling : FTP utilisateur
+  // Cycling : FTP (inchangé)
   if (profile.ftp_watts && cfg.thresholdPower !== null) {
     const ftp = profile.ftp_watts
     if (a.normalizedPowerWatts != null)
@@ -73,8 +74,6 @@ function calcIF(
     if (a.averageWatts != null)
       return { value: clamp(a.averageWatts / ftp, cfg.minIF, cfg.maxIF), source: `FTP utilisateur ${ftp}W (avg)`, model: 'power' }
   }
-
-  // Cycling : FTP par défaut
   if (cfg.thresholdPower !== null) {
     if (a.normalizedPowerWatts != null)
       return { value: clamp(a.normalizedPowerWatts / cfg.thresholdPower, cfg.minIF, cfg.maxIF), source: `FTP défaut ${cfg.thresholdPower}W (NP)`, model: 'power' }
@@ -82,19 +81,22 @@ function calcIF(
       return { value: clamp(a.averageWatts / cfg.thresholdPower, cfg.minIF, cfg.maxIF), source: `FTP défaut ${cfg.thresholdPower}W (avg)`, model: 'power' }
   }
 
+  // Run / Trail : seuil utilisateur ou défaut du sport
+  const runThreshold =
+    sport === 'run'       ? (profile.threshold_pace_run_sec_per_km ?? cfg.thresholdPaceSecPerKm)
+  : sport === 'trail_run' ? (profile.threshold_pace_trail_sec_per_km ?? cfg.thresholdPaceSecPerKm)
+  : null
+
+  if (runThreshold && sm?.gradeAdjustedPaceS != null && sm.gradeAdjustedPaceS > 0) {
+    return { value: clamp(runThreshold / sm.gradeAdjustedPaceS, cfg.minIF, cfg.maxIF), source: `GAP vs seuil ${runThreshold}s/km`, model: 'pace_gap' }
+  }
+
   const hasPace = a.distanceMeters != null && a.distanceMeters > 200 && a.movingTimeSeconds > 0
-  if (!hasPace) return { value: cfg.defaultIF, source: 'Facteur par défaut (pas de distance)', model: 'legacy' }
-  const pace = a.movingTimeSeconds / (a.distanceMeters! / 1000)
-
-  // Run : allure seuil utilisateur
-  if (sport === 'run' && profile.threshold_pace_run_sec_per_km)
-    return { value: clamp(profile.threshold_pace_run_sec_per_km / pace, cfg.minIF, cfg.maxIF), source: `Allure seuil utilisateur ${profile.threshold_pace_run_sec_per_km}s/km`, model: 'pace_threshold' }
-  if (sport === 'trail_run' && profile.threshold_pace_trail_sec_per_km)
-    return { value: clamp(profile.threshold_pace_trail_sec_per_km / pace, cfg.minIF, cfg.maxIF), source: `Allure seuil trail utilisateur ${profile.threshold_pace_trail_sec_per_km}s/km`, model: 'pace_threshold' }
-
-  // Run/Trail : allure seuil par défaut
-  if (cfg.thresholdPaceSecPerKm !== null)
-    return { value: clamp(cfg.thresholdPaceSecPerKm / pace, cfg.minIF, cfg.maxIF), source: `Allure seuil défaut ${cfg.thresholdPaceSecPerKm}s/km`, model: 'pace_threshold' }
+  if (runThreshold && hasPace) {
+    const pace = a.movingTimeSeconds / (a.distanceMeters! / 1000)
+    const userSet = (sport === 'run' && profile.threshold_pace_run_sec_per_km) || (sport === 'trail_run' && profile.threshold_pace_trail_sec_per_km)
+    return { value: clamp(runThreshold / pace, cfg.minIF, cfg.maxIF), source: `Allure seuil ${userSet ? 'utilisateur' : 'défaut'} ${runThreshold}s/km`, model: 'pace_threshold' }
+  }
 
   return { value: cfg.defaultIF, source: 'Facteur par défaut', model: 'legacy' }
 }
@@ -139,12 +141,12 @@ function buildConfidenceAndWarnings(
   return { confidence, warnings }
 }
 
-export function computeCesResult(a: ActivityInput, profile: UserProfileForCes = {}): CesResult {
+export function computeCesResult(a: ActivityInput, profile: UserProfileForCes = {}, streamMetrics?: CesStreamMetrics): CesResult {
   const durationHours = Math.max(a.movingTimeSeconds / 3600, 0.01)
   const sport         = normalizeSportType(a.rawSportType, a.name)
   const cfg           = SPORT_CONFIGS[sport]
-  const ifResult      = calcIF(a, cfg, sport, profile)
-  const elevFactor    = calcElevationFactor(a, cfg)
+  const ifResult      = calcIF(a, cfg, sport, profile, streamMetrics)
+  const elevFactor    = ifResult.model === 'pace_gap' ? 1.0 : calcElevationFactor(a, cfg)
   const baseScore     = durationHours * cfg.sportBase * (ifResult.value * ifResult.value)
   const finalScore    = baseScore * cfg.sportFactor * elevFactor
   const ces           = Math.round(finalScore)
