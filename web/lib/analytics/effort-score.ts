@@ -7,11 +7,12 @@ const MUSCLE_LOAD_RATIO = 0.6
 const CES_VERSION = 'v2.0'
 const KCARDIO_BETA = 0.01   // gonflement par % de découplage positif
 const KCARDIO_CAP  = 1.15   // plafond du correctif cardio
-const KDESCENT_CAP = 0.5
+const KDESCENT_CAP = 0.5    // plafond du facteur descente : +50% max sur la charge musculaire
 
 function calcDescentFactor(a: ActivityInput, cfg: SportConfig, sm?: CesStreamMetrics): number | null {
   if (sm?.elevationLossM == null || cfg.descentSensitivity <= 0 || !a.distanceMeters || a.distanceMeters <= 0) return null
   const per100m = (sm.elevationLossM / a.distanceMeters) * 100
+  // * 0.01 : ramène descentSensitivity (entier, même convention que elevationSensitivity) en terme fractionnaire par 100m
   return 1 + Math.min(KDESCENT_CAP, per100m * cfg.descentSensitivity * 0.01)
 }
 
@@ -108,7 +109,7 @@ function calcIF(
   const hasPace = a.distanceMeters != null && a.distanceMeters > 200 && a.movingTimeSeconds > 0
   if (runThreshold && hasPace) {
     const pace = a.movingTimeSeconds / (a.distanceMeters! / 1000)
-    const userSet = (sport === 'run' && profile.threshold_pace_run_sec_per_km) || (sport === 'trail_run' && profile.threshold_pace_trail_sec_per_km)
+    const userSet = !!((sport === 'run' && profile.threshold_pace_run_sec_per_km) || (sport === 'trail_run' && profile.threshold_pace_trail_sec_per_km))
     return { value: clamp(runThreshold / pace, cfg.minIF, cfg.maxIF), source: `Allure seuil ${userSet ? 'utilisateur' : 'défaut'} ${runThreshold}s/km`, model: 'pace_threshold' }
   }
 
@@ -170,18 +171,17 @@ export function computeCesResult(a: ActivityInput, profile: UserProfileForCes = 
   const baseScore     = durationHours * cfg.sportBase * (ifResult.value * ifResult.value)
   const finalScore    = baseScore * cfg.sportFactor * elevFactor * kCardio
   const ces           = Math.round(finalScore)
+  const kDescent      = calcDescentFactor(a, cfg, streamMetrics)
+  const muscleLoad    = kDescent != null
+    ? Math.round(baseScore * cfg.sportFactor * kDescent)
+    : Math.round(finalScore * MUSCLE_LOAD_RATIO)
 
   const { confidence, warnings } = buildConfidenceAndWarnings(sport, ifResult, a, profile)
 
   return {
     ces,
     cardioLoad:      Math.round(baseScore * cfg.sportFactor * kCardio),
-    muscleLoad:      (() => {
-                       const kDescent = calcDescentFactor(a, cfg, streamMetrics)
-                       return kDescent != null
-                         ? Math.round(baseScore * cfg.sportFactor * kDescent)
-                         : Math.round(finalScore * MUSCLE_LOAD_RATIO)
-                     })(),
+    muscleLoad,
     label:           effortLabel(ces),
     intensityFactor: Math.round(ifResult.value * 100) / 100,
     model:           ifResult.model,

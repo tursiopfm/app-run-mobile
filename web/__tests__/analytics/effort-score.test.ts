@@ -108,6 +108,8 @@ describe('Fallback FC + muscleLoad descente', () => {
       id: 't3', rawSportType: 'TrailRun', name: 'Descente', startDate: '2026-06-03T07:00:00Z',
       movingTimeSeconds: 6778, distanceMeters: 13010, elevationGainMeters: 533,
     }
+    // flat (elevationLossM:0 → kDescent=1.0) et steep passent TOUS LES DEUX par la branche
+    // descent-factor (pas le fallback ×0.6), donc on compare des grandeurs kDescent.
     const flat = computeCesResult(trail, {}, { gradeAdjustedPaceS: 430, elevationLossM: 0 })
     const steep = computeCesResult(trail, {}, { gradeAdjustedPaceS: 430, elevationLossM: 544 })
     expect(steep.muscleLoad).toBeGreaterThan(flat.muscleLoad)
@@ -177,5 +179,20 @@ describe('CES v2 — profile-aware', () => {
     const r = computeCesResult(BASE_RUN, { threshold_pace_run_sec_per_km: 300 })
     expect(r.components.durationHours).toBeCloseTo(1.0, 1)
     expect(r.components.elevationFactor).toBe(1.0)
+  })
+})
+
+describe('Fallback gracieux sans streams (régression)', () => {
+  const run = {
+    id: 'r0', rawSportType: 'Run', name: 'Footing', startDate: '2026-06-01T07:00:00Z',
+    movingTimeSeconds: 3600, distanceMeters: 12000, elevationGainMeters: 50, averageHeartrate: 150,
+  }
+  it('CES identique avec ou sans 3e argument (pas de dérive sur le pipeline existant)', () => {
+    const a = computeCesResult(run, {})
+    const b = computeCesResult(run, {}, undefined)
+    expect(b.ces).toBe(a.ces)
+    expect(b.cardioLoad).toBe(a.cardioLoad)
+    expect(b.muscleLoad).toBe(a.muscleLoad)
+    expect(b.model).toBe('pace_threshold')   // pas de GAP → allure moyenne
   })
 })
