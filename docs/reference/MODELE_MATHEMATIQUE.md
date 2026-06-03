@@ -573,7 +573,14 @@ Un CES élevé fait monter l'ATL même si l'intensité physiologique était faib
 
 ## 8. Calcul FC relative (Karvonen normalisé)
 
-Utilisé pour le coefficient cardio (Blueprint Phase 2) et l'IF FC fallback :
+> ⚠️ **Non implémenté à date (vérifié 2026-06-03).** La formule ci-dessous est une **spec cible**.
+> Dans `effort-score.ts`, `calcIF()` n'a **aucune branche FC** : la cascade réelle est
+> `puissance/FTP (vélo) → allure/allure_seuil (run/trail) → cfg.defaultIF (model 'legacy')`.
+> Quand ni puissance ni allure ne sont disponibles (walk, hike, swim sans allure seuil, cardio_other…),
+> l'IF retombe sur `defaultIF` constant — **jamais** sur la FC. Le « coefficient cardio » (`K_cardio`, §10)
+> et l'« IF FC fallback » restent donc à brancher.
+
+Formule cible — % de réserve cardiaque utilisé :
 
 ```
 HR_relative = (avgHr − restingHr) / (maxHr − restingHr)
@@ -581,7 +588,7 @@ HR_relative = (avgHr − restingHr) / (maxHr − restingHr)
 
 Représente le % de réserve cardiaque utilisé. À IF = 1,0 (seuil), `HR_relative` typique ≈ 0,80 – 0,85.
 
-**IF FC fallback :**
+**IF FC fallback (cible, non branché) :**
 
 ```
 IF_FC = clamp(HR_relative / 0.85, 0.30, 1.25)
