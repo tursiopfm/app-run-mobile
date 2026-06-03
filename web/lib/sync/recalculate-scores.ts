@@ -1,6 +1,8 @@
 import { createServiceClient } from '@/lib/database/supabase-server'
 import { computeCesResult } from '@/lib/analytics/effort-score'
-import type { UserProfileForCes, ActivityInput } from '@/lib/analytics/types'
+import type { UserProfileForCes, ActivityInput, CesStreamMetrics } from '@/lib/analytics/types'
+import { unpackStreams } from '@/lib/providers/strava/streams'
+import { computeStreamMetrics } from '@/lib/activities/stream-metrics'
 
 function toActivityInput(row: Record<string, unknown>): ActivityInput {
   return {
@@ -36,6 +38,25 @@ export async function recalculateUserEffortScores(userId: string): Promise<{ rec
 
   if (!activities?.length) return { recalculated: 0, errors: 0 }
 
+  // Charger les streams stockés (raw gz) pour appliquer SP-2 ; re-dérive les métriques en local.
+  const { data: streamRows } = await supabase
+    .from('activity_streams')
+    .select('activity_id, streams_gz')
+    .eq('user_id', userId)
+
+  const smByActivity = new Map<string, CesStreamMetrics>()
+  for (const sr of streamRows ?? []) {
+    try {
+      const row = sr as { activity_id: string; streams_gz: string }
+      const m = computeStreamMetrics(unpackStreams(String(row.streams_gz)))
+      smByActivity.set(String(row.activity_id), {
+        gradeAdjustedPaceS: m.gradeAdjustedPaceS,
+        decouplingPct:      m.decouplingPct,
+        elevationLossM:     m.elevationLossM,
+      })
+    } catch { /* stream illisible → fallback (pas de sm) */ }
+  }
+
   const now = new Date().toISOString()
   const activityUpdates: Array<{ id: string; ces: number; effort_score_version: string; effort_score_updated_at: string }> = []
   const metricUpdates:   Array<{ activity_id: string; metric_key: string; metric_value: number; computed_at: string }> = []
@@ -43,7 +64,8 @@ export async function recalculateUserEffortScores(userId: string): Promise<{ rec
   let errors = 0
   for (const act of activities) {
     try {
-      const result = computeCesResult(toActivityInput(act), profile)
+      const sm = smByActivity.get(String(act.id))
+      const result = computeCesResult(toActivityInput(act), profile, sm)
       activityUpdates.push({
         id: String(act.id),
         ces: result.ces,
@@ -55,6 +77,9 @@ export async function recalculateUserEffortScores(userId: string): Promise<{ rec
         { activity_id: String(act.id), metric_key: 'muscle_load',      metric_value: result.muscleLoad,      computed_at: now },
         { activity_id: String(act.id), metric_key: 'intensity_factor', metric_value: result.intensityFactor, computed_at: now },
       )
+      if (sm?.gradeAdjustedPaceS != null) metricUpdates.push({ activity_id: String(act.id), metric_key: 'grade_adjusted_pace_s', metric_value: sm.gradeAdjustedPaceS, computed_at: now })
+      if (sm?.decouplingPct != null)      metricUpdates.push({ activity_id: String(act.id), metric_key: 'decoupling_pct',        metric_value: sm.decouplingPct,      computed_at: now })
+      if (sm?.elevationLossM != null)     metricUpdates.push({ activity_id: String(act.id), metric_key: 'elevation_loss_m',      metric_value: sm.elevationLossM,     computed_at: now })
     } catch (e) {
       console.error('[recalculateUserEffortScores] activity', act.id, e)
       errors++
