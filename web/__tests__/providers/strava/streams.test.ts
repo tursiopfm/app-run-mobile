@@ -1,4 +1,4 @@
-import { downsampleStreams, packStreams, unpackStreams } from '@/lib/providers/strava/streams'
+import { downsampleStreams, packStreams, unpackStreams, fetchStravaStreams } from '@/lib/providers/strava/streams'
 
 describe('downsampleStreams', () => {
   it('garde ~1 point par fenêtre de 5 s + le dernier point', () => {
@@ -19,5 +19,36 @@ describe('pack/unpack', () => {
     const packed = packStreams(s)
     expect(typeof packed).toBe('string')
     expect(unpackStreams(packed)).toEqual(s)
+  })
+})
+
+describe('fetchStravaStreams', () => {
+  afterEach(() => { jest.restoreAllMocks() })
+
+  it('mappe key_by_type → StreamSet', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true, status: 200,
+      json: async () => ({
+        time: { data: [0, 1, 2] },
+        altitude: { data: [10, 11, 12] },
+        velocity_smooth: { data: [3, 3, 3] },
+        grade_smooth: { data: [0, 5, 5] },
+      }),
+    }) as unknown as typeof fetch
+    const s = await fetchStravaStreams('tok', 123)
+    expect(s.time).toEqual([0, 1, 2])
+    expect(s.velocity).toEqual([3, 3, 3])
+    expect(s.grade).toEqual([0, 5, 5])
+    expect(s.heartrate).toBeUndefined()
+  })
+
+  it('429 → erreur rateLimited', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 429 }) as unknown as typeof fetch
+    await expect(fetchStravaStreams('tok', 1)).rejects.toMatchObject({ rateLimited: true })
+  })
+
+  it('404 → StreamSet vide (activité sans streams)', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 404 }) as unknown as typeof fetch
+    expect(await fetchStravaStreams('tok', 1)).toEqual({})
   })
 })
