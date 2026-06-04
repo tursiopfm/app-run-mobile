@@ -5,6 +5,7 @@ import { stravaClientCreds } from '@/lib/providers/strava/auth'
 import { stravaToNormalized } from '@/lib/providers/strava/mapper'
 import { assignCommuteName } from '@/lib/sync/assign-commute-name'
 import { maybePushPlanTitleToStrava } from '@/lib/plan/push-title'
+import { triggerStreamsBackfill } from '@/lib/providers/strava/trigger-backfill'
 import { computeCesResult } from '@/lib/analytics/effort-score'
 import type { StravaWebhookEvent } from '@/lib/providers/strava/webhook'
 import type { ActivityInput, UserProfileForCes } from '@/lib/analytics/types'
@@ -147,6 +148,11 @@ async function processActivityEvent(event: StravaWebhookEvent): Promise<string |
   const normalized = stravaToNormalized(userId, stravaActivity)
   const upserted = await upsertActivity(supabase, normalized, profile)
   console.log('[webhook-ok]', event.object_id)
+
+  // Nouvelle activité : déclenche le backfill streams pour la passer en SP-2 (best-effort).
+  if (event.aspect_type === 'create' && upserted?.id) {
+    triggerStreamsBackfill()
+  }
 
   // Auto-détection trajet domicile-travail (best-effort : ne doit jamais faire échouer le webhook)
   if (upserted?.id) {
