@@ -2,6 +2,7 @@ import { createServiceClient } from '@/lib/database/supabase-server'
 import { getValidStravaToken } from './token'
 import { fetchStravaStreams, downsampleStreams, packStreams } from './streams'
 import { computeStreamMetrics } from '@/lib/activities/stream-metrics'
+import { recalculateUserEffortScores, recalculateUserFatigue } from '@/lib/sync/recalculate-scores'
 
 type MissingRow = { id: string; user_id: string; provider_activity_id: string }
 
@@ -10,6 +11,7 @@ export type StreamsBackfillResult = {
   stored: number
   rateLimited: boolean
   errors: number
+  recalculatedUsers: number
 }
 
 export async function processStreamsBackfillBatch(
@@ -31,6 +33,7 @@ export async function processStreamsBackfillBatch(
   }
 
   let processed = 0, stored = 0, errors = 0, rateLimited = false
+  const affectedUsers = new Set<string>()
 
   for (const [userId, acts] of Array.from(byUser.entries())) {
     let token: string
@@ -72,6 +75,7 @@ export async function processStreamsBackfillBatch(
           await supabase.from('activity_metrics').upsert(metricRows, { onConflict: 'activity_id,metric_key' })
 
         stored++
+        affectedUsers.add(userId)
       } catch (err) {
         if ((err as { rateLimited?: boolean }).rateLimited) { rateLimited = true; break }
         errors++
@@ -80,5 +84,16 @@ export async function processStreamsBackfillBatch(
     if (rateLimited) break
   }
 
-  return { processed, stored, rateLimited, errors }
+  let recalculatedUsers = 0
+  for (const userId of Array.from(affectedUsers)) {
+    try {
+      await recalculateUserEffortScores(userId)
+      await recalculateUserFatigue(userId)
+      recalculatedUsers++
+    } catch (e) {
+      console.error('[streams-backfill] recalc user', userId, e)
+    }
+  }
+
+  return { processed, stored, rateLimited, errors, recalculatedUsers }
 }
