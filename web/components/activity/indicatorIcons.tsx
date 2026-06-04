@@ -128,7 +128,7 @@ export function TypeIcon({ type, size = 32 }: { type: WorkoutType | null; size?:
           <line x1="10" y1="64" x2="24" y2="64" stroke="#D85A4A" strokeWidth="2.5" strokeLinecap="round" opacity="0.5" />
           <rect x="45" y="14" width="10" height="6" fill="#D85A4A" rx="1.5" />
           <rect x="47" y="10" width="6" height="4" fill="#D85A4A" rx="1" />
-          <circle cx="56" cy="54" r="24" fill="#1c2a24" stroke="#D85A4A" strokeWidth="3" />
+          <circle cx="56" cy="54" r="24" fill="var(--trail-card)" stroke="#D85A4A" strokeWidth="3" />
           <line x1="74" y1="32" x2="80" y2="26" stroke="#D85A4A" strokeWidth="3" strokeLinecap="round" />
           <line x1="56" y1="34" x2="56" y2="38" stroke="#D85A4A" strokeWidth="2" />
           <line x1="56" y1="70" x2="56" y2="74" stroke="#D85A4A" strokeWidth="2" />
@@ -143,7 +143,7 @@ export function TypeIcon({ type, size = 32 }: { type: WorkoutType | null; size?:
         <svg viewBox="0 0 100 100" width={w} height={h} aria-hidden="true">
           <rect x="45" y="14" width="10" height="6" fill="#3DB5E6" rx="1.5" />
           <rect x="47" y="10" width="6" height="4" fill="#3DB5E6" rx="1" />
-          <circle cx="50" cy="54" r="26" fill="#1c2a24" stroke="#3DB5E6" strokeWidth="3" />
+          <circle cx="50" cy="54" r="26" fill="var(--trail-card)" stroke="#3DB5E6" strokeWidth="3" />
           <line x1="50" y1="32" x2="50" y2="36" stroke="#3DB5E6" strokeWidth="2" />
           <line x1="50" y1="72" x2="50" y2="76" stroke="#3DB5E6" strokeWidth="2" />
           <line x1="28" y1="54" x2="32" y2="54" stroke="#3DB5E6" strokeWidth="2" />
