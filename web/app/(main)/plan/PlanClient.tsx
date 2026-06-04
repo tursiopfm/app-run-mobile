@@ -194,7 +194,7 @@ export default function PlanClient() {
   ]
 
   return (
-    <div className="px-3 py-3 max-w-lg mx-auto space-y-2">
+    <div className="px-3 py-3 max-w-lg md:max-w-none mx-auto space-y-2">
       <ModeToggleBlock />
       <BlockGrid
         storageKey="plan"

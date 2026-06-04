@@ -9,7 +9,7 @@ export default async function CommuteRoutesPage() {
   if (!user) redirect('/login')
 
   return (
-    <div className="px-3 py-3 space-y-3 max-w-lg mx-auto pb-8">
+    <div className="px-3 py-3 space-y-3 max-w-lg md:max-w-3xl mx-auto pb-8">
       <div className="px-1 flex items-center gap-2">
         <Link
           href="/settings"

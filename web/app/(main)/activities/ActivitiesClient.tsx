@@ -341,7 +341,7 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto p-4 max-w-lg mx-auto w-full space-y-3">
+      <div className="flex-1 overflow-y-auto p-4 max-w-lg md:max-w-none mx-auto w-full space-y-3">
 
         {/* Search card */}
         <div
@@ -476,7 +476,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 max-w-lg mx-auto w-full space-y-2">
+      <div className="flex-1 overflow-y-auto p-3 max-w-lg md:max-w-none mx-auto w-full space-y-2">
         <div
           className="rounded-[12px] border p-3 space-y-3"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
@@ -864,7 +864,7 @@ export default function ActivitiesClient({
         />
       )}
 
-      <div className="px-3 py-3 max-w-lg mx-auto">
+      <div className="px-3 py-3 max-w-lg md:max-w-none mx-auto">
         {/* SearchFilterBar */}
         <div
           className="rounded-[12px] border flex items-center mb-[10px]"
