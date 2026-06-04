@@ -36,12 +36,6 @@
   3. Migration douce : au premier load, si profil DB vide mais localStorage rempli → push vers Supabase puis purge localStorage.
 - **Identifié** : 2026-05-13
 
-### SP-2 — upgrade auto du CES des nouvelles activités vers le modèle streams
-- **Quoi** : le modèle CES SP-2 (GAP-IF, K_cardio, descente) ne s'applique qu'au **recalcul** (`recalculateUserEffortScores`, qui lit les streams stockés). Le backfill streams (`streams-backfill.ts`) écrit les métriques mais **ne recalcule pas le CES** ; une nouvelle activité (import/webhook) reçoit le CES scalaire et ne passe en SP-2 qu'au prochain recalcul manuel. → prévoir un déclenchement automatique : recalcul ciblé de l'activité juste après backfill de ses streams (ou recalcul périodique des users impactés).
-- **Pourquoi** : sinon SP-2 reste dormant sur les nouvelles activités jusqu'à un recalcul manuel ; le CES affiché ne reflète pas le modèle pour les sorties récentes non encore recalculées.
-- **À faire** : soit `streams-backfill` appelle `recalculateUserEffortScores`/`recalculateUserFatigue` pour les users dont une activité vient d'être backfillée, soit un recalcul ciblé par activity_id (plus léger qu'un recalcul user complet).
-- **Identifié** : 2026-06-04 (review finale SP-2)
-
 ### Détail activité — STATS
 - [ ] Retirer le bloc CES de l'onglet STATS
 
