@@ -116,7 +116,7 @@ function SortableBlock({ id, isDraggingAny, label, desktopCols = 1, onToggleWidt
         className="hidden md:flex absolute bottom-1 right-1 z-10 w-5 h-5 items-center justify-center rounded-sm opacity-40 group-hover/block:opacity-80 hover:!opacity-100 transition-opacity cursor-pointer"
       >
         <svg viewBox="0 0 10 10" className="w-3 h-3 text-trail-muted">
-          <path d="M0 0 L10 0 L10 10 Z" fill="currentColor" />
+          <path d="M10 0 L10 10 L0 10 Z" fill="currentColor" />
         </svg>
       </button>
       <div
