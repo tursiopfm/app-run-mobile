@@ -19,6 +19,7 @@ describe('triggerStreamsBackfill', () => {
     const [url, opts] = fetchMock.mock.calls[0]
     expect(url).toBe('https://trailcockpit.run/api/cron/strava-streams-backfill')
     expect((opts as { headers: Record<string, string> }).headers.Authorization).toBe('Bearer sekret')
+    expect((opts as RequestInit).keepalive).toBe(true)
   })
 
   it('no-op si CRON_SECRET absent', () => {

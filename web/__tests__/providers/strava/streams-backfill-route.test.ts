@@ -4,7 +4,7 @@
 import { GET } from '@/app/api/cron/strava-streams-backfill/route'
 
 jest.mock('@/lib/providers/strava/streams-backfill', () => ({
-  processStreamsBackfillBatch: jest.fn().mockResolvedValue({ processed: 0, stored: 0, rateLimited: false, errors: 0 }),
+  processStreamsBackfillBatch: jest.fn().mockResolvedValue({ processed: 0, stored: 0, rateLimited: false, errors: 0, recalculatedUsers: 0 }),
 }))
 
 describe('cron strava-streams-backfill auth', () => {

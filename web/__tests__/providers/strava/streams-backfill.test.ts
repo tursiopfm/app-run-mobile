@@ -55,4 +55,14 @@ describe('processStreamsBackfillBatch', () => {
     expect(recalculateUserFatigue).toHaveBeenCalledTimes(1)
     expect(recalculateUserFatigue).toHaveBeenCalledWith('u1')
   })
+
+  it('ne recalcule personne si aucun stream stocké', async () => {
+    const { fetchStravaStreams } = jest.requireMock('@/lib/providers/strava/streams') as { fetchStravaStreams: jest.Mock }
+    fetchStravaStreams.mockRejectedValueOnce(new Error('boom'))
+    fetchStravaStreams.mockRejectedValueOnce(new Error('boom'))
+    const r = await processStreamsBackfillBatch(40)
+    expect(r.recalculatedUsers).toBe(0)
+    expect(recalculateUserEffortScores).not.toHaveBeenCalled()
+    expect(recalculateUserFatigue).not.toHaveBeenCalled()
+  })
 })
