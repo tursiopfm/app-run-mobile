@@ -1,8 +1,9 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, startTransition, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, startTransition, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useT } from '@/lib/i18n/I18nProvider'
+import { usePreferences } from '@/lib/preferences/PreferencesProvider'
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent, type DragStartEvent, DragOverlay,
@@ -177,24 +178,33 @@ function AddBlockPanel({
 export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultHidden = [] }: Props) {
   const t = useT()
   const resolvedAddLabel = addLabel ?? t.cockpit.addBlock
+  const { notifyChange, onHydrated } = usePreferences()
   const orderStorage  = `${storageKey}_block_order`
   const hiddenStorage = `${storageKey}_hidden_blocks`
   const widthStorage  = `${storageKey}_block_widths`
 
-  // Lecture localStorage en lazy init : la grille rend DIRECTEMENT dans
-  // l'ordre persisté au premier paint client → pas de flash, pas de seconde
-  // passe de re-render. Côté SSR (typeof window === 'undefined') on retombe
-  // sur les défauts ; cela génère un mismatch d'hydratation sur cold-load
-  // (rare en PWA, l'app est déjà montée) qui est suppressé par le
-  // suppressHydrationWarning du wrapper et React reconcilie le DOM client.
-  // Sur nav client-side (cas du clic BottomNav, le plus fréquent), il n'y a
-  // pas d'hydratation : useState init tourne directement avec localStorage
-  // disponible → premier render = configuration utilisateur.
   const [order,    setOrder]    = useState<string[]>(() => readStoredOrder(orderStorage, defaultOrder))
   const [hidden,   setHidden]   = useState<string[]>(() => readStoredHidden(hiddenStorage, defaultHidden))
   const [widths,   setWidths]   = useState<Record<string, 1 | 2>>(() => readStoredWidths(widthStorage))
   const [activeId, setActiveId] = useState<string | null>(null)
   const [showAdd,  setShowAdd]  = useState(false)
+
+  const orderStorageRef  = useRef(orderStorage)
+  const hiddenStorageRef = useRef(hiddenStorage)
+  const widthStorageRef  = useRef(widthStorage)
+  orderStorageRef.current  = orderStorage
+  hiddenStorageRef.current = hiddenStorage
+  widthStorageRef.current  = widthStorage
+
+  useEffect(() => {
+    return onHydrated(() => {
+      startTransition(() => {
+        setOrder(readStoredOrder(orderStorageRef.current, defaultOrder))
+        setHidden(readStoredHidden(hiddenStorageRef.current, defaultHidden))
+        setWidths(readStoredWidths(widthStorageRef.current))
+      })
+    })
+  }, [onHydrated, defaultOrder, defaultHidden])
 
   // Activation par distance (pas par delay) : sur touch, un geste naturel bouge
   // > 8 px en < 250 ms, ce qui faisait abandonner silencieusement l'activation
@@ -242,6 +252,7 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
     // events urgents (clicks BottomNav) ne sont pas gelés.
     const next = arrayMove(order, order.indexOf(active.id as string), order.indexOf(over.id as string))
     try { localStorage.setItem(orderStorage, JSON.stringify(next)) } catch {}
+    notifyChange()
     startTransition(() => setOrder(next))
   }
   function handleDragCancel() { setActiveId(null); cleanupDragStyles() }
@@ -249,6 +260,7 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
     setHidden(prev => {
       const next = prev.includes(id) ? prev : [...prev, id]
       localStorage.setItem(hiddenStorage, JSON.stringify(next))
+      notifyChange()
       return next
     })
   }
@@ -256,6 +268,7 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
     setHidden(prev => {
       const next = prev.filter(b => b !== id)
       localStorage.setItem(hiddenStorage, JSON.stringify(next))
+      notifyChange()
       return next
     })
   }
@@ -264,6 +277,7 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
       const current = prev[id] ?? defaultCols
       const next = { ...prev, [id]: (current === 2 ? 1 : 2) as 1 | 2 }
       localStorage.setItem(widthStorage, JSON.stringify(next))
+      notifyChange()
       return next
     })
   }

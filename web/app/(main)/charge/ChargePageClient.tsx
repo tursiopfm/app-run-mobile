@@ -7,6 +7,7 @@ import { SportSegmentedTabs } from '@/components/charge/SportSegmentedTabs'
 import type { SportKey } from '@/lib/design/sports'
 import type { ChargePageData, ChargeSportFilterKey } from '@/lib/data/charge'
 import { useT } from '@/lib/i18n/I18nProvider'
+import { usePreferences } from '@/lib/preferences/PreferencesProvider'
 import { LoadStatusCard } from '@/components/charge/blocks/LoadStatusCard'
 import { AcuteChronicCard } from '@/components/charge/blocks/AcuteChronicCard'
 import { FreshnessCard } from '@/components/charge/blocks/FreshnessCard'
@@ -44,6 +45,7 @@ export function ChargePageClient({ data }: Props) {
     return (chargeLabels.blocks as Record<string, string>)[key] ?? id
   }
 
+  const { notifyChange, onHydrated } = usePreferences()
   const [sport, setSport] = useState<SportKey>('all')
 
   useEffect(() => {
@@ -53,9 +55,19 @@ export function ChargePageClient({ data }: Props) {
     } catch {}
   }, [])
 
+  useEffect(() => {
+    return onHydrated(() => {
+      try {
+        const stored = localStorage.getItem(SPORT_STORAGE)
+        if (stored && isSportKey(stored)) setSport(stored)
+      } catch {}
+    })
+  }, [onHydrated])
+
   function handleSportChange(k: SportKey) {
     setSport(k)
     try { localStorage.setItem(SPORT_STORAGE, k) } catch {}
+    notifyChange()
   }
 
   const payload = data.perSport[sport as ChargeSportFilterKey]

@@ -12,6 +12,7 @@ import { getCurrentPlan, peekMacros, pickActiveMacrocycle } from '@/lib/plan/sto
 import { resolveWeeklyTarget } from '@/lib/training/phases'
 import { readSportSettings } from '@/lib/design/sport-settings'
 import { useT } from '@/lib/i18n/I18nProvider'
+import { usePreferences } from '@/lib/preferences/PreferencesProvider'
 
 const SETTINGS_KEY = 'cockpit_goals_settings'
 const TARGETS_KEY  = 'cockpit_goals_targets'
@@ -76,9 +77,17 @@ function computePlanWeeklyFromSnapshot(): { km: number; dPlus: number } | null {
 export function GoalsBlock({ sportOverviews, onHide }: Props) {
   const t = useT()
   const L = t.cockpit
+  const { notifyChange, onHydrated } = usePreferences()
   const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(SETTINGS_KEY, DEFAULT_SETTINGS))
   const [targets,    setTargets]    = useState<Partial<Record<SportKey, Partial<Goals>>>>(() => readTargets())
   const [planWeekly, setPlanWeekly] = useState<{ km: number; dPlus: number } | null>(() => computePlanWeeklyFromSnapshot())
+
+  useEffect(() => {
+    return onHydrated(() => {
+      setSettings(readSportSettings(SETTINGS_KEY, DEFAULT_SETTINGS))
+      setTargets(readTargets())
+    })
+  }, [onHydrated])
   const [activeIdx,  setActiveIdx]  = useState(() => {
     const s = readSportSettings(SETTINGS_KEY, DEFAULT_SETTINGS)
     return Math.max(0, s.visible.indexOf(s.default))
@@ -121,6 +130,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
   function saveSettings(visible: SportKey[], def: SportKey) {
     const s: Settings = { visible, default: def }
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(s))
+    notifyChange()
     setSettings(s)
     setShowConfig(false)
     setActiveIdx(Math.max(0, visible.indexOf(def)))
@@ -154,6 +164,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
       nextTargets[sport] = next
     }
     localStorage.setItem(TARGETS_KEY, JSON.stringify(nextTargets))
+    notifyChange()
     setTargets(nextTargets)
     setEditSport(null)
   }
