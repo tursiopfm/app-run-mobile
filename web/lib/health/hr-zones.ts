@@ -189,6 +189,32 @@ export function distributeTimeInZones(
   })
 }
 
+// ── Distribution réelle depuis le stream HR ──────────────────────────────────
+
+export function computeZoneTimesFromStream(
+  zones:     HrZone[],
+  heartrate: number[],
+  time:      number[],
+): number[] {
+  const zoneTimes = zones.map(() => 0)
+  const len = Math.min(heartrate.length, time.length)
+  if (len < 2) return zoneTimes
+
+  for (let i = 0; i < len - 1; i++) {
+    const hr = heartrate[i]
+    const dt = time[i + 1] - time[i]
+    if (dt <= 0 || hr <= 0) continue
+
+    let zoneIdx = zones.length - 1
+    for (let z = 0; z < zones.length; z++) {
+      if (hr <= zones[z].max) { zoneIdx = z; break }
+    }
+    zoneTimes[zoneIdx] += dt
+  }
+
+  return zoneTimes.map(t => Math.round(t))
+}
+
 export function getRecommendedHeartRateZoneMode(profile: {
   max_hr?:               number | null
   aerobic_threshold_hr?: number | null

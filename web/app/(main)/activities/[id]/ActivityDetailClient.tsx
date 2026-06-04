@@ -20,13 +20,14 @@ import { vapPaceSec } from '@/lib/activities/vap'
 import { useT } from '@/lib/i18n/I18nProvider'
 import {
   asIntensityKey,
+  classifyIntensityFromZoneTimes,
   effectiveWorkoutType,
   guessIntensity,
   type IntensityKey,
   type WorkoutType,
 } from '@/lib/activities/intensity'
 import { INTENSITY_KEY_TO_LEVEL } from '@/lib/activities/indicators'
-import { calculateHrZones, type HrZoneMethod } from '@/lib/health/hr-zones'
+import { calculateHrZones, computeZoneTimesFromStream, type HrZoneMethod } from '@/lib/health/hr-zones'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -222,11 +223,13 @@ export function ActivityDetailClient({
   splits,
   laps,
   athleteProfile,
+  hrStream,
 }: {
   activity:       ActivityDetail
   splits:         StravaSplit[] | null
   laps:           StravaLap[] | null
   athleteProfile: AthleteHrProfile
+  hrStream?:      { heartrate: number[]; time: number[] } | null
 }) {
   const router = useRouter()
   const A = useT().activities
@@ -272,8 +275,13 @@ export function ActivityDetailClient({
     } catch { return [] }
   })()
 
+  const streamZoneTimes = hrStream && hrZones.length === 5
+    ? computeZoneTimesFromStream(hrZones, hrStream.heartrate, hrStream.time)
+    : null
+
   const intensityKey: IntensityKey | null =
     asIntensityKey(a.manual_intensity) ??
+    (streamZoneTimes ? classifyIntensityFromZoneTimes(streamZoneTimes) : null) ??
     guessIntensity(a.avg_hr, hrZones, {
       activityMaxHr: a.max_hr,
       movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
@@ -510,6 +518,7 @@ export function ActivityDetailClient({
                 maxHr={a.max_hr!}
                 movingTimeSec={a.manual_moving_time_sec ?? a.moving_time_sec ?? 0}
                 athleteProfile={athleteProfile}
+                hrStream={hrStream}
               />
             )}
             {activeTab === 'stats' && (

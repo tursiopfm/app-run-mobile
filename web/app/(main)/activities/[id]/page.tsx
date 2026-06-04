@@ -2,6 +2,7 @@ import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/database/supabase-server'
 import { getValidStravaToken } from '@/lib/providers/strava/token'
 import { fetchStravaActivity } from '@/lib/providers/strava/api'
+import { unpackStreams } from '@/lib/providers/strava/streams'
 import { ActivityDetailClient, type ActivityDetail } from './ActivityDetailClient'
 import type { StravaSplit, StravaLap } from '@/lib/activities/detail'
 
@@ -93,5 +94,21 @@ export default async function ActivityDetailPage({
     .eq('id', user.id)
     .single()
 
-  return <ActivityDetailClient activity={activity} splits={splits} laps={laps} athleteProfile={profile} />
+  let hrStream: { heartrate: number[]; time: number[] } | null = null
+  if (activity.avg_hr) {
+    const { data: streamRow } = await supabase
+      .from('activity_streams')
+      .select('streams_gz')
+      .eq('activity_id', id)
+      .single()
+    if (streamRow?.streams_gz) {
+      try {
+        const s = unpackStreams(String(streamRow.streams_gz))
+        if (s.heartrate?.length && s.time?.length)
+          hrStream = { heartrate: s.heartrate, time: s.time }
+      } catch { /* stream corrompu, fallback estimation */ }
+    }
+  }
+
+  return <ActivityDetailClient activity={activity} splits={splits} laps={laps} athleteProfile={profile} hrStream={hrStream} />
 }

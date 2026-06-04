@@ -1,4 +1,4 @@
-import { calculateHrZones, hrZoneForAvgHr, getRecommendedHeartRateZoneMode } from '@/lib/health/hr-zones'
+import { calculateHrZones, computeZoneTimesFromStream, hrZoneForAvgHr, getRecommendedHeartRateZoneMode } from '@/lib/health/hr-zones'
 
 describe('hrZoneForAvgHr', () => {
   const zones = calculateHrZones({ method: 'karvonen', maxHr: 195, restingHr: 57 }).zones
@@ -117,6 +117,35 @@ describe('getRecommendedHeartRateZoneMode', () => {
     const r = getRecommendedHeartRateZoneMode({ max_hr: 195, resting_hr: 57 })
     expect(r.mode).toBe('karvonen')
     expect(r.mode).not.toBe('pct_max')
+  })
+})
+
+describe('computeZoneTimesFromStream', () => {
+  const zones = calculateHrZones({ method: 'pct_max', maxHr: 195 }).zones
+  // Z1: null–140, Z2: 141–152, Z3: 153–166, Z4: 167–179, Z5: 180–195
+
+  it('counts time in correct zones', () => {
+    const hr   = [120, 120, 145, 160, 175, 185]
+    const time = [  0,  10,  20,  30,  40,  50]
+    const result = computeZoneTimesFromStream(zones, hr, time)
+    expect(result).toEqual([20, 10, 10, 10, 0])
+    // 0-10: hr=120 → Z1, 10-20: hr=120 → Z1, 20-30: hr=145 → Z2,
+    // 30-40: hr=160 → Z3, 40-50: hr=175 → Z4, last point has no duration
+  })
+
+  it('returns zeros for empty stream', () => {
+    expect(computeZoneTimesFromStream(zones, [], [])).toEqual([0, 0, 0, 0, 0])
+  })
+
+  it('handles single-point stream', () => {
+    expect(computeZoneTimesFromStream(zones, [150], [0])).toEqual([0, 0, 0, 0, 0])
+  })
+
+  it('total matches stream duration', () => {
+    const hr   = [130, 130, 155, 170]
+    const time = [  0,  30,  60,  90]
+    const result = computeZoneTimesFromStream(zones, hr, time)
+    expect(result.reduce((a, b) => a + b, 0)).toBe(90)
   })
 })
 

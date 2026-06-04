@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { calculateHrZones, distributeTimeInZones, type HrZoneMethod } from '@/lib/health/hr-zones'
+import { calculateHrZones, computeZoneTimesFromStream, distributeTimeInZones, type HrZoneMethod } from '@/lib/health/hr-zones'
 import { fmtDurationSec } from '@/lib/activities/detail'
 import { useT } from '@/lib/i18n/I18nProvider'
 
@@ -22,11 +22,13 @@ export function ActivityHeartRateZones({
   maxHr,
   movingTimeSec,
   athleteProfile,
+  hrStream,
 }: {
   avgHr:           number
   maxHr:           number
   movingTimeSec:   number
   athleteProfile?: AthleteHrProfile | null
+  hrStream?:       { heartrate: number[]; time: number[] } | null
 }) {
   const t = useT()
   const L = t.activities
@@ -60,8 +62,12 @@ export function ActivityHeartRateZones({
 
   if (result.zones.length === 0) return null
 
-  const restingHr = athleteProfile?.resting_hr ?? Math.max(avgHr - 3 * Math.max((maxHr - avgHr) / 2, 3), 40)
-  const durations = distributeTimeInZones(result.zones, avgHr, maxHr, movingTimeSec, restingHr)
+  const durations = hrStream?.heartrate?.length && hrStream?.time?.length
+    ? computeZoneTimesFromStream(result.zones, hrStream.heartrate, hrStream.time)
+    : distributeTimeInZones(
+        result.zones, avgHr, maxHr, movingTimeSec,
+        athleteProfile?.resting_hr ?? Math.max(avgHr - 3 * Math.max((maxHr - avgHr) / 2, 3), 40),
+      )
   const totalDuration = Math.max(durations.reduce((a, b) => a + b, 0), 1)
 
   return (
