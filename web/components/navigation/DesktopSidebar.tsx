@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutGrid, Dumbbell, Calendar, Footprints, Trophy,
-  ShieldCheck, Settings, ChevronLeft, ChevronRight,
+  ShieldCheck, Settings, PanelLeft, PanelLeftClose,
 } from 'lucide-react'
 import { useT } from '@/lib/i18n/I18nProvider'
 
@@ -96,7 +96,7 @@ export function DesktopSidebar({ isAdmin, displayName }: Props) {
             onClick={pinned ? unpin : pin}
             className="shrink-0 w-7 h-7 flex items-center justify-center rounded-md text-trail-muted hover:bg-trail-border/40 hover:text-trail-text transition-colors"
           >
-            {pinned ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+            {pinned ? <PanelLeftClose size={16} /> : <PanelLeft size={16} />}
           </button>
         </div>
 
