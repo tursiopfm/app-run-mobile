@@ -59,10 +59,10 @@ export function ActivityHeartRateZones({
     <div>
       <div className="flex gap-4 mb-4">
         <span className="text-xs text-gray-400">
-          {L.hrAvgLabel}: <span className="text-white">{avgHr}</span> bpm
+          {L.hrAvgLabel}: <span className="text-gray-700 dark:text-white">{avgHr}</span> bpm
         </span>
         <span className="text-xs text-gray-400">
-          {L.hrMaxLabel}: <span className="text-white">{maxHr}</span> bpm
+          {L.hrMaxLabel}: <span className="text-gray-700 dark:text-white">{maxHr}</span> bpm
         </span>
       </div>
 

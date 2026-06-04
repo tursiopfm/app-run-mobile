@@ -42,23 +42,27 @@ export function ActivitySplits({
         return (
           <div
             key={split.split}
+            className="border-b border-gray-200 dark:border-[#161a24]"
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              padding: '7px 0', borderBottom: '1px solid #161a24',
+              padding: '7px 0',
             }}
           >
             {/* Circular km badge */}
-            <div style={{
-              width: 26, height: 26, borderRadius: '50%',
-              background: '#181c29', border: '1px solid #252836',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, fontWeight: 700, color: '#8892a4', flexShrink: 0,
-            }}>
+            <div
+              className="bg-gray-100 border-gray-200 dark:bg-[#181c29] dark:border-[#252836]"
+              style={{
+                width: 26, height: 26, borderRadius: '50%',
+                borderWidth: 1, borderStyle: 'solid',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, fontWeight: 700, color: '#8892a4', flexShrink: 0,
+              }}
+            >
               {split.split}
             </div>
 
             {/* Progress bar */}
-            <div style={{ flex: 1, height: 8, background: '#181c29', borderRadius: 4, overflow: 'hidden' }}>
+            <div className="bg-gray-200 dark:bg-[#181c29]" style={{ flex: 1, height: 8, borderRadius: 4, overflow: 'hidden' }}>
               <div style={{ width: `${barPct}%`, height: '100%', borderRadius: 4, backgroundColor: color }} />
             </div>
 
