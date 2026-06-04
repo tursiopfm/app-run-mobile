@@ -26,6 +26,17 @@ const Ctx = createContext<PreferencesCtx>({
 
 export function usePreferences() { return useContext(Ctx) }
 
+function readKeyForFlush(key: string): unknown | undefined {
+  try {
+    const raw = localStorage.getItem(key)
+    if (!raw) return undefined
+    if (key === 'charge_sport_filter') return raw
+    return JSON.parse(raw)
+  } catch {
+    return undefined
+  }
+}
+
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const flushTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const listeners = useRef<Set<Listener>>(new Set())
@@ -37,16 +48,14 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       if (!user) return
       const prefs: Record<string, unknown> = {}
       for (const key of SYNCED_KEYS) {
-        try {
-          const raw = localStorage.getItem(key)
-          if (raw) prefs[key] = JSON.parse(raw)
-        } catch { /* skip malformed */ }
+        const val = readKeyForFlush(key)
+        if (val !== undefined) prefs[key] = val
       }
       await supabase
         .from('profiles')
         .update({ ui_preferences: prefs })
         .eq('id', user.id)
-    } catch { /* silent — network error, will retry on next change */ }
+    } catch { /* silent */ }
   }, [])
 
   const notifyChange = useCallback(() => {
@@ -58,6 +67,18 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     listeners.current.add(fn)
     return () => { listeners.current.delete(fn) }
   }, [])
+
+  useEffect(() => {
+    const onBeforeUnload = () => {
+      if (flushTimer.current) {
+        clearTimeout(flushTimer.current)
+        flushTimer.current = null
+        flushToSupabase()
+      }
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [flushToSupabase])
 
   useEffect(() => {
     let cancelled = false
@@ -75,8 +96,13 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         const prefs = data.ui_preferences as Record<string, unknown>
         let changed = false
         for (const key of SYNCED_KEYS) {
-          if (prefs[key] != null && !localStorage.getItem(key)) {
-            localStorage.setItem(key, JSON.stringify(prefs[key]))
+          if (prefs[key] == null) continue
+          const cloudVal = key === 'charge_sport_filter'
+            ? String(prefs[key])
+            : JSON.stringify(prefs[key])
+          const localVal = localStorage.getItem(key)
+          if (localVal !== cloudVal) {
+            localStorage.setItem(key, cloudVal)
             changed = true
           }
         }
