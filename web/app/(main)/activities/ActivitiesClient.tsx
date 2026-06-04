@@ -11,6 +11,7 @@ import {
   WORKOUT_TYPE_OPTIONS,
   effectiveWorkoutType,
   guessIntensity,
+  intensityWithWorkoutFloor,
   type IntensityKey,
   type WorkoutType,
 } from '@/lib/activities/intensity'
@@ -743,11 +744,13 @@ export default function ActivitiesClient({
     }
     if (filter.intensity !== 'Toutes') {
       list = list.filter(a => {
-        const key = (a.manual_intensity ?? guessIntensity(a.avg_hr, hrZones, {
+        if (a.manual_intensity) return a.manual_intensity === filter.intensity
+        const raw = guessIntensity(a.avg_hr, hrZones, {
           activityMaxHr: a.max_hr,
           movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
-        }))
-        return key === filter.intensity
+        })
+        const wt = effectiveWorkoutType(a.manual_workout_type, a.name, a.sport_type)
+        return intensityWithWorkoutFloor(raw, wt) === filter.intensity
       })
     }
     if (filter.workoutType !== 'Toutes') {

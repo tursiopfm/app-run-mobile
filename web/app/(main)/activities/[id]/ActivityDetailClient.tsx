@@ -23,6 +23,7 @@ import {
   classifyIntensityFromZoneTimes,
   effectiveWorkoutType,
   guessIntensity,
+  intensityWithWorkoutFloor,
   type IntensityKey,
   type WorkoutType,
 } from '@/lib/activities/intensity'
@@ -275,11 +276,14 @@ export function ActivityDetailClient({
     } catch { return [] }
   })()
 
+  const workoutTypeKey: WorkoutType | null =
+    effectiveWorkoutType(a.manual_workout_type, a.name, effectiveSport)
+
   const streamZoneTimes = hrStream && hrZones.length === 5
     ? computeZoneTimesFromStream(hrZones, hrStream.heartrate, hrStream.time)
     : null
 
-  const intensityKey: IntensityKey | null =
+  const rawIntensity: IntensityKey | null =
     asIntensityKey(a.manual_intensity) ??
     (streamZoneTimes ? classifyIntensityFromZoneTimes(streamZoneTimes) : null) ??
     guessIntensity(a.avg_hr, hrZones, {
@@ -288,8 +292,8 @@ export function ActivityDetailClient({
       restingHr:     athleteProfile?.resting_hr ?? null,
     })
 
-  const workoutTypeKey: WorkoutType | null =
-    effectiveWorkoutType(a.manual_workout_type, a.name, effectiveSport)
+  const intensityKey: IntensityKey | null =
+    a.manual_intensity ? rawIntensity : intensityWithWorkoutFloor(rawIntensity, workoutTypeKey)
 
   // Pace / speed tile
   let paceLabel: string

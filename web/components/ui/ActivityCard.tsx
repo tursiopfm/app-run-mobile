@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { colors } from '@/lib/design/colors'
 import { useT } from '@/lib/i18n/I18nProvider'
 import { formatActivityDateTime } from '@/lib/activities/format-datetime'
-import { asIntensityKey, effectiveWorkoutType, guessIntensity } from '@/lib/activities/intensity'
+import { asIntensityKey, effectiveWorkoutType, guessIntensity, intensityWithWorkoutFloor } from '@/lib/activities/intensity'
 import { INTENSITY_KEY_TO_LEVEL } from '@/lib/activities/indicators'
 import type { HrZone } from '@/lib/health/hr-zones'
 import { EffortPopup, IntensityPopup, WorkoutTypePopup } from '@/components/ui/ActivityPopups'
@@ -161,14 +161,16 @@ export function ActivityCard({
     ces:   A.cesShortLabel,
   })
 
+  const workoutTypeKey = effectiveWorkoutType(a.manual_workout_type, a.name, effectiveSport)
   const computedIntensity = mounted
     ? guessIntensity(a.avg_hr, hrZones, {
         activityMaxHr: a.max_hr,
         movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
       })
     : null
-  const intensityKey = asIntensityKey(a.manual_intensity) ?? computedIntensity
-  const workoutTypeKey = effectiveWorkoutType(a.manual_workout_type, a.name, effectiveSport)
+  const intensityKey = a.manual_intensity
+    ? asIntensityKey(a.manual_intensity)
+    : intensityWithWorkoutFloor(computedIntensity, workoutTypeKey)
 
   return (
     <>

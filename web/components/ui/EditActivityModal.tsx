@@ -5,8 +5,10 @@ import { createPortal } from 'react-dom'
 import { colors } from '@/lib/design/colors'
 import {
   asIntensityKey,
+  asWorkoutType,
   guessIntensity,
   guessWorkoutType,
+  intensityWithWorkoutFloor,
   secondsToHMS,
   hmsToSeconds,
   INTENSITY_OPTIONS,
@@ -131,11 +133,15 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
   const [saving,      setSaving]      = useState(false)
   const [error,       setError]       = useState<string | null>(null)
 
-  const computedIntensity = guessIntensity(a.avg_hr, hrZones, {
+  const computedWorkoutType = guessWorkoutType(name, sport)
+  const rawComputedIntensity = guessIntensity(a.avg_hr, hrZones, {
     activityMaxHr: a.max_hr,
     movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
   })
-  const computedWorkoutType = guessWorkoutType(name, sport)
+  const computedIntensity = intensityWithWorkoutFloor(
+    rawComputedIntensity,
+    asWorkoutType(workoutType) ?? computedWorkoutType,
+  )
   const displayedIntensity  = intensity ?? computedIntensity
   // 'none' is the explicit "no type" override that disables auto-detection.
   const displayedWorkoutType = workoutType === 'none'

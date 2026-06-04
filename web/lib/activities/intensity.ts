@@ -106,9 +106,9 @@ function zoneToIntensity(zone: number): IntensityKey {
   return 'vma'
 }
 
-const VMA_Z5_RATIO         = 0.15  // ≥ 15% en Z5 → effort VO₂max stable (Daniels)
-const SEUIL_Z4_Z5_RATIO    = 0.20  // ≥ 20% en Z4+Z5 → séance "qualité" (Seiler HIT)
-const ENDURANCE_ACTIVE_Z3P = 0.40  // ≥ 40% en Z3+ → intensité moyenne soutenue
+const VMA_Z5_RATIO         = 0.10  // ≥ 10% en Z5 → effort VO₂max
+const SEUIL_Z4_Z5_RATIO    = 0.15  // ≥ 15% en Z4+Z5 → séance qualité
+const ENDURANCE_ACTIVE_Z3P = 0.20  // ≥ 20% en Z3+ → intensité modérée soutenue
 
 export function classifyIntensityFromZoneTimes(zoneTimesSec: number[]): IntensityKey | null {
   if (zoneTimesSec.length !== 5) return null
@@ -152,6 +152,25 @@ export function guessIntensity(
   const zone = hrZoneForAvgHr(avgHr, hrZones)
   if (zone === null) return null
   return zoneToIntensity(zone)
+}
+
+const INTENSITY_ORDER: IntensityKey[] = ['recuperation', 'footing', 'endurance_active', 'seuil', 'vma']
+
+const WORKOUT_INTENSITY_FLOOR: Partial<Record<WorkoutType, IntensityKey>> = {
+  fractionne:  'endurance_active',
+  seuil_tempo: 'endurance_active',
+  cotes:       'endurance_active',
+  course:      'endurance_active',
+}
+
+export function intensityWithWorkoutFloor(
+  intensity: IntensityKey | null,
+  workoutType: WorkoutType | null,
+): IntensityKey | null {
+  if (!intensity || !workoutType) return intensity
+  const floor = WORKOUT_INTENSITY_FLOOR[workoutType]
+  if (!floor) return intensity
+  return INTENSITY_ORDER.indexOf(intensity) < INTENSITY_ORDER.indexOf(floor) ? floor : intensity
 }
 
 const RUN_SPORTS  = new Set(['Run', 'TrailRun'])
