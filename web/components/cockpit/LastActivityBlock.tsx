@@ -19,6 +19,8 @@ export type AthleteHrProfile = {
   aerobic_threshold_hr: number | null
   threshold_hr:         number | null
   birth_year:           number | null
+  hr_zone_method?:      string | null
+  hr_zones_custom?:     { zone: number; min: number | null; max: number | null }[] | null
 } | null
 
 type Settings = { visible: SportKey[]; default: SportKey }
@@ -35,9 +37,9 @@ type Props = {
 function computeHrZones(profile: AthleteHrProfile): HrZone[] {
   if (!profile) return []
   try {
-    const method = (typeof window !== 'undefined'
-      ? (localStorage.getItem('tc_hr_zone_method') ?? 'pct_max')
-      : 'pct_max') as HrZoneMethod
+    const method = (profile.hr_zone_method
+      ?? (typeof window !== 'undefined' ? localStorage.getItem('tc_hr_zone_method') : null)
+      ?? 'pct_max') as HrZoneMethod
     return calculateHrZones({
       method,
       maxHr:              profile.max_hr,
@@ -45,6 +47,7 @@ function computeHrZones(profile: AthleteHrProfile): HrZone[] {
       aerobicThresholdHr: profile.aerobic_threshold_hr,
       thresholdHr:        profile.threshold_hr,
       birthYear:          profile.birth_year,
+      customZones:        profile.hr_zones_custom,
     }).zones
   } catch { return [] }
 }

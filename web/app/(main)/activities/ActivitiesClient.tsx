@@ -634,6 +634,8 @@ type AthleteHrProfile = {
   aerobic_threshold_hr: number | null
   threshold_hr:         number | null
   birth_year:           number | null
+  hr_zone_method?:      string | null
+  hr_zones_custom?:     { zone: number; min: number | null; max: number | null }[] | null
 } | null
 
 export default function ActivitiesClient({
@@ -680,7 +682,9 @@ export default function ActivitiesClient({
   useEffect(() => {
     if (!athleteProfile) return
     try {
-      const method = (localStorage.getItem('tc_hr_zone_method') ?? 'pct_max') as HrZoneMethod
+      const method = (athleteProfile.hr_zone_method
+        ?? localStorage.getItem('tc_hr_zone_method')
+        ?? 'pct_max') as HrZoneMethod
       setHrZones(calculateHrZones({
         method,
         maxHr:              athleteProfile.max_hr,
@@ -688,6 +692,7 @@ export default function ActivitiesClient({
         aerobicThresholdHr: athleteProfile.aerobic_threshold_hr,
         thresholdHr:        athleteProfile.threshold_hr,
         birthYear:          athleteProfile.birth_year,
+        customZones:        athleteProfile.hr_zones_custom,
       }).zones)
     } catch {}
   }, [athleteProfile])
