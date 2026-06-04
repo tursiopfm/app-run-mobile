@@ -81,7 +81,10 @@ function SortableBlock({ id, isDraggingAny, label, desktopCols = 1, onToggleWidt
   onToggleWidth: () => void
   children: ReactNode
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    animateLayoutChanges: () => false,
+  })
   const [isPressed, setIsPressed] = useState(false)
   return (
     <div
