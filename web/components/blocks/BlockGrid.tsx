@@ -10,7 +10,6 @@ import {
 import {
   SortableContext, rectSortingStrategy, arrayMove, useSortable,
 } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 
 export type BlockDef = {
   id:     string
@@ -89,7 +88,7 @@ function SortableBlock({ id, isDraggingAny, label, desktopCols = 1, onToggleWidt
       ref={setNodeRef}
       className={`group/block mb-2 break-inside-avoid ${desktopCols === 2 ? 'md:[column-span:all]' : ''}`}
       style={{
-        transform:  CSS.Transform.toString(transform),
+        transform:  transform ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)` : undefined,
         transition: isDraggingAny ? transition : undefined,
         opacity:    isDragging ? 0 : 1,
         position:   'relative',
