@@ -11,7 +11,7 @@ import type { DailyMetrics } from '@/lib/analytics/fatigue'
 export function FitnessFatigue10dChart({ dailyMetrics }: { dailyMetrics: DailyMetrics[] }) {
   const L = useT().charge
   const data = dailyMetrics.slice(-10).map(m => ({
-    date: m.date.slice(5),
+    date: m.date.slice(8) + '/' + m.date.slice(5, 7),
     atl:  Math.round(m.atl),
     ctl:  Math.round(m.ctl),
     tsb:  Math.round(m.tsb),
