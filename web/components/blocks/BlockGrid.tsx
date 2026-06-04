@@ -79,7 +79,7 @@ function SortableBlock({ id, isDraggingAny, label, desktopCols = 1, children }: 
   return (
     <div
       ref={setNodeRef}
-      className={desktopCols === 2 ? 'md:col-span-2' : ''}
+      className={`mb-2 break-inside-avoid ${desktopCols === 2 ? 'md:[column-span:all]' : ''}`}
       style={{
         transform:  CSS.Transform.toString(transform),
         transition: isDraggingAny ? transition : undefined,
@@ -255,7 +255,7 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
         onDragCancel={handleDragCancel}
       >
         <SortableContext items={visibleOrder} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="md:columns-2 md:[column-gap:8px]">
             {visibleOrder.map(id => {
               const block = blocks.find(b => b.id === id)
               if (!block) return null
