@@ -88,11 +88,21 @@ export function ActivityHeartRateZones({
             <span className="w-28 text-xs shrink-0" style={{ color: zone.color }}>
               Z{zone.zone} {ZONE_NAMES_DICT[zone.zone - 1] ?? zone.name}
             </span>
-            <div className="flex-1 bg-gray-800 rounded-full h-2">
-              <div
-                className="h-2 rounded-full"
-                style={{ width: `${pct}%`, backgroundColor: zone.color }}
-              />
+            <div className="flex-1 relative">
+              {pct > 0 && (
+                <span
+                  className="absolute -top-4 text-[10px] text-gray-400"
+                  style={{ left: `${pct / 2}%`, transform: 'translateX(-50%)' }}
+                >
+                  {pct}%
+                </span>
+              )}
+              <div className="bg-gray-800 rounded-full h-2">
+                <div
+                  className="h-2 rounded-full"
+                  style={{ width: `${pct}%`, backgroundColor: zone.color }}
+                />
+              </div>
             </div>
             <span className="w-14 text-right text-xs text-gray-400 shrink-0">
               {fmtDurationSec(durations[i])}
