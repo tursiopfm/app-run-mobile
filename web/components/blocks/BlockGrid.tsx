@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useLayoutEffect, useRef, startTransition, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, startTransition, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useT } from '@/lib/i18n/I18nProvider'
 import { usePreferences } from '@/lib/preferences/PreferencesProvider'
@@ -93,7 +93,7 @@ function SortableBlock({ id, isDraggingAny, label, desktopCols = 1, onToggleWidt
   return (
     <div
       ref={setNodeRef}
-      className={`group/block mb-2 break-inside-avoid ${desktopCols === 2 ? 'md:[column-span:all]' : ''}`}
+      className={`group/block ${desktopCols === 2 ? 'md:col-span-2' : ''}`}
       style={{
         transform:  activeTransform,
         transition: isDraggingAny ? transition : undefined,
@@ -193,7 +193,6 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
   const [widths,   setWidths]   = useState<Record<string, 1 | 2>>(() => readStoredWidths(widthStorage))
   const [activeId, setActiveId] = useState<string | null>(null)
   const [showAdd,  setShowAdd]  = useState(false)
-  const gridRef = useRef<HTMLDivElement>(null)
 
   const orderStorageRef  = useRef(orderStorage)
   const hiddenStorageRef = useRef(hiddenStorage)
@@ -246,16 +245,6 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
 
   // Backup async cleanup pour les rares cas où le sync est zappé.
   useEffect(() => { if (activeId === null) cleanupDragStyles() }, [activeId])
-
-  // Force CSS columns reflow after layout changes — browsers don't always
-  // recalculate columns when React reorders existing DOM elements in place.
-  useLayoutEffect(() => {
-    const el = gridRef.current
-    if (!el) return
-    el.style.setProperty('columns', 'auto', 'important')
-    void el.offsetHeight
-    el.style.removeProperty('columns')
-  }, [order, widths])
 
   function handleDragStart(e: DragStartEvent) { setActiveId(e.active.id as string) }
   function handleDragEnd(e: DragEndEvent) {
@@ -313,7 +302,7 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
         onDragCancel={handleDragCancel}
       >
         <SortableContext items={visibleOrder} strategy={rectSortingStrategy}>
-          <div ref={gridRef} className="md:columns-2 md:[column-gap:8px]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:items-start">
             {visibleOrder.map(id => {
               const block = blocks.find(b => b.id === id)
               if (!block) return null
