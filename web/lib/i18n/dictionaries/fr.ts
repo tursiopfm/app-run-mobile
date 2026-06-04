@@ -1696,9 +1696,9 @@ export const fr: Dict = {
     intensityRule: {
       recuperation:     'aucun seuil supérieur atteint, Z1 dominant',
       footing:          'aucun seuil supérieur atteint, Z2 dominant',
-      endurance_active: 'Z3+Z4+Z5 ≥ 40 % du temps actif',
-      seuil:            'Z4+Z5 ≥ 20 % du temps actif (séance "qualité" au sens Seiler)',
-      vma:              'Z5 ≥ 15 % du temps actif (vraie séance VO₂max, intervals longs)',
+      endurance_active: 'Z3+Z4+Z5 ≥ 20 % du temps actif',
+      seuil:            'Z4+Z5 ≥ 15 % du temps actif (séance "qualité" au sens Seiler)',
+      vma:              'Z5 ≥ 10 % du temps actif (vraie séance VO₂max, intervals longs)',
     },
     rulePrefix:        'Règle : ',
     popupShortNote:    'Note sur les fractionnés courts',

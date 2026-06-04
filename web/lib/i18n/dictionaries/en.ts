@@ -613,9 +613,9 @@ export const en: Dict = {
     intensityRule: {
       recuperation:     'no higher threshold met, Z1 dominant',
       footing:          'no higher threshold met, Z2 dominant',
-      endurance_active: 'Z3+Z4+Z5 ≥ 40 % of active time',
-      seuil:            'Z4+Z5 ≥ 20 % of active time (Seiler "quality" session)',
-      vma:              'Z5 ≥ 15 % of active time (true VO₂max, long intervals)',
+      endurance_active: 'Z3+Z4+Z5 ≥ 20 % of active time',
+      seuil:            'Z4+Z5 ≥ 15 % of active time (Seiler "quality" session)',
+      vma:              'Z5 ≥ 10 % of active time (true VO₂max, long intervals)',
     },
     rulePrefix:        'Rule: ',
     popupShortNote:    'Note on short intervals',
