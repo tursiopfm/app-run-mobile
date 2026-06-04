@@ -34,7 +34,7 @@ export function BottomNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const items = isAdmin ? [...BASE_NAV, ADMIN_NAV] : BASE_NAV
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-trail-surface border-t border-trail-border pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-trail-surface border-t border-trail-border pb-safe md:hidden">
       <div className="flex items-stretch max-w-lg mx-auto">
         {items.map(({ href, icon: Icon, label }) => {
           const active = pathname.startsWith(href)

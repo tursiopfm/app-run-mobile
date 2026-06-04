@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { BottomNav } from './BottomNav'
+import { DesktopSidebar } from './DesktopSidebar'
 import { PullToRefresh } from './PullToRefresh'
 import { SyncOnFocus } from './SyncOnFocus'
 import { MoreVertical } from 'lucide-react'
@@ -32,35 +33,38 @@ export async function AppShell({ children }: { children: ReactNode }) {
   const settingsAria = getServerT().settings.title
 
   return (
-    <div className="flex flex-col min-h-screen bg-trail-bg">
-      <header
-        className="sticky top-0 z-40 bg-trail-header border-b border-trail-border px-4 pb-3"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
-      >
-        <div className="flex items-center justify-between max-w-lg mx-auto">
-          <span className="text-base font-bold tracking-widest uppercase">
-            <span className="text-trail-primary">Trail</span>
-            <span className="text-trail-text"> Cockpit</span>
-          </span>
-          <div className="flex items-center gap-2">
-            {displayName && (
-              <span className="text-sm font-semibold text-trail-primary">{displayName}</span>
-            )}
-            <Link
-              href="/settings"
-              className="text-trail-muted hover:text-trail-text p-1 -mr-1"
-              aria-label={settingsAria}
-            >
-              <MoreVertical size={18} />
-            </Link>
+    <div className="flex min-h-screen bg-trail-bg">
+      <DesktopSidebar isAdmin={isAdmin} displayName={displayName} />
+      <div className="flex-1 flex flex-col min-h-screen min-w-0">
+        <header
+          className="sticky top-0 z-40 bg-trail-header border-b border-trail-border px-4 pb-3 md:hidden"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
+        >
+          <div className="flex items-center justify-between max-w-lg mx-auto">
+            <span className="text-base font-bold tracking-widest uppercase">
+              <span className="text-trail-primary">Trail</span>
+              <span className="text-trail-text"> Cockpit</span>
+            </span>
+            <div className="flex items-center gap-2">
+              {displayName && (
+                <span className="text-sm font-semibold text-trail-primary">{displayName}</span>
+              )}
+              <Link
+                href="/settings"
+                className="text-trail-muted hover:text-trail-text p-1 -mr-1"
+                aria-label={settingsAria}
+              >
+                <MoreVertical size={18} />
+              </Link>
+            </div>
           </div>
-        </div>
-      </header>
-      <PullToRefresh>
-        <SyncOnFocus />
-        {children}
-      </PullToRefresh>
-      <BottomNav isAdmin={isAdmin} />
+        </header>
+        <PullToRefresh>
+          <SyncOnFocus />
+          {children}
+        </PullToRefresh>
+        <BottomNav isAdmin={isAdmin} />
+      </div>
     </div>
   )
 }

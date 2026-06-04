@@ -84,12 +84,14 @@ export function ChargePageClient({ data }: Props) {
       id,
       label:  blockLabel(id),
       emoji:  '📊',
+      desktopCols: 2 as const,
       render: () => <WeeklyLoadChart payload={payload} />,
     }
     if (id === 'fitness-fatigue') return {
       id,
       label:  blockLabel(id),
       emoji:  '📈',
+      desktopCols: 2 as const,
       render: () => <FitnessFatigueChart payload={payload} />,
     }
     if (id === 'sport-distribution') return {
@@ -114,12 +116,14 @@ export function ChargePageClient({ data }: Props) {
       id,
       label:  blockLabel(id),
       emoji:  '🏅',
+      desktopCols: 2 as const,
       render: () => <TopLoadActivitiesCard payload={payload} />,
     }
     if (id === 'heatmap-28d') return {
       id,
       label:  blockLabel(id),
       emoji:  '🗓️',
+      desktopCols: 2 as const,
       render: () => <LoadHeatmap28d payload={payload} />,
     }
     if (id === 'ramp-rate') return {
@@ -145,7 +149,7 @@ export function ChargePageClient({ data }: Props) {
 
   if (payload.historyDays === 0) {
     return (
-      <div className="px-3 py-3 max-w-lg mx-auto">
+      <div className="px-3 py-3 max-w-lg mx-auto md:max-w-none md:px-6">
         <SportSegmentedTabs sport={sport} onChange={handleSportChange} />
         <div className="rounded-[12px] bg-trail-card border border-trail-border p-4 text-center text-trail-muted text-[13px]">
           {chargeLabels.noActivitiesForSport(sport === 'all' ? chargeLabels.allSport : sport)}
@@ -155,7 +159,7 @@ export function ChargePageClient({ data }: Props) {
   }
 
   return (
-    <div className="px-3 py-3 max-w-lg mx-auto">
+    <div className="px-3 py-3 max-w-lg mx-auto md:max-w-none md:px-6">
       <SportSegmentedTabs sport={sport} onChange={handleSportChange} />
       <BlockGrid storageKey="charge" defaultOrder={DEFAULT_ORDER} blocks={blocks} />
     </div>

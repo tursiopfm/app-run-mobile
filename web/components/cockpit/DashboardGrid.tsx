@@ -36,17 +36,17 @@ function BlockWithHide({ children }: { children: (onHide: () => void) => React.R
 export function DashboardGrid({ sportOverviews, weekSessions, latestPerSport, weekActivities, athleteProfile }: Props) {
   const L = useT().cockpit.blockLabel
   const blocks: BlockDef[] = [
-    { id: 'morningReport', label: L.morningReport, emoji: '📋', render: () => <MorningReportTile /> },
+    { id: 'morningReport', label: L.morningReport, emoji: '📋', desktopCols: 2, render: () => <MorningReportTile /> },
     { id: 'activities',     label: L.activities,     emoji: '🏅', render: () => <BlockWithHide>{(onHide) => <ActivitiesBlock      sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
     { id: 'lastActivity',   label: L.lastActivity,   emoji: '🥇', render: () => <BlockWithHide>{(onHide) => <LastActivityBlock    latestPerSport={latestPerSport} athleteProfile={athleteProfile} onHide={onHide} />}</BlockWithHide> },
     { id: 'goals',          label: L.goals,          emoji: '🎯', render: () => <BlockWithHide>{(onHide) => <GoalsBlock           sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
     { id: 'weekly',         label: L.weekly,         emoji: '📊', render: () => <BlockWithHide>{(onHide) => <WeeklyStatsBlock     sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
     { id: 'charge',         label: L.charge,         emoji: '⚡', render: () => <BlockWithHide>{(onHide) => <ChargeBlock          sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
-    { id: 'history',        label: L.history,        emoji: '📅', render: () => <BlockWithHide>{(onHide) => <HistoryBlock         sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
-    { id: 'cumul',          label: L.cumul,          emoji: '📈', render: () => <BlockWithHide>{(onHide) => <CumulBlock           sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
+    { id: 'history',        label: L.history,        emoji: '📅', desktopCols: 2, render: () => <BlockWithHide>{(onHide) => <HistoryBlock         sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
+    { id: 'cumul',          label: L.cumul,          emoji: '📈', desktopCols: 2, render: () => <BlockWithHide>{(onHide) => <CumulBlock           sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
     { id: 'intensity',      label: L.intensity,      emoji: '🔥', render: () => <BlockWithHide>{(onHide) => <IntensityBlock       sportOverviews={sportOverviews} onHide={onHide} />}</BlockWithHide> },
-    { id: 'week',           label: L.week,           emoji: '🗓️', render: () => <WeekBlock sportOverviews={sportOverviews} allSessions={weekSessions} /> },
-    { id: 'weekActivities', label: L.weekActivities, emoji: '📋', render: () => <BlockWithHide>{(onHide) => <WeekActivitiesBlock  activities={weekActivities} onHide={onHide} />}</BlockWithHide> },
+    { id: 'week',           label: L.week,           emoji: '🗓️', desktopCols: 2, render: () => <WeekBlock sportOverviews={sportOverviews} allSessions={weekSessions} /> },
+    { id: 'weekActivities', label: L.weekActivities, emoji: '📋', desktopCols: 2, render: () => <BlockWithHide>{(onHide) => <WeekActivitiesBlock  activities={weekActivities} onHide={onHide} />}</BlockWithHide> },
   ]
   return <BlockGrid storageKey="cockpit" defaultOrder={DEFAULT_ORDER} defaultHidden={DEFAULT_HIDDEN} blocks={blocks} />
 }

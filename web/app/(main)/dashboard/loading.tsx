@@ -11,7 +11,7 @@ function SkeletonCard({ rows = 1 }: { rows?: number }) {
 
 export default function Loading() {
   return (
-    <div className="px-2 py-2 space-y-2 max-w-lg mx-auto">
+    <div className="px-2 py-2 space-y-2 max-w-lg mx-auto md:max-w-none md:px-6">
       <SkeletonCard rows={2} />
       <SkeletonCard rows={2} />
       <SkeletonCard rows={3} />

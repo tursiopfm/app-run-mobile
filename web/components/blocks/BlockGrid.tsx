@@ -8,7 +8,7 @@ import {
   type DragEndEvent, type DragStartEvent, DragOverlay,
 } from '@dnd-kit/core'
 import {
-  SortableContext, verticalListSortingStrategy, arrayMove, useSortable,
+  SortableContext, rectSortingStrategy, arrayMove, useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
@@ -17,6 +17,7 @@ export type BlockDef = {
   label:  string
   emoji:  string
   render: () => ReactNode
+  desktopCols?: 1 | 2
 }
 
 type Props = {
@@ -62,10 +63,11 @@ function readStoredHidden(storageKey: string, defaultHidden: string[]): string[]
   }
 }
 
-function SortableBlock({ id, isDraggingAny, label, children }: {
+function SortableBlock({ id, isDraggingAny, label, desktopCols = 1, children }: {
   id: string
   isDraggingAny: boolean
   label: string
+  desktopCols?: 1 | 2
   children: ReactNode
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
@@ -77,6 +79,7 @@ function SortableBlock({ id, isDraggingAny, label, children }: {
   return (
     <div
       ref={setNodeRef}
+      className={desktopCols === 2 ? 'md:col-span-2' : ''}
       style={{
         transform:  CSS.Transform.toString(transform),
         transition: isDraggingAny ? transition : undefined,
@@ -251,13 +254,13 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
-        <SortableContext items={visibleOrder} strategy={verticalListSortingStrategy}>
-          <div className="space-y-2">
+        <SortableContext items={visibleOrder} strategy={rectSortingStrategy}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {visibleOrder.map(id => {
               const block = blocks.find(b => b.id === id)
               if (!block) return null
               return (
-                <SortableBlock key={id} id={id} label={block.label} isDraggingAny={activeId !== null}>
+                <SortableBlock key={id} id={id} label={block.label} desktopCols={block.desktopCols} isDraggingAny={activeId !== null}>
                   <BlockContext.Provider value={{ hideSelf: () => hide(id) }}>
                     {block.render()}
                   </BlockContext.Provider>

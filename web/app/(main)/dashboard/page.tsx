@@ -87,7 +87,7 @@ export default async function DashboardPage() {
   const weekActivities = (weekRows ?? []) as ActivityRow[]
 
   return (
-    <div className="px-2 py-2 max-w-lg mx-auto">
+    <div className="px-2 py-2 max-w-lg mx-auto md:max-w-none md:px-6">
       <MorningReportAutoOpen createdAt={user.created_at} />
       <DashboardGrid
         sportOverviews={sportOverviews}
