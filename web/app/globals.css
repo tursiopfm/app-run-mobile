@@ -29,6 +29,25 @@
   --ind-border: #232826;
   --ind-label:  #D1D5DB;
   --ind-shadow: 0 2px 4px rgba(0,0,0,0.3);
+
+  /* ── Brand foundation « Deep Mission » (nouveau DS, additif) ─────────
+     Encre neutre multi-sport. Découple le branding (--primary) des données
+     (--data-*). Ne remplace PAS les --trail-* tant que les écrans métier ne
+     sont pas migrés. Voir /design-system. */
+  --ink-900: #0B0F14;   /* fond app (couche la plus profonde) */
+  --ink-800: #121821;   /* surface */
+  --ink-700: #18202B;   /* carte */
+  --ink-600: #25303E;   /* bordure / séparateur */
+  --ink-500: #34414F;   /* bordure accentuée / hover */
+  /* Branding — jamais piloté par la logique métier */
+  --primary:      #FF6B35;
+  --primary-dim:  #CC5528;
+  --primary-glow: rgba(255, 107, 53, 0.18);
+  /* Données — sémantique sport/charge, découplée de la marque */
+  --data-charge: #FF6B35;
+  --data-bike:   #38BDF8;
+  --data-swim:   #4ADE80;
+  --data-run:    #F87171;
 }
 
 /* ── Palette Claire ──────────────────────────────────── */
@@ -58,6 +77,20 @@
   --ind-border: #D6E1DD;
   --ind-label:  #4B5563;
   --ind-shadow: 0 1px 2px rgba(15,30,28,0.08);
+
+  /* ── Brand foundation « Deep Mission » — variante claire ───────────── */
+  --ink-900: #F4F7F6;
+  --ink-800: #FFFFFF;
+  --ink-700: #FFFFFF;
+  --ink-600: #D6E1DD;
+  --ink-500: #BBCBC4;
+  --primary:      #E6612B;
+  --primary-dim:  #CC5226;
+  --primary-glow: rgba(230, 97, 43, 0.16);
+  --data-charge: #E6612B;
+  --data-bike:   #1D8FC6;
+  --data-swim:   #138A52;
+  --data-run:    #D94F45;
 }
 
 html, body {
@@ -118,4 +151,10 @@ html, body {
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Brand foundation — montée du bottom-sheet (composant Sheet du DS) */
+@keyframes sheetUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

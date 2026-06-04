@@ -1,6 +1,21 @@
 import type { Metadata, Viewport } from 'next'
+import { Space_Grotesk, Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
+
+// Brand foundation — polices opt-in via les variables CSS --font-*.
+// Elles N'écrasent PAS la font par défaut : les écrans existants gardent leur
+// rendu, seuls les composants du nouveau DS consomment font-display / font-body.
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-space-grotesk',
+})
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+})
 import { InstallPrompt } from '@/components/ui/InstallPrompt'
 import { ServiceWorkerRegistrar } from '@/components/ui/ServiceWorkerRegistrar'
 import { I18nProvider } from '@/lib/i18n/I18nProvider'
@@ -37,7 +52,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const lang = getServerLang()
   return (
-    <html lang={lang} suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning className={`${spaceGrotesk.variable} ${inter.variable}`}>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
       </head>

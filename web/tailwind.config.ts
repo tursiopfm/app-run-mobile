@@ -32,6 +32,30 @@ const config: Config = {
           'progress-volume-bg': 'var(--trail-progress-volume-bg)',
           'progress-dplus-bg':  'var(--trail-progress-dplus-bg)',
         },
+        // ── Brand foundation « Deep Mission » (nouveau DS) ──────────────
+        ink: {
+          900: 'var(--ink-900)',
+          800: 'var(--ink-800)',
+          700: 'var(--ink-700)',
+          600: 'var(--ink-600)',
+          500: 'var(--ink-500)',
+        },
+        primary: {
+          DEFAULT: 'var(--primary)',
+          dim:     'var(--primary-dim)',
+          glow:    'var(--primary-glow)',
+        },
+        data: {
+          charge: 'var(--data-charge)',
+          bike:   'var(--data-bike)',
+          swim:   'var(--data-swim)',
+          run:    'var(--data-run)',
+        },
+      },
+      // Polices opt-in (n'override PAS `sans` → écrans existants inchangés)
+      fontFamily: {
+        display: ['var(--font-space-grotesk)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        body:    ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         '10':  ['10px', { lineHeight: '1.2' }],
