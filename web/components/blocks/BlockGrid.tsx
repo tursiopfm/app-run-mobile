@@ -74,32 +74,71 @@ function readStoredWidths(storageKey: string): Record<string, 1 | 2> {
   }
 }
 
-function SortableBlock({ id, isDraggingAny, label, desktopCols = 1, onToggleWidth, children }: {
+// Détection desktop via matchMedia (md = 768px). Init à false pour que le
+// premier render client == render serveur (mobile) → pas de mismatch
+// d'hydratation. L'effect bascule ensuite vers la vraie valeur.
+function useIsDesktop(): boolean {
+  const [isDesktop, setIsDesktop] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const update = () => setIsDesktop(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+  return isDesktop
+}
+
+// Construit les rangées du layout desktop. Un bloc pleine largeur coupe la
+// maçonnerie et occupe sa propre rangée ; les blocs demi-largeur consécutifs
+// sont répartis en alternance gauche/droite pour former deux colonnes
+// indépendantes (chacune s'empile au plus serré = effet masonry sans trou).
+type LayoutRow =
+  | { kind: 'full'; id: string }
+  | { kind: 'split'; left: string[]; right: string[] }
+
+function buildRows(ids: string[], isFull: (id: string) => boolean): LayoutRow[] {
+  const rows: LayoutRow[] = []
+  let buffer: string[] = []
+  const flush = () => {
+    if (buffer.length === 0) return
+    const left: string[] = []
+    const right: string[] = []
+    buffer.forEach((id, i) => (i % 2 === 0 ? left : right).push(id))
+    rows.push({ kind: 'split', left, right })
+    buffer = []
+  }
+  for (const id of ids) {
+    if (isFull(id)) { flush(); rows.push({ kind: 'full', id }) }
+    else buffer.push(id)
+  }
+  flush()
+  return rows
+}
+
+function SortableBlock({ id, label, isFull, onToggleWidth, children }: {
   id: string
-  isDraggingAny: boolean
   label: string
-  desktopCols?: 1 | 2
+  isFull: boolean
   onToggleWidth: () => void
   children: ReactNode
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  // Pas de transform dnd-kit appliqué : la largeur vient à 100% du conteneur
+  // parent (colonne flex-1 ou rangée pleine largeur) donc elle est garantie et
+  // ne peut pas dériver. Le feedback de drag passe par le DragOverlay ; au drop
+  // le layout se recompose proprement. animateLayoutChanges=false évite toute
+  // animation de réagencement résiduelle.
+  const { attributes, listeners, setNodeRef, isDragging } = useSortable({
     id,
     animateLayoutChanges: () => false,
   })
-  const activeTransform = isDraggingAny && transform
-    ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)`
-    : undefined
+  // Feedback visuel "attrapé" : scale léger sur le contenu dès le pointerdown.
   const [isPressed, setIsPressed] = useState(false)
   return (
     <div
       ref={setNodeRef}
-      className={`group/block ${desktopCols === 2 ? 'md:col-span-2' : ''}`}
-      style={{
-        transform:  activeTransform,
-        transition: isDraggingAny ? transition : undefined,
-        opacity:    isDragging ? 0 : 1,
-        position:   'relative',
-      }}
+      className="group/block relative"
+      style={{ opacity: isDragging ? 0 : 1 }}
     >
       <div className="absolute top-0 inset-x-0 z-10 flex justify-center items-center h-5 pointer-events-none">
         <div
@@ -117,8 +156,8 @@ function SortableBlock({ id, isDraggingAny, label, desktopCols = 1, onToggleWidt
       </div>
       <button
         onClick={onToggleWidth}
-        title={desktopCols === 2 ? 'Réduire' : 'Déployer'}
-        aria-label={desktopCols === 2 ? 'Réduire le bloc' : 'Élargir le bloc'}
+        title={isFull ? 'Réduire' : 'Déployer'}
+        aria-label={isFull ? 'Réduire le bloc' : 'Élargir le bloc'}
         className="hidden md:flex absolute bottom-1 right-1 z-10 w-5 h-5 items-center justify-center rounded-sm opacity-40 group-hover/block:opacity-80 hover:!opacity-100 transition-opacity cursor-pointer"
       >
         <svg viewBox="0 0 10 10" className="w-3 h-3 text-trail-muted">
@@ -184,6 +223,7 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
   const t = useT()
   const resolvedAddLabel = addLabel ?? t.cockpit.addBlock
   const { notifyChange, onHydrated } = usePreferences()
+  const isDesktop = useIsDesktop()
   const orderStorage  = `${storageKey}_block_order`
   const hiddenStorage = `${storageKey}_hidden_blocks`
   const widthStorage  = `${storageKey}_block_widths`
@@ -291,6 +331,29 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
   const hiddenBlocks = blocks.filter(b => hidden.includes(b.id))
   const activeBlock  = blocks.find(b => b.id === activeId)
 
+  const isFullWidth = (id: string) => {
+    const block = blocks.find(b => b.id === id)
+    return (widths[id] ?? block?.desktopCols ?? 1) === 2
+  }
+
+  const renderBlock = (id: string) => {
+    const block = blocks.find(b => b.id === id)
+    if (!block) return null
+    return (
+      <SortableBlock
+        key={id}
+        id={id}
+        label={block.label}
+        isFull={isFullWidth(id)}
+        onToggleWidth={() => toggleWidth(id, block.desktopCols ?? 1)}
+      >
+        <BlockContext.Provider value={{ hideSelf: () => hide(id) }}>
+          {block.render()}
+        </BlockContext.Provider>
+      </SortableBlock>
+    )
+  }
+
   return (
     <div suppressHydrationWarning>
       <DndContext
@@ -302,27 +365,28 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
         onDragCancel={handleDragCancel}
       >
         <SortableContext items={visibleOrder} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:items-start">
-            {visibleOrder.map(id => {
-              const block = blocks.find(b => b.id === id)
-              if (!block) return null
-              const effectiveCols = widths[id] ?? block.desktopCols ?? 1
-              return (
-                <SortableBlock
-                  key={id}
-                  id={id}
-                  label={block.label}
-                  desktopCols={effectiveCols as 1 | 2}
-                  isDraggingAny={activeId !== null}
-                  onToggleWidth={() => toggleWidth(id, block.desktopCols ?? 1)}
-                >
-                  <BlockContext.Provider value={{ hideSelf: () => hide(id) }}>
-                    {block.render()}
-                  </BlockContext.Provider>
-                </SortableBlock>
-              )
-            })}
-          </div>
+          {isDesktop ? (
+            // Desktop : maçonnerie en colonnes flex explicites. Chaque colonne
+            // fait flex-1 (= 50% exactement, largeur garantie quoi qu'il arrive)
+            // et empile ses blocs indépendamment → pas de trous verticaux.
+            <div className="space-y-2">
+              {buildRows(visibleOrder, isFullWidth).map((row, i) =>
+                row.kind === 'full' ? (
+                  renderBlock(row.id)
+                ) : (
+                  <div key={`split-${i}`} className="flex gap-2 items-start">
+                    <div className="flex-1 min-w-0 space-y-2">{row.left.map(renderBlock)}</div>
+                    <div className="flex-1 min-w-0 space-y-2">{row.right.map(renderBlock)}</div>
+                  </div>
+                ),
+              )}
+            </div>
+          ) : (
+            // Mobile : pile unique pleine largeur, dans l'ordre.
+            <div className="space-y-2">
+              {visibleOrder.map(renderBlock)}
+            </div>
+          )}
         </SortableContext>
         {/* dropAnimation=null : retire l'overlay immédiatement au drop pour éviter
             que son portail reste 200ms dans le DOM et intercepte des taps. */}
