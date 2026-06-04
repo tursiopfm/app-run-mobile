@@ -1,5 +1,7 @@
 # SP-2 instantané sur les nouvelles activités
 
+> **Status: Implémenté** · 2026-06-04 · Code: `web/lib/providers/strava/trigger-backfill.ts`, `web/lib/providers/strava/streams-backfill.ts`, `web/app/api/strava/webhook/route.ts`
+
 **Date :** 2026-06-04
 **Scope :** Web app (`web/`) — webhook Strava, backfill streams
 **Fonctionnalités :** appliquer le modèle CES SP-2 à une nouvelle activité dès sa synchronisation Strava (quelques secondes), au lieu d'attendre le prochain run du cron backfill (≤ 10 min, parfois plus).
@@ -69,7 +71,8 @@ Les deux empruntent exactement le même code (le cron). Aucune logique dupliqué
 ## Tests
 
 - `streams-backfill` : le test existant + assertion que `recalculateUserEffortScores`/`recalculateUserFatigue` (mockés) sont appelés une fois par user ayant reçu un stream ; et pas appelés si aucun stream stocké.
-- Webhook : assertion que sur un event `create` réussi, un `fetch` vers `/api/cron/strava-streams-backfill` est déclenché (global.fetch mocké) ; et que si ce `fetch` rejette, le webhook répond quand même 200.
+- `triggerStreamsBackfill` (helper) : test unitaire — `fetch` appelé avec la bonne URL + bearer + `keepalive` ; no-op sans `CRON_SECRET` ; ne propage jamais (le webhook ne peut pas casser).
+- Webhook : pas de test unitaire dédié (le route edge a trop de dépendances pour un test proportionné) ; le déclencheur est un appel `void` garde-fou (`create` + `upserted?.id`) vers le helper déjà testé → vérifié par inspection + tsc/lint + contrôle manuel post-déploiement.
 
 ---
 
