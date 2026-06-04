@@ -513,7 +513,7 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 max-w-lg md:max-w-none mx-auto w-full space-y-3">
+      <div className="flex-1 overflow-y-auto p-4 max-w-lg md:max-w-4xl mx-auto w-full space-y-3">
         <div
           className="rounded-[12px] border p-4 space-y-4"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
@@ -644,7 +644,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 max-w-lg md:max-w-none mx-auto w-full space-y-2">
+      <div className="flex-1 overflow-y-auto p-3 max-w-lg md:max-w-4xl mx-auto w-full space-y-2">
         <div
           className="rounded-[12px] border p-3 space-y-3"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
@@ -1205,7 +1205,7 @@ export default function CoursesClient({
   ]
 
   return (
-    <div className="px-3 py-3 space-y-3 max-w-lg md:max-w-none mx-auto">
+    <div className="px-3 py-3 space-y-3 max-w-lg md:max-w-4xl mx-auto">
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[6px]">
         <div className="flex gap-2">
           <SegmentButton label={L.raceTabRaces}    selected={view === 'Races'}   onClick={() => setView('Races')} />
