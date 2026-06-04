@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup 1 — Sidebar permanente</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e5e5e5; min-height: 100vh; }
+
+  /* Layout */
+  .app { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 240px;
+    background: #141414;
+    border-right: 1px solid #262626;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 40;
+  }
+  .sidebar-header {
+    padding: 20px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #262626;
+  }
+  .logo {
+    width: 36px; height: 36px;
+    background: #FF6B35;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 18px; color: white;
+  }
+  .app-name { font-weight: 600; font-size: 16px; color: #FF6B35; }
+
+  .nav-section { padding: 12px 8px; flex: 1; }
+  .nav-section-title { font-size: 11px; text-transform: uppercase; color: #737373; padding: 8px 12px 4px; letter-spacing: 0.05em; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #a3a3a3;
+    transition: all 0.15s;
+  }
+  .nav-item:hover { background: #1f1f1f; color: #e5e5e5; }
+  .nav-item.active { background: rgba(255, 107, 53, 0.12); color: #FF6B35; }
+  .nav-item .icon { width: 20px; text-align: center; font-size: 16px; }
+
+  .sidebar-footer {
+    padding: 12px 8px;
+    border-top: 1px solid #262626;
+  }
+  .user-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+  }
+  .avatar {
+    width: 32px; height: 32px;
+    background: #FF6B35;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; color: white;
+  }
+  .user-name { font-size: 13px; color: #d4d4d4; }
+  .user-sub { font-size: 11px; color: #737373; }
+
+  /* Main content */
+  .main { margin-left: 240px; flex: 1; padding: 24px 32px; }
+
+  .page-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 24px;
+  }
+  .page-title { font-size: 24px; font-weight: 700; }
+  .sync-badge {
+    font-size: 12px; color: #22c55e; background: rgba(34, 197, 94, 0.1);
+    padding: 4px 12px; border-radius: 20px;
+  }
+
+  /* Dashboard grid */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .card {
+    background: #141414;
+    border: 1px solid #262626;
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px;
+  }
+  .card-title { font-size: 13px; color: #a3a3a3; text-transform: uppercase; letter-spacing: 0.03em; }
+  .card-value { font-size: 28px; font-weight: 700; color: #FF6B35; }
+  .card-unit { font-size: 14px; color: #737373; margin-left: 4px; }
+  .card-sub { font-size: 12px; color: #737373; margin-top: 4px; }
+  .card.wide { grid-column: span 2; }
+  .card.full { grid-column: span 3; }
+
+  /* Mini chart placeholder */
+  .mini-chart {
+    height: 60px;
+    background: linear-gradient(180deg, rgba(255,107,53,0.08) 0%, transparent 100%);
+    border-radius: 8px;
+    margin-top: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .mini-chart-line {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 40px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 40'%3E%3Cpath d='M0,35 C30,30 60,15 90,20 C120,25 150,10 180,15 C210,20 240,5 270,12 L300,8' fill='none' stroke='%23FF6B35' stroke-width='2'/%3E%3C/svg%3E") no-repeat;
+    background-size: 100% 100%;
+  }
+
+  /* Charge bars */
+  .charge-bars { display: flex; gap: 3px; align-items: flex-end; height: 50px; margin-top: 12px; }
+  .charge-bar {
+    flex: 1;
+    border-radius: 2px 2px 0 0;
+    min-height: 4px;
+  }
+  .charge-bar.low { background: #22c55e; }
+  .charge-bar.med { background: #FF6B35; }
+  .charge-bar.high { background: #ef4444; }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 14px; font-weight: 600;
+    margin-top: 8px;
+  }
+  .status-badge.optimal { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .status-badge.fatigue { background: rgba(255,107,53,0.15); color: #FF6B35; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+  /* Activity list */
+  .activity-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #1f1f1f;
+  }
+  .activity-icon {
+    width: 36px; height: 36px;
+    background: rgba(255,107,53,0.1);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .activity-info { flex: 1; }
+  .activity-name { font-size: 14px; font-weight: 500; }
+  .activity-meta { font-size: 12px; color: #737373; }
+  .activity-ces { font-size: 16px; font-weight: 700; color: #FF6B35; }
+
+  /* Responsive: revert to mobile on small screens */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 16px; }
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .card.wide, .card.full { grid-column: span 1; }
+    .mobile-nav { display: flex !important; }
+  }
+  @media (min-width: 769px) and (max-width: 1100px) {
+    .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+    .card.full { grid-column: span 2; }
+  }
+
+  /* Mobile bottom nav (hidden on desktop) */
+  .mobile-nav {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #141414; border-top: 1px solid #262626;
+    justify-content: space-around; padding: 8px 0 20px;
+    z-index: 50;
+  }
+  .mobile-nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; color: #737373; }
+  .mobile-nav-item.active { color: #FF6B35; }
+
+  /* Label */
+  .label-tag { font-size: 11px; background: #262626; color: #a3a3a3; padding: 2px 8px; border-radius: 4px; }
+
+  .mockup-banner {
+    position: fixed; top: 0; left: 240px; right: 0;
+    background: #FF6B35; color: white; text-align: center;
+    padding: 6px; font-size: 13px; font-weight: 600; z-index: 100;
+  }
+  @media (max-width: 768px) { .mockup-banner { left: 0; } }
+</style>
+</head>
+<body>
+<div class="mockup-banner">MOCKUP 1 — Sidebar permanente + grille 3 colonnes</div>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">T</div>
+      <div class="app-name">TrailCockpit</div>
+    </div>
+    <nav class="nav-section">
+      <div class="nav-section-title">Navigation</div>
+      <div class="nav-item active">
+        <span class="icon">&#9638;</span> Cockpit
+      </div>
+      <div class="nav-item">
+        <span class="icon">&#9783;</span> Charge
+      </div>
+      <div class="nav-item">
+        <span class="icon">&#128197;</span> Plan
+      </div>
+      <div class="nav-item">
+        <span class="icon">&#128099;</span> Activites
+      </div>
+      <div class="nav-item">
+        <span class="icon">&#127942;</span> Courses
+      </div>
+      <div class="nav-section-title" style="margin-top:16px;">Outils</div>
+      <div class="nav-item">
+        <span class="icon">&#9881;</span> Reglages
+      </div>
+      <div class="nav-item">
+        <span class="icon">&#128172;</span> Coach IA
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">F</div>
+        <div>
+          <div class="user-name">Franck</div>
+          <div class="user-sub">Strava connecte</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main" style="padding-top: 48px;">
+    <div class="page-header">
+      <h1 class="page-title">Cockpit</h1>
+      <div class="sync-badge">&#10003; Synchro OK</div>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Row 1: 3 KPI cards -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">CES du jour</span>
+          <span class="label-tag">Trail</span>
+        </div>
+        <div class="card-value">127<span class="card-unit">pts</span></div>
+        <div class="card-sub">+12% vs semaine derniere</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Fitness (CTL)</span>
+        </div>
+        <div class="card-value">68</div>
+        <div class="mini-chart"><div class="mini-chart-line"></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Fraicheur (TSB)</span>
+        </div>
+        <div class="card-value" style="color: #22c55e;">+14</div>
+        <div class="status-badge optimal"><span class="status-dot"></span> Optimal</div>
+      </div>
+
+      <!-- Row 2: wide charge + fatigue -->
+      <div class="card wide">
+        <div class="card-header">
+          <span class="card-title">Charge 7 jours</span>
+          <span class="label-tag">ATL</span>
+        </div>
+        <div class="card-value">342<span class="card-unit">pts</span></div>
+        <div class="charge-bars">
+          <div class="charge-bar low" style="height:30%"></div>
+          <div class="charge-bar low" style="height:45%"></div>
+          <div class="charge-bar med" style="height:70%"></div>
+          <div class="charge-bar high" style="height:90%"></div>
+          <div class="charge-bar med" style="height:55%"></div>
+          <div class="charge-bar low" style="height:20%"></div>
+          <div class="charge-bar low" style="height:10%"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Fatigue</span>
+        </div>
+        <div class="card-value">54</div>
+        <div class="status-badge fatigue"><span class="status-dot"></span> Modere</div>
+      </div>
+
+      <!-- Row 3: full-width activities -->
+      <div class="card full">
+        <div class="card-header">
+          <span class="card-title">Activites recentes</span>
+          <span style="font-size:13px; color:#FF6B35; cursor:pointer;">Voir tout &rarr;</span>
+        </div>
+        <div class="activity-row">
+          <div class="activity-icon">&#127939;</div>
+          <div class="activity-info">
+            <div class="activity-name">Trail du Lac Blanc</div>
+            <div class="activity-meta">Aujourd'hui &middot; 18.4 km &middot; 1h52</div>
+          </div>
+          <div class="activity-ces">127</div>
+        </div>
+        <div class="activity-row">
+          <div class="activity-icon">&#127939;</div>
+          <div class="activity-info">
+            <div class="activity-name">Fractionne VMA</div>
+            <div class="activity-meta">Hier &middot; 8.2 km &middot; 42min</div>
+          </div>
+          <div class="activity-ces">89</div>
+        </div>
+        <div class="activity-row" style="border:none;">
+          <div class="activity-icon">&#128692;</div>
+          <div class="activity-info">
+            <div class="activity-name">Velo recup</div>
+            <div class="activity-meta">2 juin &middot; 32 km &middot; 1h15</div>
+          </div>
+          <div class="activity-ces">42</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Mobile bottom nav -->
+  <div class="mobile-nav">
+    <div class="mobile-nav-item active">&#9638;<br>Cockpit</div>
+    <div class="mobile-nav-item">&#9783;<br>Charge</div>
+    <div class="mobile-nav-item">&#128197;<br>Plan</div>
+    <div class="mobile-nav-item">&#128099;<br>Activites</div>
+    <div class="mobile-nav-item">&#127942;<br>Courses</div>
+  </div>
+</div>
+</body>
+</html>
