@@ -69,7 +69,7 @@ export default async function DashboardPage() {
       .order('start_time', { ascending: false }),
     supabase
       .from('profiles')
-      .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year, onboarding_skipped')
+      .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year, onboarding_skipped, hr_zone_method, hr_zones_custom')
       .eq('id', user.id)
       .maybeSingle(),
     supabase
