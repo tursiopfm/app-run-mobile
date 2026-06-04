@@ -134,7 +134,7 @@ export default async function SettingsPage({
   }
 
   return (
-    <div className="px-3 py-3 pb-10 space-y-4 max-w-lg mx-auto">
+    <div className="px-3 py-3 pb-10 space-y-4 max-w-lg md:max-w-3xl mx-auto">
 
       {/* ── Page hero ── */}
       <div className="px-1 pt-[2px]">
