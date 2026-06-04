@@ -11,6 +11,8 @@ type AthleteHrProfile = {
   aerobic_threshold_hr?: number | null
   threshold_hr?:         number | null
   birth_year?:           number | null
+  hr_zone_method?:       string | null
+  hr_zones_custom?:      { zone: number; min: number | null; max: number | null }[] | null
 }
 
 // ── Composant ─────────────────────────────────────────────────────────────────
@@ -29,12 +31,18 @@ export function ActivityHeartRateZones({
   const t = useT()
   const L = t.activities
   const ZONE_NAMES_DICT = [t.hrZones.z1Name, t.hrZones.z2Name, t.hrZones.z3Name, t.hrZones.z4Name, t.hrZones.z5Name]
-  const [method, setMethod] = useState<HrZoneMethod>('pct_max')
+  const [method, setMethod] = useState<HrZoneMethod>(
+    (athleteProfile?.hr_zone_method as HrZoneMethod) ?? 'pct_max'
+  )
 
   useEffect(() => {
-    const m = localStorage.getItem('tc_hr_zone_method')
-    if (m) setMethod(m as HrZoneMethod)
-  }, [])
+    if (athleteProfile?.hr_zone_method) {
+      setMethod(athleteProfile.hr_zone_method as HrZoneMethod)
+    } else {
+      const m = localStorage.getItem('tc_hr_zone_method')
+      if (m) setMethod(m as HrZoneMethod)
+    }
+  }, [athleteProfile?.hr_zone_method])
 
   let result = calculateHrZones({
     method,
@@ -43,6 +51,7 @@ export function ActivityHeartRateZones({
     aerobicThresholdHr: athleteProfile?.aerobic_threshold_hr  ?? null,
     thresholdHr:        athleteProfile?.threshold_hr          ?? null,
     birthYear:          athleteProfile?.birth_year            ?? null,
+    customZones:        athleteProfile?.hr_zones_custom       ?? null,
   })
 
   if (result.zones.length === 0) {

@@ -89,7 +89,7 @@ export default async function ActivityDetailPage({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year')
+    .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year, hr_zone_method, hr_zones_custom')
     .eq('id', user.id)
     .single()
 
