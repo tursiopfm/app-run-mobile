@@ -86,13 +86,16 @@ function SortableBlock({ id, isDraggingAny, label, desktopCols = 1, onToggleWidt
     id,
     animateLayoutChanges: () => false,
   })
+  const activeTransform = isDraggingAny && transform
+    ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)`
+    : undefined
   const [isPressed, setIsPressed] = useState(false)
   return (
     <div
       ref={setNodeRef}
       className={`group/block mb-2 break-inside-avoid ${desktopCols === 2 ? 'md:[column-span:all]' : ''}`}
       style={{
-        transform:  transform ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)` : undefined,
+        transform:  activeTransform,
         transition: isDraggingAny ? transition : undefined,
         opacity:    isDragging ? 0 : 1,
         position:   'relative',
