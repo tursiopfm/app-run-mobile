@@ -87,7 +87,7 @@ function SortableBlock({ id, isDraggingAny, label, desktopCols = 1, children }: 
         position:   'relative',
       }}
     >
-      <div className="absolute top-0 inset-x-0 z-10 flex justify-center items-center h-5 pointer-events-none">
+      <div className="absolute top-0 inset-x-0 z-10 flex justify-center items-center h-5 md:h-0 md:opacity-0 md:hover:opacity-100 md:hover:h-5 md:transition-all pointer-events-none">
         <div
           {...attributes}
           {...listeners}
@@ -102,7 +102,7 @@ function SortableBlock({ id, isDraggingAny, label, desktopCols = 1, children }: 
         </div>
       </div>
       <div
-        className="pt-4"
+        className="pt-4 md:pt-0"
         style={{
           transform:       isPressed && !isDragging ? 'scale(0.95)' : 'scale(1)',
           transformOrigin: 'center top',
@@ -255,7 +255,7 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
         onDragCancel={handleDragCancel}
       >
         <SortableContext items={visibleOrder} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
             {visibleOrder.map(id => {
               const block = blocks.find(b => b.id === id)
               if (!block) return null

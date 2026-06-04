@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -83,9 +84,7 @@ export function DesktopSidebar({ isAdmin, displayName }: Props) {
       >
         {/* Header: logo + toggle */}
         <div className="shrink-0 flex items-center gap-3 px-3 h-14 border-b border-trail-border">
-          <div className="w-9 h-9 shrink-0 rounded-lg bg-trail-primary flex items-center justify-center text-white font-bold text-base">
-            T
-          </div>
+          <Image src="/icons/icon-192.png" alt="Trail Cockpit" width={36} height={36} className="shrink-0 rounded-lg" />
           {expanded && (
             <span className="flex-1 text-sm font-bold tracking-widest uppercase whitespace-nowrap">
               <span className="text-trail-primary">Trail</span>
