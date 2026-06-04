@@ -12,7 +12,7 @@ import {
 export function FitnessFatigueChart({ payload }: { payload: ChargeSportPayload }) {
   const L = useT().charge
   const data = payload.dailyMetrics.slice(-70).map(m => ({
-    date: m.date.slice(5),
+    date: m.date.slice(8) + '/' + m.date.slice(5, 7),
     atl:  Math.round(m.atl),
     ctl:  Math.round(m.ctl),
     tsb:  Math.round(m.tsb),
