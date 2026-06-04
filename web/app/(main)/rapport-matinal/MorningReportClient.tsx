@@ -41,7 +41,7 @@ export function MorningReportClient({ data }: { data: MorningReportData }) {
   const all = data.charge.perSport.all
 
   return (
-    <div className="max-w-[420px] mx-auto p-3 sm:p-5 space-y-3">
+    <div className="max-w-[420px] md:max-w-[860px] mx-auto p-3 sm:p-5 space-y-3">
       <header className="flex items-center justify-between mb-1 px-1">
         <p className="text-[11px] text-trail-muted uppercase tracking-[0.15em]">Rapport matinal</p>
         <Link
@@ -54,19 +54,28 @@ export function MorningReportClient({ data }: { data: MorningReportData }) {
       </header>
 
       <MorningHeaderLoader firstName={data.firstName} />
-      <SessionTodayBlock session={data.todaySession} />
-      <FormStatusBlock payload={all} />
+
+      <div className="md:grid md:grid-cols-2 md:gap-3 space-y-3 md:space-y-0">
+        <SessionTodayBlock session={data.todaySession} />
+        <FormStatusBlock payload={all} />
+      </div>
+
       <FitnessFatigue10dChart dailyMetrics={all.dailyMetrics} />
+
       <div className="grid grid-cols-2 gap-2.5">
         <WeatherCurrentBlock {...weatherProps} />
         <WeatherDayBlock     {...weatherProps} />
       </div>
       <BestWindowBlock {...weatherProps} />
-      <div className="grid grid-cols-3 gap-2.5">
-        <div className="col-span-2"><WeekVolumeBlock data={data.weekVolume} /></div>
-        <MonthlyVolumeBlock km={data.monthlyVolume.km} dPlus={data.monthlyVolume.dPlus} />
+
+      <div className="md:grid md:grid-cols-2 md:gap-3 space-y-3 md:space-y-0">
+        <div className="grid grid-cols-3 gap-2.5">
+          <div className="col-span-2"><WeekVolumeBlock data={data.weekVolume} /></div>
+          <MonthlyVolumeBlock km={data.monthlyVolume.km} dPlus={data.monthlyVolume.dPlus} />
+        </div>
+        <CoachAiBlock />
       </div>
-      <CoachAiBlock />
+
       <YesterdayBlock act={data.lastActivity} />
 
       <Link
