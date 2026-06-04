@@ -14,6 +14,7 @@ import ChargeIndicator from '@/components/activity/ChargeIndicator'
 import IntensityIndicator from '@/components/activity/IntensityIndicator'
 import TypeIndicator from '@/components/activity/TypeIndicator'
 import { fmtPaceSec, fmtDurationSec } from '@/lib/activities/detail'
+import { formatActivityDateTimeLong } from '@/lib/activities/format-datetime'
 import type { StravaSplit, StravaLap } from '@/lib/activities/detail'
 import { vapPaceSec } from '@/lib/activities/vap'
 import { useT } from '@/lib/i18n/I18nProvider'
@@ -199,13 +200,7 @@ function fmtElev(m: number | null): string {
 }
 
 function fmtDetailDate(iso: string): string {
-  const d = new Date(iso)
-  const datePart = new Intl.DateTimeFormat('fr-FR', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  }).format(d)
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mm = String(d.getMinutes()).padStart(2, '0')
-  return `${datePart} · ${hh}:${mm}`
+  return formatActivityDateTimeLong(iso)
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────

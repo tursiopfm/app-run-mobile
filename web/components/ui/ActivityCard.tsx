@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { colors } from '@/lib/design/colors'
 import { useT } from '@/lib/i18n/I18nProvider'
+import { formatActivityDateTime } from '@/lib/activities/format-datetime'
 import { asIntensityKey, effectiveWorkoutType, guessIntensity } from '@/lib/activities/intensity'
 import { INTENSITY_KEY_TO_LEVEL } from '@/lib/activities/indicators'
 import type { HrZone } from '@/lib/health/hr-zones'
@@ -75,13 +76,7 @@ function fmtDuration(seconds: number | null): string {
 }
 
 function fmtDate(iso: string): string {
-  const d = new Date(iso)
-  const dd   = String(d.getDate()).padStart(2, '0')
-  const mm   = String(d.getMonth() + 1).padStart(2, '0')
-  const yyyy = d.getFullYear()
-  const hh   = String(d.getHours()).padStart(2, '0')
-  const mn   = String(d.getMinutes()).padStart(2, '0')
-  return `${dd}/${mm}/${yyyy} · ${hh}:${mn}`
+  return formatActivityDateTime(iso)
 }
 
 function fmtPace(distM: number | null, timeSec: number | null): string {
