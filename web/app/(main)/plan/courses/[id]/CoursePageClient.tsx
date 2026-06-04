@@ -61,7 +61,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
 
   if (!loaded) {
     return (
-      <div className="px-3 py-3 max-w-lg mx-auto">
+      <div className="px-3 py-3 max-w-lg md:max-w-none mx-auto">
         <div className="animate-pulse space-y-3">
           <div className="h-[28px] w-[60%] rounded bg-trail-surface" />
           <div className="h-[14px] w-[40%] rounded bg-trail-surface" />
@@ -73,7 +73,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
 
   if (!race) {
     return (
-      <div className="px-3 py-6 max-w-lg mx-auto text-center">
+      <div className="px-3 py-6 max-w-lg md:max-w-none mx-auto text-center">
         <p className="text-trail-muted text-[14px]">Course introuvable.</p>
         <button
           type="button"
@@ -87,7 +87,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   }
 
   return (
-    <div className="px-3 py-3 max-w-lg mx-auto space-y-3">
+    <div className="px-3 py-3 max-w-lg md:max-w-none mx-auto space-y-3">
       <div className="flex items-center justify-between">
         <button
           type="button"
