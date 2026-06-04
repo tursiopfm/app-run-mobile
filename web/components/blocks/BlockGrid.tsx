@@ -63,23 +63,31 @@ function readStoredHidden(storageKey: string, defaultHidden: string[]): string[]
   }
 }
 
-function SortableBlock({ id, isDraggingAny, label, desktopCols = 1, children }: {
+function readStoredWidths(storageKey: string): Record<string, 1 | 2> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const stored = localStorage.getItem(storageKey)
+    if (!stored) return {}
+    return JSON.parse(stored) as Record<string, 1 | 2>
+  } catch {
+    return {}
+  }
+}
+
+function SortableBlock({ id, isDraggingAny, label, desktopCols = 1, onToggleWidth, children }: {
   id: string
   isDraggingAny: boolean
   label: string
   desktopCols?: 1 | 2
+  onToggleWidth: () => void
   children: ReactNode
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
-  // Feedback visuel "attrapé" : scale léger sur le contenu dès le pointerdown,
-  // avant même que distance:8 active le drag. onPointerDownCapture s'exécute en
-  // phase capture donc ne conflicte pas avec le onPointerDown du PointerSensor
-  // dnd-kit (qui est dans {...listeners}). Reset sur pointerup/cancel.
   const [isPressed, setIsPressed] = useState(false)
   return (
     <div
       ref={setNodeRef}
-      className={`mb-2 break-inside-avoid ${desktopCols === 2 ? 'md:[column-span:all]' : ''}`}
+      className={`group/block mb-2 break-inside-avoid ${desktopCols === 2 ? 'md:[column-span:all]' : ''}`}
       style={{
         transform:  CSS.Transform.toString(transform),
         transition: isDraggingAny ? transition : undefined,
@@ -101,6 +109,18 @@ function SortableBlock({ id, isDraggingAny, label, desktopCols = 1, children }: 
           <div className="w-10 h-[5px] rounded-full bg-trail-muted hover:bg-trail-text transition-colors" />
         </div>
       </div>
+      <button
+        onClick={onToggleWidth}
+        aria-label={desktopCols === 2 ? 'Réduire le bloc' : 'Élargir le bloc'}
+        className="hidden md:flex absolute bottom-1 right-1 z-10 w-5 h-5 items-center justify-center rounded-sm opacity-40 group-hover/block:opacity-80 hover:!opacity-100 transition-opacity cursor-se-resize"
+      >
+        <svg viewBox="0 0 10 10" className="w-3 h-3 text-trail-muted">
+          {desktopCols === 2
+            ? <path d="M3 0 L10 0 L10 7 Z" fill="currentColor" />
+            : <path d="M0 3 L7 10 L0 10 Z" fill="currentColor" />
+          }
+        </svg>
+      </button>
       <div
         className="pt-4"
         style={{
@@ -161,6 +181,7 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
   const resolvedAddLabel = addLabel ?? t.cockpit.addBlock
   const orderStorage  = `${storageKey}_block_order`
   const hiddenStorage = `${storageKey}_hidden_blocks`
+  const widthStorage  = `${storageKey}_block_widths`
 
   // Lecture localStorage en lazy init : la grille rend DIRECTEMENT dans
   // l'ordre persisté au premier paint client → pas de flash, pas de seconde
@@ -173,6 +194,7 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
   // disponible → premier render = configuration utilisateur.
   const [order,    setOrder]    = useState<string[]>(() => readStoredOrder(orderStorage, defaultOrder))
   const [hidden,   setHidden]   = useState<string[]>(() => readStoredHidden(hiddenStorage, defaultHidden))
+  const [widths,   setWidths]   = useState<Record<string, 1 | 2>>(() => readStoredWidths(widthStorage))
   const [activeId, setActiveId] = useState<string | null>(null)
   const [showAdd,  setShowAdd]  = useState(false)
 
@@ -239,6 +261,14 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
       return next
     })
   }
+  function toggleWidth(id: string, defaultCols: 1 | 2) {
+    setWidths(prev => {
+      const current = prev[id] ?? defaultCols
+      const next = { ...prev, [id]: (current === 2 ? 1 : 2) as 1 | 2 }
+      localStorage.setItem(widthStorage, JSON.stringify(next))
+      return next
+    })
+  }
 
   const visibleOrder = order.filter(id => !hidden.includes(id))
   const hiddenBlocks = blocks.filter(b => hidden.includes(b.id))
@@ -259,8 +289,16 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
             {visibleOrder.map(id => {
               const block = blocks.find(b => b.id === id)
               if (!block) return null
+              const effectiveCols = widths[id] ?? block.desktopCols ?? 1
               return (
-                <SortableBlock key={id} id={id} label={block.label} desktopCols={block.desktopCols} isDraggingAny={activeId !== null}>
+                <SortableBlock
+                  key={id}
+                  id={id}
+                  label={block.label}
+                  desktopCols={effectiveCols as 1 | 2}
+                  isDraggingAny={activeId !== null}
+                  onToggleWidth={() => toggleWidth(id, block.desktopCols ?? 1)}
+                >
                   <BlockContext.Provider value={{ hideSelf: () => hide(id) }}>
                     {block.render()}
                   </BlockContext.Provider>
