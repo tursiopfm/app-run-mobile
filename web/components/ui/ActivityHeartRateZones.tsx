@@ -62,7 +62,7 @@ export function ActivityHeartRateZones({
 
   const restingHr = athleteProfile?.resting_hr ?? Math.max(avgHr - 3 * Math.max((maxHr - avgHr) / 2, 3), 40)
   const durations = distributeTimeInZones(result.zones, avgHr, maxHr, movingTimeSec, restingHr)
-  const maxDuration = Math.max(...durations, 1)
+  const totalDuration = Math.max(durations.reduce((a, b) => a + b, 0), 1)
 
   return (
     <div>
@@ -76,7 +76,7 @@ export function ActivityHeartRateZones({
       </div>
 
       {result.zones.map((zone, i) => {
-        const pct = Math.round((durations[i] / maxDuration) * 100)
+        const pct = Math.round((durations[i] / totalDuration) * 100)
         return (
           <div key={zone.zone} className="flex items-center gap-2 py-1.5">
             <span className="w-28 text-xs shrink-0" style={{ color: zone.color }}>
