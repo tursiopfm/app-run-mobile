@@ -111,14 +111,12 @@ function SortableBlock({ id, isDraggingAny, label, desktopCols = 1, onToggleWidt
       </div>
       <button
         onClick={onToggleWidth}
+        title={desktopCols === 2 ? 'Réduire' : 'Déployer'}
         aria-label={desktopCols === 2 ? 'Réduire le bloc' : 'Élargir le bloc'}
-        className="hidden md:flex absolute bottom-1 right-1 z-10 w-5 h-5 items-center justify-center rounded-sm opacity-40 group-hover/block:opacity-80 hover:!opacity-100 transition-opacity cursor-se-resize"
+        className="hidden md:flex absolute bottom-1 right-1 z-10 w-5 h-5 items-center justify-center rounded-sm opacity-40 group-hover/block:opacity-80 hover:!opacity-100 transition-opacity cursor-pointer"
       >
         <svg viewBox="0 0 10 10" className="w-3 h-3 text-trail-muted">
-          {desktopCols === 2
-            ? <path d="M3 0 L10 0 L10 7 Z" fill="currentColor" />
-            : <path d="M0 3 L7 10 L0 10 Z" fill="currentColor" />
-          }
+          <path d="M0 0 L10 0 L10 10 Z" fill="currentColor" />
         </svg>
       </button>
       <div
