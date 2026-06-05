@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/database/supabase-server'
+import { onboardingCompletionPatch } from '@/lib/profile/onboarding-completion'
 
 export async function PATCH(req: NextRequest) {
   const supabase = await createClient()
@@ -14,6 +15,7 @@ export async function PATCH(req: NextRequest) {
     'threshold_pace_run_sec_per_km', 'threshold_pace_trail_sec_per_km',
     'hr_zone_method', 'hr_zones_custom', 'hr_method_updated_at',
     'plan_auto_push_title', 'onboarding_skipped',
+    'onboarding_discipline', 'onboarding_mission', 'onboarding_mode', 'onboarding_data_source',
   ]
   const update: Record<string, unknown> = {}
   for (const key of allowed) {
@@ -32,6 +34,8 @@ export async function PATCH(req: NextRequest) {
       update.birth_year = null
     }
   }
+
+  Object.assign(update, onboardingCompletionPatch(body))
 
   const { error } = await supabase
     .from('profiles')
