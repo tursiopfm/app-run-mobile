@@ -59,13 +59,12 @@ Migration **non auto-appliquée** → rappeler à Franck de coller le SQL dans l
 
 ### Chemin Strava (étape Données → tuile Strava)
 
-La tuile Strava n'est plus un `<a href>` direct mais un handler :
+Les réponses sont persistées **au fil des sélections** : chaque choix (discipline / mission / mode / import manuel) déclenche un `PATCH /api/profile` du seul champ concerné. La tuile Strava reste donc un simple `<a href="/api/strava/connect?from=onboarding">` (pas de navigation pilotée par JS, pas de `window.location` à mocker en test).
 
-1. `PATCH /api/profile` avec les 4 réponses (discipline/mission/mode/data_source). **Sans** `onboarding_complete` — la complétion est posée par le callback.
-2. `window.location.href = '/api/strava/connect?from=onboarding'`.
-3. OAuth → [callback](../../../app/api/strava/callback/route.ts). Après l'upsert `provider_connections` réussi, **si `from === 'onboarding'`**, poser `onboarding_completed_at = now()` sur `profiles`, puis rediriger vers `/dashboard?strava=connected` (comportement `okUrl` inchangé).
+1. L'utilisateur clique la tuile Strava → navigation pleine page vers le endpoint connect. Les réponses déjà choisies sont **déjà en base** (persistées à la sélection).
+2. OAuth → [callback](../../../app/api/strava/callback/route.ts). Après l'upsert `provider_connections` réussi, **si `from === 'onboarding'`**, poser `onboarding_completed_at = now()` **et** `onboarding_data_source = 'strava'` sur `profiles`, puis rediriger vers `/dashboard?strava=connected` (comportement `okUrl` inchangé).
 
-→ Les réponses survivent au round-trip OAuth car PATCHées **avant** la redirection.
+→ Les réponses survivent au round-trip OAuth sans persistance ad hoc avant redirection, car écrites dès la sélection.
 
 ### Chemin sans Strava (« Lancer le cockpit » / import manuel)
 
@@ -96,25 +95,25 @@ Retraits (artefacts de preview) :
 
 Ajouts :
 
-- Handler de persistance sur la tuile Strava (chemin Strava ci-dessus).
-- Handler de complétion sur « Lancer le cockpit » / « Entrer dans le cockpit » (chemin sans-Strava).
-- État de chargement minimal pendant les `fetch` (désactiver le bouton, comme `OnboardingStrava` le faisait pour skip).
+- Persistance au fil des sélections : chaque tuile (discipline / mission / mode / import manuel) PATCH son champ via un helper `selectAndPersist`. La tuile Strava reste un `<a href>`.
+- Handler de complétion `finish()` sur « Entrer dans le cockpit » (chemin sans-Strava : PATCH `onboarding_complete: true` + `router.push('/dashboard')`).
+- État de chargement minimal (`busy`) sur le bouton de complétion pendant le `fetch`.
 - **Ré-hydratation des réponses** : le composant accepte une prop `initialAnswers` (discipline/mission/mode/data_source lues en DB par la page serveur) pour initialiser son état. Indispensable au chemin d'erreur : sans ça, un retour sur `/onboarding` repartirait avec un état client vide et un PATCH de retry écraserait les réponses déjà sauvegardées avec des `null`.
 - **Affichage d'erreur Strava** : le callback peut renvoyer vers `/onboarding?strava=error|already_linked` (échec OAuth ou athlète déjà rattaché — `23505`). La page `/onboarding` passe `stravaStatus={searchParams.strava}` au composant ; quand il est présent, le flow démarre directement sur l'étape « Données » (réponses ré-hydratées via `initialAnswers`) et affiche le message d'erreur correspondant (libellés `errorGeneric` / `errorAlreadyLinked` en français, repris de `OnboardingStrava`).
 
 Inchangé : les 5 étapes, les sélections discipline/mission/mode, la `TrajectoryLine`, les tokens Deep Mission.
 
-## Nettoyage + correctif
+## Nettoyage
 
 - Supprimer `web/app/onboarding-preview/page.tsx` (redondant).
 - Supprimer `web/components/onboarding/OnboardingStrava.tsx` + `web/__tests__/onboarding/OnboardingStrava.test.tsx`.
-- **Bug** dans [auth.ts](../../../lib/providers/strava/auth.ts) `stravaCallbackRedirects` : `base = onboarding ? '\onboarding' : '/settings'`. `\o` est une fausse séquence d'échappement → `'\onboarding' === 'onboarding'`, donc `errUrl`/`alreadyLinkedUrl` deviennent `${appUrl}onboarding?...` (slash manquant). Corriger en `'/onboarding'`.
+
+Le `stravaCallbackRedirects` ([auth.ts](../../../lib/providers/strava/auth.ts)) renvoie déjà `okUrl = /dashboard` et `errUrl/alreadyLinkedUrl = /onboarding` pour `from=onboarding` — aucun changement nécessaire.
 
 ## Tests (proportionnés)
 
 - `MissionSetupFlow` (`__tests__/onboarding/MissionSetupFlow.test.tsx`) : navigation entre étapes ; « Continuer » bloqué tant qu'aucune sélection ; « Entrer dans le cockpit » appelle `fetch` avec `onboarding_complete: true` ; la tuile Strava PATCH **puis** redirige (fetch + `window.location` mockés).
 - `/api/profile` : accepte les 4 nouveaux champs ; pose `onboarding_completed_at` ssi `onboarding_complete === true`.
-- `stravaCallbackRedirects` (`__tests__/lib/providers/strava/callback-redirects.test.ts`) : mettre à jour pour `'/onboarding'` (fix du slash).
 
 ## Migration / déploiement
 
