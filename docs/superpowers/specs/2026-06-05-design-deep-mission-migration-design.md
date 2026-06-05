@@ -1,6 +1,6 @@
 # Migration du design Deep Mission vers les écrans réels
 
-> **Status: Spec** · 2026-06-05 · Branche: `claude/design-deep-mission`
+> **Status: Implémenté** · 2026-06-05 · Branche: `claude/design-deep-mission` · Code: web/app/globals.css, web/tailwind.config.ts, web/app/layout.tsx, web/lib/design/{colors,sports}.ts
 
 ## Contexte
 
