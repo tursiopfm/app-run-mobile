@@ -49,13 +49,17 @@ export async function AppShell({ children }: { children: ReactNode }) {
             </span>
             <div className="flex items-center gap-2">
               <AppModeToggle variant="compact" initialMode={mode} />
-              <Link
-                href="/settings"
-                className="text-trail-muted hover:text-trail-text p-1 -mr-1"
-                aria-label={settingsAria}
-              >
-                <MoreVertical size={18} />
-              </Link>
+              {/* En Mode Mission, l'accès Réglages se fait via la roue dentée
+                  de la barre du bas → on masque le ⋮ ici. */}
+              {mode !== 'mission' && (
+                <Link
+                  href="/settings"
+                  className="text-trail-muted hover:text-trail-text p-1 -mr-1"
+                  aria-label={settingsAria}
+                >
+                  <MoreVertical size={18} />
+                </Link>
+              )}
             </div>
           </div>
         </header>
