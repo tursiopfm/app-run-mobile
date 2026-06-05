@@ -10,6 +10,7 @@ const SYNCED_KEYS = [
   'courses_block_order', 'courses_hidden_blocks', 'courses_block_widths',
   'cockpit_goals_settings', 'cockpit_goals_targets',
   'charge_sport_filter',
+  'whats_new_seen',
 ]
 
 type Listener = () => void

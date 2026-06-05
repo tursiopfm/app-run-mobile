@@ -39,7 +39,7 @@ export function BlockCard({ title, helpTitle, helpBody, children, rightSlot, tit
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       <div className="flex items-center justify-between mb-[6px]">
-        <h3 className={titleClassName ?? 'text-[15px] font-semibold text-trail-muted'}>{title}</h3>
+        <h3 className={titleClassName ?? 'text-[15px] font-semibold text-trail-muted font-display'}>{title}</h3>
         <div className="flex items-center gap-1">
           {rightSlot}
           <button

@@ -196,7 +196,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-4">
-      <h2 className="text-[14px] font-semibold text-trail-muted mb-2">{title}</h2>
+      <h2 className="text-[14px] font-semibold text-trail-muted mb-2 font-display">{title}</h2>
       {children}
     </div>
   )
