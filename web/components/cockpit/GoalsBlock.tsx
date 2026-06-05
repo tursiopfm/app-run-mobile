@@ -187,7 +187,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                 <div className="p-[10px]">
                   <div className="flex items-center justify-between mb-[10px]">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[15px] font-semibold text-trail-muted">{L.headerGoals}</span>
+                      <span className="text-[15px] font-semibold text-trail-muted font-display">{L.headerGoals}</span>
                       <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>
                         {sportLabel(sport, t)}
                       </span>

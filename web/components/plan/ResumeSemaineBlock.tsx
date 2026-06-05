@@ -347,7 +347,7 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
         >
           <span className="text-[11px] text-trail-muted">{formatDow(selectedDateISO, L.dowLong)}</span>
           <span
-            className="text-[18px] text-trail-text leading-tight"
+            className="text-[18px] text-trail-text leading-tight font-display"
             style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.02em' }}
           >
             {formatLong(selectedDateISO, L.monthsShort)}
@@ -515,7 +515,7 @@ function MetricTile({
     >
       <p className="text-[11px] text-trail-muted">{label}</p>
       <p className="mt-[2px] flex items-baseline gap-[2px] min-w-0">
-        <span className="text-[18px] font-bold leading-none truncate" style={{ color }}>{mainValue}</span>
+        <span className="text-[18px] font-bold leading-none truncate font-display" style={{ color }}>{mainValue}</span>
         {mainUnit && (
           <span className="text-[11px] text-trail-muted leading-none flex-shrink-0">{mainUnit}</span>
         )}

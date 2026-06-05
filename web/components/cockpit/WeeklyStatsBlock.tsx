@@ -55,7 +55,7 @@ export function WeeklyStatsBlock({ sportOverviews, onHide }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-[6px]">
         <div className="flex items-center gap-1">
-          <span className="text-[15px] font-semibold text-trail-muted">{L.headerWeeklyStats}</span>
+          <span className="text-[15px] font-semibold text-trail-muted font-display">{L.headerWeeklyStats}</span>
           <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{sportLabel(activeSport, t)}</span>
         </div>
         <div className="flex items-center gap-2">

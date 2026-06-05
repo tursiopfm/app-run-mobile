@@ -41,7 +41,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
           style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
         >
           <div className="flex items-center justify-between max-w-lg mx-auto">
-            <span className="text-base font-bold tracking-widest uppercase">
+            <span className="text-base font-bold tracking-widest uppercase font-display">
               <span className="text-trail-primary">Trail</span>
               <span className="text-trail-text"> Cockpit</span>
             </span>

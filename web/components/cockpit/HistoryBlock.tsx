@@ -302,7 +302,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-[10px]">
         <div className="flex items-center gap-1.5">
-          <span className="text-[15px] font-semibold text-trail-muted">{L.headerHistory}</span>
+          <span className="text-[15px] font-semibold text-trail-muted font-display">{L.headerHistory}</span>
           <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{sportLabel(activeSport, t)}</span>
         </div>
         <div className="flex items-center gap-2">

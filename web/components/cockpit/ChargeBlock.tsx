@@ -62,7 +62,7 @@ export function ChargeBlock({ sportOverviews, onHide }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-[6px]">
         <div className="flex items-center gap-1">
-          <span className="text-[15px] font-semibold text-trail-muted">{C.headerCharge}</span>
+          <span className="text-[15px] font-semibold text-trail-muted font-display">{C.headerCharge}</span>
           <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{sportLabel(activeSport, t)}</span>
         </div>
         <div className="flex items-center gap-2">
