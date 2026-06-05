@@ -45,15 +45,11 @@ function fullGlyph(glyph: string, surface: string, glow: boolean): string {
   )
 }
 
-// Compact TRAJ : même courbe que TRAJ mais arrondie à l'entier le plus proche sur
-// chaque coordonnée de contrôle (évite 27.5 qui correspond au waypoint à venir
-// absent en mode compact — cf. test "ni étape à venir").
-const TRAJ_COMPACT = 'M10,37 C 14,36 15,31 19,30 C 23,30 24,33 28,32 C 31,30 32,22 35,15'
-
 function compactGlyph(glyph: string): string {
   const t = TIER.compact
+  // Même tracé que le mark complet (TRAJ), sans pointillé ni étapes.
   return (
-    `<path d="${TRAJ_COMPACT}" fill="none" stroke="${glyph}" stroke-width="${t.stroke}" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<path d="${TRAJ}" fill="none" stroke="${glyph}" stroke-width="${t.stroke}" stroke-linecap="round" stroke-linejoin="round"/>` +
     `<circle cx="${START.x}" cy="${START.y}" r="${t.start}" fill="${glyph}"/>` +
     flag(glyph, t.mast, t.fan, t.node)
   )

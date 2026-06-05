@@ -29,12 +29,14 @@ describe('renderLogoMarkSvg', () => {
   it('compact = ni pointillé ni étape à venir', () => {
     const svg = renderLogoMarkSvg({ tier: 'compact' })
     expect(svg).not.toContain('stroke-dasharray')
-    expect(svg).not.toContain('27.5')
+    // l'anneau « étape à venir » est le seul élément avec stroke-width="1.5"
+    expect(svg).not.toContain('stroke-width="1.5"')
   })
 
-  it('full = pointillé présent', () => {
+  it('full = pointillé + étape à venir présents', () => {
     const svg = renderLogoMarkSvg({ tier: 'full' })
     expect(svg).toContain('stroke-dasharray')
+    expect(svg).toContain('stroke-width="1.5"')
   })
 
   it('maskable = fond bord-à-bord + glyphe scalé dans la zone sûre', () => {
