@@ -1,17 +1,23 @@
 import { cn } from '@/lib/cn'
+import {
+  VIEWBOX, TRAJ, TRAJ_LEN, SOLID_FRACTION,
+  START, END, WAYPOINT_REACHED, WAYPOINT_UPCOMING, TIER,
+} from '@/lib/brand/logo-geometry'
 
 // ─────────────────────────────────────────────────────────────────────────
 // LogoTrailCockpit — identité de marque, dérivée de la TrajectoryLine.
 //
-// Concept : une trajectoire ascendante qui vise une cible (l'objectif),
-// inscrite dans une « lunette » arrondie (l'instrument / le cockpit).
-// → mission, progression, direction, cockpit, endurance.
-// Pas de montagne, pas de coureur, 100 % SVG (favicon / PWA / splash OK).
+// Concept : une trajectoire qui grimpe, jalonnée d'étapes (atteinte = pleine,
+// à venir = anneau creux), avec le reste à parcourir en pointillé, vers un
+// drapeau (l'objectif). → mission, progression, direction, endurance.
+// 100 % SVG. Géométrie partagée avec le pack d'assets (logo-geometry.ts) →
+// le logo écran est identique aux icônes exportées (favicon / PWA / OG).
 //
 // Variantes : icon · horizontal · stacked
 // Tons      : brand (squircle orange + glyphe blanc) · mono (currentColor)
+// Palier auto : compact < 40px (épuré), full ≥ 40px (pointillé + étapes).
 //
-// Composant serveur (aucun hook). Ne remplace PAS le logo live — preview.
+// Composant serveur (aucun hook).
 // ─────────────────────────────────────────────────────────────────────────
 
 type Variant = 'icon' | 'horizontal' | 'stacked'
@@ -42,12 +48,19 @@ export function LogoMark({
   const squircleFill = brand ? 'var(--primary)' : 'none'
   const squircleStroke = brand ? 'none' : 'currentColor'
   const glyph = brand ? '#FFFFFF' : 'currentColor'
-  // Centre du nœud de départ : « creux » en brand (laisse voir l'orange).
-  const startFill = brand ? 'var(--primary)' : 'none'
+  // Centre de l'étape « à venir » : rempli du fond en brand (laisse voir l'orange),
+  // transparent en mono.
+  const hole = brand ? 'var(--primary)' : 'none'
+
+  const tier = size < 40 ? 'compact' : 'full'
+  const t = tier === 'compact' ? TIER.compact : TIER.full
+  const solid = (TRAJ_LEN * SOLID_FRACTION).toFixed(2)
+  const tip = END.y - 9
+  const fanX = END.x + t.fan
 
   return (
     <svg
-      viewBox="0 0 48 48"
+      viewBox={VIEWBOX}
       width={size}
       height={size}
       role="img"
@@ -62,20 +75,29 @@ export function LogoMark({
         stroke={squircleStroke}
         strokeWidth={brand ? 0 : 2.5}
       />
-      {/* Trajectoire ascendante */}
-      <path
-        d="M12 34 C 18 32 21 25 27 22 C 31 20 32 19 35.5 14.5"
-        fill="none"
-        stroke={glyph}
-        strokeWidth={3.4}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {/* Départ — nœud creux */}
-      <circle cx={12} cy={34} r={2.4} fill={startFill} stroke={glyph} strokeWidth={2} />
-      {/* Cible — anneau (visée / direction) + disque (l'objectif) */}
-      <circle cx={35.5} cy={14.5} r={5} fill="none" stroke={glyph} strokeWidth={2} opacity={0.55} />
-      <circle cx={35.5} cy={14.5} r={2.9} fill={glyph} />
+      {tier === 'full' && (
+        <>
+          {/* Reste à parcourir — pointillé */}
+          <path d={TRAJ} fill="none" stroke={glyph} strokeOpacity={0.5} strokeWidth={t.stroke} strokeLinecap="round" strokeDasharray="0.5 2.6" />
+          {/* Accompli — plein */}
+          <path d={TRAJ} fill="none" stroke={glyph} strokeWidth={t.stroke} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={`${solid} ${TRAJ_LEN}`} />
+          {/* Départ + étape atteinte (pleines) + étape à venir (anneau creux) */}
+          <circle cx={START.x} cy={START.y} r={t.start} fill={glyph} />
+          <circle cx={WAYPOINT_REACHED.x} cy={WAYPOINT_REACHED.y} r={2} fill={glyph} />
+          <circle cx={WAYPOINT_UPCOMING.x} cy={WAYPOINT_UPCOMING.y} r={2.1} fill={hole} stroke={glyph} strokeWidth={1.5} />
+        </>
+      )}
+      {tier === 'compact' && (
+        <>
+          {/* Trait plein épaissi, sans pointillé ni étapes (lisible en petit) */}
+          <path d={TRAJ} fill="none" stroke={glyph} strokeWidth={t.stroke} strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx={START.x} cy={START.y} r={t.start} fill={glyph} />
+        </>
+      )}
+      {/* Drapeau d'arrivée — l'objectif */}
+      <line x1={END.x} y1={END.y} x2={END.x} y2={tip} stroke={glyph} strokeWidth={t.mast} strokeLinecap="round" />
+      <path d={`M${END.x},${tip} L${fanX},${(tip + t.fan * 0.27).toFixed(2)} L${END.x},${(tip + t.fan * 0.54).toFixed(2)} Z`} fill={glyph} />
+      <circle cx={END.x} cy={END.y} r={t.node} fill={glyph} />
     </svg>
   )
 }
