@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, type CSSProperties, type ReactNode } from 'react'
-import { useTheme } from 'next-themes'
+import { useState, type CSSProperties, type ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import {
-  ArrowRight, ArrowLeft, Check, Sun, Moon, RotateCcw,
+  ArrowRight, ArrowLeft, Check,
   Mountain, Footprints, Bike, Waves, Medal,
   Activity, TrendingUp, Compass, BarChart3,
   Upload, Watch, Rocket,
@@ -14,13 +14,21 @@ import { TrajectoryLine } from '@/components/brand/TrajectoryLine'
 import { cn } from '@/lib/cn'
 
 // ─────────────────────────────────────────────────────────────────────────
-// Onboarding « Mission Setup » — PREVIEW isolée (/onboarding-preview).
-// N'altère PAS l'onboarding existant (/onboarding) ni aucun écran métier.
-// Aucune persistance, aucun calcul : étude visuelle de la marque.
-// Dark + light via les tokens du Design System.
+// Onboarding « Mission Setup » — écran de production (/onboarding).
+// Collecte discipline / mission / mode / source et les persiste dans
+// `profiles` (colonnes onboarding_*). Seuls la connexion Strava et le flag
+// onboarding_completed_at pilotent le parcours ; les autres réponses sont
+// stockées pour usage futur. FR codé en dur (v1).
 // ─────────────────────────────────────────────────────────────────────────
 
 type Option = { id: string; label: string; desc: string; icon: typeof Mountain; accent: string }
+
+export type OnboardingAnswers = {
+  discipline: string | null
+  mission: string | null
+  mode: string | null
+  dataSource: string | null
+}
 
 const DISCIPLINES: Option[] = [
   { id: 'trail',     label: 'Trail',     desc: 'Sentiers & dénivelé',     icon: Mountain,   accent: 'var(--data-run)' },
@@ -48,7 +56,6 @@ function ringStyle(accent: string, extra?: CSSProperties): CSSProperties {
   return { ['--tw-ring-color' as string]: accent, ...extra } as CSSProperties
 }
 
-// Tuile sélectionnable, focusable clavier (a11y), colorée par l'accent du sport.
 function SelectTile({
   selected, accent, icon: Icon, title, desc, onClick, compact,
 }: {
@@ -111,17 +118,27 @@ function StepShell({ eyebrow, title, subtitle, children, stepKey }: {
   )
 }
 
-export function MissionSetupFlow() {
-  const { theme, setTheme } = useTheme()
-  // next-themes ne connaît pas le thème au SSR → on garde l'icône du toggle
-  // derrière `mounted` pour éviter un mismatch d'hydratation (Sun vs Moon).
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-  const [step, setStep] = useState(1)
+export function MissionSetupFlow({
+  stravaStatus,
+  initialAnswers,
+}: {
+  stravaStatus?: string
+  initialAnswers?: OnboardingAnswers
+}) {
+  const router = useRouter()
+  // Retour d'un échec OAuth → on réaffiche directement l'étape Données.
+  const [step, setStep] = useState(stravaStatus ? TOTAL : 1)
   const [done, setDone] = useState(false)
-  const [discipline, setDiscipline] = useState<string | null>(null)
-  const [mission, setMission] = useState<string | null>(null)
-  const [mode, setMode] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [discipline, setDiscipline] = useState<string | null>(initialAnswers?.discipline ?? null)
+  const [mission, setMission] = useState<string | null>(initialAnswers?.mission ?? null)
+  const [mode, setMode] = useState<string | null>(initialAnswers?.mode ?? null)
+  const [dataSource, setDataSource] = useState<string | null>(initialAnswers?.dataSource ?? null)
+
+  const errorMsg =
+    stravaStatus === 'already_linked' ? 'Ce compte Strava est déjà connecté à un autre compte Trail Cockpit.'
+    : stravaStatus === 'error'        ? 'La connexion Strava a échoué. Réessaie.'
+    : null
 
   const canNext =
     step === 1 ? true :
@@ -130,8 +147,41 @@ export function MissionSetupFlow() {
     step === 4 ? !!mode :
     true
 
-  function reset() {
-    setStep(1); setDone(false); setDiscipline(null); setMission(null); setMode(null)
+  function answersPayload(): Record<string, unknown> {
+    return {
+      onboarding_discipline: discipline,
+      onboarding_mission: mission,
+      onboarding_mode: mode,
+      onboarding_data_source: dataSource,
+    }
+  }
+
+  async function persist(payload: Record<string, unknown>) {
+    try {
+      await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+    } catch {
+      // best-effort : on continue le parcours même si la persistance échoue
+    }
+  }
+
+  // Persistance au fil des sélections : chaque choix est sauvegardé seul, ce
+  // qui survit au round-trip OAuth (la tuile Strava est un simple lien, pas
+  // de navigation pilotée par JS). Le callback Strava pose data_source='strava'.
+  function selectAndPersist(field: string, value: string, set: (v: string) => void) {
+    set(value)
+    void persist({ [field]: value })
+  }
+
+  // Chemin sans Strava : persister les réponses + demander la complétion
+  // (le serveur pose onboarding_completed_at), puis dashboard.
+  async function finish() {
+    setBusy(true)
+    await persist({ ...answersPayload(), onboarding_complete: true })
+    router.push('/dashboard')
   }
 
   const disciplineOpt = DISCIPLINES.find(d => d.id === discipline)
@@ -140,33 +190,21 @@ export function MissionSetupFlow() {
 
   return (
     <main className="min-h-screen bg-ink-900 text-fg-primary flex flex-col">
-      {/* Top bar : marque + progression + thème */}
       <header className="mx-auto w-full max-w-md px-5 pt-6">
         <div className="flex items-center justify-between">
           <span className="font-display text-[14px] font-bold tracking-widest uppercase">
             <span className="text-primary-text">Mission</span>
             <span className="text-fg-primary"> Setup</span>
           </span>
-          <button
-            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-ink-700 border border-ink-600 text-fg-muted hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            aria-label="Basculer le thème"
-          >
-            {mounted && theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
-          </button>
         </div>
 
-        {/* Progression — segments + signature trajectoire */}
         {!done && (
           <div className="mt-5">
             <div className="flex items-center gap-1.5">
               {Array.from({ length: TOTAL }, (_, i) => (
                 <span
                   key={i}
-                  className={cn(
-                    'h-1 flex-1 rounded-full transition-colors duration-300',
-                    i < step ? 'bg-primary' : 'bg-ink-600',
-                  )}
+                  className={cn('h-1 flex-1 rounded-full transition-colors duration-300', i < step ? 'bg-primary' : 'bg-ink-600')}
                 />
               ))}
             </div>
@@ -175,12 +213,9 @@ export function MissionSetupFlow() {
         )}
       </header>
 
-      {/* Contenu */}
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-5 py-7">
         {done ? (
-          <CompletionScreen
-            discipline={disciplineOpt} mission={missionOpt} mode={modeOpt} onReset={reset}
-          />
+          <CompletionScreen discipline={disciplineOpt} mission={missionOpt} mode={modeOpt} busy={busy} onEnter={finish} />
         ) : (
           <div className="flex-1">
             {step === 1 && (
@@ -207,7 +242,7 @@ export function MissionSetupFlow() {
                 <div className="grid gap-2.5">
                   {DISCIPLINES.map(d => (
                     <SelectTile key={d.id} icon={d.icon} title={d.label} desc={d.desc} accent={d.accent}
-                      selected={discipline === d.id} onClick={() => setDiscipline(d.id)} />
+                      selected={discipline === d.id} onClick={() => selectAndPersist('onboarding_discipline', d.id, setDiscipline)} />
                   ))}
                 </div>
               </StepShell>
@@ -219,7 +254,7 @@ export function MissionSetupFlow() {
                 <div className="grid gap-2.5">
                   {MISSIONS.map(m => (
                     <SelectTile key={m.id} icon={m.icon} title={m.label} desc={m.desc} accent={m.accent}
-                      selected={mission === m.id} onClick={() => setMission(m.id)} />
+                      selected={mission === m.id} onClick={() => selectAndPersist('onboarding_mission', m.id, setMission)} />
                   ))}
                 </div>
               </StepShell>
@@ -236,7 +271,7 @@ export function MissionSetupFlow() {
                       <button
                         key={m.id}
                         type="button"
-                        onClick={() => setMode(m.id)}
+                        onClick={() => selectAndPersist('onboarding_mode', m.id, setMode)}
                         aria-pressed={selected}
                         className={cn(
                           'w-full text-left rounded-xl border bg-ink-700 p-4 cursor-pointer',
@@ -278,17 +313,22 @@ export function MissionSetupFlow() {
             {step === 5 && (
               <StepShell stepKey={5} eyebrow="Données" title="Connecte tes données"
                 subtitle="Synchronise tes activités pour activer le cockpit.">
+                {errorMsg && (
+                  <p role="alert" className="mb-3 text-sm text-red-400 bg-red-500/10 border border-red-500/25 rounded-xl px-3 py-2.5">
+                    {errorMsg}
+                  </p>
+                )}
                 <div className="grid gap-2.5">
                   <a
                     href="/api/strava/connect?from=onboarding"
-                    className="group flex items-center gap-3.5 rounded-xl border border-ink-600 bg-ink-700 p-4 hover:-translate-y-0.5 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+                    className="group flex items-center gap-3.5 rounded-xl border border-ink-600 bg-ink-700 p-4 text-left hover:-translate-y-0.5 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
                   >
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: 'rgba(252,76,2,0.15)', color: '#FC4C02' }}>
                       <Activity size={22} />
                     </span>
                     <div className="flex-1">
                       <p className="font-display text-[15px] font-semibold tracking-tight text-fg-primary">Strava</p>
-                      <p className="font-body text-[12.5px] text-fg-muted">Recommandé · flux existant préservé</p>
+                      <p className="font-body text-[12.5px] text-fg-muted">Recommandé · import automatique</p>
                     </div>
                     <ArrowRight size={18} className="text-fg-muted group-hover:text-fg-primary" />
                   </a>
@@ -306,26 +346,32 @@ export function MissionSetupFlow() {
 
                   <button
                     type="button"
-                    className="flex items-center gap-3.5 rounded-xl border border-ink-600 bg-ink-700 p-4 hover:-translate-y-0.5 transition-transform text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+                    onClick={() => selectAndPersist('onboarding_data_source', 'manual', setDataSource)}
+                    aria-pressed={dataSource === 'manual'}
+                    className={cn(
+                      'flex items-center gap-3.5 rounded-xl border bg-ink-700 p-4 text-left hover:-translate-y-0.5 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900',
+                      dataSource === 'manual' ? 'border-primary' : 'border-ink-600',
+                    )}
                   >
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-ink-600 text-fg-secondary">
                       <Upload size={22} />
                     </span>
                     <div className="flex-1">
                       <p className="font-display text-[15px] font-semibold tracking-tight text-fg-primary">Import manuel</p>
-                      <p className="font-body text-[12.5px] text-fg-muted">Fichiers GPX / FIT</p>
+                      <p className="font-body text-[12.5px] text-fg-muted">J&apos;ajouterai mes activités plus tard</p>
                     </div>
+                    {dataSource === 'manual' && (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary">
+                        <Check size={13} className="text-ink-900" strokeWidth={3} />
+                      </span>
+                    )}
                   </button>
                 </div>
-                <p className="font-body text-[11px] text-fg-muted mt-4 text-center">
-                  Aperçu — aucune donnée n’est enregistrée dans cette démo.
-                </p>
               </StepShell>
             )}
           </div>
         )}
 
-        {/* Navigation */}
         {!done && (
           <nav className="mt-7 flex items-center gap-3">
             {step > 1 && (
@@ -350,13 +396,12 @@ export function MissionSetupFlow() {
   )
 }
 
-function CompletionScreen({ discipline, mission, mode, onReset }: {
-  discipline?: Option; mission?: Option; mode?: Option; onReset: () => void
+function CompletionScreen({ discipline, mission, mode, busy, onEnter }: {
+  discipline?: Option; mission?: Option; mode?: Option; busy: boolean; onEnter: () => void
 }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center text-center animate-[stepIn_320ms_cubic-bezier(0.32,0.72,0,1)]">
       <div className="h-20 w-full max-w-[220px]">
-        {/* Mission accomplie → chemin entièrement plein, drapeau atteint. */}
         <TrajectoryLine orientation="horizontal" animated duration={1.4} progress={1} />
       </div>
       <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white mt-2">
@@ -374,8 +419,8 @@ function CompletionScreen({ discipline, mission, mode, onReset }: {
       </div>
 
       <div className="mt-7 w-full">
-        <Button fullWidth variant="secondary" onClick={onReset} leadingIcon={<RotateCcw size={16} />}>
-          Relancer la démo
+        <Button fullWidth onClick={onEnter} disabled={busy} trailingIcon={<ArrowRight size={16} />}>
+          Entrer dans le cockpit
         </Button>
       </div>
     </div>
