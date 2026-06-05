@@ -97,7 +97,11 @@ export default async function DashboardPage() {
   if (mode === 'mission') {
     try {
       const charge = await getChargePageData(user.id)
-      freshnessPayload = charge.perSport.all
+      // Fraîcheur basée sur la course ; repli sur le global si aucune activité
+      // running (ex. profil vélo/natation uniquement).
+      freshnessPayload = charge.perSport.run.historyDays > 0
+        ? charge.perSport.run
+        : charge.perSport.all
     } catch { freshnessPayload = null }
   }
 

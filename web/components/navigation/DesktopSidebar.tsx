@@ -9,6 +9,7 @@ import {
   ShieldCheck, Settings, PanelLeft, PanelLeftClose,
 } from 'lucide-react'
 import { useT } from '@/lib/i18n/I18nProvider'
+import { AppModeToggle } from '@/components/settings/AppModeToggle'
 
 type Props = {
   isAdmin: boolean
@@ -137,6 +138,12 @@ export function DesktopSidebar({ isAdmin, displayName, mode = 'expert' }: Props)
 
         {/* Bottom section */}
         <div className="shrink-0 border-t border-trail-border px-2 py-2 space-y-1">
+          {/* Bascule Mode Mission ↔ Expert (visible quand la sidebar est dépliée) */}
+          {expanded && (
+            <div className="px-1 pb-1">
+              <AppModeToggle variant="compact" initialMode={mode} />
+            </div>
+          )}
           <Link
             href="/settings"
             onClick={handleNavClick}
