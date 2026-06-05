@@ -1,6 +1,6 @@
 # Spec — Brancher l'onboarding « Mission Setup » en production
 
-> Status: Spec validée · 2026-06-05 · Cible: `web/app/onboarding`, `web/components/onboarding/mission-setup`
+> **Status: Implémenté** · 2026-06-05 · Code: `web/app/onboarding/page.tsx`, `web/components/onboarding/mission-setup/MissionSetupFlow.tsx`, `web/app/api/profile/route.ts`, `web/lib/profile/onboarding-completion.ts`, `web/app/api/strava/callback/route.ts`, `web/app/(main)/dashboard/page.tsx`, `web/supabase/migrations/033_profile_onboarding_answers.sql` · Plan: `docs/superpowers/plans/2026-06-05-onboarding-mission-setup-wiring.md`
 
 ## Contexte
 
@@ -69,6 +69,8 @@ Les réponses sont persistées **au fil des sélections** : chaque choix (discip
 ### Chemin sans Strava (« Lancer le cockpit » / import manuel)
 
 `PATCH /api/profile` avec les 4 réponses **+ `onboarding_complete: true`**. L'API, voyant ce flag, pose `onboarding_completed_at = new Date().toISOString()` **côté serveur** (jamais un timestamp fourni par le client). Puis `router.push('/dashboard')`.
+
+> **Durcissement (ajouté à l'implémentation)** : `persist()` renvoie `res.ok`. Si le PATCH de complétion échoue, `finish()` **ne navigue pas** (sinon le gate renverrait l'utilisateur sur `/onboarding` en boucle) : il affiche une erreur et réactive le bouton pour réessayer. La persistance au fil des sélections reste best-effort.
 
 L'étape « Données » reste **skippable** : « Lancer le cockpit » termine l'onboarding même sans source connectée. `onboarding_data_source` enregistre l'intention (`strava` | `manual` | `null`). « Import manuel » dans cette v1 = sélectionner la source `manual` et terminer (pas de flow d'upload GPX/FIT construit ici). Garmin reste désactivé (« Bientôt »).
 
