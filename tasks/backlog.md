@@ -76,6 +76,13 @@
 ### PWA
 - [ ] Splash screen PWA (post-domaine personnalisé)
 
+### Table `daily_metrics` — réactiver comme cache serveur si besoin
+- **Quoi** : la table `daily_metrics` (ATL/CTL/TSB par jour) existe toujours en base mais **n'est plus ni écrite ni lue** (fonction `recalculateUserFatigue` retirée le 2026-06-05). Les vues Charge et Cockpit recalculent l'EWMA à la volée sur ~1 an d'historique (`buildChargeMetrics`, `EWMA_WARMUP_DAYS`) → une seule source de vérité, toujours fraîche.
+- **Pourquoi retirée** : aucun lecteur côté UI ; cacher un calcul gratuit (EWMA O(n) sur ~400 points) n'apporte rien et rajoute un risque de divergence/staleness — bug réel constaté le 2026-06-05 : `daily_metrics` calculé à 07:01 ne voyait pas l'activité de 07:42.
+- **Quand réactiver** : seulement si un consommateur **léger, côté serveur** doit lire la fraîcheur sans charger toutes les activités — typiquement le **rapport matinal** (cron / push / email). Sinon, ne pas réactiver.
+- **Comment** : restaurer `recalculateUserFatigue` (git avant 2026-06-05) + ses appels (`streams-backfill.ts`, `app/api/profile/recalculate`). Impératif : rafraîchir sur TOUS les chemins qui changent les charges (insert/update/delete activité, changement de seuil profil → CES) sinon staleness. Table + RLS déjà en place (migrations 001/002).
+- **Identifié** : 2026-06-05
+
 ## Onglet Plan — bibliothèque de séances
 
 - [ ] Types de séance custom par utilisateur (table dédiée `user_session_types`) — Plan bibliothèque

@@ -123,49 +123,7 @@ export async function recalculateUserEffortScores(userId: string): Promise<{ rec
   return { recalculated: activityUpdates.length, errors }
 }
 
-export async function recalculateUserFatigue(userId: string): Promise<void> {
-  const supabase = createServiceClient()
-
-  // Plus récentes d'abord (cap ~1000 lignes) : couvre la fenêtre récente pertinente
-  // pour les courbes ATL/CTL ; le tri chronologique final est refait en JS plus bas.
-  const { data: activities } = await supabase
-    .from('activities')
-    .select('start_time, ces')
-    .eq('user_id', userId)
-    .order('start_time', { ascending: false })
-
-  if (!activities?.length) return
-
-  const { buildDailyMetrics } = await import('@/lib/analytics/fatigue')
-
-  const map = new Map<string, number>()
-  for (const a of activities) {
-    const date = String(a.start_time).split('T')[0]
-    map.set(date, (map.get(date) ?? 0) + Number(a.ces ?? 0))
-  }
-  const dailyLoads = Array.from(map.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, ces]) => ({ date, ces }))
-
-  const metrics = buildDailyMetrics(dailyLoads)
-  if (metrics.length === 0) return
-
-  const now = new Date().toISOString()
-  const { error } = await supabase
-    .from('daily_metrics')
-    .upsert(
-      metrics.map(m => ({
-        user_id:    userId,
-        metric_date: m.date,
-        atl:        m.atl,
-        ctl:        m.ctl,
-        tsb:        m.tsb,
-        daily_load: m.dailyLoad,
-        computed_at: now,
-      })),
-      { onConflict: 'user_id,metric_date' },
-    )
-  if (error) {
-    console.error('[recalculateUserFatigue] batch upsert', error)
-  }
-}
+// NB : la table `daily_metrics` (ATL/CTL/TSB par jour) n'est plus maintenue.
+// Les vues Charge et Cockpit recalculent l'EWMA à la volée sur ~1 an
+// d'historique (cf. buildChargeMetrics) → une seule source de vérité, toujours
+// fraîche. Voir tasks/backlog.md si on veut la réactiver comme cache serveur.

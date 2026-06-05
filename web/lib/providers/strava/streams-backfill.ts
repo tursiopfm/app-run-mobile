@@ -2,7 +2,7 @@ import { createServiceClient } from '@/lib/database/supabase-server'
 import { getValidStravaToken } from './token'
 import { fetchStravaStreams, downsampleStreams, packStreams } from './streams'
 import { computeStreamMetrics } from '@/lib/activities/stream-metrics'
-import { recalculateUserEffortScores, recalculateUserFatigue } from '@/lib/sync/recalculate-scores'
+import { recalculateUserEffortScores } from '@/lib/sync/recalculate-scores'
 
 type MissingRow = { id: string; user_id: string; provider_activity_id: string }
 
@@ -88,7 +88,6 @@ export async function processStreamsBackfillBatch(
   for (const userId of Array.from(affectedUsers)) {
     try {
       await recalculateUserEffortScores(userId)
-      await recalculateUserFatigue(userId)
       recalculatedUsers++
     } catch (e) {
       console.error('[streams-backfill] recalc user', userId, e)

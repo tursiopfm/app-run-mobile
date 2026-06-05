@@ -1,5 +1,5 @@
 import { processStreamsBackfillBatch } from '@/lib/providers/strava/streams-backfill'
-import { recalculateUserEffortScores, recalculateUserFatigue } from '@/lib/sync/recalculate-scores'
+import { recalculateUserEffortScores } from '@/lib/sync/recalculate-scores'
 
 jest.mock('@/lib/providers/strava/token', () => ({
   getValidStravaToken: jest.fn().mockResolvedValue('tok'),
@@ -15,7 +15,6 @@ jest.mock('@/lib/providers/strava/streams', () => {
 })
 jest.mock('@/lib/sync/recalculate-scores', () => ({
   recalculateUserEffortScores: jest.fn().mockResolvedValue({ recalculated: 0, errors: 0 }),
-  recalculateUserFatigue: jest.fn().mockResolvedValue(undefined),
 }))
 
 const upsert = jest.fn().mockResolvedValue({ error: null })
@@ -34,7 +33,6 @@ describe('processStreamsBackfillBatch', () => {
   beforeEach(() => {
     upsert.mockClear()
     ;(recalculateUserEffortScores as jest.Mock).mockClear()
-    ;(recalculateUserFatigue as jest.Mock).mockClear()
   })
 
   it('fetch + stocke les streams + métriques de chaque activité manquante', async () => {
@@ -52,8 +50,6 @@ describe('processStreamsBackfillBatch', () => {
     expect(r.recalculatedUsers).toBe(1)
     expect(recalculateUserEffortScores).toHaveBeenCalledTimes(1)
     expect(recalculateUserEffortScores).toHaveBeenCalledWith('u1')
-    expect(recalculateUserFatigue).toHaveBeenCalledTimes(1)
-    expect(recalculateUserFatigue).toHaveBeenCalledWith('u1')
   })
 
   it('ne recalcule personne si aucun stream stocké', async () => {
@@ -63,6 +59,5 @@ describe('processStreamsBackfillBatch', () => {
     const r = await processStreamsBackfillBatch(40)
     expect(r.recalculatedUsers).toBe(0)
     expect(recalculateUserEffortScores).not.toHaveBeenCalled()
-    expect(recalculateUserFatigue).not.toHaveBeenCalled()
   })
 })
