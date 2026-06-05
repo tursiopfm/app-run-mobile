@@ -66,6 +66,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(upsertError.code === '23505' ? alreadyLinkedUrl : errUrl)
     }
 
+    // Onboarding : connecter Strava depuis le flow termine l'onboarding
+    // et enregistre la source de données côté serveur (fiable).
+    if (from === 'onboarding') {
+      await supabase
+        .from('profiles')
+        .update({ onboarding_completed_at: now, onboarding_data_source: 'strava' })
+        .eq('id', user.id)
+    }
+
     // Trigger immédiat du premier tick d'import (background via waitUntil).
     // L'user voit les premières activités dès l'arrivée sur le dashboard,
     // sans attendre le prochain tick GitHub Actions (5 min).
