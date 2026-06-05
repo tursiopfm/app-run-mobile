@@ -20,16 +20,18 @@ function navWithFallback(href: string) {
   }, 700)
 }
 
-export function BottomNav({ isAdmin = false }: { isAdmin?: boolean }) {
+export function BottomNav({ isAdmin = false, mode = 'expert' }: { isAdmin?: boolean; mode?: 'mission' | 'expert' }) {
   const pathname = usePathname()
   const tabs = useT().tabs
+  // Mode Mission : onglets Charge et Courses masqués (réservés à l'Expert).
+  const MISSION_HIDDEN = ['/charge', '/courses']
   const BASE_NAV = [
     { href: '/dashboard',  icon: LayoutGrid, label: tabs.cockpit    },
     { href: '/charge',     icon: Dumbbell,   label: tabs.charge     },
     { href: '/plan',       icon: Calendar,   label: tabs.plan       },
     { href: '/activities', icon: Footprints, label: tabs.activities },
     { href: '/courses',    icon: Trophy,     label: tabs.courses    },
-  ]
+  ].filter(item => mode !== 'mission' || !MISSION_HIDDEN.includes(item.href))
   const ADMIN_NAV = { href: '/admin', icon: ShieldCheck, label: 'Admin' }
   const items = isAdmin ? [...BASE_NAV, ADMIN_NAV] : BASE_NAV
 

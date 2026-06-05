@@ -141,10 +141,15 @@ type ResumeSemaineBlockProps = {
    * démonter le composant.
    */
   reloadKey?: number
+  /**
+   * Mode Mission : masque les tuiles « Planifié » et « Restant » (aspect
+   * planification) → ne reste qu'Objectif + Réalisé + les barres de progression.
+   */
+  simplified?: boolean
 }
 
 // ─── Composant principal ─────────────────────────────────────────────────────
-export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = {}) {
+export function ResumeSemaineBlock({ reloadKey = 0, simplified = false }: ResumeSemaineBlockProps = {}) {
   const L = useT().plan
   const TILE_EXPLANATIONS = useMemo(() => getTileExpl(L), [L])
   const todayISO = useMemo(() => {
@@ -381,7 +386,7 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
             open={openTile === 'objectif'}
             onToggle={toggleTile}
           />
-          {plannedSessionsCount > 0 && (
+          {!simplified && plannedSessionsCount > 0 && (
             <MetricTile
               tileKey="planifie"
               label={L.tilePlanifie}
@@ -401,15 +406,17 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
             open={openTile === 'realise'}
             onToggle={toggleTile}
           />
-          <MetricTile
-            tileKey="restant"
-            label={L.tileRestant}
-            main={`${fmt1(remaining.km)} km`}
-            sub={`${Math.round(remaining.dPlus)} ${L.mDPlus}`}
-            color={colors.seriesYellow}
-            open={openTile === 'restant'}
-            onToggle={toggleTile}
-          />
+          {!simplified && (
+            <MetricTile
+              tileKey="restant"
+              label={L.tileRestant}
+              main={`${fmt1(remaining.km)} km`}
+              sub={`${Math.round(remaining.dPlus)} ${L.mDPlus}`}
+              color={colors.seriesYellow}
+              open={openTile === 'restant'}
+              onToggle={toggleTile}
+            />
+          )}
         </div>
         {openTile && (
           <TilePopover

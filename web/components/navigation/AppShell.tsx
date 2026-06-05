@@ -9,6 +9,8 @@ import { createClient } from '@/lib/database/supabase-server'
 import { getServerUser } from '@/lib/database/get-user'
 import { getIsAdmin } from '@/lib/database/get-admin'
 import { getServerT } from '@/lib/i18n/server'
+import { getServerAppMode } from '@/lib/preferences/server'
+import { AppModeToggle } from '@/components/settings/AppModeToggle'
 
 async function fetchDisplayName(): Promise<string | null> {
   try {
@@ -28,13 +30,13 @@ async function fetchDisplayName(): Promise<string | null> {
 }
 
 export async function AppShell({ children }: { children: ReactNode }) {
-  const [displayName, user] = await Promise.all([fetchDisplayName(), getServerUser()])
+  const [displayName, user, mode] = await Promise.all([fetchDisplayName(), getServerUser(), getServerAppMode()])
   const isAdmin = user ? await getIsAdmin(user.id) : false
   const settingsAria = getServerT().settings.title
 
   return (
     <div className="flex min-h-screen bg-trail-bg">
-      <DesktopSidebar isAdmin={isAdmin} displayName={displayName} />
+      <DesktopSidebar isAdmin={isAdmin} displayName={displayName} mode={mode} />
       <div className="flex-1 flex flex-col min-h-screen min-w-0">
         <header
           className="sticky top-0 z-40 bg-trail-header border-b border-trail-border px-4 pb-3 md:hidden"
@@ -46,9 +48,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
               <span className="text-trail-text"> Cockpit</span>
             </span>
             <div className="flex items-center gap-2">
-              {displayName && (
-                <span className="text-sm font-semibold text-trail-primary">{displayName}</span>
-              )}
+              <AppModeToggle variant="compact" initialMode={mode} />
               <Link
                 href="/settings"
                 className="text-trail-muted hover:text-trail-text p-1 -mr-1"
@@ -63,7 +63,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
           <SyncOnFocus />
           {children}
         </PullToRefresh>
-        <BottomNav isAdmin={isAdmin} />
+        <BottomNav isAdmin={isAdmin} mode={mode} />
       </div>
     </div>
   )

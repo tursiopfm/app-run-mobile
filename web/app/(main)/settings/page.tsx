@@ -1,5 +1,7 @@
-import { Plug2, Palette, Sparkles, LifeBuoy, User, Route } from 'lucide-react'
+import { Plug2, Palette, Sparkles, LifeBuoy, User, Route, Compass } from 'lucide-react'
 import { StravaSection } from '@/components/settings/StravaSection'
+import { AppModeToggle } from '@/components/settings/AppModeToggle'
+import { getServerAppMode } from '@/lib/preferences/server'
 import { CommuteRoutesTeaser } from '@/components/settings/CommuteRoutesTeaser'
 import { AccountSection } from '@/components/settings/AccountSection'
 import { AppearanceSection } from '@/components/settings/AppearanceSection'
@@ -70,6 +72,7 @@ export default async function SettingsPage({
   const ROADMAP = buildRoadmap(settingsLabels)
   const user = await getServerUser()
   const supabase = await createClient()
+  const appMode = await getServerAppMode()
 
   let stravaConnected = false
   let stravaAthleteName: string | null = null
@@ -203,6 +206,18 @@ export default async function SettingsPage({
             activeCount={commuteActiveCount}
             labels={commuteLabels}
           />
+        </SectionCard>
+      </section>
+
+      {/* ── Mode d'affichage ── */}
+      <section>
+        <SectionHeader
+          icon={Compass}
+          title="Mode d’affichage"
+          subtitle="Mission (allégé) ou Expert (cockpit complet)"
+        />
+        <SectionCard>
+          <AppModeToggle variant="row" initialMode={appMode} />
         </SectionCard>
       </section>
 

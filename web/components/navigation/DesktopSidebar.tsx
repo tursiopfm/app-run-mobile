@@ -13,9 +13,10 @@ import { useT } from '@/lib/i18n/I18nProvider'
 type Props = {
   isAdmin: boolean
   displayName: string | null
+  mode?: 'mission' | 'expert'
 }
 
-export function DesktopSidebar({ isAdmin, displayName }: Props) {
+export function DesktopSidebar({ isAdmin, displayName, mode = 'expert' }: Props) {
   const pathname = usePathname()
   const tabs = useT().tabs
   const [pinned, setPinned] = useState(() => {
@@ -54,13 +55,15 @@ export function DesktopSidebar({ isAdmin, displayName }: Props) {
     if (!pinned) setHovered(false)
   }, [pinned])
 
+  // Mode Mission : onglets Charge et Courses masqués (réservés à l'Expert).
+  const MISSION_HIDDEN = ['/charge', '/courses']
   const NAV = [
     { href: '/dashboard',  icon: LayoutGrid, label: tabs.cockpit },
     { href: '/charge',     icon: Dumbbell,   label: tabs.charge },
     { href: '/plan',       icon: Calendar,   label: tabs.plan },
     { href: '/activities', icon: Footprints, label: tabs.activities },
     { href: '/courses',    icon: Trophy,     label: tabs.courses },
-  ]
+  ].filter(item => mode !== 'mission' || !MISSION_HIDDEN.includes(item.href))
   if (isAdmin) NAV.push({ href: '/admin', icon: ShieldCheck, label: 'Admin' })
 
   const initials = displayName
