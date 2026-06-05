@@ -69,10 +69,13 @@ export async function GET(request: NextRequest) {
     // Onboarding : connecter Strava depuis le flow termine l'onboarding
     // et enregistre la source de données côté serveur (fiable).
     if (from === 'onboarding') {
-      await supabase
+      const { error: completionError } = await supabase
         .from('profiles')
         .update({ onboarding_completed_at: now, onboarding_data_source: 'strava' })
         .eq('id', user.id)
+      // Non bloquant : la connexion a réussi. Si l'update échoue, l'user
+      // retombe sur /onboarding (étape Données) — récupérable, pas de perte.
+      if (completionError) console.error('Onboarding completion update failed:', completionError)
     }
 
     // Trigger immédiat du premier tick d'import (background via waitUntil).
