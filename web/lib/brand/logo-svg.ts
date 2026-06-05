@@ -20,6 +20,7 @@ export type RenderOpts = {
   glow?: boolean
 }
 
+// fan = longueur du fanion (axe x) ; 0.27/0.54 en dérivent la hauteur du triangle.
 function flag(glyph: string, mast: number, fan: number, node: number): string {
   const { x, y } = END
   const tip = y - 9
@@ -61,6 +62,7 @@ export function renderLogoMarkSvg(opts: RenderOpts = {}): string {
   const glyph = tier === 'compact' ? compactGlyph(v.glyph) : fullGlyph(v.glyph, v.surface, glow)
 
   const effShape: Shape = maskable ? 'bleed' : shape
+  // shape 'none' (ou variante mono sans fill) → pas de rect : fond transparent.
   let bg = ''
   if (v.fill && effShape === 'squircle') bg = `<rect x="3" y="3" width="42" height="42" rx="13" fill="${v.fill}"/>`
   else if (v.fill && effShape === 'bleed') bg = `<rect x="0" y="0" width="48" height="48" fill="${v.fill}"/>`
