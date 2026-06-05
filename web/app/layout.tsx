@@ -15,6 +15,7 @@ const inter = Inter({
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { InstallPrompt } from '@/components/ui/InstallPrompt'
 import { ServiceWorkerRegistrar } from '@/components/ui/ServiceWorkerRegistrar'
+import { SplashScreen } from '@/components/ui/SplashScreen'
 import { I18nProvider } from '@/lib/i18n/I18nProvider'
 import { getServerLang } from '@/lib/i18n/server'
 
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <I18nProvider initialLang={lang}>
           <ThemeProvider>
             {children}
+            <SplashScreen />
             <ServiceWorkerRegistrar />
             <InstallPrompt />
           </ThemeProvider>
