@@ -18,6 +18,9 @@ const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : use
 
 type Phase = 'show' | 'fade' | 'done'
 
+const SHOW_MS = 2600 // durée pleine de notre splash (après que la page soit visible)
+const FADE_MS = 600 // durée du fondu de sortie
+
 export function SplashScreen() {
   const [phase, setPhase] = useState<Phase>('show')
   const [forced, setForced] = useState(false)
@@ -35,9 +38,39 @@ export function SplashScreen() {
       return
     }
     sessionStorage.setItem('tc_splash', '1')
-    const toFade = setTimeout(() => setPhase('fade'), 1100)
-    const toDone = setTimeout(() => setPhase('done'), 1550)
-    return () => { clearTimeout(toFade); clearTimeout(toDone) }
+
+    let toFade: ReturnType<typeof setTimeout>
+    let toDone: ReturnType<typeof setTimeout>
+    let onVis: (() => void) | null = null
+
+    // Démarre le compte à rebours UNIQUEMENT quand la page est réellement à
+    // l'écran (le splash OS peut masquer la page 2-3 s pendant le chargement ;
+    // sans ça notre minuteur s'écoule derrière lui et le splash ne « flashe »
+    // qu'une fraction de seconde).
+    const begin = () => {
+      toFade = setTimeout(() => setPhase('fade'), SHOW_MS)
+      toDone = setTimeout(() => setPhase('done'), SHOW_MS + FADE_MS)
+    }
+    const kick = () => requestAnimationFrame(() => requestAnimationFrame(begin))
+
+    if (document.visibilityState === 'visible') {
+      kick()
+    } else {
+      onVis = () => {
+        if (document.visibilityState === 'visible') {
+          document.removeEventListener('visibilitychange', onVis!)
+          onVis = null
+          kick()
+        }
+      }
+      document.addEventListener('visibilitychange', onVis)
+    }
+
+    return () => {
+      clearTimeout(toFade)
+      clearTimeout(toDone)
+      if (onVis) document.removeEventListener('visibilitychange', onVis)
+    }
   }, [])
 
   if (phase === 'done') return null
