@@ -1,6 +1,8 @@
 # Brand Asset Pack — App Icon / Favicon / PWA / Splash / Open Graph
 
-> **Status: Spec validée** · 2026-06-05 · Tout en **preview** (aucun asset live ni écran métier modifié). Mockups validés via Playwright (`.tmp-brand-mockup/`).
+> **Status: Implémenté** · 2026-06-05 · Branche: `feat/brand-asset-pack` · Code: web/lib/brand/{logo-geometry,logo-svg}.ts, web/components/brand/{BrandGlyph,OgCard}.tsx, web/scripts/brand/{ico,gen-brand-assets}.ts, web/public/brand-preview/, web/app/design-system/{page.tsx,og/page.tsx}
+>
+> Tout reste en **preview** (aucun asset live ni écran métier modifié).
 
 ## Contexte
 
@@ -148,4 +150,7 @@ Tuile `/design-system` : fond `#0B0F14`, logo stacked centré (mark `full` orang
 
 ## Drift notes
 
-_(à remplir si l'implémentation diverge de cette spec.)_
+- **Outillage** : builder écrit en TS (`logo-svg.ts`), script exécuté via **`tsx`** (devDep) en plus de `sharp` — pour conserver une source unique TS partagée écran/export (cf. décision Q1 « Node + sharp »).
+- **`LogoMark` live non modifié** : le glyphe trajectoire+drapeau vit dans `logo-svg.ts` / `BrandGlyph` (preview). `LogoTrailCockpit.tsx` (cible concentrique) reste tel quel → la section « Logo » de `/design-system` montre l'ancien mark, les nouvelles sections le nouveau. Adoption live = point à valider (#2).
+- **Route de capture OG** : ajout de `web/app/design-system/og/page.tsx` (carte 1200×630 pleine largeur) car la section OG dans la page `max-w-3xl` clippe la carte. Le PNG `og-default.png` est capturé via Playwright sur cette route (prompt PWA `position:fixed` masqué avant capture).
+- **Dasharray en unités absolues** : `TRAJ_LEN = 38.58` (mesuré) au lieu de `pathLength=1`, pour un rendu identique navigateur ↔ sharp/librsvg. Halo (`glow`) désactivé à l'export (filtres CSS non garantis sous librsvg).
