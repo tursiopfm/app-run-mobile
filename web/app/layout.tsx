@@ -1,5 +1,17 @@
 import type { Metadata, Viewport } from 'next'
+import { Space_Grotesk, Inter } from 'next/font/google'
 import './globals.css'
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-space-grotesk',
+})
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+})
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { InstallPrompt } from '@/components/ui/InstallPrompt'
 import { ServiceWorkerRegistrar } from '@/components/ui/ServiceWorkerRegistrar'
@@ -37,7 +49,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const lang = getServerLang()
   return (
-    <html lang={lang} suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning className={`${spaceGrotesk.variable} ${inter.variable}`}>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
