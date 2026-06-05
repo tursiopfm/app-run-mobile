@@ -9,6 +9,8 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Sheet } from '@/components/ui/Sheet'
 import { TrajectoryLine } from '@/components/brand/TrajectoryLine'
 import { LogoTrailCockpit, LogoMark } from '@/components/brand/LogoTrailCockpit'
+import { BrandGlyph } from '@/components/brand/BrandGlyph'
+import { OgCard } from '@/components/brand/OgCard'
 
 // Page interne de validation de la marque — /design-system
 // Présente palette, typographies, boutons, badges, cartes, sheets et la
@@ -138,6 +140,99 @@ export default function DesignSystemPage() {
               <div className="inline-block rounded-lg" style={{ outline: '1px dashed var(--ink-500)', padding: 22 }}>
                 <LogoTrailCockpit variant="horizontal" tone="brand" size={44} />
               </div>
+            </div>
+          </div>
+        </Section>
+
+        {/* Audit lisibilité — Full vs Micro */}
+        <Section id="audit" title="App Icon — audit lisibilité (full vs micro)">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {([['full', 'Mark complet'], ['compact', 'Mark micro']] as const).map(([tier, label]) => (
+              <div key={tier} className="rounded-xl border border-ink-600 bg-ink-800 p-6">
+                <p className="font-body text-[12px] text-trail-muted mb-4">{label}</p>
+                <div className="flex flex-wrap items-end gap-5">
+                  {[16, 24, 32, 64, 128].map((s) => (
+                    <div key={s} className="flex flex-col items-center gap-1.5">
+                      <BrandGlyph variant="orange" tier={tier} shape="squircle" size={s} />
+                      <span className="font-body text-[11px] text-trail-muted">{s}px</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        {/* Variantes App Icon */}
+        <Section id="appicon" title="App Icon — variantes A / B / C">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="flex flex-col items-center gap-2 rounded-xl border border-ink-600 bg-ink-700 p-6">
+              <BrandGlyph variant="orange" tier="full" shape="squircle" size={104} />
+              <p className="font-body text-[12px] font-semibold text-trail-text">A — Orange</p>
+              <p className="font-body text-[11px] text-trail-muted">fond #FF7900 · glyphe blanc</p>
+            </div>
+            <div className="flex flex-col items-center gap-2 rounded-xl border border-ink-600 bg-ink-700 p-6">
+              <BrandGlyph variant="deep" tier="full" shape="squircle" size={104} />
+              <p className="font-body text-[12px] font-semibold text-trail-text">B — Deep Mission</p>
+              <p className="font-body text-[11px] text-trail-muted">fond #0B0F14 · glyphe orange</p>
+            </div>
+            <div className="flex flex-col items-center gap-2 rounded-xl border border-ink-600 bg-ink-700 p-6">
+              <div className="flex items-center gap-3 rounded-lg bg-ink-900 p-3">
+                <BrandGlyph variant="mono-white" tier="full" shape="none" size={72} />
+                <span className="rounded bg-[#F4F7F6] p-1.5"><BrandGlyph variant="mono-black" tier="full" shape="none" size={56} /></span>
+              </div>
+              <p className="font-body text-[12px] font-semibold text-trail-text">C — Monochrome</p>
+              <p className="font-body text-[11px] text-trail-muted">blanc + noir · transparent</p>
+            </div>
+          </div>
+        </Section>
+
+        {/* Pack exporté (PNG réels depuis /brand-preview) */}
+        <Section id="pack" title="Pack exporté — favicon · PWA · Apple">
+          <div className="rounded-xl border border-ink-600 bg-ink-800 p-6 space-y-6">
+            <div>
+              <p className="font-body text-[12px] text-trail-muted mb-3">Favicon (tailles réelles)</p>
+              <div className="flex items-end gap-6">
+                {[16, 32, 48].map((s) => (
+                  <div key={s} className="flex flex-col items-center gap-1.5">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`/brand-preview/favicon-${s}.png`} width={s} height={s} alt={`favicon ${s}`} />
+                    <span className="font-body text-[11px] text-trail-muted">{s}px</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-wrap items-end gap-8">
+              {([
+                ['icon-192.png', 96, 'PWA any 192'],
+                ['icon-512.png', 96, 'PWA any 512'],
+                ['maskable-512.png', 96, 'PWA maskable'],
+                ['apple-touch-icon.png', 90, 'Apple 180'],
+              ] as const).map(([file, w, label]) => (
+                <div key={file} className="flex flex-col items-center gap-1.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/brand-preview/${file}`} width={w} height={w} alt={label} className="rounded-2xl" />
+                  <span className="font-body text-[11px] text-trail-muted">{label}</span>
+                </div>
+              ))}
+            </div>
+            <p className="font-body text-[12px] text-trail-muted">
+              Recommandé pour la PWA : <span className="text-primary font-semibold">variante A (Orange)</span>. Pack complet et tailles dans <code className="text-trail-text">/brand-preview/README.md</code>.
+            </p>
+          </div>
+        </Section>
+
+        {/* Splash — concept */}
+        <Section id="splash" title="Splash — concept">
+          <div className="rounded-xl border border-ink-600 bg-ink-800 p-6 flex justify-center">
+            <div className="flex flex-col items-center justify-center rounded-[34px] border border-ink-600" style={{ width: 300, height: 540, background: '#0B0F14' }}>
+              <span style={{ background: '#FF7900', width: 72, height: 72, borderRadius: 21, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <BrandGlyph variant="orange" tier="full" shape="none" size={56} />
+              </span>
+              <span className="wordmark font-display mt-3.5 text-[17px] font-bold uppercase tracking-[0.12em]">
+                <span className="text-primary">Trail</span> Cockpit
+              </span>
+              <span className="font-display text-trail-muted text-[13px] mt-7">Préparer. Piloter. Accomplir.</span>
             </div>
           </div>
         </Section>
@@ -336,6 +431,13 @@ export default function DesignSystemPage() {
                 <Flag size={18} className="shrink-0 text-primary" />
               </div>
             </Card>
+          </div>
+        </Section>
+
+        {/* Open Graph */}
+        <Section id="og" title="Open Graph — concept (1200×630)">
+          <div className="overflow-auto rounded-xl border border-ink-600">
+            <OgCard />
           </div>
         </Section>
 
