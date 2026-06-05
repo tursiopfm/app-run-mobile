@@ -21,7 +21,7 @@ export function FitnessFatigue10dChart({ dailyMetrics }: { dailyMetrics: DailyMe
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       <div className="flex items-center justify-between mb-[6px]">
-        <h3 className="text-[15px] font-semibold text-trail-muted">{L.blocks.fitnessFatigue}</h3>
+        <h3 className="text-[15px] font-semibold text-trail-muted font-display">{L.blocks.fitnessFatigue}</h3>
       </div>
       <div ref={wrapperRef} style={{ width: '100%', height: 180 }}>
         <ResponsiveContainer>

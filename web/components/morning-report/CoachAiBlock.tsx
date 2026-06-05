@@ -12,7 +12,7 @@ export function CoachAiBlock() {
       <div className="flex items-center justify-between mb-[6px]">
         <div className="flex items-center gap-2">
           <span className="text-[14px]">🧠</span>
-          <h3 className="text-[15px] font-semibold text-trail-muted">Mot du coach</h3>
+          <h3 className="text-[15px] font-semibold text-trail-muted font-display">Mot du coach</h3>
         </div>
         <span
           className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold"

@@ -23,7 +23,7 @@ function SectionHeader({
         <Icon size={14} className="text-trail-primary" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-bold text-trail-text leading-tight">{title}</p>
+        <p className="text-[14px] font-bold text-trail-text leading-tight font-display">{title}</p>
         <p className="text-[11px] text-trail-muted leading-tight mt-[1px]">{subtitle}</p>
       </div>
     </div>

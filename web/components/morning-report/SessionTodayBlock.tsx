@@ -26,7 +26,7 @@ export function SessionTodayBlock({ session }: { session: MorningTodaySession })
     return (
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
         <div className="flex items-center justify-between mb-[6px]">
-          <h3 className="text-[15px] font-semibold text-trail-muted">Séance du jour</h3>
+          <h3 className="text-[15px] font-semibold text-trail-muted font-display">Séance du jour</h3>
           <span className="text-[11px] text-trail-success">Repos</span>
         </div>
         <h2
@@ -51,7 +51,7 @@ export function SessionTodayBlock({ session }: { session: MorningTodaySession })
       }}
     >
       <div className="flex items-center justify-between mb-[6px]">
-        <h3 className="text-[15px] font-semibold text-trail-muted">Séance du jour</h3>
+        <h3 className="text-[15px] font-semibold text-trail-muted font-display">Séance du jour</h3>
       </div>
       {!session && <p className="text-[12px] text-trail-muted">Pas de séance prévue aujourd&apos;hui.</p>}
       {session && (

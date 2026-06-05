@@ -502,7 +502,7 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
       >
         <button onClick={onClose} className="flex items-center gap-2" style={{ cursor: 'pointer' }}>
           <BackArrow />
-          <span className="text-[16px] font-semibold text-trail-text">{A.headerSearch}</span>
+          <span className="text-[16px] font-semibold text-trail-text font-display">{A.headerSearch}</span>
         </button>
         <button
           onClick={onClose}
@@ -640,7 +640,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
       >
         <button onClick={onClose} className="flex items-center gap-2" style={{ cursor: 'pointer' }}>
           <BackArrow />
-          <span className="text-[16px] font-semibold text-trail-text">{A.headerFilter}</span>
+          <span className="text-[16px] font-semibold text-trail-text font-display">{A.headerFilter}</span>
         </button>
       </div>
 
@@ -848,7 +848,7 @@ function RecordsView({ records }: { records: PersonalRecord[] }) {
       </div>
 
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-        <p className="text-[15px] font-bold text-trail-text mb-[10px]">{A.raceRecordsTitle}</p>
+        <p className="text-[15px] font-bold text-trail-text mb-[10px] font-display">{A.raceRecordsTitle}</p>
         <div className="flex gap-2 overflow-x-auto pb-2 mb-[10px]">
           {(Object.keys(RECORD_FILTER_LABELS) as RecordFilter[]).map(f => (
             <RecordFilterChip key={f} label={RECORD_FILTER_LABELS[f]} active={filter === f} onClick={() => setFilter(f)} />
@@ -1096,7 +1096,7 @@ export default function CoursesClient({
           title={L.upcomingRaces}
           helpTitle={L.upcomingRaces}
           helpBody={L.upcomingRacesHelp}
-          titleClassName="text-[15px] font-semibold text-trail-text"
+          titleClassName="text-[15px] font-semibold text-trail-text font-display"
         >
           {upcomingRaces.length === 0 ? (
             <p className="text-[13px] text-trail-muted">{L.noRacePlanned}</p>
@@ -1221,7 +1221,7 @@ export default function CoursesClient({
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border, minHeight: 200 }}
         >
           <span className="text-[32px] mb-3">🏆</span>
-          <p className="text-[16px] font-bold text-trail-text mb-2">Records</p>
+          <p className="text-[16px] font-bold text-trail-text mb-2 font-display">Records</p>
           <p className="text-[14px]" style={{ color: colors.subtleText }}>Bientôt disponible</p>
         </div>
       )}

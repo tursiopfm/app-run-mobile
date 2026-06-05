@@ -329,7 +329,7 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
       >
         <button onClick={onClose} className="flex items-center gap-2" style={{ cursor: 'pointer' }}>
           <BackArrow />
-          <span className="text-[16px] font-semibold text-trail-text">{L.headerSearch}</span>
+          <span className="text-[16px] font-semibold text-trail-text font-display">{L.headerSearch}</span>
         </button>
         <button
           onClick={onClose}
@@ -472,7 +472,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
       >
         <button onClick={onClose} className="flex items-center gap-2" style={{ cursor: 'pointer' }}>
           <BackArrow />
-          <span className="text-[16px] font-semibold text-trail-text">{L.headerFilter}</span>
+          <span className="text-[16px] font-semibold text-trail-text font-display">{L.headerFilter}</span>
         </button>
       </div>
 

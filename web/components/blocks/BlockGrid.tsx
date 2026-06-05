@@ -181,7 +181,7 @@ function SortableBlock({ id, label, isFull, onToggleWidth, children }: {
 function DragCard({ label, emoji }: { label: string; emoji: string }) {
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-primary/60 shadow-2xl px-4 py-5 opacity-90">
-      <span className="text-[15px] font-semibold text-trail-text">{emoji} {label}</span>
+      <span className="text-[15px] font-semibold text-trail-text font-display">{emoji} {label}</span>
     </div>
   )
 }

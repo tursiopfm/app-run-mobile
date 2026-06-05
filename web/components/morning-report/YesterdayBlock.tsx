@@ -19,7 +19,7 @@ export function YesterdayBlock({ act }: { act: MorningLastActivity | null }) {
   if (!act) {
     return (
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-        <h3 className="text-[15px] font-semibold text-trail-muted">Hier</h3>
+        <h3 className="text-[15px] font-semibold text-trail-muted font-display">Hier</h3>
         <p className="text-[12px] text-trail-muted mt-2">Aucune activité récente.</p>
       </div>
     )
@@ -32,7 +32,7 @@ export function YesterdayBlock({ act }: { act: MorningLastActivity | null }) {
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       <div className="flex items-center justify-between mb-[6px]">
-        <h3 className="text-[15px] font-semibold text-trail-muted truncate">Hier · {act.name}</h3>
+        <h3 className="text-[15px] font-semibold text-trail-muted truncate font-display">Hier · {act.name}</h3>
       </div>
       <div className="grid grid-cols-4 gap-2">
         <Cell label="Durée"  value={dur} />

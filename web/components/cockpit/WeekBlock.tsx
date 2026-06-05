@@ -51,7 +51,7 @@ export function WeekBlock({ sportOverviews, allSessions }: Props) {
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       {/* Header */}
       <div className="flex items-center justify-between mb-[10px]">
-        <p className="text-[15px] font-semibold text-trail-text font-display">{L.blockLabel.week}</p>
+        <p className="text-[15px] font-semibold text-trail-muted font-display">{L.blockLabel.week}</p>
         <div className="flex gap-1">
           {ALL_SPORT_KEYS.map((sport) => {
             const scfg = SPORT_CONFIG[sport]
