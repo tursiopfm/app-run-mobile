@@ -130,6 +130,7 @@ export function MissionSetupFlow({
   const [step, setStep] = useState(stravaStatus ? TOTAL : 1)
   const [done, setDone] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [completionError, setCompletionError] = useState(false)
   const [discipline, setDiscipline] = useState<string | null>(initialAnswers?.discipline ?? null)
   const [mission, setMission] = useState<string | null>(initialAnswers?.mission ?? null)
   const [mode, setMode] = useState<string | null>(initialAnswers?.mode ?? null)
@@ -156,15 +157,16 @@ export function MissionSetupFlow({
     }
   }
 
-  async function persist(payload: Record<string, unknown>) {
+  async function persist(payload: Record<string, unknown>): Promise<boolean> {
     try {
-      await fetch('/api/profile', {
+      const res = await fetch('/api/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
+      return res.ok
     } catch {
-      // best-effort : on continue le parcours même si la persistance échoue
+      return false
     }
   }
 
@@ -177,10 +179,18 @@ export function MissionSetupFlow({
   }
 
   // Chemin sans Strava : persister les réponses + demander la complétion
-  // (le serveur pose onboarding_completed_at), puis dashboard.
+  // (le serveur pose onboarding_completed_at), puis dashboard. Si l'écriture
+  // échoue, on NE navigue PAS (le gate renverrait l'user ici en boucle) : on
+  // réaffiche le bouton avec une erreur pour qu'il réessaie.
   async function finish() {
     setBusy(true)
-    await persist({ ...answersPayload(), onboarding_complete: true })
+    setCompletionError(false)
+    const ok = await persist({ ...answersPayload(), onboarding_complete: true })
+    if (!ok) {
+      setCompletionError(true)
+      setBusy(false)
+      return
+    }
     router.push('/dashboard')
   }
 
@@ -215,7 +225,7 @@ export function MissionSetupFlow({
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-5 py-7">
         {done ? (
-          <CompletionScreen discipline={disciplineOpt} mission={missionOpt} mode={modeOpt} busy={busy} onEnter={finish} />
+          <CompletionScreen discipline={disciplineOpt} mission={missionOpt} mode={modeOpt} busy={busy} error={completionError} onEnter={finish} />
         ) : (
           <div className="flex-1">
             {step === 1 && (
@@ -396,8 +406,8 @@ export function MissionSetupFlow({
   )
 }
 
-function CompletionScreen({ discipline, mission, mode, busy, onEnter }: {
-  discipline?: Option; mission?: Option; mode?: Option; busy: boolean; onEnter: () => void
+function CompletionScreen({ discipline, mission, mode, busy, error, onEnter }: {
+  discipline?: Option; mission?: Option; mode?: Option; busy: boolean; error: boolean; onEnter: () => void
 }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center text-center animate-[stepIn_320ms_cubic-bezier(0.32,0.72,0,1)]">
@@ -417,6 +427,12 @@ function CompletionScreen({ discipline, mission, mode, busy, onEnter }: {
         {mission && <Badge variant="charge" dot>{mission.label}</Badge>}
         {mode && <Badge color={mode.accent} dot>{mode.label}</Badge>}
       </div>
+
+      {error && (
+        <p role="alert" className="mt-5 text-sm text-red-400 bg-red-500/10 border border-red-500/25 rounded-xl px-3 py-2.5 max-w-xs">
+          L&apos;enregistrement a échoué. Réessaie.
+        </p>
+      )}
 
       <div className="mt-7 w-full">
         <Button fullWidth onClick={onEnter} disabled={busy} trailingIcon={<ArrowRight size={16} />}>

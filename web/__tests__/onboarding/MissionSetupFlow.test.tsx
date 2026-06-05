@@ -55,4 +55,16 @@ describe('MissionSetupFlow', () => {
     expect(body.onboarding_complete).toBe(true)
     await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/dashboard'))
   })
+
+  it('en cas d\'échec de complétion, garde l\'utilisateur sur place avec une erreur', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, json: async () => ({}) }) as jest.Mock
+    render(<MissionSetupFlow stravaStatus="error" />)
+    fireEvent.click(screen.getByRole('button', { name: /lancer le cockpit/i }))
+    fireEvent.click(screen.getByRole('button', { name: /entrer dans le cockpit/i }))
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(/enregistrement a échoué/i)
+    })
+    expect(mockPush).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: /entrer dans le cockpit/i })).not.toBeDisabled()
+  })
 })
