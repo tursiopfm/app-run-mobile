@@ -19,8 +19,9 @@ import { I18nProvider } from '@/lib/i18n/I18nProvider'
 import { getServerLang } from '@/lib/i18n/server'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://trailcockpit.run'),
   title: 'Trail Cockpit',
-  description: 'Your trail running dashboard',
+  description: 'Le centre de contrôle intelligent des sportifs d’endurance.',
   manifest: '/manifest.json',
   applicationName: 'Trail Cockpit',
   appleWebApp: {
@@ -30,10 +31,24 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: '/favicon.ico', sizes: 'any' },
       { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
       { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'Trail Cockpit',
+    title: 'Trail Cockpit',
+    description: 'Préparer. Piloter. Accomplir. — le centre de contrôle intelligent des sportifs d’endurance.',
+    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Trail Cockpit' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Trail Cockpit',
+    description: 'Préparer. Piloter. Accomplir. — le centre de contrôle intelligent des sportifs d’endurance.',
+    images: ['/og-default.png'],
   },
 }
 
