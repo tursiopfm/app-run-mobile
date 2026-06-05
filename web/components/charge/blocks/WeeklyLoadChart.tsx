@@ -11,8 +11,8 @@ import {
 
 const SPORT_COLORS = {
   run:   colors.chargeOrange,
-  ride:  colors.seriesGreen,
-  swim:  colors.seriesBlue,
+  ride:  colors.bikeGreen,
+  swim:  colors.swimBlue,
   other: colors.subtleText,
 }
 

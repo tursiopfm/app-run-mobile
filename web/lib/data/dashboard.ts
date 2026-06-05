@@ -100,7 +100,7 @@ export type DashboardData = {
 }
 
 const DAY_ABBR = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
-const MONTH_CUMUL_COLORS = ['#4ADE80', '#FF6B35', '#FACC15', '#38BDF8']
+const MONTH_CUMUL_COLORS = ['#4ADE80', '#FF7900', '#FACC15', '#38BDF8']
 const YEAR_COLOR_PALETTE = [
   '#38BDF8', '#EF4444', '#EAB308', '#22C55E',
   '#F97316', '#06B6D4', '#8B5CF6', '#FB7185',

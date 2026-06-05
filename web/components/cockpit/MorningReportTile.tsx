@@ -54,7 +54,7 @@ export function MorningReportTile() {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="w-[6px] h-[6px] rounded-full bg-trail-primary" />
-          <span className="text-[15px] font-semibold text-trail-muted">Rapport matinal</span>
+          <span className="text-[15px] font-semibold text-trail-muted font-display">Rapport matinal</span>
         </div>
         <span
           className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold"

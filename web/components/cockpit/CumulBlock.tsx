@@ -62,7 +62,7 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-[6px]">
         <div className="flex items-center gap-1">
-          <span className="text-[15px] font-semibold text-trail-muted">
+          <span className="text-[15px] font-semibold text-trail-muted font-display">
             {L.cumulHeader(period)}
           </span>
           <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{sportLabel(activeSport, t)}</span>

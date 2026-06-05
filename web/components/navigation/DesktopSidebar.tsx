@@ -86,7 +86,7 @@ export function DesktopSidebar({ isAdmin, displayName }: Props) {
         <div className="shrink-0 flex items-center gap-3 px-3 h-14 border-b border-trail-border">
           <Image src="/icons/icon-192.png" alt="Trail Cockpit" width={36} height={36} className="shrink-0 rounded-lg" />
           {expanded && (
-            <span className="flex-1 text-sm font-bold tracking-widest uppercase whitespace-nowrap">
+            <span className="flex-1 text-sm font-bold tracking-widest uppercase whitespace-nowrap font-display">
               <span className="text-trail-primary">Trail</span>
               <span className="text-trail-text"> Cockpit</span>
             </span>

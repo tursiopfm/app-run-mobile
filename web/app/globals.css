@@ -4,15 +4,15 @@
 
 /* ── Palette Sombre (défaut) ─────────────────────────── */
 :root {
-  --trail-bg:               #0A0F0E;
-  --trail-surface:          #111A18;
-  --trail-card:             #162420;
-  --trail-border:           #1E3530;
-  --trail-header:           #101917;
-  --trail-muted:            #8BA8A3;
-  --trail-text:             #E2ECE9;
-  --trail-primary:          #FF6B35;
-  --trail-primary-dim:      #CC5528;
+  --trail-bg:               var(--ink-900);
+  --trail-surface:          var(--ink-800);
+  --trail-card:             var(--ink-700);
+  --trail-border:           var(--ink-600);
+  --trail-header:           #0F151D;
+  --trail-muted:            var(--text-muted);
+  --trail-text:             var(--text-primary);
+  --trail-primary:          var(--primary);
+  --trail-primary-dim:      var(--primary-dim);
   --trail-accent:           #38BDF8;
   --trail-success:          #4ADE80;
   --trail-warning:          #FBBF24;
@@ -29,19 +29,46 @@
   --ind-border: #232826;
   --ind-label:  #D1D5DB;
   --ind-shadow: 0 2px 4px rgba(0,0,0,0.3);
+
+  /* ── Brand foundation « Deep Mission » (nouveau DS, additif) ─────────
+     Encre neutre multi-sport. Découple le branding (--primary) des données
+     (--data-*). Voir /design-system. */
+  --ink-900: #0B0F14;
+  --ink-800: #121821;
+  --ink-700: #18202B;
+  --ink-600: #25303E;
+  --ink-500: #34414F;
+  --primary:      #FF7900;
+  --primary-dim:  #CC6100;
+  --primary-glow: rgba(255, 121, 0, 0.18);
+  --data-charge: #FF7900;
+  --data-bike:   #27A971;
+  --data-swim:   #4BB4E6;
+  --data-run:    #FF7900;
+  --text-primary:   #E2ECE9;
+  --text-secondary: #B7C6C1;
+  --text-muted:     #8BA8A3;
+  --text-disabled:  #5A6E69;
+  --text-inverse:   #0B0F14;
+  --primary-text:   #FF8A33;
+  --status-success: #4ADE80;
+  --status-warning: #FBBF24;
+  --status-danger:  #F87171;
+  --status-info:    #38BDF8;
+  --status-neutral: #8BA8A3;
 }
 
 /* ── Palette Claire ──────────────────────────────────── */
 .light {
-  --trail-bg:               #F4F7F6;
-  --trail-surface:          #FFFFFF;
-  --trail-card:             #FFFFFF;
-  --trail-border:           #D6E1DD;
+  --trail-bg:               var(--ink-900);
+  --trail-surface:          var(--ink-800);
+  --trail-card:             var(--ink-700);
+  --trail-border:           var(--ink-600);
   --trail-header:           #E8F0ED;
-  --trail-muted:            #5F7771;
-  --trail-text:             #13201D;
-  --trail-primary:          #E6612B;
-  --trail-primary-dim:      #CC5226;
+  --trail-muted:            var(--text-muted);
+  --trail-text:             var(--text-primary);
+  --trail-primary:          #C2410C;
+  --trail-primary-dim:      #A8380A;
   --trail-accent:           #1D8FC6;
   --trail-success:          #138A52;
   --trail-warning:          #CC9200;
@@ -58,6 +85,31 @@
   --ind-border: #D6E1DD;
   --ind-label:  #4B5563;
   --ind-shadow: 0 1px 2px rgba(15,30,28,0.08);
+
+  /* ── Brand foundation « Deep Mission » — variante claire ───────────── */
+  --ink-900: #F4F7F6;
+  --ink-800: #FFFFFF;
+  --ink-700: #FFFFFF;
+  --ink-600: #D6E1DD;
+  --ink-500: #BBCBC4;
+  --primary:      #FF7900;
+  --primary-dim:  #CC6100;
+  --primary-glow: rgba(255, 121, 0, 0.18);
+  --data-charge: #C2410C;
+  --data-bike:   #1E8E5E;
+  --data-swim:   #2A8FC4;
+  --data-run:    #C2410C;
+  --text-primary:   #13201D;
+  --text-secondary: #3C4F49;
+  --text-muted:     #5F7771;
+  --text-disabled:  #9DB0AA;
+  --text-inverse:   #F7FAF9;
+  --primary-text:   #C2410C;
+  --status-success: #138A52;
+  --status-warning: #B07A00;
+  --status-danger:  #D94F45;
+  --status-info:    #1D8FC6;
+  --status-neutral: #5F7771;
 }
 
 html, body {
@@ -118,4 +170,16 @@ html, body {
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Brand foundation — montée du bottom-sheet (composant Sheet du DS) */
+@keyframes sheetUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Onboarding Mission Setup — entrée d'écran */
+@keyframes stepIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
