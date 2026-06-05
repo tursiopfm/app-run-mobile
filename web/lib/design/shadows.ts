@@ -2,10 +2,12 @@
 // No box-shadow is used in the design system.
 // This file documents the border pattern used everywhere.
 
+// Theme-aware: pointe sur le token --trail-border (remappé Deep Mission), donc
+// correct en sombre ET en clair. (Actuellement non importé — doc de référence.)
 export const borders = {
-  card:       '1px solid #1E3530',   // border border-trail-border
-  tableCell:  '0.5px solid #1E3530', // border-[0.5px] border-trail-border
-  gridLine:   '#1E3530b3',           // trail-border at 70% opacity (chart grid lines)
+  card:       '1px solid var(--trail-border)',   // border border-trail-border
+  tableCell:  '0.5px solid var(--trail-border)', // border-[0.5px] border-trail-border
+  gridLine:   'color-mix(in srgb, var(--trail-border) 70%, transparent)', // trail-border ~70% (chart grid)
 } as const
 
 // Tailwind class shorthands

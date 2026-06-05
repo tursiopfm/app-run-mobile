@@ -108,10 +108,7 @@ export function ObjectifCourseBlock({ onChange }: Props) {
       >
         <div className="flex flex-col items-center justify-center text-center py-6 px-4">
           <span className="text-[40px] leading-none mb-2" aria-hidden>🎯</span>
-          <h3
-            className="text-[20px] text-trail-text mb-1 font-display"
-            style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-          >
+          <h3 className="text-[20px] text-trail-text mb-1 font-display">
             {L.objectifEmpty}
           </h3>
           <p className="text-[13px] text-trail-muted mb-4 max-w-xs">

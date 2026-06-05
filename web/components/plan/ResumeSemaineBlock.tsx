@@ -348,7 +348,7 @@ export function ResumeSemaineBlock({ reloadKey = 0 }: ResumeSemaineBlockProps = 
           <span className="text-[11px] text-trail-muted">{formatDow(selectedDateISO, L.dowLong)}</span>
           <span
             className="text-[18px] text-trail-text leading-tight font-display"
-            style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.02em' }}
+            style={{ letterSpacing: '0.02em' }}
           >
             {formatLong(selectedDateISO, L.monthsShort)}
           </span>
