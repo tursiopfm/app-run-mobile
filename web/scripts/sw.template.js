@@ -5,7 +5,7 @@ const VERSION = '__SW_VERSION__'
 const STATIC_CACHE = `trail-static-${VERSION}`
 const RUNTIME_CACHE = `trail-runtime-${VERSION}`
 
-const PRECACHE_URLS = ['/', '/manifest.json', '/icons/icon-192.png', '/icons/icon-512.png']
+const PRECACHE_URLS = ['/', '/launch', '/manifest.json', '/icons/icon-192.png', '/icons/icon-512.png']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -43,6 +43,21 @@ self.addEventListener('fetch', (event) => {
   // RSC payloads (?rsc=...) : streams dynamiques, jamais mis en cache.
   // Cloner un RSC stream pendant sa lecture cause "Error in input stream".
   if (url.searchParams.has('_rsc') || url.searchParams.has('rsc')) return
+
+  // Page de lancement /launch : cache-first → peinture quasi instantanée au
+  // démarrage de la PWA (le splash OS se lève dès le 1er rendu). Page statique
+  // triviale (splash + redirect) qui ne référence que des chunks hashés cachés ;
+  // une version éventuellement obsolète redirige juste vers /dashboard (lui en
+  // network-first, donc frais). Le bump de VERSION au déploiement purge le cache.
+  if (url.pathname === '/launch') {
+    event.respondWith(
+      caches.match(req).then((cached) => cached || fetch(req).then((res) => {
+        if (res.ok) caches.open(STATIC_CACHE).then((c) => c.put(req, res.clone())).catch(() => {})
+        return res
+      }))
+    )
+    return
+  }
 
   // Assets Next.js hashés : cache-first (URL garantit la fraîcheur)
   if (isHashedAsset(url)) {

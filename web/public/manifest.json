@@ -2,7 +2,7 @@
   "name": "Trail Cockpit",
   "short_name": "Trail Cockpit",
   "description": "Dashboard trail running & endurance",
-  "start_url": "/dashboard",
+  "start_url": "/launch",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

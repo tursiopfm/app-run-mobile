@@ -10,7 +10,7 @@
 // l'effet layout le retire avant la première peinture → aucun flash.
 
 import { useEffect, useLayoutEffect, useState } from 'react'
-import { LogoTrailCockpit } from '@/components/brand/LogoTrailCockpit'
+import { SplashVisual } from '@/components/ui/SplashVisual'
 
 // useLayoutEffect côté client (retire le splash avant peinture), useEffect en SSR
 // pour éviter le warning React.
@@ -85,10 +85,7 @@ export function SplashScreen() {
         pointerEvents: phase === 'fade' ? 'none' : undefined,
       }}
     >
-      <LogoTrailCockpit variant="stacked" tone="brand" size={88} />
-      <p className="font-display text-[14px] tracking-[0.02em]" style={{ color: '#8BA8A3' }}>
-        Préparer. Piloter. Accomplir.
-      </p>
+      <SplashVisual />
     </div>
   )
 }
