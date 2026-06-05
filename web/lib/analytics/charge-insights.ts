@@ -1,4 +1,5 @@
 // web/lib/analytics/charge-insights.ts
+import { buildDailyMetrics } from './fatigue'
 import type { DailyLoad, DailyMetrics } from './fatigue'
 import type { CesActivity, WeeklyLoadByCategory, SportCategoryKey, FreshnessResult, FreshnessZone, LoadBalanceResult, SportDistribution, IntensityLabel, IntensityShareCes, TopActivity, RampRateResult, RampRateLabel, InsightsResult, NoteItem, StatusId, ChargeSportPayload } from './charge-insights.types'
 import { FRESHNESS, MONOTONY, RAMP_RATE, LOAD_BALANCE, STRAIN } from './charge-thresholds'
@@ -39,6 +40,27 @@ export function getDailyLoadSeries(
     cursor.setUTCDate(cursor.getUTCDate() + 1)
   }
   return result
+}
+
+// Fenêtre d'amorçage de l'EWMA. L'ATL/CTL/TSB d'un jour doivent être une photo
+// stable de ce jour-là : ils ne doivent pas bouger quand on rouvre la page le
+// lendemain. On amorce donc l'EWMA sur ~1 an d'historique (CTL k=42 → convergé,
+// poids de la graine ~exp(-400/42) ≈ 0) puis on n'affiche que les derniers jours.
+// Sans ça, la fenêtre glissante ré-amorçait le CTL au 1er jour : quand ce jour
+// tombait sur une grosse séance, la fraîcheur de tous les jours récents sautait.
+export const EWMA_WARMUP_DAYS = 400
+export const CHARGE_DISPLAY_DAYS = 90
+
+export function buildChargeMetrics(
+  activities: CesActivity[],
+  now: Date = new Date(),
+): { dailyLoads: DailyLoad[]; dailyMetrics: DailyMetrics[] } {
+  const fullLoads   = getDailyLoadSeries(activities, EWMA_WARMUP_DAYS, now)
+  const fullMetrics = buildDailyMetrics(fullLoads)
+  return {
+    dailyLoads:   fullLoads.slice(-CHARGE_DISPLAY_DAYS),
+    dailyMetrics: fullMetrics.slice(-CHARGE_DISPLAY_DAYS),
+  }
 }
 
 const RUN_TYPES  = new Set(['Run', 'TrailRun'])

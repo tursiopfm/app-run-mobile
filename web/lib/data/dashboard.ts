@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/database/supabase-server'
 import { buildDailyMetrics, type DailyLoad, type DailyMetrics } from '@/lib/analytics/fatigue'
+import { EWMA_WARMUP_DAYS, CHARGE_DISPLAY_DAYS } from '@/lib/analytics/charge-insights'
 import { type SportKey, SPORT_TYPE_MAP } from '@/lib/design/sports'
 import { effectiveWorkoutType, type WorkoutType } from '@/lib/activities/intensity'
 
@@ -144,7 +145,7 @@ function mondayOfCurrentWeek(): Date {
 // Construit une série quotidienne (UTC) de la charge CES sur `days` jours
 // glissants. Logique strictement identique à `getDailyLoadSeries` de
 // charge-insights.ts pour garantir que ATL/CTL/TSB du Cockpit collent à
-// ceux de l'onglet Charge.
+// ceux de l'onglet Charge (même fenêtre d'amorçage EWMA_WARMUP_DAYS).
 function buildWindowedLoads(
   rows: ActivityRow[],
   days: number,
@@ -297,9 +298,10 @@ function buildSportOverview(
     monthlyDPlus[i] = Math.round(monthlyDPlus[i])
   }
 
-  // 90 jours : même fenêtre que l'onglet Charge (getDailyLoadSeries) pour
-  // que la convergence EWMA du CTL (k=42) soit identique → mêmes ATL/CTL/TSB.
-  const loads   = buildWindowedLoads(acts, 90, now)
+  // EWMA amorcée sur ~1 an d'historique (cf. buildChargeMetrics) pour que
+  // l'ATL/CTL/TSB du jour soit convergé et stable — pas re-amorcé sur une
+  // fenêtre glissante de 90 jours dont le 1er jour fait sauter le CTL.
+  const loads   = buildWindowedLoads(acts, EWMA_WARMUP_DAYS, now)
   const metrics = buildDailyMetrics(loads)
   const latest  = metrics[metrics.length - 1] ?? { atl: 0, ctl: 0, tsb: 0 }
   const last7Tsb = metrics.slice(-7).map((m) => m.tsb)
@@ -442,15 +444,15 @@ async function fetchAllHistorySlim(
 export async function getDashboardData(userId: string): Promise<DashboardData> {
   const supabase = await createClient()
 
-  const yearAgo = new Date()
-  yearAgo.setDate(yearAgo.getDate() - 365)
+  const since = new Date()
+  since.setDate(since.getDate() - EWMA_WARMUP_DAYS)
 
   const [{ data: rows }, yearActivities] = await Promise.all([
     supabase
       .from('activities')
       .select('id, sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_intensity, manual_sport_type, manual_workout_type, manual_distance_m, manual_elevation_gain_m, manual_moving_time_sec')
       .eq('user_id', userId)
-      .gte('start_time', yearAgo.toISOString())
+      .gte('start_time', since.toISOString())
       .is('deleted_at', null)
       .order('start_time', { ascending: true }),
     fetchAllHistorySlim(supabase, userId),
@@ -458,8 +460,8 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
 
   const activities = (rows ?? []) as ActivityRow[]
 
-  const globalLoads = buildWindowedLoads(activities, 90)
-  const dailyMetrics = buildDailyMetrics(globalLoads)
+  const globalLoads = buildWindowedLoads(activities, EWMA_WARMUP_DAYS)
+  const dailyMetrics = buildDailyMetrics(globalLoads).slice(-CHARGE_DISPLAY_DAYS)
 
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)

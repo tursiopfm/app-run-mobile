@@ -1,9 +1,8 @@
 // web/lib/data/charge.ts
 import { createClient } from '@/lib/database/supabase-server'
-import { buildDailyMetrics, type DailyMetrics, type DailyLoad } from '@/lib/analytics/fatigue'
 import { calculateHrZones, type HrZone, type HrZoneMethod } from '@/lib/health/hr-zones'
 import {
-  getDailyLoadSeries, getWeeklyLoadByCategory,
+  buildChargeMetrics, EWMA_WARMUP_DAYS, getWeeklyLoadByCategory,
   computeSportDistribution, computeIntensityDistribution,
   computeTopLoadActivities, computeMonotony7d, computeStrain7d,
   computeActiveDays7d, computePeakDay7d, computeRampRate,
@@ -63,8 +62,7 @@ function buildSportPayload(
   zones: HrZone[],
   now: Date,
 ): ChargeSportPayload {
-  const dailyLoads   = getDailyLoadSeries(acts, 90, now)
-  const dailyMetrics = buildDailyMetrics(dailyLoads)
+  const { dailyLoads, dailyMetrics } = buildChargeMetrics(acts, now)
   const weeklyLoad   = getWeeklyLoadByCategory(acts, 10, now)
   const rampRate     = computeRampRate(weeklyLoad)
   const historyDays  = dailyMetrics.length
@@ -115,8 +113,10 @@ function buildSportPayload(
 
 export async function getChargePageData(userId: string): Promise<ChargePageData> {
   const supabase = await createClient()
+  // On charge ~1 an d'activités pour amorçer l'EWMA sur un historique convergé
+  // (cf. buildChargeMetrics) ; seuls les 90 derniers jours sont affichés.
   const since = new Date()
-  since.setDate(since.getDate() - 90)
+  since.setDate(since.getDate() - EWMA_WARMUP_DAYS)
 
   const [{ data: rows }, { data: profile }] = await Promise.all([
     supabase
