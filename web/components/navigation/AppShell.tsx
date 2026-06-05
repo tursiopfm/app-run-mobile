@@ -11,6 +11,7 @@ import { getIsAdmin } from '@/lib/database/get-admin'
 import { getServerT } from '@/lib/i18n/server'
 import { getServerAppMode } from '@/lib/preferences/server'
 import { AppModeToggle } from '@/components/settings/AppModeToggle'
+import { ExpertModeHint } from '@/components/settings/ExpertModeHint'
 
 async function fetchDisplayName(): Promise<string | null> {
   try {
@@ -48,7 +49,12 @@ export async function AppShell({ children }: { children: ReactNode }) {
               <span className="text-trail-text"> Cockpit</span>
             </span>
             <div className="flex items-center gap-2">
-              <AppModeToggle variant="compact" initialMode={mode} />
+              {/* Bouton de bascule UNIQUEMENT en Mode Mission (affiche « Expert »),
+                  décalé à gauche du nom. En Expert : pas de bouton ici. */}
+              {mode === 'mission' && <AppModeToggle variant="compact" initialMode={mode} />}
+              {displayName && (
+                <span className="text-sm font-semibold text-trail-primary">{displayName}</span>
+              )}
               {/* En Mode Mission, l'accès Réglages se fait via la roue dentée
                   de la barre du bas → on masque le ⋮ ici. */}
               {mode !== 'mission' && (
@@ -69,6 +75,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
         </PullToRefresh>
         <BottomNav isAdmin={isAdmin} mode={mode} />
       </div>
+      <ExpertModeHint />
     </div>
   )
 }

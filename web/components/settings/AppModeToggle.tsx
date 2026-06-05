@@ -27,14 +27,19 @@ export function AppModeToggle({ variant = 'row', initialMode = 'expert' }: Props
 
   if (variant === 'compact') {
     const next: AppMode = mode === 'mission' ? 'expert' : 'mission'
-    const label = mode === 'mission' ? 'Mission' : 'Expert'
-    const Icon = mode === 'mission' ? Compass : BarChart3
+    // Le bouton affiche la DESTINATION (en Mission, il affiche « Expert »).
+    const label = next === 'expert' ? 'Expert' : 'Mission'
+    const Icon = next === 'expert' ? BarChart3 : Compass
     return (
       <button
         type="button"
-        onClick={() => switchTo(next)}
-        aria-label={`Mode ${label} — basculer vers ${next === 'mission' ? 'Mission' : 'Expert'}`}
-        title={`Mode ${label}`}
+        onClick={() => {
+          // Au passage en Expert : informer comment revenir en Mission.
+          if (next === 'expert') window.dispatchEvent(new CustomEvent('tc:show-expert-hint'))
+          switchTo(next)
+        }}
+        aria-label={`Basculer en mode ${label}`}
+        title={`Passer en mode ${label}`}
         className="inline-flex items-center gap-1.5 rounded-full border border-trail-border bg-trail-card px-2.5 py-1 text-[11px] font-semibold text-trail-text hover:border-trail-primary transition-colors"
         style={{ visibility: mounted ? 'visible' : 'hidden' }}
       >
