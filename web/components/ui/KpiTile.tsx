@@ -17,7 +17,7 @@ type KpiTileProps = {
 
 export function KpiTile({
   title,
-  titleColor = '#FF6B35',    // chargeOrange / run default
+  titleColor = '#FF7900',    // chargeOrange / run default
   mainValue,
   mainValueColor,
   unit,
