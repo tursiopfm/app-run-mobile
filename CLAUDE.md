@@ -50,6 +50,8 @@ Le SW est généré au build, ne **jamais** éditer `web/public/sw.js` directeme
 
 À chaque déploiement, `VERSION` change donc l'event `activate` du SW supprime les anciens caches `trail-static-*` / `trail-runtime-*` et `clients.claim()` force la nouvelle version active sur les onglets ouverts. Sans ça : les chunks JS cachés restent obsolètes après deploy → router Next.js gelé silencieusement (incident 2026-05-14).
 
+Stratégies de cache (handler `fetch`) : chunks Next hashés `/_next/static/*` = **cache-first** (l'URL garantit la fraîcheur) ; **navigations** (documents HTML, `req.mode === 'navigate'`) = **stale-while-revalidate** (peinture instantanée depuis le cache → démarrage PWA rapide, revalidation réseau en tâche de fond) ; reste (RSC, `/api`, icônes, manifest) = **network-first**. Le SWR navigation ne gèle pas (HTML caché ↔ chunks hashés cachés = cohérents) et le bump de VERSION purge tout au déploiement ; compromis assumé : **1 lancement sur l'ancienne version juste après un déploiement** (puis MAJ). Hard-reload (`reload`/`no-cache`) bypasse le SW.
+
 **Si tu modifies la logique du SW** (handlers `fetch`/`install`/`activate`), édite uniquement `scripts/sw.template.js` ; le bump de VERSION est automatique au push suivant.
 
 ## Web architecture

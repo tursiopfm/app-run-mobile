@@ -55,9 +55,37 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Tout le reste (HTML, RSC payloads, /api, /icons, manifest) : network-first.
-  // Le cache n'est utilisé qu'en fallback offline. Critique pour récupérer le
-  // nouveau code après un déploiement sans avoir à clear site data.
+  // Navigations (documents HTML) : stale-while-revalidate. On peint depuis le
+  // cache instantanément (démarrage PWA quasi immédiat dès la 2e ouverture) puis
+  // on revalide le réseau en tâche de fond. Cache vide → réseau (aucun
+  // ralentissement vs avant). Pas de gel : le HTML caché référence des chunks
+  // hashés eux-mêmes cachés (cache-first) → version interne cohérente ; le bump
+  // de VERSION au déploiement purge les caches (activate) → fraîcheur garantie au
+  // lancement suivant. Compromis assumé : 1 lancement sur l'ancienne version
+  // juste après un déploiement.
+  if (req.mode === 'navigate') {
+    event.respondWith((async () => {
+      const cache = await caches.open(RUNTIME_CACHE)
+      const cached = await cache.match(req)
+      const network = fetch(req).then((res) => {
+        if (res.ok) cache.put(req, res.clone()).catch(() => {})
+        return res
+      })
+      if (cached) {
+        event.waitUntil(network.catch(() => {})) // revalidation en arrière-plan
+        return cached
+      }
+      try {
+        return await network
+      } catch {
+        return (await cache.match(req)) || (await caches.match('/'))
+      }
+    })())
+    return
+  }
+
+  // Tout le reste (RSC payloads, /api, /icons, manifest) : network-first.
+  // Le cache n'est utilisé qu'en fallback offline.
   event.respondWith(
     fetch(req).then((res) => {
       if (res.ok) caches.open(RUNTIME_CACHE).then((c) => c.put(req, res.clone())).catch(() => {})
