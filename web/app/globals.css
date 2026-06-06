@@ -2,14 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Splash in-app : visible uniquement en PWA installée (standalone).
-   En onglet navigateur, masqué dès la 1re peinture → aucun flash sur la landing. */
-@media not all and (display-mode: standalone) {
-  .tc-splash { display: none !important; }
-}
-/* Aperçu navigateur forcé via ?splash=1 (outrepasse le gate ci-dessus). */
-.tc-splash--forced { display: flex !important; }
-
 /* ── Palette Sombre (défaut) ─────────────────────────── */
 :root {
   --trail-bg:               var(--ink-900);
