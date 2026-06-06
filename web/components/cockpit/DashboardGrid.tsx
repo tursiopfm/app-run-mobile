@@ -12,9 +12,12 @@ import { CumulBlock }            from './CumulBlock'
 import { IntensityBlock }        from './IntensityBlock'
 import { WeekBlock }             from './WeekBlock'
 import { MorningReportTile }     from './MorningReportTile'
+import { FreshnessCard }         from '@/components/charge/blocks/FreshnessCard'
 import type { SportOverview, DaySession } from '@/lib/data/dashboard'
 import type { SportKey } from '@/lib/design/sports'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
+import type { AppMode } from '@/lib/preferences/app-mode'
+import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
@@ -23,17 +26,23 @@ type Props = {
   latestPerSport: Record<SportKey, ActivityRow | null>
   weekActivities: ActivityRow[]
   athleteProfile: AthleteHrProfile
+  mode?: AppMode
+  freshnessPayload?: ChargeSportPayload | null
 }
 
 const DEFAULT_ORDER = ['morningReport', 'activities', 'charge', 'lastActivity', 'goals', 'weekly', 'history', 'cumul', 'intensity', 'week', 'weekActivities']
 const DEFAULT_HIDDEN: string[] = []
+
+// Sous-ensemble « essentiel novice » affiché en Mode Mission (ordre fixe,
+// lecture seule). Inclut le bloc Fraîcheur importé de l'onglet Charge.
+const MISSION_VISIBLE = ['morningReport', 'activities', 'lastActivity', 'goals', 'weekly', 'week', 'cumul', 'freshness']
 
 function BlockWithHide({ children }: { children: (onHide: () => void) => React.ReactNode }) {
   const { hideSelf } = useBlockContext()
   return <>{children(hideSelf)}</>
 }
 
-export function DashboardGrid({ sportOverviews, weekSessions, latestPerSport, weekActivities, athleteProfile }: Props) {
+export function DashboardGrid({ sportOverviews, weekSessions, latestPerSport, weekActivities, athleteProfile, mode = 'expert', freshnessPayload }: Props) {
   const L = useT().cockpit.blockLabel
   const blocks: BlockDef[] = [
     { id: 'morningReport', label: L.morningReport, emoji: '📋', desktopCols: 2, render: () => <MorningReportTile /> },
@@ -48,5 +57,26 @@ export function DashboardGrid({ sportOverviews, weekSessions, latestPerSport, we
     { id: 'week',           label: L.week,           emoji: '🗓️', desktopCols: 2, render: () => <WeekBlock sportOverviews={sportOverviews} allSessions={weekSessions} /> },
     { id: 'weekActivities', label: L.weekActivities, emoji: '📋', desktopCols: 2, render: () => <BlockWithHide>{(onHide) => <WeekActivitiesBlock  activities={weekActivities} onHide={onHide} />}</BlockWithHide> },
   ]
-  return <BlockGrid storageKey="cockpit" defaultOrder={DEFAULT_ORDER} defaultHidden={DEFAULT_HIDDEN} blocks={blocks} />
+
+  // Bloc Fraîcheur : uniquement en Mode Mission (payload fetché côté page).
+  // Réutilise le composant de prod → hérite du correctif fraîcheur.
+  // Const capturée : préserve le narrowing dans la closure render().
+  const fp = freshnessPayload
+  if (fp) {
+    blocks.push({ id: 'freshness', label: 'Fraîcheur', emoji: '🌬️', render: () => <FreshnessCard payload={fp} /> })
+  }
+
+  const missionVisible = mode === 'mission'
+    ? MISSION_VISIBLE.filter(id => id !== 'freshness' || freshnessPayload != null)
+    : undefined
+
+  return (
+    <BlockGrid
+      storageKey="cockpit"
+      defaultOrder={DEFAULT_ORDER}
+      defaultHidden={DEFAULT_HIDDEN}
+      blocks={blocks}
+      missionVisible={missionVisible}
+    />
+  )
 }

@@ -11,6 +11,7 @@ const SYNCED_KEYS = [
   'cockpit_goals_settings', 'cockpit_goals_targets',
   'charge_sport_filter',
   'whats_new_seen',
+  'app_mode',
 ]
 
 type Listener = () => void
@@ -18,11 +19,13 @@ type Listener = () => void
 type PreferencesCtx = {
   notifyChange: () => void
   onHydrated: (fn: Listener) => () => void
+  flushNow: () => Promise<void>
 }
 
 const Ctx = createContext<PreferencesCtx>({
   notifyChange: () => {},
   onHydrated: () => () => {},
+  flushNow: async () => {},
 })
 
 export function usePreferences() { return useContext(Ctx) }
@@ -62,6 +65,13 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const notifyChange = useCallback(() => {
     if (flushTimer.current) clearTimeout(flushTimer.current)
     flushTimer.current = setTimeout(flushToSupabase, 2000)
+  }, [flushToSupabase])
+
+  // Flush synchrone (await) — pour les changements qui doivent être lus
+  // immédiatement côté serveur (ex. bascule Mode Mission + router.refresh()).
+  const flushNow = useCallback(async () => {
+    if (flushTimer.current) { clearTimeout(flushTimer.current); flushTimer.current = null }
+    await flushToSupabase()
   }, [flushToSupabase])
 
   const onHydrated = useCallback((fn: Listener) => {
@@ -116,5 +126,5 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true }
   }, [])
 
-  return <Ctx.Provider value={{ notifyChange, onHydrated }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ notifyChange, onHydrated, flushNow }}>{children}</Ctx.Provider>
 }

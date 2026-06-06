@@ -54,7 +54,7 @@ function makeId(): string {
   return `session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
-export default function PlanClient() {
+export default function PlanClient({ mode = 'expert' }: { mode?: 'mission' | 'expert' } = {}) {
   const L = useT().plan
   const [reloadKey, setReloadKey] = useState(0)
   const bumpReload = useCallback(() => setReloadKey(k => k + 1), [])
@@ -148,7 +148,7 @@ export default function PlanClient() {
       id: 'resume-semaine',
       label: L.blockResume,
       emoji: '📊',
-      render: () => <ResumeSemaineBlock reloadKey={reloadKey} />,
+      render: () => <ResumeSemaineBlock reloadKey={reloadKey} simplified={mode === 'mission'} />,
     },
     {
       id: 'structure',
@@ -201,6 +201,7 @@ export default function PlanClient() {
         defaultOrder={DEFAULT_ORDER}
         blocks={blocks}
         addLabel={L.addBlock}
+        missionVisible={mode === 'mission' ? ['objectif', 'resume-semaine', 'semaine-bibliotheque'] : undefined}
       />
     </div>
   )

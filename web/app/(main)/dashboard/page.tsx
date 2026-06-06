@@ -3,8 +3,11 @@ import { getServerUser } from '@/lib/database/get-user'
 import { DashboardGrid } from '@/components/cockpit/DashboardGrid'
 import { MorningReportAutoOpen } from '@/components/morning-report/MorningReportAutoOpen'
 import { getDashboardData } from '@/lib/data/dashboard'
+import { getChargePageData } from '@/lib/data/charge'
+import { getServerAppMode } from '@/lib/preferences/server'
 import { createClient } from '@/lib/database/supabase-server'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
+import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 import { SPORT_TYPE_MAP, type SportKey } from '@/lib/design/sports'
 
 const ACTIVITY_CARD_FIELDS =
@@ -79,6 +82,22 @@ export default async function DashboardPage() {
 
   const weekActivities = (weekRows ?? []) as ActivityRow[]
 
+  // Mode Mission : on importe le bloc Fraîcheur sur le Cockpit. La donnée de
+  // charge (~1 an d'activités) n'est récupérée QUE dans ce mode → l'Expert
+  // garde exactement son coût/comportement actuel.
+  const mode = await getServerAppMode()
+  let freshnessPayload: ChargeSportPayload | null = null
+  if (mode === 'mission') {
+    try {
+      const charge = await getChargePageData(user.id)
+      // Fraîcheur basée sur la course ; repli sur le global si aucune activité
+      // running (ex. profil vélo/natation uniquement).
+      freshnessPayload = charge.perSport.run.historyDays > 0
+        ? charge.perSport.run
+        : charge.perSport.all
+    } catch { freshnessPayload = null }
+  }
+
   return (
     <div className="px-2 py-2 max-w-lg mx-auto md:max-w-none md:px-6">
       <MorningReportAutoOpen createdAt={user.created_at} />
@@ -88,6 +107,8 @@ export default async function DashboardPage() {
         latestPerSport={latestPerSport}
         weekActivities={weekActivities}
         athleteProfile={athleteProfile ?? null}
+        mode={mode}
+        freshnessPayload={freshnessPayload}
       />
     </div>
   )
