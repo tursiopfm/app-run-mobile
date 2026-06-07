@@ -1,7 +1,14 @@
 # Logo « Montagne + Sentier » — refonte de l'identité de marque
 
-> **Status: Spec** · 2026-06-07 · Remplace le glyphe « trajectoire + drapeau »
-> (spec `2026-06-05-brand-asset-pack-design.md`) par une montagne enneigée + sentier.
+> **Status: Implémenté (pivot raster)** · 2026-06-07 · Code: `web/scripts/brand/gen-brand-assets.ts`,
+> `web/public/brand-source/logo-master.png`, `web/components/brand/LogoTrailCockpit.tsx`.
+> Remplace le glyphe « trajectoire + drapeau » (spec `2026-06-05-brand-asset-pack-design.md`).
+
+> ⚠️ **PIVOT (voir Drift notes).** Le plan d'origine reproduisait le logo en **SVG vectoriel**.
+> Le rendu vectorisé divergeait trop du logo fourni → bascule sur le **master raster**
+> `public/brand-source/logo-master.png` comme source unique. Les sections « Géométrie »,
+> « Variantes SVG » et « builder » ci-dessous sont **caduques** ; voir Drift notes pour
+> l'implémentation réelle.
 
 ## Contexte & décision
 
@@ -112,7 +119,25 @@ logo étant désormais **final**, on aligne preview et live :
 
 ## Drift notes
 
-- **Mono = montagne seule** (sentier omis) : choix de lisibilité monochrome, divergence
-  assumée vs l'illustration 2-couleurs.
-- Ancien concept « trajectoire + drapeau » (mission/progression) abandonné ; la
-  métaphore portée par le logo devient « sommet à atteindre + sentier qui y mène ».
+- **PIVOT SVG → raster (2026-06-07).** La reproduction SVG (montagne + sentier tracés à la
+  main) ne convergeait pas vers le logo fourni (style trop géométrique/dentelé vs
+  illustration lisse). Décision validée avec Franck : utiliser son **fichier raster** comme
+  master. Implémentation réelle :
+  - Master : `public/brand-source/logo-master.png` (1254×1254, squircle orange + montagne
+    enneigée + sentier).
+  - `scripts/brand/gen-brand-assets.ts` génère tout le pack depuis ce master : trim →
+    zoom-crop 1.10 (retire le halo anti-aliasé du bord) → masque rounded-rect (coins
+    transparents, `RADIUS_FRAC=0.16`). Sorties : favicon.ico (16/32/48), icon-192/512
+    (coins transparents), maskable-512 (orange plein bord-à-bord, art à 82 % = zone sûre),
+    apple-touch (180, orange opaque), og-default (1200×630). Preview + live.
+  - Logo écran (`LogoMark`), `OgCard`, `/design-system` : `<img src="/icons/icon-512.png">`.
+  - Modules SVG supprimés : `lib/brand/logo-geometry.ts`, `lib/brand/logo-svg.ts`,
+    `components/brand/BrandGlyph.tsx`, `__tests__/lib/brand/logo-svg.test.ts`.
+  - Conséquence : **plus de variantes SVG** (deep/mono/tier compact) — un seul logo raster.
+    Le token `--brand-trail` (#17284A) reste défini (couleur de marque documentée) mais
+    n'est plus consommé par le logo.
+  - `og-default.png` régénéré via sharp (icône + texte) faute de capture Playwright dispo.
+- Sections « Géométrie verrouillée », « Variantes & paliers » (SVG), « builder » plus haut :
+  **caduques** (relèvent de l'approche SVG abandonnée).
+- Ancien concept « trajectoire + drapeau » (mission/progression) abandonné ; la métaphore
+  portée par le logo devient « sommet à atteindre + sentier qui y mène ».
