@@ -1,21 +1,17 @@
 import { cn } from '@/lib/cn'
-import {
-  VIEWBOX, TRAJ, TRAJ_LEN, SOLID_FRACTION,
-  START, END, WAYPOINT_REACHED, WAYPOINT_UPCOMING, TIER,
-} from '@/lib/brand/logo-geometry'
+import { VIEWBOX, MOUNTAIN, TRAIL } from '@/lib/brand/logo-geometry'
 
 // ─────────────────────────────────────────────────────────────────────────
-// LogoTrailCockpit — identité de marque, dérivée de la TrajectoryLine.
+// LogoTrailCockpit — identité de marque : montagne enneigée + sentier.
 //
-// Concept : une trajectoire qui grimpe, jalonnée d'étapes (atteinte = pleine,
-// à venir = anneau creux), avec le reste à parcourir en pointillé, vers un
-// drapeau (l'objectif). → mission, progression, direction, endurance.
+// Concept : un sommet à atteindre (montagne blanche) et le sentier qui y mène
+// (ruban bleu nuit qui serpente) sur une pastille orange. → endurance, objectif, trail.
 // 100 % SVG. Géométrie partagée avec le pack d'assets (logo-geometry.ts) →
 // le logo écran est identique aux icônes exportées (favicon / PWA / OG).
 //
 // Variantes : icon · horizontal · stacked
-// Tons      : brand (squircle orange + glyphe blanc) · mono (currentColor)
-// Palier auto : compact < 40px (épuré), full ≥ 40px (pointillé + étapes).
+// Tons      : brand (squircle orange + montagne blanche + sentier navy) · mono (currentColor)
+// Petit (< 40px) ou mono : montagne seule (sentier masqué).
 //
 // Composant serveur (aucun hook).
 // ─────────────────────────────────────────────────────────────────────────
@@ -45,18 +41,8 @@ export function LogoMark({
   title?: string
 }) {
   const brand = tone === 'brand'
-  const squircleFill = brand ? 'var(--primary)' : 'none'
-  const squircleStroke = brand ? 'none' : 'currentColor'
-  const glyph = brand ? '#FFFFFF' : 'currentColor'
-  // Centre de l'étape « à venir » : rempli du fond en brand (laisse voir l'orange),
-  // transparent en mono.
-  const hole = brand ? 'var(--primary)' : 'none'
-
-  const tier = size < 40 ? 'compact' : 'full'
-  const t = tier === 'compact' ? TIER.compact : TIER.full
-  const solid = (TRAJ_LEN * SOLID_FRACTION).toFixed(2)
-  const tip = END.y - 9
-  const fanX = END.x + t.fan
+  const mountain = brand ? '#FFFFFF' : 'currentColor'
+  const showTrail = brand && size >= 40 // petit : montagne seule
 
   return (
     <svg
@@ -68,36 +54,9 @@ export function LogoMark({
       className={cn('block shrink-0', className)}
     >
       <title>{title}</title>
-      {/* Lunette / instrument */}
-      <rect
-        x={3} y={3} width={42} height={42} rx={13}
-        fill={squircleFill}
-        stroke={squircleStroke}
-        strokeWidth={brand ? 0 : 2.5}
-      />
-      {tier === 'full' && (
-        <>
-          {/* Reste à parcourir — pointillé */}
-          <path d={TRAJ} fill="none" stroke={glyph} strokeOpacity={0.5} strokeWidth={t.stroke} strokeLinecap="round" strokeDasharray="0.5 2.6" />
-          {/* Accompli — plein */}
-          <path d={TRAJ} fill="none" stroke={glyph} strokeWidth={t.stroke} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={`${solid} ${TRAJ_LEN}`} />
-          {/* Départ + étape atteinte (pleines) + étape à venir (anneau creux) */}
-          <circle cx={START.x} cy={START.y} r={t.start} fill={glyph} />
-          <circle cx={WAYPOINT_REACHED.x} cy={WAYPOINT_REACHED.y} r={2} fill={glyph} />
-          <circle cx={WAYPOINT_UPCOMING.x} cy={WAYPOINT_UPCOMING.y} r={2.1} fill={hole} stroke={glyph} strokeWidth={1.5} />
-        </>
-      )}
-      {tier === 'compact' && (
-        <>
-          {/* Trait plein épaissi, sans pointillé ni étapes (lisible en petit) */}
-          <path d={TRAJ} fill="none" stroke={glyph} strokeWidth={t.stroke} strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx={START.x} cy={START.y} r={t.start} fill={glyph} />
-        </>
-      )}
-      {/* Drapeau d'arrivée — l'objectif */}
-      <line x1={END.x} y1={END.y} x2={END.x} y2={tip} stroke={glyph} strokeWidth={t.mast} strokeLinecap="round" />
-      <path d={`M${END.x},${tip} L${fanX},${(tip + t.fan * 0.27).toFixed(2)} L${END.x},${(tip + t.fan * 0.54).toFixed(2)} Z`} fill={glyph} />
-      <circle cx={END.x} cy={END.y} r={t.node} fill={glyph} />
+      {brand && <rect x={3} y={3} width={42} height={42} rx={13} fill="var(--primary)" />}
+      <path d={MOUNTAIN} fill={mountain} />
+      {showTrail && <path d={TRAIL} fill="var(--brand-trail, #17284A)" />}
     </svg>
   )
 }
