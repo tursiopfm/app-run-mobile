@@ -2,11 +2,11 @@
 // For Tailwind className usage, see tailwind.config.ts (trail-* tokens).
 
 export const dark = {
-  background:       '#0A0F0E',
-  surface:          '#111A18',
-  cardBg:           '#162420',
-  border:           '#1E3530',
-  headerBg:         '#101917',
+  background:       '#0B0F14',
+  surface:          '#121821',
+  cardBg:           '#18202B',
+  border:           '#25303E',
+  headerBg:         '#0F151D',
   subtleText:       '#8BA8A3',
   text:             '#E2ECE9',
   greenOk:          '#4ADE80',
@@ -14,6 +14,7 @@ export const dark = {
   runRed:           '#F87171',
   bikeBlack:        '#38BDF8',
   chargeOrange:     '#FF7900',
+  brandTrail:       '#17284A',
   bikeGreen:        '#27A971',
   swimBlue:         '#4BB4E6',
   seriesBlue:       '#38BDF8',
@@ -49,6 +50,7 @@ export const light = {
   runRed:           '#D94F45',
   bikeBlack:        '#1D8FC6',
   chargeOrange:     '#C2410C',
+  brandTrail:       '#17284A',
   bikeGreen:        '#1E8E5E',
   swimBlue:         '#2A8FC4',
   seriesBlue:       '#1D8FC6',

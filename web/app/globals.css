@@ -41,6 +41,7 @@
   --primary:      #FF7900;
   --primary-dim:  #CC6100;
   --primary-glow: rgba(255, 121, 0, 0.18);
+  --brand-trail: #17284A;
   --data-charge: #FF7900;
   --data-bike:   #27A971;
   --data-swim:   #4BB4E6;
@@ -95,6 +96,7 @@
   --primary:      #FF7900;
   --primary-dim:  #CC6100;
   --primary-glow: rgba(255, 121, 0, 0.18);
+  --brand-trail: #17284A;
   --data-charge: #C2410C;
   --data-bike:   #1E8E5E;
   --data-swim:   #2A8FC4;
