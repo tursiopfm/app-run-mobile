@@ -1,4 +1,5 @@
 import { renderLogoMarkSvg } from '@/lib/brand/logo-svg'
+import { MOUNTAIN, TRAIL } from '@/lib/brand/logo-geometry'
 
 describe('renderLogoMarkSvg', () => {
   it('émet un SVG valide en viewBox 48', () => {
@@ -7,36 +8,38 @@ describe('renderLogoMarkSvg', () => {
     expect(svg).toContain('viewBox="0 0 48 48"')
   })
 
-  it('variante orange = squircle #FF7900 + glyphe blanc', () => {
+  it('variante orange = squircle #FF7900 + montagne blanche + sentier navy', () => {
     const svg = renderLogoMarkSvg({ variant: 'orange' })
     expect(svg).toContain('rx="13"')
     expect(svg).toContain('fill="#FF7900"')
-    expect(svg).toContain('stroke="#FFFFFF"')
+    expect(svg).toContain(`<path d="${MOUNTAIN}" fill="#FFFFFF"/>`)
+    expect(svg).toContain(`<path d="${TRAIL}" fill="#17284A"/>`)
   })
 
-  it('variante deep = fond #0B0F14 + glyphe orange', () => {
+  it('variante deep = fond #0B0F14 + montagne claire + sentier orange', () => {
     const svg = renderLogoMarkSvg({ variant: 'deep' })
     expect(svg).toContain('fill="#0B0F14"')
-    expect(svg).toContain('stroke="#FF7900"')
+    expect(svg).toContain('fill="#EAF0F6"')
+    expect(svg).toContain(`<path d="${TRAIL}" fill="#FF7900"/>`)
   })
 
-  it('variante mono-white = aucun fond (pas de rect)', () => {
+  it('mono-white = aucun fond + montagne blanche + pas de sentier', () => {
     const svg = renderLogoMarkSvg({ variant: 'mono-white' })
     expect(svg).not.toContain('<rect')
-    expect(svg).toContain('stroke="#FFFFFF"')
+    expect(svg).toContain(`<path d="${MOUNTAIN}" fill="#FFFFFF"/>`)
+    expect(svg).not.toContain(TRAIL)
   })
 
-  it('compact = ni pointillé ni étape à venir', () => {
+  it('compact = montagne seule (pas de sentier)', () => {
     const svg = renderLogoMarkSvg({ tier: 'compact' })
-    expect(svg).not.toContain('stroke-dasharray')
-    // l'anneau « étape à venir » est le seul élément avec stroke-width="1.5"
-    expect(svg).not.toContain('stroke-width="1.5"')
+    expect(svg).toContain(MOUNTAIN)
+    expect(svg).not.toContain(TRAIL)
   })
 
-  it('full = pointillé + étape à venir présents', () => {
-    const svg = renderLogoMarkSvg({ tier: 'full' })
-    expect(svg).toContain('stroke-dasharray')
-    expect(svg).toContain('stroke-width="1.5"')
+  it('full orange = montagne + sentier', () => {
+    const svg = renderLogoMarkSvg({ tier: 'full', variant: 'orange' })
+    expect(svg).toContain(MOUNTAIN)
+    expect(svg).toContain(TRAIL)
   })
 
   it('maskable = fond bord-à-bord + glyphe scalé dans la zone sûre', () => {
