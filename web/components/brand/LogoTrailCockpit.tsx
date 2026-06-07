@@ -1,17 +1,16 @@
 import { cn } from '@/lib/cn'
-import { VIEWBOX, MOUNTAIN, TRAIL } from '@/lib/brand/logo-geometry'
 
 // ─────────────────────────────────────────────────────────────────────────
 // LogoTrailCockpit — identité de marque : montagne enneigée + sentier.
 //
 // Concept : un sommet à atteindre (montagne blanche) et le sentier qui y mène
-// (ruban bleu nuit qui serpente) sur une pastille orange. → endurance, objectif, trail.
-// 100 % SVG. Géométrie partagée avec le pack d'assets (logo-geometry.ts) →
-// le logo écran est identique aux icônes exportées (favicon / PWA / OG).
+// (ruban bleu nuit) sur une pastille orange. → endurance, objectif, trail.
+// Le logo écran référence l'icône raster live (public/icons/icon-512.png),
+// générée depuis le master `public/brand-source/logo-master.png` par
+// `npm run gen:brand-assets` → identique au favicon / PWA / Apple.
 //
-// Variantes : icon · horizontal · stacked
-// Tons      : brand (squircle orange + montagne blanche + sentier navy) · mono (currentColor)
-// Petit (< 40px) ou mono : montagne seule (sentier masqué).
+// Variantes : icon · horizontal · stacked. Le ton « mono » n'a plus d'effet
+// (logo couleur unique) ; il reste accepté pour compat d'API.
 //
 // Composant serveur (aucun hook).
 // ─────────────────────────────────────────────────────────────────────────
@@ -28,9 +27,8 @@ type Props = {
   title?: string
 }
 
-// ── Pastille (icon-only), pure SVG, viewBox 48 ──────────────────────────
+// ── Pastille (icon-only) — logo raster (squircle orange, coins transparents) ──
 export function LogoMark({
-  tone = 'brand',
   size = 40,
   className,
   title = 'Trail Cockpit',
@@ -40,24 +38,15 @@ export function LogoMark({
   className?: string
   title?: string
 }) {
-  const brand = tone === 'brand'
-  const mountain = brand ? '#FFFFFF' : 'currentColor'
-  const showTrail = brand && size >= 40 // petit : montagne seule
-
   return (
-    <svg
-      viewBox={VIEWBOX}
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/icons/icon-512.png"
       width={size}
       height={size}
-      role="img"
-      aria-label={title}
+      alt={title}
       className={cn('block shrink-0', className)}
-    >
-      <title>{title}</title>
-      {brand && <rect x={3} y={3} width={42} height={42} rx={13} fill="var(--primary)" />}
-      <path d={MOUNTAIN} fill={mountain} />
-      {showTrail && <path d={TRAIL} fill="var(--brand-trail, #17284A)" />}
-    </svg>
+    />
   )
 }
 
