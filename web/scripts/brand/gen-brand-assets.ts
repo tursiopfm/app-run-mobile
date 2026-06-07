@@ -1,5 +1,5 @@
 // web/scripts/brand/gen-brand-assets.ts
-// Génère le pack d'assets de marque dans web/public/brand-preview/ (PREVIEW).
+// Génère le pack d'assets de marque dans web/public/brand-preview/ (preview) ET web/public/ (live).
 // Exécution : `npm run gen:brand-assets` (depuis web/). Idempotent.
 import { writeFile, mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -7,7 +7,9 @@ import sharp from 'sharp'
 import { renderLogoMarkSvg, type RenderOpts } from '../../lib/brand/logo-svg'
 import { pngsToIco } from './ico'
 
-const OUT = join(process.cwd(), 'public', 'brand-preview')
+const PREVIEW = join(process.cwd(), 'public', 'brand-preview')
+const LIVE = join(process.cwd(), 'public')
+const LIVE_ICONS = join(LIVE, 'icons')
 
 async function png(opts: RenderOpts, size: number): Promise<Buffer> {
   const svg = renderLogoMarkSvg({ ...opts, size })
@@ -16,7 +18,7 @@ async function png(opts: RenderOpts, size: number): Promise<Buffer> {
 
 const README = `# Brand preview assets
 
-> Générés par \`npm run gen:brand-assets\` — **preview uniquement**, ne remplacent pas les assets live.
+> Générés par \`npm run gen:brand-assets\` — pack de marque (preview + promu en **live** par ce script).
 > Source : \`web/lib/brand/logo-svg.ts\`. Spec : \`docs/superpowers/specs/2026-06-05-brand-asset-pack-design.md\`.
 
 | Fichier | Taille(s) | Variante / palier | Usage |
@@ -32,43 +34,50 @@ const README = `# Brand preview assets
 | icon-mono-white.png | 512 | C blanc, transparent | Android themed / iOS tinted |
 | icon-mono-black.png | 512 | C noir, transparent | Docs / fonds clairs |
 | og-default.png | 1200×630 | Deep Mission + TrajectoryLine | Open Graph (généré séparément, capture Playwright) |
-
-**Recommandation PWA : variante A (Orange).**
 `
 
 async function main() {
-  await mkdir(OUT, { recursive: true })
-  const write = (name: string, buf: Buffer) => writeFile(join(OUT, name), buf)
+  await mkdir(PREVIEW, { recursive: true })
+  await mkdir(LIVE_ICONS, { recursive: true })
 
-  // Favicon (chip orange) — compact ≤32, full à 48 + .ico multi-image
+  // ── Calcul des buffers (une fois) ──────────────────────────────────────
   const fav16 = await png({ variant: 'orange', tier: 'compact', shape: 'squircle' }, 16)
   const fav32 = await png({ variant: 'orange', tier: 'compact', shape: 'squircle' }, 32)
   const fav48 = await png({ variant: 'orange', tier: 'full', shape: 'squircle' }, 48)
-  await write('favicon-16.png', fav16)
-  await write('favicon-32.png', fav32)
-  await write('favicon-48.png', fav48)
-  await write('favicon.ico', pngsToIco([
+  const faviconIco = pngsToIco([
     { size: 16, png: fav16 },
     { size: 32, png: fav32 },
     { size: 48, png: fav48 },
-  ]))
+  ])
+  const icon192 = await png({ variant: 'orange', tier: 'full', shape: 'squircle' }, 192)
+  const icon512 = await png({ variant: 'orange', tier: 'full', shape: 'squircle' }, 512)
+  const maskable512 = await png({ variant: 'orange', tier: 'full', maskable: true }, 512)
+  const apple = await png({ variant: 'orange', tier: 'full', shape: 'bleed' }, 180)
+  const monoWhite = await png({ variant: 'mono-white', tier: 'full', shape: 'none' }, 512)
+  const monoBlack = await png({ variant: 'mono-black', tier: 'full', shape: 'none' }, 512)
 
-  // PWA any (squircle orange, coins transparents)
-  await write('icon-192.png', await png({ variant: 'orange', tier: 'full', shape: 'squircle' }, 192))
-  await write('icon-512.png', await png({ variant: 'orange', tier: 'full', shape: 'squircle' }, 512))
+  // ── Preview (web/public/brand-preview/) ────────────────────────────────
+  const writeP = (name: string, buf: Buffer) => writeFile(join(PREVIEW, name), buf)
+  await writeP('favicon-16.png', fav16)
+  await writeP('favicon-32.png', fav32)
+  await writeP('favicon-48.png', fav48)
+  await writeP('favicon.ico', faviconIco)
+  await writeP('icon-192.png', icon192)
+  await writeP('icon-512.png', icon512)
+  await writeP('maskable-512.png', maskable512)
+  await writeP('apple-touch-icon.png', apple)
+  await writeP('icon-mono-white.png', monoWhite)
+  await writeP('icon-mono-black.png', monoBlack)
+  await writeP('README.md', Buffer.from(README, 'utf8'))
 
-  // PWA maskable (plein bord-à-bord, zone sûre)
-  await write('maskable-512.png', await png({ variant: 'orange', tier: 'full', maskable: true }, 512))
+  // ── LIVE (web/public/) — le logo est final, preview = live ─────────────
+  await writeFile(join(LIVE, 'favicon.ico'), faviconIco)
+  await writeFile(join(LIVE, 'apple-touch-icon.png'), apple)
+  await writeFile(join(LIVE_ICONS, 'icon-192.png'), icon192)
+  await writeFile(join(LIVE_ICONS, 'icon-512.png'), icon512)
+  await writeFile(join(LIVE_ICONS, 'maskable-512.png'), maskable512)
 
-  // Apple (opaque, plein bord-à-bord, sans coins cuits)
-  await write('apple-touch-icon.png', await png({ variant: 'orange', tier: 'full', shape: 'bleed' }, 180))
-
-  // Monochrome (transparent)
-  await write('icon-mono-white.png', await png({ variant: 'mono-white', tier: 'full', shape: 'none' }, 512))
-  await write('icon-mono-black.png', await png({ variant: 'mono-black', tier: 'full', shape: 'none' }, 512))
-
-  await write('README.md', Buffer.from(README, 'utf8'))
-  console.log('✓ brand-preview généré dans', OUT)
+  console.log('✓ brand assets — preview:', PREVIEW, '· live:', LIVE)
 }
 
 main().catch((e) => {
