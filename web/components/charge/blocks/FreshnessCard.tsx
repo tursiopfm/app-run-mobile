@@ -38,10 +38,10 @@ export function FreshnessCard({ payload }: { payload: ChargeSportPayload }) {
     <BlockCard title={L.blocks.freshness} helpTitle={L.blocks.freshness} helpBody={L.help.freshness}>
       <div className="flex items-baseline justify-between gap-3 mb-2">
         <div>
-          <p className="text-[22px] font-bold font-data tabular-nums text-trail-text">{Math.round(f.tsb)}</p>
-          <p className="text-[12px] font-semibold text-trail-text">{zoneLabel}</p>
+          <p className="text-h1 font-bold font-data tabular-nums text-trail-text">{Math.round(f.tsb)}</p>
+          <p className="text-caption font-semibold text-trail-text">{zoneLabel}</p>
         </div>
-        <span className="inline-flex items-center gap-1.5 text-[12px] text-trail-muted text-right leading-snug">
+        <span className="inline-flex items-center gap-1.5 text-caption text-trail-muted text-right leading-snug">
           <TrendIcon size={14} strokeWidth={2.5} color={trendColor} aria-hidden />
           <span>
             <strong style={{ color: trendColor }}>{delta > 0 ? '+' : ''}{delta}</strong>
@@ -58,7 +58,7 @@ export function FreshnessCard({ payload }: { payload: ChargeSportPayload }) {
         max={max}
         zones={zones}
       />
-      <p className="mt-3 text-[11px] text-trail-muted leading-[16px]">{zoneInterpret[f.zone]}</p>
+      <p className="mt-3 text-micro text-trail-muted leading-[16px]">{zoneInterpret[f.zone]}</p>
     </BlockCard>
   )
 }

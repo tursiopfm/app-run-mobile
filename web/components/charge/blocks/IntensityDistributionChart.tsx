@@ -53,7 +53,7 @@ export function IntensityDistributionChart({ payload }: { payload: ChargeSportPa
       }
     >
       {total === 0 ? (
-        <p className="text-[12px] text-trail-muted text-center py-6">{L.notEnoughData}</p>
+        <p className="text-caption text-trail-muted text-center py-6">{L.notEnoughData}</p>
       ) : (
         <>
           <ul className="space-y-1.5 mt-1">
@@ -61,7 +61,7 @@ export function IntensityDistributionChart({ payload }: { payload: ChargeSportPa
               const pct = Math.round((x.ces / total) * 100)
               return (
                 <li key={x.label}>
-                  <div className="flex items-center text-[12px] text-trail-text">
+                  <div className="flex items-center text-caption text-trail-text">
                     <span className="w-2.5 h-2.5 rounded-sm mr-2" style={{ backgroundColor: INTENSITY_COLORS[x.label] }} />
                     <span className="flex-1">{L.intensityLabels[x.label]}</span>
                     <span className="font-semibold">{pct}%</span>
@@ -73,7 +73,7 @@ export function IntensityDistributionChart({ payload }: { payload: ChargeSportPa
               )
             })}
           </ul>
-          {note && <p className="mt-3 text-[11px] text-trail-muted leading-[16px]">{note}</p>}
+          {note && <p className="mt-3 text-micro text-trail-muted leading-[16px]">{note}</p>}
         </>
       )}
     </BlockCard>

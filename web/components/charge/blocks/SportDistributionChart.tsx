@@ -48,7 +48,7 @@ export function SportDistributionChart({ payload }: { payload: ChargeSportPayloa
       }
     >
       {d.total === 0 ? (
-        <p className="text-[12px] text-trail-muted text-center py-6">{L.notEnoughData}</p>
+        <p className="text-caption text-trail-muted text-center py-6">{L.notEnoughData}</p>
       ) : (
         <div className="flex items-center gap-3">
           <div ref={wrapperRef} style={{ width: 140, height: 140 }}>
@@ -64,7 +64,7 @@ export function SportDistributionChart({ payload }: { payload: ChargeSportPayloa
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <ul className="flex-1 space-y-1.5 text-[12px] text-trail-text">
+          <ul className="flex-1 space-y-1.5 text-caption text-trail-text">
             {data.map(s => (
               <li key={s.name} className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: s.color }} />

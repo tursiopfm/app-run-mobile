@@ -34,7 +34,7 @@ export function SportSegmentedTabs({ sport, onChange }: Props) {
               aria-selected={active}
               onClick={() => onChange(key)}
               className={[
-                'flex-1 px-2 py-2 rounded-[8px] text-[12px] font-semibold transition-colors',
+                'flex-1 px-2 py-2 rounded-[8px] text-caption font-semibold transition-colors',
                 active ? 'text-white' : 'text-trail-muted hover:text-trail-text',
               ].join(' ')}
               style={active ? { backgroundColor: cfg.color } : undefined}

@@ -39,7 +39,7 @@ export function LoadHeatmap28d({ payload }: { payload: ChargeSportPayload }) {
           )
         })}
       </div>
-      <div className="flex justify-between items-center mt-3 text-[11px] text-trail-muted">
+      <div className="flex justify-between items-center mt-3 text-micro text-trail-muted">
         <span>{L.heatLess}</span>
         <div className="flex gap-1">
           {[0.15, 0.35, 0.55, 0.75, 0.95].map((o, i) => (
@@ -49,7 +49,7 @@ export function LoadHeatmap28d({ payload }: { payload: ChargeSportPayload }) {
         <span>{L.heatMore}</span>
       </div>
       {tip && (
-        <p className="mt-2 text-[11px] text-trail-text text-center">
+        <p className="mt-2 text-micro text-trail-text text-center">
           <strong>{fmtDate(tip.date)}</strong> · {tip.ces} CES
         </p>
       )}

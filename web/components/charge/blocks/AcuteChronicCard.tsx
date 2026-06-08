@@ -32,19 +32,19 @@ export function AcuteChronicCard({ payload }: { payload: ChargeSportPayload }) {
       <div className="grid grid-cols-2 gap-3 mt-1">
         <div className="rounded-[10px] bg-trail-surface px-3 py-2">
           <p className="text-[10px] text-trail-muted">{L.acuteLoad}</p>
-          <p className="text-[22px] font-bold font-data tabular-nums mt-0.5 text-trail-text">{sum7}</p>
+          <p className="text-h1 font-bold font-data tabular-nums mt-0.5 text-trail-text">{sum7}</p>
         </div>
         <div className="rounded-[10px] bg-trail-surface px-3 py-2">
           <p className="text-[10px] text-trail-muted">{L.chronicLoad}</p>
-          <p className="text-[22px] font-bold font-data tabular-nums mt-0.5 text-trail-text">{sum28}</p>
+          <p className="text-h1 font-bold font-data tabular-nums mt-0.5 text-trail-text">{sum28}</p>
         </div>
       </div>
       <div className="mt-3 flex items-center gap-2">
-        <span className="text-[11px] text-trail-muted">{L.loadBalance}</span>
-        <span className="text-[14px] font-bold" style={{ color: zone.color }}>{pct(ratio)}</span>
-        <span className="text-[11px] font-semibold" style={{ color: zone.color }}>· {zone.label}</span>
+        <span className="text-micro text-trail-muted">{L.loadBalance}</span>
+        <span className="text-body font-bold" style={{ color: zone.color }}>{pct(ratio)}</span>
+        <span className="text-micro font-semibold" style={{ color: zone.color }}>· {zone.label}</span>
       </div>
-      <p className="mt-2 text-[11px] text-trail-muted leading-[16px]"
+      <p className="mt-2 text-micro text-trail-muted leading-[16px]"
          dangerouslySetInnerHTML={{ __html: L.acuteChronicRecap(`<strong class="text-trail-text">${pct(ratio)}</strong>`) }}
       />
     </BlockCard>

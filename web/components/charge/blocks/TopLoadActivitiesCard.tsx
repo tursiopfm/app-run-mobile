@@ -23,7 +23,7 @@ export function TopLoadActivitiesCard({ payload }: { payload: ChargeSportPayload
   if (payload.top.length === 0) {
     return (
       <BlockCard title={L.blocks.topActivities} helpTitle={L.blocks.topActivities} helpBody={L.help.topActivities}>
-        <p className="text-[12px] text-trail-muted text-center py-4">{L.notEnoughData}</p>
+        <p className="text-caption text-trail-muted text-center py-4">{L.notEnoughData}</p>
       </BlockCard>
     )
   }
@@ -34,8 +34,8 @@ export function TopLoadActivitiesCard({ payload }: { payload: ChargeSportPayload
           <li key={a.id}>
             <Link href={`/activities/${a.id}`} className="block rounded-[10px] bg-trail-surface px-3 py-2 hover:border-trail-primary border border-transparent transition-colors">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[12px] font-semibold text-trail-text truncate">{a.name || `${t.sportLabel[a.sport] ?? a.sport} ${fmtDate(a.date)}`}</span>
-                <span className="text-[12px] font-bold flex-shrink-0" style={{ color: colors.chargeOrange }}>{a.ces} CES</span>
+                <span className="text-caption font-semibold text-trail-text truncate">{a.name || `${t.sportLabel[a.sport] ?? a.sport} ${fmtDate(a.date)}`}</span>
+                <span className="text-caption font-bold flex-shrink-0" style={{ color: colors.chargeOrange }}>{a.ces} CES</span>
               </div>
               <div className="flex items-center gap-2 text-[10px] text-trail-muted mt-0.5">
                 <span>{fmtDate(a.date)}</span>
