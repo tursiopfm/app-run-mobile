@@ -419,7 +419,7 @@ export function MissionSetupFlow({
                       )}
                       <Button onClick={validateManualHr} disabled={!hrInputValid}>Valider mes zones</Button>
                       {(hrMethod === 'pct_max' || hrMethod === 'auto') && (
-                        <p className="font-body text-[12px] text-primary-text">Zones enregistrées ✓</p>
+                        <p className="font-body text-[12px] text-status-success">Zones enregistrées ✓</p>
                       )}
                     </div>
                   )}
