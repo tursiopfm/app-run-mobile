@@ -239,7 +239,7 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
             <path d="M19 12H5M5 12L12 19M5 12L12 5"
               stroke={colors.subtleText} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span className="text-[16px] font-semibold text-trail-text">{L.editTitle}</span>
+          <span className="font-display text-[16px] font-semibold text-trail-text">{L.editTitle}</span>
         </button>
         <span className="text-[13px] text-trail-muted">{fmtModalDate(a.start_time)}</span>
       </div>

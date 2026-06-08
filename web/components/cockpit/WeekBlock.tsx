@@ -91,7 +91,7 @@ export function WeekBlock({ sportOverviews, allSessions }: Props) {
               <span style={{ fontSize: 9, fontWeight: 700, color: colors.subtleText }}>{s.day}</span>
               {hasActivity ? (
                 <>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: cfg.color, lineHeight: 1 }}>{km}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums', color: cfg.color, lineHeight: 1 }}>{km}</span>
                   <span style={{ fontSize: 8, color: colors.subtleText, lineHeight: 1 }}>km</span>
                   {s.dPlus > 0 && (
                     <span style={{ fontSize: 9, fontWeight: 600, color: '#4db6f0', lineHeight: 1 }}>
@@ -113,21 +113,21 @@ export function WeekBlock({ sportOverviews, allSessions }: Props) {
         style={{ borderTop: `1px solid ${colors.border}` }}
       >
         <div className="flex flex-col items-center gap-[1px]">
-          <span style={{ fontSize: 13, fontWeight: 800, color: cfg.color }}>
+          <span style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums', color: cfg.color }}>
             {totalKm > 0 ? (totalKm < 10 ? totalKm.toFixed(1) : Math.round(totalKm)) : '—'}
             {totalKm > 0 && <span style={{ fontSize: 9, fontWeight: 400, color: colors.subtleText }}> km</span>}
           </span>
           <span style={{ fontSize: 9, color: colors.subtleText }}>{L.totalLabel}</span>
         </div>
         <div className="flex flex-col items-center gap-[1px]">
-          <span style={{ fontSize: 13, fontWeight: 800, color: '#4db6f0' }}>
+          <span style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums', color: '#4db6f0' }}>
             {totalDp > 0 ? `${totalDp}` : '—'}
             {totalDp > 0 && <span style={{ fontSize: 9, fontWeight: 400, color: colors.subtleText }}> m</span>}
           </span>
           <span style={{ fontSize: 9, color: colors.subtleText }}>{L.dPlusShort}</span>
         </div>
         <div className="flex flex-col items-center gap-[1px]">
-          <span style={{ fontSize: 13, fontWeight: 800, color: '#4caf50' }}>{durLabel}</span>
+          <span style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums', color: '#4caf50' }}>{durLabel}</span>
           <span style={{ fontSize: 9, color: colors.subtleText }}>{L.durationShort}</span>
         </div>
       </div>

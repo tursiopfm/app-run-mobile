@@ -23,7 +23,7 @@ export function RampRateCard({ payload }: { payload: ChargeSportPayload }) {
   return (
     <BlockCard title={L.blocks.rampRateBlock} helpTitle={L.blocks.rampRateBlock} helpBody={L.help.rampRateBlock}>
       <div className="flex items-baseline gap-3">
-        <p className="text-[28px] font-black" style={{ color }}>
+        <p className="text-[28px] font-bold font-data tabular-nums" style={{ color }}>
           {pct > 0 ? '+' : ''}{pct}%
         </p>
         <p className="text-[14px] font-semibold text-trail-text">{txt}</p>

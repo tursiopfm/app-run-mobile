@@ -12,6 +12,7 @@
 | [reference/MODELE_MATHEMATIQUE.md](./reference/MODELE_MATHEMATIQUE.md) | Source de vérité math : zones HR, intensité, CES, charge/fatigue |
 | [reference/MAINTENANCE.md](./reference/MAINTENANCE.md) | Checklist maintenance et opérations |
 | [reference/MINMAP.md](./reference/MINMAP.md) | Index rapide écrans ↔ composants |
+| [reference/TYPOGRAPHIE.md](./reference/TYPOGRAPHIE.md) | Charte typo : polices (Space Grotesk + Inter), échelle, règle 14 vs 13, KPI |
 
 ## Superpowers — designs et plans
 

@@ -30,7 +30,7 @@ export function RepeatStepEditor({ step, sessionType: _sessionType, intensityMod
         className="bg-trail-card border border-trail-border rounded-t-[20px] sm:rounded-[16px] w-full max-w-md p-5 pb-8"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-[16px] font-semibold text-trail-text mb-4">
+        <h2 className="font-display text-[16px] font-semibold text-trail-text mb-4">
           {L.repeatStepEditTitle}
         </h2>
 

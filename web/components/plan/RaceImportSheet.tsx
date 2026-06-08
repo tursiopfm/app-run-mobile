@@ -100,7 +100,7 @@ export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
         className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-[16px] bg-trail-card border-t border-trail-border p-4 space-y-3"
       >
         <div className="flex justify-between items-center">
-          <h2 className="text-[16px] font-semibold">Importer le tableau de course</h2>
+          <h2 className="font-display text-[16px] font-semibold">Importer le tableau de course</h2>
           <button type="button" onClick={onClose} aria-label="Fermer" className="text-trail-muted">×</button>
         </div>
 

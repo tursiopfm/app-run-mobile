@@ -6,12 +6,22 @@
   body { font-family: var(--font-sans); }
 }
 
+/* Classe KPI : police chiffres (Space Grotesk) + chasse fixe + poids charte.
+   À utiliser sur les valeurs/compteurs importants au lieu d'inline fontFamily. */
+@layer components {
+  .numeric-kpi {
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+}
+
 /* ── Palette Sombre (défaut) ─────────────────────────── */
 :root {
   /* Police brand : alias des variables next/font posées sur <html>.
-     --font-sans = Manrope (texte/UI) · --font-data = JetBrains Mono (chiffres) */
-  --font-sans: var(--font-manrope);
-  --font-data: var(--font-jetbrains-mono);
+     --font-sans = Inter (texte/UI) · --font-data = Space Grotesk (titres, chiffres, KPI) */
+  --font-sans: var(--font-inter);
+  --font-data: var(--font-space-grotesk);
 
   --trail-bg:               var(--ink-900);
   --trail-surface:          var(--ink-800);

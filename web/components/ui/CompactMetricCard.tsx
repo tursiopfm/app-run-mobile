@@ -12,7 +12,7 @@ export function CompactMetricCard({ unit, value, description, color }: Props) {
   return (
     <div className="flex-1 rounded-[8px] bg-trail-surface border border-trail-border px-3 py-2">
       <p className="text-[11px] font-semibold text-trail-muted leading-tight">{unit}</p>
-      <p className="text-[22px] font-black leading-tight" style={{ color }}>{Math.round(value)}</p>
+      <p className="text-[22px] font-bold font-data tabular-nums leading-tight" style={{ color }}>{Math.round(value)}</p>
       <p className="text-[11px] text-trail-muted leading-tight">{description}</p>
     </div>
   )

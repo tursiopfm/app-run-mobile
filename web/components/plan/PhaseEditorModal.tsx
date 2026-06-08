@@ -299,7 +299,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
         <div className="w-10 h-1 rounded-full bg-trail-border mx-auto mb-4 md:hidden" />
 
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[16px] font-semibold text-trail-text">{L.phaseEditorTitle}</h2>
+          <h2 className="font-display text-[16px] font-semibold text-trail-text">{L.phaseEditorTitle}</h2>
           <button
             type="button"
             onClick={handleAutoGenerate}

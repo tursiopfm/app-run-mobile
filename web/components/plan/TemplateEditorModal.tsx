@@ -196,7 +196,7 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
       >
         <div className="w-10 h-1 rounded-full bg-trail-border mx-auto mb-4 md:hidden" />
 
-        <h2 className="text-[16px] font-semibold text-trail-text mb-3">
+        <h2 className="font-display text-[16px] font-semibold text-trail-text mb-3">
           {isEdit ? L.templateEditTitle : L.templateCreateTitle}
         </h2>
 

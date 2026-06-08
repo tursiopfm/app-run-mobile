@@ -39,7 +39,7 @@ export function ExpertModeHint() {
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-trail-primary/15">
           <BarChart3 className="text-trail-primary" size={24} />
         </div>
-        <h2 className="text-[17px] font-bold text-trail-text">Mode Expert activé</h2>
+        <h2 className="font-display text-[17px] font-bold text-trail-text">Mode Expert activé</h2>
         <p className="mt-2 text-[13px] text-trail-muted leading-relaxed">
           Tu as maintenant accès au cockpit complet. Pour revenir au Mode Mission,
           va dans <span className="font-semibold text-trail-text">Réglages → Mode d’affichage</span>.

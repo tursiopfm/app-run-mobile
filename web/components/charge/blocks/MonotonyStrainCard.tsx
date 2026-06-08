@@ -26,21 +26,21 @@ export function MonotonyStrainCard({ payload }: { payload: ChargeSportPayload })
       <div className="grid grid-cols-2 gap-2 mt-1">
         <div className="rounded-[10px] bg-trail-surface px-3 py-2">
           <p className="text-[10px] text-trail-muted">{L.monoTitle}</p>
-          <p className="text-[18px] font-black mt-0.5" style={{ color: monoColor }}>{payload.monotony7d.toFixed(2)}</p>
+          <p className="text-[18px] font-bold font-data tabular-nums mt-0.5" style={{ color: monoColor }}>{payload.monotony7d.toFixed(2)}</p>
           <p className="text-[10px] text-trail-muted mt-0.5">{L.monoUnit}</p>
         </div>
         <div className="rounded-[10px] bg-trail-surface px-3 py-2">
           <p className="text-[10px] text-trail-muted">{L.strainTitle}</p>
-          <p className="text-[18px] font-black mt-0.5" style={{ color: strainColor }}>{payload.strain7d}</p>
+          <p className="text-[18px] font-bold font-data tabular-nums mt-0.5" style={{ color: strainColor }}>{payload.strain7d}</p>
           <p className="text-[10px] text-trail-muted mt-0.5">{L.strainUnit}</p>
         </div>
         <div className="rounded-[10px] bg-trail-surface px-3 py-2">
           <p className="text-[10px] text-trail-muted">{L.activeDays}</p>
-          <p className="text-[18px] font-black mt-0.5 text-trail-text">{payload.activeDays7d}/7</p>
+          <p className="text-[18px] font-bold font-data tabular-nums mt-0.5 text-trail-text">{payload.activeDays7d}/7</p>
         </div>
         <div className="rounded-[10px] bg-trail-surface px-3 py-2">
           <p className="text-[10px] text-trail-muted">{L.peakDay}</p>
-          <p className="text-[18px] font-black mt-0.5 text-trail-text">
+          <p className="text-[18px] font-bold font-data tabular-nums mt-0.5 text-trail-text">
             {payload.peakDay7d ? payload.peakDay7d.ces : 0}
           </p>
           <p className="text-[10px] text-trail-muted mt-0.5">

@@ -114,7 +114,7 @@ export function SessionAddSheet({ open, dateISO, onClose, onPickTemplate, onCrea
 
         <div className="px-4 pt-2 pb-3 flex items-start justify-between border-b border-trail-border">
           <div>
-            <h2 className="text-[16px] font-semibold text-trail-text">{L.addTitle}</h2>
+            <h2 className="font-display text-[16px] font-semibold text-trail-text">{L.addTitle}</h2>
             <p className="text-[12px] text-trail-muted mt-[2px]">{formatLong(dateISO, L.monthsFull)}</p>
           </div>
           <button

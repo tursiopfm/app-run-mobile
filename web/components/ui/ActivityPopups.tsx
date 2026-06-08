@@ -51,7 +51,7 @@ function FullScreenSheet({ title, onClose, children }: {
         className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0"
         style={{ backgroundColor: colors.headerBg, borderColor: colors.border }}
       >
-        <span className="text-[16px] font-bold" style={{ color: colors.text }}>{title}</span>
+        <span className="font-display text-[16px] font-bold" style={{ color: colors.text }}>{title}</span>
         <button
           onClick={onClose}
           aria-label={L.popupCloseAria}

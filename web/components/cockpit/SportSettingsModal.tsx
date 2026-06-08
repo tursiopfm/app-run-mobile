@@ -43,7 +43,7 @@ export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave
         className="bg-trail-card border border-trail-border rounded-[16px] p-5 w-[320px] max-w-[90vw] max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-[16px] font-semibold text-trail-text mb-4">{title}</h2>
+        <h2 className="font-display text-[16px] font-semibold text-trail-text mb-4">{title}</h2>
 
         <p className="text-[12px] font-semibold text-trail-muted mb-2">{L.activitiesToShow}</p>
         <div className="space-y-2 mb-1">

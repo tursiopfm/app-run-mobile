@@ -458,7 +458,7 @@ function NavButton({
         border: `1px solid ${colors.border}`,
         color: colors.text,
         fontSize: 18,
-        fontWeight: 900,
+        fontWeight: 700,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

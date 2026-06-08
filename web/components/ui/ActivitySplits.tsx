@@ -104,7 +104,7 @@ export function ActivitySplits({
 
             {/* Pace */}
             <span style={{
-              fontSize: 14, fontWeight: 800, width: 42, textAlign: 'right',
+              fontSize: 14, fontWeight: 700, width: 42, textAlign: 'right',
               color, flexShrink: 0, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums',
             }}>
               {fmtPaceSec(pace)}

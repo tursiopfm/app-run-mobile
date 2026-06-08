@@ -69,17 +69,30 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans:    ['var(--font-manrope)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['var(--font-manrope)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        body:    ['var(--font-manrope)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        mono:    ['var(--font-jetbrains-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        // Charte : Inter = texte/UI · Space Grotesk = titres/valeurs/chiffres.
+        sans:    ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        body:    ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['var(--font-space-grotesk)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // `font-data` : classe dédiée aux chiffres (remplace l'inline var(--font-data)).
+        data:    ['var(--font-space-grotesk)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono:    ['var(--font-space-grotesk)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       fontSize: {
+        // Tokens numériques historiques (conservés pour ne rien casser).
         '10':  ['10px', { lineHeight: '1.2' }],
         '11':  ['11px', { lineHeight: '1.3' }],
         '13':  ['13px', { lineHeight: '1.4' }],
         '14':  ['14px', { lineHeight: '1.4' }],
         '20':  ['20px', { lineHeight: '1.2' }],
+        // ── Échelle typographique officielle (brand) ─────────────────────
+        // Usage 14 vs 13 : voir docs/reference/TYPOGRAPHIE.md
+        'display':   ['28px', { lineHeight: '1.1',  letterSpacing: '-0.01em' }],
+        'h1':        ['22px', { lineHeight: '1.15', letterSpacing: '-0.01em' }],
+        'h2':        ['18px', { lineHeight: '1.25' }],
+        'body':      ['14px', { lineHeight: '1.5' }],
+        'body-sm':   ['13px', { lineHeight: '1.45' }],
+        'caption':   ['12px', { lineHeight: '1.4' }],
+        'micro':     ['11px', { lineHeight: '1.3' }],
       },
       borderRadius: {
         'kpi':   '4px',

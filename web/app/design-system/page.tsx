@@ -251,6 +251,22 @@ export default function DesignSystemPage() {
                 Le centre de contrôle des sportifs d’endurance.
               </p>
             </div>
+            {/* Échelle officielle — tokens Tailwind (text-display … text-micro).
+                Règle 14 vs 13 : voir docs/reference/TYPOGRAPHIE.md */}
+            <div className="rounded-xl border border-ink-600 bg-ink-800 p-5">
+              <p className="font-body text-micro uppercase tracking-widest text-trail-muted mb-3">
+                Échelle typographique
+              </p>
+              <div className="space-y-2">
+                <p className="font-display text-display leading-none">Display · 28 <span className="font-body text-micro text-trail-muted">text-display</span></p>
+                <p className="font-display text-h1 leading-none">Titre H1 · 22 <span className="font-body text-micro text-trail-muted">text-h1</span></p>
+                <p className="font-display text-h2 leading-none">Titre H2 · 18 <span className="font-body text-micro text-trail-muted">text-h2</span></p>
+                <p className="font-body text-body">Body · 14 — nouveaux écrans <span className="text-micro text-trail-muted">text-body</span></p>
+                <p className="font-body text-body-sm text-trail-text">Body Small · 13 — écrans denses <span className="text-micro text-trail-muted">text-body-sm</span></p>
+                <p className="font-body text-caption text-trail-muted">Caption · 12 <span className="text-micro">text-caption</span></p>
+                <p className="font-body text-micro text-trail-muted">Micro · 11 · text-micro</p>
+              </div>
+            </div>
           </div>
         </Section>
 

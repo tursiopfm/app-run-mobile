@@ -47,7 +47,7 @@ export default async function ProfileIdentityPage() {
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <p className="text-[22px] font-black text-trail-text leading-tight">{S.identityPageTitle}</p>
+          <p className="text-[22px] font-display font-bold text-trail-text leading-tight">{S.identityPageTitle}</p>
           <p className="text-[12px] text-trail-muted leading-[16px]">
             {S.identityPageIntro}
           </p>

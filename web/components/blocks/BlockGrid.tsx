@@ -203,7 +203,7 @@ function AddBlockPanel({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
       <div className="bg-trail-card border border-trail-border rounded-t-[20px] w-full max-w-lg p-5 pb-8" onClick={(e) => e.stopPropagation()}>
         <div className="w-10 h-1 rounded-full bg-trail-border mx-auto mb-4" />
-        <h2 className="text-[16px] font-semibold text-trail-text mb-4">{addBlockLabel}</h2>
+        <h2 className="font-display text-[16px] font-semibold text-trail-text mb-4">{addBlockLabel}</h2>
         <div className="space-y-2">
           {hiddenBlocks.map((b) => (
             <button

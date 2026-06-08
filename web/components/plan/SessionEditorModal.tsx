@@ -248,7 +248,7 @@ export function SessionEditorModal({
         <div className="w-10 h-1 rounded-full bg-trail-border mx-auto mb-4 md:hidden" />
 
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[16px] font-semibold text-trail-text">
+          <h2 className="font-display text-[16px] font-semibold text-trail-text">
             {isEdit ? L.sessionEditTitle : L.sessionCreateTitle}
           </h2>
         </div>

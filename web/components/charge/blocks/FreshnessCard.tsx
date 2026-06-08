@@ -38,7 +38,7 @@ export function FreshnessCard({ payload }: { payload: ChargeSportPayload }) {
     <BlockCard title={L.blocks.freshness} helpTitle={L.blocks.freshness} helpBody={L.help.freshness}>
       <div className="flex items-baseline justify-between gap-3 mb-2">
         <div>
-          <p className="text-[22px] font-black text-trail-text">{Math.round(f.tsb)}</p>
+          <p className="text-[22px] font-bold font-data tabular-nums text-trail-text">{Math.round(f.tsb)}</p>
           <p className="text-[12px] font-semibold text-trail-text">{zoneLabel}</p>
         </div>
         <span className="inline-flex items-center gap-1.5 text-[12px] text-trail-muted text-right leading-snug">

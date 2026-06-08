@@ -99,7 +99,7 @@ function KpiCell({ label, labelColor, value, statusLabel, tooltip, onClick }: Kp
       className="rounded-[10px] bg-trail-surface px-2 py-2 text-center hover:brightness-110 transition cursor-pointer w-full"
     >
       <p className="text-[12px] font-semibold" style={{ color: labelColor }}>{label}</p>
-      <p className="text-[18px] font-black mt-0.5 text-trail-text">{value}</p>
+      <p className="text-[18px] font-bold font-data tabular-nums mt-0.5 text-trail-text">{value}</p>
       <p className="text-[11px] font-medium mt-0.5 text-trail-muted leading-[14px]">
         {statusLabel}
       </p>

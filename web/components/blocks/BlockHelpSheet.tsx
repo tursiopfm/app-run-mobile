@@ -14,7 +14,7 @@ export function BlockHelpSheet({ title, body, onClose }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-10 h-1 rounded-full bg-trail-border mx-auto mb-4" />
-        <h2 className="text-[16px] font-semibold text-trail-text mb-3">{title}</h2>
+        <h2 className="font-display text-[16px] font-semibold text-trail-text mb-3">{title}</h2>
         {typeof body === 'string' ? (
           <p className="text-[13px] text-trail-muted leading-[19px] whitespace-pre-line">{body}</p>
         ) : (

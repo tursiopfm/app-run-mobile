@@ -93,7 +93,7 @@ export function ActivitySplitsProfile({
   const callout = (label: string, value: string, hint: string, color: string) => (
     <div style={{ background: 'var(--trail-card)', border: '1px solid var(--trail-border)', borderRadius: 11, padding: 11 }}>
       <div style={{ fontSize: 10.5, color: 'var(--trail-muted)', marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 19, fontWeight: 800, lineHeight: 1, color, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 19, fontWeight: 700, lineHeight: 1, color, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       <div style={{ fontSize: 10, color: 'var(--trail-muted)', marginTop: 4 }}>{hint}</div>
     </div>
   )

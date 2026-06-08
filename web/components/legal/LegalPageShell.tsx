@@ -37,7 +37,7 @@ export function LegalPageShell({
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-trail-primary">
             {eyebrow}
           </p>
-          <h1 className="text-[22px] font-black text-trail-text leading-tight mt-[2px]">
+          <h1 className="text-[22px] font-display font-bold text-trail-text leading-tight mt-[2px]">
             {title}
           </h1>
           {description ? (

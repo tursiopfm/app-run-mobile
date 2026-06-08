@@ -144,7 +144,7 @@ export default async function SettingsPage({
         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-trail-primary">
           {settingsLabels.title}
         </p>
-        <p className="text-[22px] font-black text-trail-text leading-tight mt-[2px]">
+        <p className="text-[22px] font-display font-bold text-trail-text leading-tight mt-[2px]">
           {settingsLabels.pageHeroSubtitle}
         </p>
         <p className="text-[12px] text-trail-muted leading-[16px] mt-[6px] max-w-[360px]">

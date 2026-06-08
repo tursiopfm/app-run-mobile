@@ -94,7 +94,7 @@ export default function SupportPage() {
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-trail-primary">
             {S.eyebrow}
           </p>
-          <h1 className="text-[22px] font-black text-trail-text leading-tight mt-[2px]">
+          <h1 className="text-[22px] font-display font-bold text-trail-text leading-tight mt-[2px]">
             {S.title}
           </h1>
           <p className="text-[12px] text-trail-muted leading-[16px] mt-[6px] max-w-[400px]">

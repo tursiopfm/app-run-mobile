@@ -103,7 +103,7 @@ function StatTile({ label, value, unit, valueStyle }: {
   return (
     <div style={{ background: 'var(--trail-card)', border: '1px solid var(--trail-border)', borderRadius: 10, padding: '9px 10px 8px' }}>
       <div style={{ fontSize: 11, color: 'var(--trail-muted)', marginBottom: 3 }}>{label}</div>
-      <div style={{ fontSize: 17, fontWeight: 800, lineHeight: 1, color: 'var(--trail-text)', ...valueStyle }}>{value}</div>
+      <div style={{ fontSize: 17, fontWeight: 700, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums', lineHeight: 1, color: 'var(--trail-text)', ...valueStyle }}>{value}</div>
       {unit && <div style={{ fontSize: 11, color: 'var(--trail-muted)' }}>{unit}</div>}
     </div>
   )
@@ -408,7 +408,7 @@ export function ActivityDetailClient({
             <SportBadge type={effectiveSport} />
             <span style={{ fontSize: 11, color: 'var(--trail-muted)' }}>{fmtDetailDate(a.start_time)}</span>
           </div>
-          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--trail-text)', lineHeight: 1.15, marginBottom: 10 }}>
+          <div style={{ fontSize: 17, fontWeight: 700, fontFamily: 'var(--font-data)', color: 'var(--trail-text)', lineHeight: 1.15, marginBottom: 10 }}>
             {a.name}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>

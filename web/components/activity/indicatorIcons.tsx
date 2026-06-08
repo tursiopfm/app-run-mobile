@@ -88,7 +88,7 @@ export function UnknownTypeIcon({ size = 32 }: { size?: number }) {
         fontSize="44"
         fontWeight="700"
         fill="#6B7280"
-        fontFamily="sans-serif"
+        fontFamily="var(--font-data)"
       >
         ?
       </text>

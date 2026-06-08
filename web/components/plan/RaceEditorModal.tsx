@@ -121,7 +121,7 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
       >
         <div className="w-10 h-1 rounded-full bg-trail-border mx-auto mb-4 md:hidden" />
 
-        <h2 className="text-[16px] font-semibold text-trail-text mb-4">
+        <h2 className="font-display text-[16px] font-semibold text-trail-text mb-4">
           {isEdit ? L.raceEditTitle : L.raceCreateTitle}
         </h2>
 

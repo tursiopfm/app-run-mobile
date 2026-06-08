@@ -315,7 +315,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
             className="bg-trail-card border border-trail-border rounded-[12px] p-5 w-full max-w-sm max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-[16px] font-bold text-trail-text mb-4">
+            <h3 className="font-display text-[16px] font-bold text-trail-text mb-4">
               {L.goalEdit.titleFor(sportLabel(editSport, t), SPORT_CONFIG[editSport].emoji)}
             </h3>
             {planWeekly && (editSport === 'run' || editSport === 'all') && (

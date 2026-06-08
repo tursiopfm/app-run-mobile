@@ -170,7 +170,7 @@ export function ActivityTypesPrefsModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[16px] font-semibold text-trail-text">{L.typesPrefsTitle}</h2>
+          <h2 className="font-display text-[16px] font-semibold text-trail-text">{L.typesPrefsTitle}</h2>
           <button
             type="button"
             onClick={onClose}

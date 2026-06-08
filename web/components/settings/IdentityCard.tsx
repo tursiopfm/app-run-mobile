@@ -160,7 +160,7 @@ export function IdentityCard({
           />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[16px] font-bold text-trail-text truncate">{fullName}</p>
+          <p className="font-display text-[16px] font-bold text-trail-text truncate">{fullName}</p>
           <div className="flex items-center gap-1 mt-[2px]">
             <Mail size={11} className="text-trail-muted flex-shrink-0" />
             <p className="text-[12px] text-trail-muted truncate">{email ?? '—'}</p>

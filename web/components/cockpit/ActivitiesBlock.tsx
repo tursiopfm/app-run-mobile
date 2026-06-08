@@ -108,7 +108,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
                     barValues={kmNorm} barLabels={kmLabels} barColor={scfg.color}
                   >
                     <div className="flex items-baseline gap-[3px]">
-                      <span className="text-[21px] font-black leading-none text-trail-text">{sov.weekKm}</span>
+                      <span className="text-[21px] font-bold font-data tabular-nums leading-none text-trail-text">{sov.weekKm}</span>
                       <span className="text-[14px] text-trail-muted">km</span>
                     </div>
                   </CockpitKpiTile>
@@ -119,7 +119,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
                     barValues={dpNorm} barLabels={dpLabels} barColor={colors.seriesBlue}
                   >
                     <div className="flex items-baseline gap-[3px]">
-                      <span className="text-[21px] font-black leading-none text-trail-text">{sov.weekDPlus}</span>
+                      <span className="text-[21px] font-bold font-data tabular-nums leading-none text-trail-text">{sov.weekDPlus}</span>
                       <span className="text-[14px] text-trail-muted">m</span>
                     </div>
                   </CockpitKpiTile>
@@ -134,7 +134,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
                     barValues={mNorm} barLabels={mLabels} barColor={scfg.color}
                   >
                     <div className="flex items-baseline gap-[3px]">
-                      <span className="text-[18px] font-black leading-none text-trail-text">{sov.ytdKm}</span>
+                      <span className="text-[18px] font-bold font-data tabular-nums leading-none text-trail-text">{sov.ytdKm}</span>
                       <span className="text-[14px] text-trail-muted">km</span>
                     </div>
                   </CockpitKpiTile>
@@ -145,7 +145,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
                     barValues={mdpNorm} barLabels={mdpLabels} barColor={colors.seriesBlue}
                   >
                     <div className="flex items-baseline gap-[3px]">
-                      <span className="text-[18px] font-black leading-none text-trail-text">{sov.ytdDPlus.toLocaleString('fr-FR')}</span>
+                      <span className="text-[18px] font-bold font-data tabular-nums leading-none text-trail-text">{sov.ytdDPlus.toLocaleString('fr-FR')}</span>
                       <span className="text-[14px] text-trail-muted">m</span>
                     </div>
                   </CockpitKpiTile>

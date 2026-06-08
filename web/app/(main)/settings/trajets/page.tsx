@@ -19,7 +19,7 @@ export default async function CommuteRoutesPage() {
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <p className="text-[22px] font-black text-trail-text leading-tight">
+          <p className="text-[22px] font-display font-bold text-trail-text leading-tight">
             Trajets domicile-travail
           </p>
           <p className="text-[12px] text-trail-muted leading-[16px] mt-1">

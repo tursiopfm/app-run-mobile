@@ -110,10 +110,10 @@ export function ChargeBlock({ sportOverviews, onHide }: Props) {
               >
                 <div className="flex items-baseline gap-[2px] flex-nowrap">
                   <span className="text-[13px] text-trail-muted">{C.atl7d} </span>
-                  <span className="text-[21px] font-black leading-none text-trail-text">{Math.round(sov.atl)}</span>
+                  <span className="text-[21px] font-bold font-data tabular-nums leading-none text-trail-text">{Math.round(sov.atl)}</span>
                   <span className="text-[13px] text-trail-muted mx-[3px]">·</span>
                   <span className="text-[13px] text-trail-muted">{C.ctl42d} </span>
-                  <span className="text-[21px] font-black leading-none text-trail-text">{Math.round(sov.ctl)}</span>
+                  <span className="text-[21px] font-bold font-data tabular-nums leading-none text-trail-text">{Math.round(sov.ctl)}</span>
                 </div>
               </CockpitKpiTile>
             ),

@@ -401,7 +401,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
                   style={{ borderTop: `1px solid ${colors.border}` }}
                 >
                   <div className="flex flex-col items-center gap-[1px]">
-                    <span style={{ fontSize: 13, fontWeight: 800, color: scfg.color }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums', color: scfg.color }}>
                       {view.totalKm > 0
                         ? (view.totalKm < 10 ? view.totalKm.toFixed(1) : Math.round(view.totalKm))
                         : '—'}
@@ -412,7 +412,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
                     <span style={{ fontSize: 9, color: colors.subtleText }}>{L.totalLabel}</span>
                   </div>
                   <div className="flex flex-col items-center gap-[1px]">
-                    <span style={{ fontSize: 13, fontWeight: 800, color: '#4db6f0' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums', color: '#4db6f0' }}>
                       {view.totalDPlus > 0 ? `${view.totalDPlus}` : '—'}
                       {view.totalDPlus > 0 && (
                         <span style={{ fontSize: 9, fontWeight: 400, color: colors.subtleText }}> m</span>
@@ -421,7 +421,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
                     <span style={{ fontSize: 9, color: colors.subtleText }}>{L.dPlusShort}</span>
                   </div>
                   <div className="flex flex-col items-center gap-[1px]">
-                    <span style={{ fontSize: 13, fontWeight: 800, color: '#4caf50' }}>{durLabel}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums', color: '#4caf50' }}>{durLabel}</span>
                     <span style={{ fontSize: 9, color: colors.subtleText }}>{L.durationShort}</span>
                   </div>
                 </div>

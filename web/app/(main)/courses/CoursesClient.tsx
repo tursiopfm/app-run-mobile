@@ -228,7 +228,7 @@ function SegmentButton({ label, selected, onClick }: { label: string; selected: 
 function SummaryPill({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div className="flex-1 rounded-[10px] px-[8px] py-[6px] text-center" style={{ backgroundColor: colors.surface }}>
-      <p className="text-[18px] font-black" style={{ color }}>{value}</p>
+      <p className="text-[18px] font-bold font-data tabular-nums" style={{ color }}>{value}</p>
       <p className="text-[10px] text-trail-muted mt-[2px]">{label}</p>
     </div>
   )
@@ -804,7 +804,7 @@ function RecordCard({ record }: { record: PersonalRecord }) {
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       <div className="flex items-center justify-between mb-[4px]">
         <div className="flex items-center gap-[6px]">
-          <span className="text-[11px] font-black" style={{ color: colors.chargeOrange }}>Record</span>
+          <span className="text-[11px] font-semibold" style={{ color: colors.chargeOrange }}>Record</span>
           <SourceBadge source={record.source} />
           <span className="text-[11px] text-trail-muted">{SPORT_LABEL[record.sport]}</span>
         </div>

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Manrope, JetBrains_Mono } from 'next/font/google'
+import { Space_Grotesk, Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { InstallPrompt } from '@/components/ui/InstallPrompt'
@@ -7,17 +7,18 @@ import { ServiceWorkerRegistrar } from '@/components/ui/ServiceWorkerRegistrar'
 import { I18nProvider } from '@/lib/i18n/I18nProvider'
 import { getServerLang } from '@/lib/i18n/server'
 
-// Police « brand » : Manrope pour le texte/UI, JetBrains Mono pour les chiffres
-// (allures, distances, valeurs — look « instrument cockpit »).
-const manrope = Manrope({
+// Police « brand » (charte officielle) : Space Grotesk pour les titres, valeurs,
+// chiffres et KPI (look « instrument cockpit ») ; Inter pour le texte courant/UI.
+// Variable fonts → tous les poids charte (Space Grotesk 500/600/700, Inter 400/500/600).
+const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-manrope',
+  variable: '--font-space-grotesk',
 })
-const jetbrainsMono = JetBrains_Mono({
+const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-jetbrains-mono',
+  variable: '--font-inter',
 })
 
 export const metadata: Metadata = {
@@ -68,7 +69,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const lang = getServerLang()
   return (
-    <html lang={lang} suppressHydrationWarning className={`${manrope.variable} ${jetbrainsMono.variable}`}>
+    <html lang={lang} suppressHydrationWarning className={`${spaceGrotesk.variable} ${inter.variable}`}>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
       </head>

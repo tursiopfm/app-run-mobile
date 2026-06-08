@@ -14,7 +14,7 @@ export function KpiCard({ label, value, unit, sub, accent }: KpiCardProps) {
         : 'bg-trail-card border-trail-border'
     }`}>
       <p className="text-trail-muted text-xs font-medium uppercase tracking-wide mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${accent ? 'text-trail-primary' : 'text-trail-text'}`}>
+      <p className={`text-2xl font-bold font-data tabular-nums ${accent ? 'text-trail-primary' : 'text-trail-text'}`}>
         {value}
         {unit && <span className="text-sm font-normal ml-1 text-trail-muted">{unit}</span>}
       </p>

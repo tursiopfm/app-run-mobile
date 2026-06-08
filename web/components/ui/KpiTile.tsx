@@ -42,7 +42,7 @@ export function KpiTile({
       {/* Body */}
       <div className="px-2.5 py-2">
         <p
-          className="text-[20px] font-bold leading-tight"
+          className="text-[20px] font-bold font-data tabular-nums leading-tight"
           style={{ color: mainValueColor ?? '#E2ECE9' }}
         >
           {mainValue}

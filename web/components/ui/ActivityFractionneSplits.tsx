@@ -93,7 +93,7 @@ export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
         border: '1px solid rgba(232,101,26,0.35)', borderRadius: 16,
         padding: '14px 16px', marginBottom: 13,
       }}>
-        <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: '-0.4px' }}>{a.structureLabel}</div>
+        <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-data)', letterSpacing: '-0.4px' }}>{a.structureLabel}</div>
         <div style={{ fontSize: 11.5, color: 'var(--trail-muted)', marginTop: 3 }}>
           {a.avgRecoverySec != null && <>{L.fracRecoveryShort} ~{fmtDurationSec(a.avgRecoverySec)} · </>}
           {L.fracAvgEffort} {a.avgEffortPaceSec ? `${fmtPaceSec(a.avgEffortPaceSec)}/km` : '—'}
@@ -103,7 +103,7 @@ export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
           {a.efforts.map(e => (
             <div key={e.rep} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
               <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', flex: 1 }}>
-                <span style={{ fontSize: 9.5, fontWeight: 800, color: FAST, whiteSpace: 'nowrap', marginBottom: 3 }}>
+                <span style={{ fontSize: 9.5, fontWeight: 700, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums', color: FAST, whiteSpace: 'nowrap', marginBottom: 3 }}>
                   {e.paceSec ? fmtPaceSec(e.paceSec) : '—'}
                 </span>
                 <div style={{
@@ -131,9 +131,9 @@ export function ActivityFractionneSplits({ laps }: { laps: StravaLap[] }) {
               display: 'inline-block', fontSize: 10, color: 'var(--trail-muted)',
               transform: detailOpen ? 'rotate(90deg)' : 'none', transition: 'transform .18s ease',
             }}>▶</span>
-            <span style={{ fontSize: 12.5, fontWeight: 800 }}>{L.fracMainBlock(a.efforts.length)}</span>
+            <span style={{ fontSize: 12.5, fontWeight: 600 }}>{L.fracMainBlock(a.efforts.length)}</span>
           </span>
-          <span style={{ fontSize: 14, fontWeight: 900, color: FAST, fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-data)', color: FAST, fontVariantNumeric: 'tabular-nums' }}>
             {a.avgEffortPaceSec ? fmtPaceSec(a.avgEffortPaceSec) : '—'}
           </span>
         </div>
@@ -175,9 +175,9 @@ function PhaseCard({ phase, label }: { phase: FracPhase; label: string }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={tagStyle(c)}>{label}</span>
-          <span style={{ fontSize: 12.5, fontWeight: 800 }}>{fmtLapDist(phase.distance)}</span>
+          <span style={{ fontSize: 12.5, fontWeight: 700, fontFamily: 'var(--font-data)' }}>{fmtLapDist(phase.distance)}</span>
         </span>
-        <span style={{ fontSize: 14, fontWeight: 900, color: c, fontVariantNumeric: 'tabular-nums' }}>
+        <span style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-data)', color: c, fontVariantNumeric: 'tabular-nums' }}>
           {phase.paceSec ? fmtPaceSec(phase.paceSec) : '—'}
         </span>
       </div>
@@ -196,7 +196,7 @@ function DetailRow({ effort, recovery, recLabel }: { effort?: FracEffort; recove
           {effort.laps.length > 1 && <span style={{ color: 'var(--trail-muted)' }}> ({effort.laps.length}×)</span>}
         </span>
         <span style={{ fontSize: 11.5, fontVariantNumeric: 'tabular-nums' }}>{fmtDurationSec(effort.movingTime)}</span>
-        <span style={{ fontSize: 11.5, fontWeight: 800, color: FAST, fontVariantNumeric: 'tabular-nums', minWidth: 52, textAlign: 'right' }}>
+        <span style={{ fontSize: 11.5, fontWeight: 700, fontFamily: 'var(--font-data)', color: FAST, fontVariantNumeric: 'tabular-nums', minWidth: 52, textAlign: 'right' }}>
           {effort.paceSec ? `${fmtPaceSec(effort.paceSec)}/km` : '—'}
         </span>
       </div>
@@ -232,7 +232,7 @@ function cardStyle(accent: string): React.CSSProperties {
 
 function tagStyle(color: string): React.CSSProperties {
   return {
-    fontSize: 9.5, fontWeight: 800, letterSpacing: '0.5px', padding: '2px 6px',
+    fontSize: 9.5, fontWeight: 600, letterSpacing: '0.5px', padding: '2px 6px',
     borderRadius: 4, textTransform: 'uppercase', color, background: `${color}22`,
   }
 }
@@ -241,7 +241,7 @@ function badgeStyle(isRec: boolean): React.CSSProperties {
   return {
     width: 19, height: 19, borderRadius: '50%',
     background: isRec ? 'rgba(125,147,142,0.18)' : 'rgba(232,101,26,0.18)',
-    color: isRec ? REC : FAST, fontSize: 10, fontWeight: 800,
+    color: isRec ? REC : FAST, fontSize: 10, fontWeight: 700,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
   }
 }
@@ -252,6 +252,6 @@ function copyBtnStyle(enabled: boolean): React.CSSProperties {
     background: enabled ? 'rgba(232,101,26,0.16)' : 'var(--trail-card)',
     border: `1px solid ${enabled ? 'rgba(232,101,26,0.4)' : 'var(--trail-border)'}`,
     borderRadius: 11, color: enabled ? FAST : 'var(--trail-muted)',
-    fontSize: 12.5, fontWeight: 800, cursor: enabled ? 'pointer' : 'default',
+    fontSize: 12.5, fontWeight: 600, cursor: enabled ? 'pointer' : 'default',
   }
 }
