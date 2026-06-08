@@ -85,7 +85,7 @@ export async function TabDashboard() {
         <Users size={18} className="text-trail-accent mb-2" />
         <p className="text-2xl font-bold text-trail-text">{s.userCount}</p>
         <p className="text-xs text-trail-muted mt-0.5">Utilisateurs</p>
-        <p className="text-[11px] text-trail-muted mt-1">
+        <p className="text-micro text-trail-muted mt-1">
           +{s.newUsers7d} <span className="opacity-70">7j</span> · {s.active24h} <span className="opacity-70">actifs 24h</span>
         </p>
       </Card>
@@ -100,7 +100,7 @@ export async function TabDashboard() {
         <Activity size={18} className="text-trail-primary mb-2" />
         <p className="text-2xl font-bold text-trail-text">{s.activityCount}</p>
         <p className="text-xs text-trail-muted mt-0.5">Activités importées</p>
-        <p className="text-[11px] text-trail-muted mt-1">
+        <p className="text-micro text-trail-muted mt-1">
           +{s.activity24h} <span className="opacity-70">24h</span> · sync {formatDateTime(s.lastSyncAt)}
         </p>
       </Card>
@@ -109,10 +109,10 @@ export async function TabDashboard() {
         <Webhook size={18} className="text-trail-warning mb-2" />
         <p className="text-2xl font-bold text-trail-text">{s.webhookCount}</p>
         <p className="text-xs text-trail-muted mt-0.5">Webhooks reçus</p>
-        <p className="text-[11px] text-trail-muted mt-1">
+        <p className="text-micro text-trail-muted mt-1">
           dernier {formatDateTime(s.lastWebhookAt)}
         </p>
-        <p className={`text-[11px] mt-0.5 ${s.errorCount > 0 ? 'text-trail-danger' : 'text-trail-muted'}`}>
+        <p className={`text-micro mt-0.5 ${s.errorCount > 0 ? 'text-trail-danger' : 'text-trail-muted'}`}>
           {s.errorCount} <span className="opacity-70">erreur{s.errorCount > 1 ? 's' : ''} 24h</span>
         </p>
       </Card>
@@ -123,10 +123,10 @@ export async function TabDashboard() {
           <>
             <p className={`text-sm font-bold ${deployState.color}`}>{deployState.label}</p>
             <p className="text-xs text-trail-muted mt-0.5">{s.lastDeploy.environment}</p>
-            <p className="text-[11px] text-trail-muted mt-1 font-mono truncate">
+            <p className="text-micro text-trail-muted mt-1 font-mono truncate">
               {s.lastDeploy.commitHash || '—'}
             </p>
-            <p className="text-[11px] text-trail-muted mt-0.5">
+            <p className="text-micro text-trail-muted mt-0.5">
               {formatDateTime(new Date(s.lastDeploy.createdAt).toISOString())}
             </p>
           </>
@@ -144,7 +144,7 @@ export async function TabDashboard() {
           {s.env.present}/{s.env.total}
         </p>
         <p className="text-xs text-trail-muted mt-0.5">Système — env vars</p>
-        <p className="text-[11px] text-trail-muted mt-1">
+        <p className="text-micro text-trail-muted mt-1">
           {process.env.NODE_ENV ?? '—'} {envOk ? '· tout OK' : `· ${s.env.missing} manquant${s.env.missing > 1 ? 's' : ''}`}
         </p>
       </Card>
