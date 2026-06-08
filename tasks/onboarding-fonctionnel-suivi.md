@@ -13,11 +13,12 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` livré (date + commit).
 - [x] Proposition A : collecte `birth_year` (via le fallback année de naissance) · `e91ee7bb`
 - [x] `onboarding_mode` **semé** dans `ui_preferences.app_mode` à la complétion (2 chemins : `/api/profile` `2f780989`, callback Strava `c737cd40` ; helper `456f9537`). hydrate() le propage au client ; le toggle Réglages reste maître ensuite.
 
-## Lot 2 — Discipline → sport par défaut des blocs cockpit
-- [ ] Helper `defaultSportForDiscipline()` (trail/route→run, vélo→ride, natation→swim, tri→all)
-- [ ] `DashboardGrid` reçoit `discipline`, passe `defaultSport` aux 8 blocs sport-aware
-- [ ] Chaque bloc : `localStorage override ?? defaultSport ?? DEFAULT_SETTINGS.default`
-- [ ] `MISSION_VISIBLE` (Mode Mission) respecte le sport par défaut
+## Lot 2 — Discipline → sport par défaut des blocs cockpit — ✅ livré 2026-06-08 (branche `worktree-onboarding-lot2-discipline-sport`)
+- [x] Helper `defaultSportForDiscipline()` : vélo→ride, natation→swim, tri→all, **trail/route→undefined** (pas de surcharge, garde les défauts par bloc) + `withDefaultSport()` · `0f2262c1`
+- [x] `DashboardGrid` reçoit `discipline`, dérive `defaultSport`, le passe aux 8 blocs sport-aware · `60b06fee`
+- [x] Chaque bloc : `localStorage override (readSportSettings) ?? defaultSport (withDefaultSport) ?? DEFAULT_SETTINGS.default` — perso utilisateur prioritaire · `60b06fee`
+- [x] `MISSION_VISIBLE` (Mode Mission) respecte le sport par défaut (mêmes composants → héritent de `defaultSport`, rien à changer) · `60b06fee`
+- [x] Test contrat LS-override-wins (`readSportSettings` + `withDefaultSport`)
 
 ## Lot 3 — Mission → bibliothèque Plan + séance clé + renommage route
 - [ ] Renommage « Préparer un marathon » → « Préparer une course sur route » (10 km, semi, marathon), id `route`
