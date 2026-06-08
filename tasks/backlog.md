@@ -6,9 +6,9 @@
 ## Priorité haute
 
 ### Tests composants activité — wrap I18nProvider manquant
-- **Quoi** : `__tests__/activities/ActivitySplits.test.tsx` et `ActivityHeartRateZones.test.tsx` rendent leur composant sans `<I18nProvider>`, donc `useT()` throw `useI18n must be used inside <I18nProvider>` → 2 suites rouges. Fix = wrapper avec `<I18nProvider initialLang="fr">` (cf. `ActivityFractionneSplits.test.tsx`).
+- **Quoi** : `__tests__/activities/ActivityHeartRateZones.test.tsx` rend son composant sans `<I18nProvider>`, donc `useT()` throw `useI18n must be used inside <I18nProvider>` → suite rouge. Fix = wrapper avec `<I18nProvider initialLang="fr">` (cf. `ActivityFractionneSplits.test.tsx`).
 - **Pourquoi** : suite de tests `__tests__/activities/` rouge en permanence, masque de vraies régressions.
-- **Identifié** : 2026-06-03
+- **Identifié** : 2026-06-03. `ActivitySplits.test.tsx` corrigé le 2026-06-08 (refonte splits).
 
 ### Coach IA fonctionnel
 - **Quoi** : remplacer le skeleton actuel par un vrai assistant (OpenAI ou Claude) qui lit `coach_messages` (Supabase) et propose des séances en fonction de la fatigue/objectifs.
@@ -26,6 +26,11 @@
 - **Identifié** : 2026-05-04. Note : un cron `cron/strava-import` existe déjà pour l'import initial.
 
 ## Priorité moyenne
+
+### Police « brand » app-wide (Manrope + JetBrains Mono)
+- **Quoi** : les mockups splits V2 validés utilisaient Manrope (UI) + JetBrains Mono (chiffres tabulaires). La refonte splits livrée s'en tient à la police actuelle de l'app (`-apple-system, 'Inter'`) + `tabular-nums`, pour ne pas toucher tout le shell. Décision à part : charger ces webfonts (via `next/font`) et basculer la police de base de l'app.
+- **Pourquoi** : cohérence visuelle avec les mockups / identité de marque, mais impacte tout l'app (layout, CSS global, perf de chargement) → à traiter globalement, pas dans une PR splits.
+- **Identifié** : 2026-06-08
 
 ### Migrer le profil FC (zones cardiaques) vers Supabase
 - **Quoi** : actuellement stocké en `localStorage` (clés `tc_athlete_hr` et `tc_hr_zone_method`).

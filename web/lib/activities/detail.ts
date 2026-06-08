@@ -53,14 +53,35 @@ export function splitPaceSec(
   return Math.round((split.moving_time / split.distance) * 1000)
 }
 
-export function splitColor(splitPace: number, avgPace: number): string {
-  if (!avgPace) return '#8892a4'
-  const ratio = (splitPace - avgPace) / avgPace
-  if (ratio <= -0.10) return '#e8651a'  // ≥10% faster → orange/red (max effort)
-  if (ratio <= 0)     return '#ff7043'  // faster → orange
-  if (ratio <= 0.10)  return '#ffb300'  // slightly slower → yellow
-  if (ratio <= 0.20)  return '#8bc34a'  // slower → light green
-  return '#4caf50'                       // ≥20% slower → green (easy)
+// Dégradé d'allure continu, aligné charte Deep Mission :
+// le plus rapide → orange, puis jaune, vert, et bleu pour le plus lent.
+// `minPace` ancre le chaud (le meilleur km), `avgPace × 1.12` ancre le froid
+// (au-delà — typiquement une côte marchée — la couleur sature en bleu).
+const PACE_GRADIENT_STOPS: { t: number; rgb: [number, number, number] }[] = [
+  { t: 0,    rgb: [255, 121, 0]   }, // #FF7900 orange — le plus rapide
+  { t: 0.34, rgb: [251, 191, 36]  }, // #FBBF24 jaune
+  { t: 0.67, rgb: [74, 222, 128]  }, // #4ADE80 vert
+  { t: 1,    rgb: [56, 189, 248]  }, // #38BDF8 bleu — le plus lent
+]
+
+const toHex = (v: number) =>
+  Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')
+
+export function paceGradientColor(pace: number, minPace: number, avgPace: number): string {
+  if (!avgPace || !Number.isFinite(pace)) return '#8892a4'
+  const hi = Math.max(avgPace * 1.12, minPace + 1)
+  let t = (pace - minPace) / (hi - minPace)
+  t = Math.max(0, Math.min(1, t))
+  for (let i = 0; i < PACE_GRADIENT_STOPS.length - 1; i++) {
+    const a = PACE_GRADIENT_STOPS[i]
+    const b = PACE_GRADIENT_STOPS[i + 1]
+    if (t <= b.t) {
+      const f = (t - a.t) / (b.t - a.t)
+      const c = a.rgb.map((v, k) => v + (b.rgb[k] - v) * f)
+      return `#${toHex(c[0])}${toHex(c[1])}${toHex(c[2])}`
+    }
+  }
+  return '#38bdf8'
 }
 
 // ── Lap utilities ─────────────────────────────────────────────────────────────

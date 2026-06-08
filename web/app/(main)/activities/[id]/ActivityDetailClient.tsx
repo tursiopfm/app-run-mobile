@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { ActivityMapPlaceholder } from '@/components/ui/ActivityMap'
 import { ActivitySplits } from '@/components/ui/ActivitySplits'
+import { ActivitySplitsProfile } from '@/components/ui/ActivitySplitsProfile'
 import { ActivityFractionneSplits } from '@/components/ui/ActivityFractionneSplits'
 import { ActivityHeartRateZones } from '@/components/ui/ActivityHeartRateZones'
 import { EditActivityModal } from '@/components/ui/EditActivityModal'
@@ -511,7 +512,10 @@ export function ActivityDetailClient({
 
           <div style={{ paddingTop: 12, paddingBottom: 20 }}>
             {activeTab === 'splits' && showSplits && (
-              <ActivitySplits splits={splits!} avgPaceSec={avgPaceSec} />
+              <>
+                <ActivitySplitsProfile splits={splits!} avgPaceSec={avgPaceSec} />
+                <ActivitySplits splits={splits!} avgPaceSec={avgPaceSec} />
+              </>
             )}
             {activeTab === 'fractionne' && showFractionne && (
               <ActivityFractionneSplits laps={laps!} />

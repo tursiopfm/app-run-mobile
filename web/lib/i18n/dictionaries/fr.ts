@@ -248,6 +248,16 @@ export type Dict = {
     mapUnavailable: string
     splitsBest: (pace: string) => string
     splitsCount: string
+    splitsSlower: string
+    splitsFaster: string
+    splitsAvg: string
+    splitsProfileTitle: (dist: string) => string
+    splitsDetailTitle: string
+    splitsElevLabel: string
+    splitsFastest: string
+    splitsSlowest: string
+    splitsRegularity: string
+    splitsRegularityHint: string
     hrAvgLabel: string
     hrMaxLabel: string
     fracBlocksCount: string
@@ -1654,6 +1664,16 @@ export const fr: Dict = {
     mapUnavailable:           'Carte non disponible',
     splitsBest:               (pace: string) => `★ Meilleur ${pace}`,
     splitsCount:              'segments',
+    splitsSlower:             'plus lent',
+    splitsFaster:             'plus rapide',
+    splitsAvg:                'moy',
+    splitsProfileTitle:       (dist: string) => `Profil sur ${dist}`,
+    splitsDetailTitle:        'Détail par kilomètre',
+    splitsElevLabel:          'Dénivelé',
+    splitsFastest:            'Plus rapide',
+    splitsSlowest:            'Plus lent',
+    splitsRegularity:         'Régularité',
+    splitsRegularityHint:     'hors côte',
     hrAvgLabel:               'FC moy',
     hrMaxLabel:               'FC max',
     fracBlocksCount:          'blocs',

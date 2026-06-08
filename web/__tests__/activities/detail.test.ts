@@ -1,6 +1,6 @@
 import type { StravaLap } from '@/lib/activities/detail'
 import {
-  splitColor,
+  paceGradientColor,
   fmtPaceSec,
   fmtDurationSec,
   splitPaceSec,
@@ -58,27 +58,32 @@ describe('splitPaceSec', () => {
   })
 })
 
-// ── splitColor ────────────────────────────────────────────────────────────────
-describe('splitColor', () => {
-  // avgPace = 648 sec/km (10:48/km)
-  const avg = 648
-  it('returns orange/red for splits ≤ -10% faster', () => {
-    expect(splitColor(580, avg)).toBe('#e8651a')   // 580/648 = -10.5%
+// ── paceGradientColor ───────────────────────────────────────────────────────────
+describe('paceGradientColor', () => {
+  // Échelle : minPace (le plus rapide) → orange ; ≥ avg×1.12 (lent) → bleu.
+  const minPace = 351
+  const avg = 374
+  it('returns orange (#ff7900) for the fastest split (pace = minPace)', () => {
+    expect(paceGradientColor(minPace, minPace, avg)).toBe('#ff7900')
   })
-  it('returns orange for splits -10% to 0%', () => {
-    expect(splitColor(610, avg)).toBe('#ff7043')   // 610/648 = -5.9%
+  it('saturates to blue (#38bdf8) for a split ≥ 12% slower than average', () => {
+    expect(paceGradientColor(Math.ceil(avg * 1.12) + 50, minPace, avg)).toBe('#38bdf8')
+    // a huge outlier (a walked climb) also saturates blue
+    expect(paceGradientColor(575, minPace, avg)).toBe('#38bdf8')
   })
-  it('returns yellow for splits 0% to +10%', () => {
-    expect(splitColor(680, avg)).toBe('#ffb300')   // 680/648 = +4.9%
+  it('returns a warm tone (more red than blue) for a faster-than-average split', () => {
+    const c = paceGradientColor(360, minPace, avg)            // ~6:00, plus rapide que la moyenne
+    const r = parseInt(c.slice(1, 3), 16)
+    const b = parseInt(c.slice(5, 7), 16)
+    expect(r).toBeGreaterThan(b)
   })
-  it('returns light green for splits +10% to +20%', () => {
-    expect(splitColor(745, avg)).toBe('#8bc34a')   // 745/648 = +15%
+  it('returns a valid 7-char hex for any in-range pace', () => {
+    for (const p of [351, 360, 374, 390, 405, 420, 575]) {
+      expect(paceGradientColor(p, minPace, avg)).toMatch(/^#[0-9a-f]{6}$/)
+    }
   })
-  it('returns green for splits > +20%', () => {
-    expect(splitColor(800, avg)).toBe('#4caf50')   // 800/648 = +23.5%
-  })
-  it('returns muted for null avg', () => {
-    expect(splitColor(600, 0)).toBe('#8892a4')
+  it('returns muted (#8892a4) when avg is missing', () => {
+    expect(paceGradientColor(360, minPace, 0)).toBe('#8892a4')
   })
 })
 

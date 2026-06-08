@@ -1,6 +1,10 @@
 import { render, screen } from '@testing-library/react'
 import { ActivitySplits } from '@/components/ui/ActivitySplits'
+import { I18nProvider } from '@/lib/i18n/I18nProvider'
 import type { StravaSplit } from '@/lib/activities/detail'
+
+const renderWithI18n = (ui: React.ReactElement) =>
+  render(<I18nProvider initialLang="fr">{ui}</I18nProvider>)
 
 const makeSplit = (overrides: Partial<StravaSplit> & { split: number }): StravaSplit => ({
   distance: 1000,
@@ -23,14 +27,14 @@ const AVG_PACE = 345
 
 describe('ActivitySplits', () => {
   it('renders one row per split', () => {
-    render(<ActivitySplits splits={splits} avgPaceSec={AVG_PACE} />)
+    renderWithI18n(<ActivitySplits splits={splits} avgPaceSec={AVG_PACE} />)
     expect(screen.getByText('1')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
     expect(screen.getByText('3')).toBeInTheDocument()
   })
 
   it('formats pace correctly', () => {
-    render(<ActivitySplits splits={splits} avgPaceSec={AVG_PACE} />)
+    renderWithI18n(<ActivitySplits splits={splits} avgPaceSec={AVG_PACE} />)
     // split 1: 330 sec/km → 5:30 (no /km suffix)
     expect(screen.getByText('5:30')).toBeInTheDocument()
     // split 2: 360 sec/km → 6:00
@@ -40,7 +44,7 @@ describe('ActivitySplits', () => {
   })
 
   it('shows ↑Xm for positive elevation, ↓Xm for negative, nothing for 0', () => {
-    render(<ActivitySplits splits={splits} avgPaceSec={AVG_PACE} />)
+    renderWithI18n(<ActivitySplits splits={splits} avgPaceSec={AVG_PACE} />)
     expect(screen.getByText('↑3m')).toBeInTheDocument()
     expect(screen.getByText('↓2m')).toBeInTheDocument()
     // elevation 0 should not appear
@@ -49,7 +53,7 @@ describe('ActivitySplits', () => {
   })
 
   it('shows km label as split number', () => {
-    render(<ActivitySplits splits={splits} avgPaceSec={AVG_PACE} />)
+    renderWithI18n(<ActivitySplits splits={splits} avgPaceSec={AVG_PACE} />)
     expect(screen.getByText('1')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
     expect(screen.getByText('3')).toBeInTheDocument()
