@@ -6,7 +6,10 @@ import type { StravaSplit } from '@/lib/activities/detail'
 import { useT } from '@/lib/i18n/I18nProvider'
 
 // ── Geometry ─────────────────────────────────────────────────────────────────
-const W = 360, H = 172
+// W large volontairement : le SVG est rendu en width:100%, son ratio (W/H) fixe
+// donc la hauteur affichée. Un W large → graphe plus plat, moins haut à l'écran
+// (et texte/traits, en unités viewBox, moins gros sur les colonnes larges).
+const W = 460, H = 172
 const PAD_L = 8, PAD_R = 8
 const PACE_TOP = 22, PACE_BOT = 98       // bande allure (rapide = haut)
 const ELEV_TOP = 106, ELEV_BOT = 160     // silhouette dénivelé
