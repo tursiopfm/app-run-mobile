@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { waitUntil } from '@vercel/functions'
 import { exchangeStravaCode, stravaCallbackRedirects } from '@/lib/providers/strava/auth'
 import { createClient } from '@/lib/database/supabase-server'
+import { seedAppModePreferences } from '@/lib/profile/seed-app-mode'
 
 const APP_URL = process.env.APP_URL ?? 'http://localhost:3000'
 
@@ -69,9 +70,25 @@ export async function GET(request: NextRequest) {
     // Onboarding : connecter Strava depuis le flow termine l'onboarding
     // et enregistre la source de données côté serveur (fiable).
     if (from === 'onboarding') {
+      // Relit onboarding_mode (persisté à l'étape Mode) + ui_preferences pour
+      // semer app_mode (Lot 1), sans écraser les autres préférences.
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('onboarding_mode, ui_preferences')
+        .eq('id', user.id)
+        .maybeSingle()
+      const completionUpdate: Record<string, unknown> = {
+        onboarding_completed_at: now,
+        onboarding_data_source: 'strava',
+      }
+      const seeded = seedAppModePreferences(
+        (prof?.ui_preferences ?? null) as Record<string, unknown> | null,
+        prof?.onboarding_mode,
+      )
+      if (seeded) completionUpdate.ui_preferences = seeded
       const { error: completionError } = await supabase
         .from('profiles')
-        .update({ onboarding_completed_at: now, onboarding_data_source: 'strava' })
+        .update(completionUpdate)
         .eq('id', user.id)
       // Non bloquant : la connexion a réussi. Si l'update échoue, l'user
       // retombe sur /onboarding (étape Données) — récupérable, pas de perte.
