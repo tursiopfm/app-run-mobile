@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 193 48" width="193" height="48" role="img" aria-label="Connect with Strava">
+  <!-- REPRÉSENTATION — remplacer par le bouton officiel « Connect with Strava » avant prod -->
+  <rect width="193" height="48" rx="8" fill="#FC4C02"/>
+  <path d="M28 13 19 31h5L28 22.2 32 31h-3.7L25 36 28 31h5.2L28 13z" fill="#ffffff"/>
+  <text x="46" y="30" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">Connect with Strava</text>
+</svg>
