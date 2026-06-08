@@ -139,7 +139,7 @@ export function StravaSection({ isConnected, athleteName, planAutoPushTitle, not
       )}
 
       {isConnected && (
-        <div className="flex items-start gap-3 px-1 py-[6px]">
+        <div className="flex items-start gap-3 px-1 pt-[6px] pb-0">
           <div className="flex-1 min-w-0">
             <p className="text-caption font-semibold text-trail-text leading-tight">
               {L.planAutoPushTitleLabel}
@@ -171,7 +171,7 @@ export function StravaSection({ isConnected, athleteName, planAutoPushTitle, not
       )}
 
       {isConnected && (
-        <div className="flex items-center justify-center pt-[6px]">
+        <div className="flex items-center justify-center pt-0 -mt-[2px]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/strava/powered-by-strava.svg" alt="Powered by Strava" height={18} style={{ height: 18, width: 'auto', display: 'block' }} />
         </div>
