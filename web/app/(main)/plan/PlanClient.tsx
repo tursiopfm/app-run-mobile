@@ -54,7 +54,7 @@ function makeId(): string {
   return `session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
-export default function PlanClient({ mode = 'expert' }: { mode?: 'mission' | 'expert' } = {}) {
+export default function PlanClient({ mode = 'expert', mission = null }: { mode?: 'mission' | 'expert'; mission?: string | null } = {}) {
   const L = useT().plan
   const [reloadKey, setReloadKey] = useState(0)
   const bumpReload = useCallback(() => setReloadKey(k => k + 1), [])
@@ -180,7 +180,7 @@ export default function PlanClient({ mode = 'expert' }: { mode?: 'mission' | 'ex
         >
           <div className="space-y-2">
             <VueSemaineBlock reloadKey={reloadKey} />
-            <BibliothequeSeancesBlock />
+            <BibliothequeSeancesBlock mission={mission} />
           </div>
         </PlanSessionsDndProvider>
       ),

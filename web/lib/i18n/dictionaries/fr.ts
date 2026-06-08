@@ -882,6 +882,7 @@ export type Dict = {
     btnLoggingIn: string
     btnCreating: string
     btnSendLink: string
+    btnSendCode: string
     btnLogin: string
     btnSignup: string
     noAccount: string
@@ -889,6 +890,15 @@ export type Dict = {
     createAccount: string
     loginAction: string
     genericError: string
+    verifyTitle: string
+    verifySubtitle: string
+    resetTitle: string
+    newPasswordPh: string
+    btnVerify: string
+    btnVerifying: string
+    resendCode: string
+    resendIn: string
+    codeInvalid: string
     featCharge: string; featChargeDesc: string
     featEffort: string; featEffortDesc: string
     featCoach: string; featCoachDesc: string
@@ -2855,6 +2865,7 @@ export const fr: Dict = {
     btnLoggingIn:     'Connexion…',
     btnCreating:      'Création…',
     btnSendLink:      'Envoyer le lien',
+    btnSendCode:      'Envoyer le code',
     btnLogin:         'Se connecter',
     btnSignup:        'Créer mon compte',
     noAccount:        'Pas encore de compte ?',
@@ -2862,6 +2873,15 @@ export const fr: Dict = {
     createAccount:    'Créer un compte',
     loginAction:      'Se connecter',
     genericError:     'Erreur de connexion.',
+    verifyTitle:      'Entre le code reçu',
+    verifySubtitle:   'Code à 6 chiffres envoyé à',
+    resetTitle:       'Réinitialise ton mot de passe',
+    newPasswordPh:    'Nouveau mot de passe',
+    btnVerify:        'Vérifier',
+    btnVerifying:     'Vérification…',
+    resendCode:       'Renvoyer le code',
+    resendIn:         'Renvoyer dans',
+    codeInvalid:      'Code invalide ou expiré.',
     featCharge:       'Anticipe ta fatigue', featChargeDesc: 'Forme, fraîcheur et charge suivies au jour le jour.',
     featEffort:       'Pèse chaque sortie',  featEffortDesc: 'L\'effort réel de ta séance, pas juste les kilomètres.',
     featCoach:        'Analyse tes séances', featCoachDesc:  'Une lecture claire de ce que chaque sortie t\'apporte.',

@@ -10,7 +10,7 @@ import { sportLabel } from '@/lib/design/sports-i18n'
 import type { SportOverview } from '@/lib/data/dashboard'
 import { getCurrentPlan, peekMacros, pickActiveMacrocycle } from '@/lib/plan/storage'
 import { resolveWeeklyTarget } from '@/lib/training/phases'
-import { readSportSettings } from '@/lib/design/sport-settings'
+import { readSportSettings, withDefaultSport } from '@/lib/design/sport-settings'
 import { useT } from '@/lib/i18n/I18nProvider'
 import { usePreferences } from '@/lib/preferences/PreferencesProvider'
 
@@ -45,7 +45,7 @@ function startOfISOWeekUTC(d: Date): Date {
   return utc
 }
 
-type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
+type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void; defaultSport?: SportKey }
 
 // Helpers de lecture sync depuis LS — réutilisés au lazy init des useState
 // et dans l'effet de sync visuel (scrollLeft) post-mount.
@@ -74,22 +74,22 @@ function computePlanWeeklyFromSnapshot(): { km: number; dPlus: number } | null {
   return { km: t.km, dPlus: t.dPlus }
 }
 
-export function GoalsBlock({ sportOverviews, onHide }: Props) {
+export function GoalsBlock({ sportOverviews, onHide, defaultSport }: Props) {
   const t = useT()
   const L = t.cockpit
   const { notifyChange, onHydrated } = usePreferences()
-  const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(SETTINGS_KEY, DEFAULT_SETTINGS))
+  const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(SETTINGS_KEY, withDefaultSport(DEFAULT_SETTINGS, defaultSport)))
   const [targets,    setTargets]    = useState<Partial<Record<SportKey, Partial<Goals>>>>(() => readTargets())
   const [planWeekly, setPlanWeekly] = useState<{ km: number; dPlus: number } | null>(() => computePlanWeeklyFromSnapshot())
 
   useEffect(() => {
     return onHydrated(() => {
-      setSettings(readSportSettings(SETTINGS_KEY, DEFAULT_SETTINGS))
+      setSettings(readSportSettings(SETTINGS_KEY, withDefaultSport(DEFAULT_SETTINGS, defaultSport)))
       setTargets(readTargets())
     })
-  }, [onHydrated])
+  }, [onHydrated, defaultSport])
   const [activeIdx,  setActiveIdx]  = useState(() => {
-    const s = readSportSettings(SETTINGS_KEY, DEFAULT_SETTINGS)
+    const s = readSportSettings(SETTINGS_KEY, withDefaultSport(DEFAULT_SETTINGS, defaultSport))
     return Math.max(0, s.visible.indexOf(s.default))
   })
   const [showConfig, setShowConfig] = useState(false)

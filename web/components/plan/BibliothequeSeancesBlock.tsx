@@ -17,6 +17,7 @@ import {
 import { TemplateEditorModal } from './TemplateEditorModal'
 import { ActivityTypesPrefsModal } from './ActivityTypesPrefsModal'
 import { useActivityTypes } from '@/lib/plan/use-activity-types'
+import { curateTemplatesForMission } from '@/lib/training/mission-curation'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useT } from '@/lib/i18n/I18nProvider'
@@ -28,7 +29,7 @@ import { FilterBar } from '@/components/plan/library/FilterBar'
 // quand l'utilisateur n'a pas filtré (« Tous » sélectionné).
 const COLLAPSED_TEMPLATES_COUNT = 2
 
-export function BibliothequeSeancesBlock() {
+export function BibliothequeSeancesBlock({ mission = null }: { mission?: string | null } = {}) {
   const L = useT().plan
   const [custom, setCustom] = useState<SessionTemplate[]>([])
   const [hiddenSystemIds, setHiddenSystemIds] = useState<string[]>([])
@@ -72,11 +73,13 @@ export function BibliothequeSeancesBlock() {
   const customIds = useMemo(() => new Set(custom.map(t => t.id)), [custom])
   const hiddenSet = useMemo(() => new Set(hiddenSystemIds), [hiddenSystemIds])
 
-  // Merge system + custom : custom en premier. Les système masqués sont retirés.
+  // Merge system + custom : custom en premier (invariant préservé). Les système
+  // masqués sont retirés. La curation par mission ne réordonne QUE le système
+  // (séance clé en tête + types pertinents), sans déranger les templates custom.
   const allTemplates = useMemo<SessionTemplate[]>(() => {
     const visibleSystem = SESSION_TEMPLATES.filter(t => !hiddenSet.has(t.id))
-    return [...custom, ...visibleSystem]
-  }, [custom, hiddenSet])
+    return [...custom, ...curateTemplatesForMission(visibleSystem, mission)]
+  }, [custom, hiddenSet, mission])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
