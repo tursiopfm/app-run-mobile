@@ -67,7 +67,7 @@ export function CockpitCumulChart({ months, height = 220, mode = 'month' }: Prop
   if (maxDays === 0) {
     return (
       <div style={{ height }} className="flex items-center justify-center">
-        <span className="text-[12px] text-trail-muted">Aucune donnée</span>
+        <span className="text-caption text-trail-muted">Aucune donnée</span>
       </div>
     )
   }

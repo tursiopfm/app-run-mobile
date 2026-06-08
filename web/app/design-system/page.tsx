@@ -21,7 +21,7 @@ import { OgCard } from '@/components/brand/OgCard'
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
     <section id={id} className="scroll-mt-6">
-      <h2 className="font-display text-[13px] font-semibold uppercase tracking-[0.18em] text-trail-muted mb-4">
+      <h2 className="font-display text-body-sm font-semibold uppercase tracking-[0.18em] text-trail-muted mb-4">
         {title}
       </h2>
       {children}
@@ -54,8 +54,8 @@ function Swatch({ token, bg, label }: { token: string; bg: string; label: string
     <div className="flex flex-col gap-1.5">
       <div className={`${bg} h-16 rounded-xl border border-ink-600`} />
       <div className="font-body">
-        <p className="text-[12px] font-semibold text-trail-text">{label}</p>
-        <p className="text-[11px] text-trail-muted">{token}</p>
+        <p className="text-caption font-semibold text-trail-text">{label}</p>
+        <p className="text-micro text-trail-muted">{token}</p>
       </div>
     </div>
   )
@@ -76,13 +76,13 @@ export default function DesignSystemPage() {
         <header className="space-y-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="font-body text-[12px] font-medium uppercase tracking-[0.2em] text-primary">
+              <p className="font-body text-caption font-medium uppercase tracking-[0.2em] text-primary">
                 Brand Foundation
               </p>
               <h1 className="font-display text-[34px] font-bold leading-none tracking-tight mt-1">
                 <span className="text-primary">Trail</span> Cockpit
               </h1>
-              <p className="font-body text-[14px] text-trail-muted mt-2">
+              <p className="font-body text-body text-trail-muted mt-2">
                 Préparer. Piloter. Accomplir.
               </p>
             </div>
@@ -107,7 +107,7 @@ export default function DesignSystemPage() {
               <div className="rounded-xl border border-ink-600 p-6 flex flex-col items-center gap-6" style={{ background: '#0B0F14', color: '#E2ECE9' }}>
                 <LogoTrailCockpit variant="horizontal" tone="brand" size={44} />
                 <LogoTrailCockpit variant="stacked" tone="brand" size={56} />
-                <p className="font-body text-[11px]" style={{ color: '#8BA8A3' }}>sur fond sombre</p>
+                <p className="font-body text-micro" style={{ color: '#8BA8A3' }}>sur fond sombre</p>
               </div>
               <div className="rounded-xl border border-ink-600 p-6 flex flex-col items-center gap-6" style={{ background: '#F4F7F6' }}>
                 <div style={{ color: '#13201D' }}>
@@ -116,13 +116,13 @@ export default function DesignSystemPage() {
                 <div style={{ color: '#13201D' }}>
                   <LogoTrailCockpit variant="stacked" tone="brand" size={56} />
                 </div>
-                <p className="font-body text-[11px]" style={{ color: '#5F7771' }}>sur fond clair</p>
+                <p className="font-body text-micro" style={{ color: '#5F7771' }}>sur fond clair</p>
               </div>
             </div>
 
             {/* Icon-only : tons + tailles (jusqu'au favicon) */}
             <div className="rounded-xl border border-ink-600 bg-ink-800 p-6">
-              <p className="font-body text-[12px] text-trail-muted mb-4">Icon-only — jusqu’à la taille favicon</p>
+              <p className="font-body text-caption text-trail-muted mb-4">Icon-only — jusqu’à la taille favicon</p>
               <div className="flex flex-wrap items-end gap-6">
                 <LogoMark size={64} />
                 <LogoMark size={40} />
@@ -133,7 +133,7 @@ export default function DesignSystemPage() {
 
             {/* Zone de sécurité */}
             <div className="rounded-xl border border-ink-600 bg-ink-800 p-6">
-              <p className="font-body text-[12px] text-trail-muted mb-4">Zone de sécurité (≈ ½ pastille autour du logo)</p>
+              <p className="font-body text-caption text-trail-muted mb-4">Zone de sécurité (≈ ½ pastille autour du logo)</p>
               <div className="inline-block rounded-lg" style={{ outline: '1px dashed var(--ink-500)', padding: 22 }}>
                 <LogoTrailCockpit variant="horizontal" tone="brand" size={44} />
               </div>
@@ -144,14 +144,14 @@ export default function DesignSystemPage() {
         {/* App Icon — logo raster unique */}
         <Section id="appicon" title="App Icon — logo (lisibilité par taille)">
           <div className="rounded-xl border border-ink-600 bg-ink-800 p-6">
-            <p className="font-body text-[12px] text-trail-muted mb-4">
+            <p className="font-body text-caption text-trail-muted mb-4">
               Logo unique (raster, généré depuis <code className="text-trail-text">brand-source/logo-master.png</code>) — du favicon à l’app icon.
             </p>
             <div className="flex flex-wrap items-end gap-5">
               {[16, 24, 32, 64, 104, 128].map((s) => (
                 <div key={s} className="flex flex-col items-center gap-1.5">
                   <img src="/icons/icon-512.png" width={s} height={s} alt={`logo ${s}px`} />
-                  <span className="font-body text-[11px] text-trail-muted">{s}px</span>
+                  <span className="font-body text-micro text-trail-muted">{s}px</span>
                 </div>
               ))}
             </div>
@@ -162,13 +162,13 @@ export default function DesignSystemPage() {
         <Section id="pack" title="Pack exporté — favicon · PWA · Apple">
           <div className="rounded-xl border border-ink-600 bg-ink-800 p-6 space-y-6">
             <div>
-              <p className="font-body text-[12px] text-trail-muted mb-3">Favicon (tailles réelles)</p>
+              <p className="font-body text-caption text-trail-muted mb-3">Favicon (tailles réelles)</p>
               <div className="flex items-end gap-6">
                 {[16, 32, 48].map((s) => (
                   <div key={s} className="flex flex-col items-center gap-1.5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={`/brand-preview/favicon-${s}.png`} width={s} height={s} alt={`favicon ${s}`} />
-                    <span className="font-body text-[11px] text-trail-muted">{s}px</span>
+                    <span className="font-body text-micro text-trail-muted">{s}px</span>
                   </div>
                 ))}
               </div>
@@ -183,11 +183,11 @@ export default function DesignSystemPage() {
                 <div key={file} className="flex flex-col items-center gap-1.5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`/brand-preview/${file}`} width={w} height={w} alt={label} className="rounded-2xl" />
-                  <span className="font-body text-[11px] text-trail-muted">{label}</span>
+                  <span className="font-body text-micro text-trail-muted">{label}</span>
                 </div>
               ))}
             </div>
-            <p className="font-body text-[12px] text-trail-muted">
+            <p className="font-body text-caption text-trail-muted">
               Pack généré depuis <code className="text-trail-text">brand-source/logo-master.png</code> via <code className="text-trail-text">npm run gen:brand-assets</code>. Détail dans <code className="text-trail-text">/brand-preview/README.md</code>.
             </p>
           </div>
@@ -201,7 +201,7 @@ export default function DesignSystemPage() {
               <span className="wordmark font-display mt-3.5 text-[17px] font-bold uppercase tracking-[0.12em]">
                 <span className="text-primary">Trail</span> Cockpit
               </span>
-              <span className="font-display text-trail-muted text-[13px] mt-7">Préparer. Piloter. Accomplir.</span>
+              <span className="font-display text-trail-muted text-body-sm mt-7">Préparer. Piloter. Accomplir.</span>
             </div>
           </div>
         </Section>
@@ -210,19 +210,19 @@ export default function DesignSystemPage() {
         <Section id="palette" title="Palette — Deep Mission">
           <div className="space-y-6">
             <div>
-              <p className="font-body text-[12px] text-trail-muted mb-2">Encre (multi-sport, neutre)</p>
+              <p className="font-body text-caption text-trail-muted mb-2">Encre (multi-sport, neutre)</p>
               <div className="grid grid-cols-5 gap-3">
                 {INK.map(([t, bg, l]) => <Swatch key={t} token={t} bg={bg} label={l} />)}
               </div>
             </div>
             <div>
-              <p className="font-body text-[12px] text-trail-muted mb-2">Branding (jamais piloté par la donnée)</p>
+              <p className="font-body text-caption text-trail-muted mb-2">Branding (jamais piloté par la donnée)</p>
               <div className="grid grid-cols-5 gap-3">
                 {BRAND.map(([t, bg, l]) => <Swatch key={t} token={t} bg={bg} label={l} />)}
               </div>
             </div>
             <div>
-              <p className="font-body text-[12px] text-trail-muted mb-2">Données (sémantique sport, découplée)</p>
+              <p className="font-body text-caption text-trail-muted mb-2">Données (sémantique sport, découplée)</p>
               <div className="grid grid-cols-4 gap-3">
                 {DATA.map(([t, bg, l]) => <Swatch key={t} token={t} bg={bg} label={l} />)}
               </div>
@@ -234,7 +234,7 @@ export default function DesignSystemPage() {
         <Section id="type" title="Typographies">
           <div className="space-y-5">
             <div className="rounded-xl border border-ink-600 bg-ink-800 p-5">
-              <p className="font-body text-[11px] uppercase tracking-widest text-trail-muted mb-2">
+              <p className="font-body text-micro uppercase tracking-widest text-trail-muted mb-2">
                 Space Grotesk — Titres / valeurs
               </p>
               <p className="font-display text-[32px] font-bold tracking-tight leading-none">J-42 · UTMB</p>
@@ -243,10 +243,10 @@ export default function DesignSystemPage() {
               </p>
             </div>
             <div className="rounded-xl border border-ink-600 bg-ink-800 p-5">
-              <p className="font-body text-[11px] uppercase tracking-widest text-trail-muted mb-2">
+              <p className="font-body text-micro uppercase tracking-widest text-trail-muted mb-2">
                 Inter — Texte courant
               </p>
-              <p className="font-body text-[14px] leading-relaxed text-trail-text">
+              <p className="font-body text-body leading-relaxed text-trail-text">
                 Trail Cockpit transforme chaque objectif en mission préparée, pilotée, accomplie.
                 Le centre de contrôle des sportifs d’endurance.
               </p>
@@ -343,7 +343,7 @@ export default function DesignSystemPage() {
             Ouvrir une sheet
           </Button>
           <Sheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Détails de la mission">
-            <div className="font-body text-[13px] text-trail-muted leading-relaxed space-y-3">
+            <div className="font-body text-body-sm text-trail-muted leading-relaxed space-y-3">
               <p>
                 Bottom-sheet unifié du Design System. Ferme au clic sur le fond, à la
                 touche Échap, ou via la croix. Verrouille le scroll du body.
@@ -370,11 +370,11 @@ export default function DesignSystemPage() {
               </div>
               <div className="space-y-5">
                 <div className="h-14">
-                  <p className="font-body text-[11px] text-trail-muted mb-1">Statique</p>
+                  <p className="font-body text-micro text-trail-muted mb-1">Statique</p>
                   <TrajectoryLine orientation="horizontal" />
                 </div>
                 <div className="h-14">
-                  <p className="font-body text-[11px] text-trail-muted mb-1">Animée (se dessine)</p>
+                  <p className="font-body text-micro text-trail-muted mb-1">Animée (se dessine)</p>
                   <TrajectoryLine key={animKey} orientation="horizontal" animated />
                 </div>
               </div>
@@ -426,7 +426,7 @@ export default function DesignSystemPage() {
           </div>
         </Section>
 
-        <footer className="border-t border-ink-600 pt-6 font-body text-[12px] text-trail-muted">
+        <footer className="border-t border-ink-600 pt-6 font-body text-caption text-trail-muted">
           Fondation de marque — aucune logique métier. Valider ici avant toute refonte des écrans.
         </footer>
       </div>

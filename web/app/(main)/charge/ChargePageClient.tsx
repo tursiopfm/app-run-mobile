@@ -155,7 +155,7 @@ export function ChargePageClient({ data }: Props) {
       id,
       label:  blockLabel(id),
       emoji:  '⚡',
-      render: () => <div className="text-[12px] text-trail-muted p-3">{id}</div>,
+      render: () => <div className="text-caption text-trail-muted p-3">{id}</div>,
     }
   })
 
@@ -163,7 +163,7 @@ export function ChargePageClient({ data }: Props) {
     return (
       <div className="px-3 py-3 max-w-lg mx-auto md:max-w-none md:px-6">
         <SportSegmentedTabs sport={sport} onChange={handleSportChange} />
-        <div className="rounded-[12px] bg-trail-card border border-trail-border p-4 text-center text-trail-muted text-[13px]">
+        <div className="rounded-[12px] bg-trail-card border border-trail-border p-4 text-center text-trail-muted text-body-sm">
           {chargeLabels.noActivitiesForSport(sport === 'all' ? chargeLabels.allSport : sport)}
         </div>
       </div>

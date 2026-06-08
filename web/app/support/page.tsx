@@ -40,8 +40,8 @@ function SectionHeader({
         <Icon size={14} className="text-trail-primary" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-bold text-trail-text leading-tight">{title}</p>
-        <p className="text-[11px] text-trail-muted leading-tight mt-[1px]">{subtitle}</p>
+        <p className="text-body font-bold text-trail-text leading-tight">{title}</p>
+        <p className="text-micro text-trail-muted leading-tight mt-[1px]">{subtitle}</p>
       </div>
     </div>
   )
@@ -62,7 +62,7 @@ function AboutRow({ label, value }: { label: string; value: string }) {
         <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-trail-muted">
           {label}
         </p>
-        <p className="text-[13px] text-trail-text mt-[2px]">{value}</p>
+        <p className="text-body-sm text-trail-text mt-[2px]">{value}</p>
       </div>
     </div>
   )
@@ -83,7 +83,7 @@ export default function SupportPage() {
         <div className="pt-[2px]">
           <Link
             href="/settings"
-            className="inline-flex items-center gap-[6px] text-[12px] text-trail-muted hover:text-trail-text transition-colors"
+            className="inline-flex items-center gap-[6px] text-caption text-trail-muted hover:text-trail-text transition-colors"
           >
             <ArrowLeft size={14} />
             {S.backToSettings}
@@ -94,10 +94,10 @@ export default function SupportPage() {
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-trail-primary">
             {S.eyebrow}
           </p>
-          <h1 className="text-[22px] font-display font-bold text-trail-text leading-tight mt-[2px]">
+          <h1 className="text-h1 font-display font-bold text-trail-text leading-tight mt-[2px]">
             {S.title}
           </h1>
-          <p className="text-[12px] text-trail-muted leading-[16px] mt-[6px] max-w-[400px]">
+          <p className="text-caption text-trail-muted leading-[16px] mt-[6px] max-w-[400px]">
             {S.description}
           </p>
         </header>
@@ -110,7 +110,7 @@ export default function SupportPage() {
           />
           <SectionCard>
             <ContactCard />
-            <p className="text-[11px] text-trail-muted leading-[16px] px-1">
+            <p className="text-micro text-trail-muted leading-[16px] px-1">
               {S.contactNote}
             </p>
           </SectionCard>
@@ -132,7 +132,7 @@ export default function SupportPage() {
                   <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
                     <Icon size={13} className="text-trail-primary" />
                   </div>
-                  <p className="flex-1 text-[13px] text-trail-text">{label}</p>
+                  <p className="flex-1 text-body-sm text-trail-text">{label}</p>
                 </li>
               ))}
             </ul>
@@ -152,20 +152,20 @@ export default function SupportPage() {
                   <Activity size={14} className="text-[#FC4C02]" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-trail-muted">
+                  <p className="text-micro font-semibold uppercase tracking-wider text-trail-muted">
                     {S.stravaAuthLabel}
                   </p>
-                  <p className="text-[13px] text-trail-text">{S.stravaAuthValue}</p>
+                  <p className="text-body-sm text-trail-text">{S.stravaAuthValue}</p>
                 </div>
               </div>
-              <p className="text-[12px] text-trail-text leading-[18px] px-1">
+              <p className="text-caption text-trail-text leading-[18px] px-1">
                 {S.stravaBody}
               </p>
               <Link
                 href="/settings"
                 className="flex items-center gap-3 px-3 py-[10px] rounded-[10px] bg-trail-card border border-trail-border hover:bg-trail-border/30 transition-colors"
               >
-                <p className="flex-1 text-[12px] font-semibold text-trail-text">
+                <p className="flex-1 text-caption font-semibold text-trail-text">
                   {S.stravaManage}
                 </p>
                 <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
@@ -189,7 +189,7 @@ export default function SupportPage() {
                 <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
                   <FileText size={13} className="text-trail-primary" />
                 </div>
-                <p className="flex-1 text-[13px] text-trail-text">{S.legalMentions}</p>
+                <p className="flex-1 text-body-sm text-trail-text">{S.legalMentions}</p>
                 <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
               </Link>
               <Link
@@ -199,7 +199,7 @@ export default function SupportPage() {
                 <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
                   <ShieldCheck size={13} className="text-trail-primary" />
                 </div>
-                <p className="flex-1 text-[13px] text-trail-text">{S.legalPrivacy}</p>
+                <p className="flex-1 text-body-sm text-trail-text">{S.legalPrivacy}</p>
                 <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
               </Link>
               <Link
@@ -209,11 +209,11 @@ export default function SupportPage() {
                 <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
                   <Scale size={13} className="text-trail-primary" />
                 </div>
-                <p className="flex-1 text-[13px] text-trail-text">{S.legalTerms}</p>
+                <p className="flex-1 text-body-sm text-trail-text">{S.legalTerms}</p>
                 <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
               </Link>
             </div>
-            <p className="text-[11px] text-trail-muted leading-[16px] px-1">
+            <p className="text-micro text-trail-muted leading-[16px] px-1">
               {S.legalNote}
             </p>
           </SectionCard>
@@ -239,11 +239,11 @@ export default function SupportPage() {
           <div className="rounded-[10px] bg-trail-surface border border-trail-border px-3 py-[12px] space-y-[6px]">
             <div className="flex items-center gap-2">
               <Activity size={12} className="text-[#FC4C02] flex-shrink-0" />
-              <p className="text-[11px] font-bold uppercase tracking-wider text-trail-text">
+              <p className="text-micro font-bold uppercase tracking-wider text-trail-text">
                 {S.poweredByStrava}
               </p>
             </div>
-            <p className="text-[11px] text-trail-muted leading-[16px]">
+            <p className="text-micro text-trail-muted leading-[16px]">
               {S.stravaCompliance}
             </p>
           </div>

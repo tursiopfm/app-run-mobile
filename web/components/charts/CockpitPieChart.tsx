@@ -72,7 +72,7 @@ export function CockpitPieChart({ data, height = chart.minHeight }: Props) {
       {/* Legend */}
       <div className="flex flex-col gap-[5px] flex-1 min-w-0">
         {empty ? (
-          <span className="text-[14px] text-trail-muted">Aucune donnée</span>
+          <span className="text-body text-trail-muted">Aucune donnée</span>
         ) : (
           data.map((entry) => {
             return (
@@ -86,10 +86,10 @@ export function CockpitPieChart({ data, height = chart.minHeight }: Props) {
                     {entry.icon}
                   </span>
                 ) : entry.emoji ? (
-                  <span className="flex-shrink-0 text-[13px] leading-none">{entry.emoji}</span>
+                  <span className="flex-shrink-0 text-body-sm leading-none">{entry.emoji}</span>
                 ) : null}
-                <span className="text-[13px] font-bold text-trail-text truncate flex-1">{entry.label}</span>
-                <span className="text-[13px] font-semibold text-trail-text flex-shrink-0">
+                <span className="text-body-sm font-bold text-trail-text truncate flex-1">{entry.label}</span>
+                <span className="text-body-sm font-semibold text-trail-text flex-shrink-0">
                   {entry.value.toFixed(1)} km
                 </span>
               </div>

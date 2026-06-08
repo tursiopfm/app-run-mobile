@@ -24,7 +24,7 @@ export function CockpitChartCard({
       {titleSlot ? (
         titleSlot
       ) : title ? (
-        <p className="text-[13px] font-semibold text-trail-text leading-tight">{title}</p>
+        <p className="text-body-sm font-semibold text-trail-text leading-tight">{title}</p>
       ) : null}
 
       {/* Chart content area */}

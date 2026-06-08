@@ -26,7 +26,7 @@ export function LegalPageShell({
         <div className="pt-[2px]">
           <Link
             href="/support"
-            className="inline-flex items-center gap-[6px] text-[12px] text-trail-muted hover:text-trail-text transition-colors"
+            className="inline-flex items-center gap-[6px] text-caption text-trail-muted hover:text-trail-text transition-colors"
           >
             <ArrowLeft size={14} />
             {L.backToSupport}
@@ -37,11 +37,11 @@ export function LegalPageShell({
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-trail-primary">
             {eyebrow}
           </p>
-          <h1 className="text-[22px] font-display font-bold text-trail-text leading-tight mt-[2px]">
+          <h1 className="text-h1 font-display font-bold text-trail-text leading-tight mt-[2px]">
             {title}
           </h1>
           {description ? (
-            <p className="text-[12px] text-trail-muted leading-[16px] mt-[6px] max-w-[400px]">
+            <p className="text-caption text-trail-muted leading-[16px] mt-[6px] max-w-[400px]">
               {description}
             </p>
           ) : null}
@@ -69,10 +69,10 @@ export function LegalSection({
 }) {
   return (
     <section className="rounded-[14px] bg-trail-card border border-trail-border p-[14px] space-y-[10px]">
-      <h2 className="text-[14px] font-bold text-trail-text leading-tight">
+      <h2 className="text-body font-bold text-trail-text leading-tight">
         {title}
       </h2>
-      <div className="space-y-[8px] text-[13px] leading-[19px] text-trail-text/90">
+      <div className="space-y-[8px] text-body-sm leading-[19px] text-trail-text/90">
         {children}
       </div>
     </section>
@@ -80,14 +80,14 @@ export function LegalSection({
 }
 
 export function LegalParagraph({ children }: { children: ReactNode }) {
-  return <p className="text-[13px] leading-[19px] text-trail-text/90">{children}</p>
+  return <p className="text-body-sm leading-[19px] text-trail-text/90">{children}</p>
 }
 
 export function LegalList({ items }: { items: ReactNode[] }) {
   return (
     <ul className="space-y-[6px] pl-4 list-disc marker:text-trail-muted">
       {items.map((item, index) => (
-        <li key={index} className="text-[13px] leading-[19px] text-trail-text/90">
+        <li key={index} className="text-body-sm leading-[19px] text-trail-text/90">
           {item}
         </li>
       ))}
@@ -97,7 +97,7 @@ export function LegalList({ items }: { items: ReactNode[] }) {
 
 export function LegalTodo({ children }: { children: ReactNode }) {
   return (
-    <p className="text-[12px] leading-[18px] text-trail-muted italic px-2 py-[6px] rounded-[8px] bg-trail-surface border border-dashed border-trail-border">
+    <p className="text-caption leading-[18px] text-trail-muted italic px-2 py-[6px] rounded-[8px] bg-trail-surface border border-dashed border-trail-border">
       {children}
     </p>
   )
