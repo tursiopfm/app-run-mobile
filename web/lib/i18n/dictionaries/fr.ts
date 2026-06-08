@@ -881,6 +881,7 @@ export type Dict = {
     btnLoggingIn: string
     btnCreating: string
     btnSendLink: string
+    btnSendCode: string
     btnLogin: string
     btnSignup: string
     noAccount: string
@@ -2862,6 +2863,7 @@ export const fr: Dict = {
     btnLoggingIn:     'Connexion…',
     btnCreating:      'Création…',
     btnSendLink:      'Envoyer le lien',
+    btnSendCode:      'Envoyer le code',
     btnLogin:         'Se connecter',
     btnSignup:        'Créer mon compte',
     noAccount:        'Pas encore de compte ?',

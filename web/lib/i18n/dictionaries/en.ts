@@ -1710,6 +1710,7 @@ export const en: Dict = {
     btnLoggingIn:     'Logging in…',
     btnCreating:      'Creating…',
     btnSendLink:      'Send link',
+    btnSendCode:      'Send code',
     btnLogin:         'Log in',
     btnSignup:        'Create my account',
     noAccount:        "Don't have an account yet?",

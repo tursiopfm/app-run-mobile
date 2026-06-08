@@ -39,4 +39,17 @@ describe('OtpCodeInput', () => {
     fireEvent.paste(boxes[0], { clipboardData: { getData: () => 'ab12cd34ef56' } })
     expect(onComplete).toHaveBeenCalledWith('123456')
   })
+
+  it('édite une case du milieu sans effacer la fin', () => {
+    const onComplete = jest.fn()
+    render(<Harness onComplete={onComplete} />)
+    let boxes = screen.getAllByRole('textbox')
+    ;['1', '2', '3', '4', '5', '6'].forEach((d, i) =>
+      fireEvent.change(boxes[i], { target: { value: d } })
+    )
+    onComplete.mockClear()
+    boxes = screen.getAllByRole('textbox')
+    fireEvent.change(boxes[2], { target: { value: '9' } })
+    expect(onComplete).toHaveBeenCalledWith('129456')
+  })
 })

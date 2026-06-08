@@ -86,6 +86,20 @@ describe('LoginForm — inscription par code', () => {
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
     expect(mockPush).not.toHaveBeenCalled()
   })
+
+  it('réinitialise les identifiants en revenant à la connexion', async () => {
+    auth.signUp.mockResolvedValue({ data: { session: null, user: { id: 'u1' } }, error: null })
+    renderForm()
+    fireEvent.click(screen.getByRole('button', { name: /créer un compte/i }))
+    type(/^email$/i, 'new@runner.io')
+    fireEvent.change(screen.getAllByPlaceholderText(/mot de passe/i)[0], { target: { value: 'secret6' } })
+    fireEvent.change(screen.getByPlaceholderText(/confirmer le mot de passe/i), { target: { value: 'secret6' } })
+    fireEvent.click(screen.getByRole('button', { name: /créer mon compte/i }))
+    await screen.findByText(/entre le code reçu/i)
+    fireEvent.click(screen.getByRole('button', { name: /retour à la connexion/i }))
+    const pw = screen.getAllByPlaceholderText(/mot de passe/i)[0] as HTMLInputElement
+    expect(pw.value).toBe('')
+  })
 })
 
 describe('LoginForm — reset par code', () => {

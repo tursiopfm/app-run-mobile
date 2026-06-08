@@ -32,11 +32,21 @@ export function LoginForm() {
     return () => clearInterval(id)
   }, [cooldown])
 
-  function goVerify(next: Mode) {
-    setCode('')
-    setError(null)
-    setCooldown(RESEND_COOLDOWN)
+  // Bascule de mode en repartant d'un état d'identifiants propre (évite de
+  // traîner un mot de passe/code saisi dans un mode précédent).
+  function switchMode(next: Mode) {
     setMode(next)
+    setError(null)
+    setPassword('')
+    setConfirmPassword('')
+    setCode('')
+    setShowPassword(false)
+    setShowConfirm(false)
+  }
+
+  function goVerify(next: Mode) {
+    switchMode(next)
+    setCooldown(RESEND_COOLDOWN)
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -86,10 +96,12 @@ export function LoginForm() {
   async function handleResend() {
     if (cooldown > 0) return
     setError(null)
-    setCooldown(RESEND_COOLDOWN)
     const supabase = createClient()
-    if (mode === 'signupVerify') await supabase.auth.resend({ type: 'signup', email })
-    else if (mode === 'resetVerify') await supabase.auth.resetPasswordForEmail(email)
+    const { error } = mode === 'signupVerify'
+      ? await supabase.auth.resend({ type: 'signup', email })
+      : await supabase.auth.resetPasswordForEmail(email)
+    if (error) { setError(error.message); return }
+    setCooldown(RESEND_COOLDOWN)
   }
 
   const isVerify = mode === 'signupVerify' || mode === 'resetVerify'
@@ -164,7 +176,11 @@ export function LoginForm() {
 
             <button
               type="submit"
-              disabled={loading || code.length < 6}
+              disabled={
+                loading ||
+                code.length < 6 ||
+                (mode === 'resetVerify' && (password.length < 6 || password !== confirmPassword))
+              }
               className="block w-full py-3.5 px-6 rounded-2xl bg-trail-primary text-white font-semibold text-center text-base active:scale-95 transition-transform disabled:opacity-50"
             >
               {loading ? A.btnVerifying : A.btnVerify}
@@ -181,7 +197,7 @@ export function LoginForm() {
 
             <button
               type="button"
-              onClick={() => { setMode('login'); setError(null); setCode('') }}
+              onClick={() => switchMode('login')}
               className="block w-full text-xs text-trail-muted underline"
             >
               {A.backToLogin}
@@ -274,7 +290,7 @@ export function LoginForm() {
                 <div className="flex justify-end">
                   <button
                     type="button"
-                    onClick={() => { setMode('forgot'); setError(null) }}
+                    onClick={() => switchMode('forgot')}
                     className="text-xs text-trail-accent underline"
                   >
                     {A.forgotPw}
@@ -290,23 +306,23 @@ export function LoginForm() {
           >
             {loading
               ? (mode === 'forgot' ? A.btnSending : mode === 'login' ? A.btnLoggingIn : A.btnCreating)
-              : (mode === 'forgot' ? A.btnSendLink : mode === 'login' ? A.btnLogin : A.btnSignup)}
+              : (mode === 'forgot' ? A.btnSendCode : mode === 'login' ? A.btnLogin : A.btnSignup)}
           </button>
           <p className="text-xs text-trail-muted text-center">
             {mode === 'login' ? (
               <>{A.noAccount}{' '}
-                <button type="button" onClick={() => { setMode('signup'); setError(null) }} className="text-trail-accent underline">
+                <button type="button" onClick={() => switchMode('signup')} className="text-trail-accent underline">
                   {A.createAccount}
                 </button>
               </>
             ) : mode === 'signup' ? (
               <>{A.haveAccount}{' '}
-                <button type="button" onClick={() => { setMode('login'); setError(null) }} className="text-trail-accent underline">
+                <button type="button" onClick={() => switchMode('login')} className="text-trail-accent underline">
                   {A.loginAction}
                 </button>
               </>
             ) : (
-              <button type="button" onClick={() => { setMode('login'); setError(null) }} className="text-trail-accent underline">
+              <button type="button" onClick={() => switchMode('login')} className="text-trail-accent underline">
                 {A.backToLogin}
               </button>
             )}

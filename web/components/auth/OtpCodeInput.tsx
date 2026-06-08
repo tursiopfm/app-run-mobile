@@ -24,8 +24,10 @@ export function OtpCodeInput({ value, onChange, onComplete, length = 6, disabled
   function handleInput(i: number, raw: string) {
     const typed = raw.replace(/\D/g, '')
     if (!typed) return
-    const clean = commit(value.slice(0, i) + typed)
-    refs.current[Math.min(clean.length, length - 1)]?.focus()
+    // Remplace à partir de la position i en conservant les chiffres suivants
+    // (corrige l'édition d'une case du milieu sans effacer la fin).
+    const clean = commit(value.slice(0, i) + typed + value.slice(i + typed.length))
+    refs.current[Math.min(i + typed.length, length - 1)]?.focus()
   }
 
   function handleKeyDown(i: number, e: KeyboardEvent<HTMLInputElement>) {
@@ -51,6 +53,7 @@ export function OtpCodeInput({ value, onChange, onComplete, length = 6, disabled
           type="text"
           inputMode="numeric"
           autoComplete="one-time-code"
+          autoFocus={i === 0}
           maxLength={1}
           disabled={disabled}
           value={digits[i] ?? ''}
