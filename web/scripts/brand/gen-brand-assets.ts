@@ -1,6 +1,6 @@
 // web/scripts/brand/gen-brand-assets.ts
 // Génère le pack d'icônes de marque à partir du logo source raster
-// `public/brand-source/logo-master.png` (montagne enneigée + sentier sur squircle orange).
+// `public/brand-source/logo-master-v2.png` (montagne enneigée + sentier sur squircle orange).
 // Écrit le pack en PREVIEW (public/brand-preview/) ET promeut les assets LIVE (public/).
 // Exécution : `npm run gen:brand-assets` (depuis web/). Idempotent.
 import { writeFile, mkdir } from 'node:fs/promises'
@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import sharp from 'sharp'
 import { pngsToIco } from './ico'
 
-const SRC = join(process.cwd(), 'public', 'brand-source', 'logo-master.png')
+const SRC = join(process.cwd(), 'public', 'brand-source', 'logo-master-v2.png')
 const PREVIEW = join(process.cwd(), 'public', 'brand-preview')
 const LIVE = join(process.cwd(), 'public')
 const LIVE_ICONS = join(LIVE, 'icons')
@@ -94,12 +94,12 @@ async function main() {
   await writeFile(join(LIVE_ICONS, 'icon-512.png'), icon512)
   await writeFile(join(LIVE_ICONS, 'maskable-512.png'), maskable512)
 
-  console.log('✓ brand assets (depuis logo-master.png) — preview:', PREVIEW, '· live:', LIVE)
+  console.log('✓ brand assets (depuis logo-master-v2.png) — preview:', PREVIEW, '· live:', LIVE)
 }
 
 const README = `# Brand assets
 
-> Générés par \`npm run gen:brand-assets\` depuis \`public/brand-source/logo-master.png\`.
+> Générés par \`npm run gen:brand-assets\` depuis \`public/brand-source/logo-master-v2.png\`.
 > Pack de marque (preview + promu en **live** par ce script). Spec :
 > \`docs/superpowers/specs/2026-06-07-logo-montagne-design.md\`.
 

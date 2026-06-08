@@ -1,6 +1,6 @@
 # Brand assets
 
-> Générés par `npm run gen:brand-assets` depuis `public/brand-source/logo-master.png`.
+> Générés par `npm run gen:brand-assets` depuis `public/brand-source/logo-master-v2.png`.
 > Pack de marque (preview + promu en **live** par ce script). Spec :
 > `docs/superpowers/specs/2026-06-07-logo-montagne-design.md`.
 
