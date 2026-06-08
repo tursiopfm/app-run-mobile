@@ -239,6 +239,10 @@ export function MissionSetupFlow({
       try { localStorage.setItem(APP_MODE_KEY, JSON.stringify(mode)) } catch { /* private mode */ }
     }
     router.push('/dashboard')
+    // Invalide le Router Cache : sans ça l'AppShell de (main) peut être servi
+    // depuis un rendu antérieur (mode expert) → le raccourci « Expert » du header
+    // (visible seulement en mode mission) n'apparaît pas après l'onboarding.
+    router.refresh()
   }
 
   const disciplineOpt = DISCIPLINES.find(d => d.id === discipline)
