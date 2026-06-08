@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/database/supabase-server'
 import { onboardingCompletionPatch } from '@/lib/profile/onboarding-completion'
+import { seedAppModePreferences } from '@/lib/profile/seed-app-mode'
 
 export async function PATCH(req: NextRequest) {
   const supabase = await createClient()
@@ -35,7 +36,25 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
-  Object.assign(update, onboardingCompletionPatch(body))
+  const completion = onboardingCompletionPatch(body)
+  Object.assign(update, completion)
+
+  // Seed app_mode (Lot 1) : à la complétion d'onboarding, on sème le Mode choisi
+  // dans ui_preferences.app_mode. hydrate() le recopiera en localStorage côté
+  // dashboard → cockpit (SSR) et nav (client) cohérents. Lecture-merge pour ne
+  // pas écraser les autres préférences.
+  if (completion.onboarding_completed_at && 'onboarding_mode' in body) {
+    const { data: prof } = await supabase
+      .from('profiles')
+      .select('ui_preferences')
+      .eq('id', user.id)
+      .maybeSingle()
+    const seeded = seedAppModePreferences(
+      (prof?.ui_preferences ?? null) as Record<string, unknown> | null,
+      body.onboarding_mode,
+    )
+    if (seeded) update.ui_preferences = seeded
+  }
 
   const { error } = await supabase
     .from('profiles')
