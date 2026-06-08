@@ -74,7 +74,7 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className="text-[11px] font-semibold px-2 py-0.5 rounded-full transition-colors"
+                className="text-micro font-semibold px-2 py-0.5 rounded-full transition-colors"
                 style={{
                   backgroundColor: period === p ? cfg.color : 'transparent',
                   color:           period === p ? '#fff' : colors.subtleText,
@@ -87,7 +87,7 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
+            className="text-trail-muted hover:text-trail-text px-1 text-h2 leading-none"
             aria-label={L.aria.cumulSettings}
           >
             ⋮
@@ -114,7 +114,7 @@ export function CumulBlock({ sportOverviews, onHide }: Props) {
                 <CockpitCumulChart months={series} height={220} mode={period} />
                 <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
                   {series.map((m) => (
-                    <span key={m.label} className="flex items-center gap-1 text-[11px] text-trail-muted">
+                    <span key={m.label} className="flex items-center gap-1 text-micro text-trail-muted">
                       <span className="inline-block w-3 h-[3px] rounded-full" style={{ backgroundColor: m.color }} />
                       {m.label}
                     </span>

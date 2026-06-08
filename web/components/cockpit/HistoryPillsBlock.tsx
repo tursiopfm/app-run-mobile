@@ -59,7 +59,7 @@ export function HistoryPillsBlock({ daySessions, weeklyPoints, monthlyRunKm }: P
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className="text-[11px] font-semibold px-2 py-0.5 rounded-full transition-colors"
+              className="text-micro font-semibold px-2 py-0.5 rounded-full transition-colors"
               style={{
                 backgroundColor: period === p ? colors.chargeOrange : 'transparent',
                 color:           period === p ? '#fff' : colors.subtleText,
@@ -94,20 +94,20 @@ function HistoryPill({
       className="rounded-[8px] bg-trail-surface border border-trail-border px-1.5 py-2 flex flex-col items-center gap-[2px]"
       style={{ flex: flex ? '1' : 'none', minWidth: flex ? 0 : 44 }}
     >
-      <span className="text-[11px] font-semibold text-trail-muted leading-none">{label}</span>
+      <span className="text-micro font-semibold text-trail-muted leading-none">{label}</span>
       {km > 0 ? (
         <>
-          <span className="text-[13px] font-bold leading-tight" style={{ color: colors.chargeOrange }}>
+          <span className="text-body-sm font-bold leading-tight" style={{ color: colors.chargeOrange }}>
             {km < 10 ? km.toFixed(1) : Math.round(km)}
           </span>
           <span className="text-[10px] text-trail-muted leading-none">km</span>
         </>
       ) : (
-        <span className="text-[13px] font-bold leading-tight text-trail-muted">—</span>
+        <span className="text-body-sm font-bold leading-tight text-trail-muted">—</span>
       )}
       {dPlus > 0 && (
         <>
-          <span className="text-[11px] font-semibold leading-tight" style={{ color: colors.seriesBlue }}>
+          <span className="text-micro font-semibold leading-tight" style={{ color: colors.seriesBlue }}>
             {Math.round(dPlus)}
           </span>
           <span className="text-[10px] text-trail-muted leading-none">m D+</span>

@@ -66,7 +66,7 @@ function ReadinessRing({ value }: { value: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-display text-[22px] font-bold leading-none text-fg-primary">{value}</span>
+        <span className="font-display text-h1 font-bold leading-none text-fg-primary">{value}</span>
         <span className="font-body text-[9px] uppercase tracking-wider text-fg-muted">/100</span>
       </div>
     </div>
@@ -95,7 +95,7 @@ function Sparkline({ data }: { data: number[] }) {
 function MissionSection({ children, title }: { title?: string; children: ReactNode }) {
   return (
     <section>
-      {title && <h2 className="font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-fg-muted mb-2 px-1">{title}</h2>}
+      {title && <h2 className="font-body text-micro font-semibold uppercase tracking-[0.18em] text-fg-muted mb-2 px-1">{title}</h2>}
       {children}
     </section>
   )
@@ -125,7 +125,7 @@ export function CockpitMissionPreview() {
         </header>
         <div className="mt-3 flex items-center justify-between gap-2 px-1">
           <Badge variant="primary" size="sm">Mode Mission</Badge>
-          <span className="flex items-center gap-1.5 font-body text-[11px] text-fg-muted">
+          <span className="flex items-center gap-1.5 font-body text-micro text-fg-muted">
             <CheckCircle2 size={12} className="text-status-success" />
             Synchronisé · 08:42
           </span>
@@ -140,17 +140,17 @@ export function CockpitMissionPreview() {
             </div>
             <div className="relative">
               <div className="flex items-center justify-between">
-                <span className="font-body text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-text">Ma mission</span>
+                <span className="font-body text-micro font-semibold uppercase tracking-[0.2em] text-primary-text">Ma mission</span>
                 <Badge variant="primary" size="sm">J-{MISSION.jMinus}</Badge>
               </div>
               <h1 className="font-display text-[30px] font-bold leading-none tracking-tight text-fg-primary mt-2">{MISSION.race}</h1>
-              <p className="font-body text-[13px] text-fg-secondary mt-1.5 flex items-center gap-2">
+              <p className="font-body text-body-sm text-fg-secondary mt-1.5 flex items-center gap-2">
                 <Mountain size={14} className="text-primary" /> {MISSION.distance} · {MISSION.dplus}
               </p>
 
               <div className="mt-4">
                 <div className="flex items-end justify-between mb-1.5">
-                  <span className="font-body text-[12px] text-fg-muted">Préparation</span>
+                  <span className="font-body text-caption text-fg-muted">Préparation</span>
                   <span className="font-display text-[15px] font-bold text-fg-primary">{MISSION.prep}%</span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-ink-600">
@@ -174,8 +174,8 @@ export function CockpitMissionPreview() {
                     <p className="font-display text-[16px] font-semibold tracking-tight text-fg-primary">{TODAY.type}</p>
                     <Badge variant={st.badge} size="sm" dot>{st.label}</Badge>
                   </div>
-                  <p className="font-body text-[13px] text-fg-secondary mt-0.5">{TODAY.duration} · {TODAY.goal}</p>
-                  <p className="font-body text-[12px] text-fg-muted mt-2">{st.line}</p>
+                  <p className="font-body text-body-sm text-fg-secondary mt-0.5">{TODAY.duration} · {TODAY.goal}</p>
+                  <p className="font-body text-caption text-fg-muted mt-2">{st.line}</p>
                 </div>
               </div>
               <Button variant="secondary" size="sm" className="mt-3" fullWidth trailingIcon={<ArrowRight size={15} />}>Démarrer la séance</Button>
@@ -202,7 +202,7 @@ export function CockpitMissionPreview() {
                 <Card key={k.label} className="p-3 text-center min-w-0">
                   <p className="font-body text-[10px] uppercase tracking-wider text-fg-muted truncate">{k.label}</p>
                   <p className="font-display text-[17px] font-bold leading-none text-fg-primary mt-1.5 truncate">
-                    {k.value}{k.unit && <span className="font-body text-[11px] font-normal text-fg-muted ml-0.5">{k.unit}</span>}
+                    {k.value}{k.unit && <span className="font-body text-micro font-normal text-fg-muted ml-0.5">{k.unit}</span>}
                   </p>
                   <p className="font-body text-[10px] text-fg-muted mt-1 truncate">{k.sub}</p>
                 </Card>
@@ -216,7 +216,7 @@ export function CockpitMissionPreview() {
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 16%, transparent)', color: 'var(--primary)' }}>
                 <Sparkles size={18} />
               </span>
-              <p className="font-body text-[13px] text-fg-secondary leading-relaxed">{SIGNAL}</p>
+              <p className="font-body text-body-sm text-fg-secondary leading-relaxed">{SIGNAL}</p>
             </Card>
           </MissionSection>
 
@@ -229,7 +229,7 @@ export function CockpitMissionPreview() {
             >
               <span className="flex items-center gap-2.5">
                 <Activity size={16} className="text-fg-muted" />
-                <span className="font-display text-[14px] font-semibold tracking-tight text-fg-primary">Voir les données avancées</span>
+                <span className="font-display text-body font-semibold tracking-tight text-fg-primary">Voir les données avancées</span>
               </span>
               <ChevronDown size={18} className={cn('text-fg-muted transition-transform', expert && 'rotate-180')} />
             </button>
@@ -239,21 +239,21 @@ export function CockpitMissionPreview() {
                   {EXPERT.map((e) => (
                     <div key={e.k} className="rounded-lg bg-ink-800 border border-ink-600 p-2.5 text-center">
                       <p className="font-body text-[10px] uppercase tracking-wider text-fg-muted">{e.k}</p>
-                      <p className="font-display text-[18px] font-bold text-fg-primary leading-none mt-1">{e.v}</p>
+                      <p className="font-display text-h2 font-bold text-fg-primary leading-none mt-1">{e.v}</p>
                       <p className="font-body text-[10px] text-fg-muted mt-0.5">{e.label}</p>
                     </div>
                   ))}
                 </div>
                 <div className="mt-3">
-                  <p className="font-body text-[11px] text-fg-muted mb-1">Charge — 11 derniers jours</p>
+                  <p className="font-body text-micro text-fg-muted mb-1">Charge — 11 derniers jours</p>
                   <Sparkline data={TREND} />
                 </div>
-                <p className="font-body text-[11px] text-fg-muted mt-3">Le détail complet vit dans le <span className="text-fg-secondary font-semibold">Mode Expert</span>.</p>
+                <p className="font-body text-micro text-fg-muted mt-3">Le détail complet vit dans le <span className="text-fg-secondary font-semibold">Mode Expert</span>.</p>
               </div>
             )}
           </Card>
 
-          <p className="pt-1 text-center font-body text-[11px] text-fg-muted">
+          <p className="pt-1 text-center font-body text-micro text-fg-muted">
             Mode Mission — l’essentiel en 5 secondes · aperçu, données simulées
           </p>
         </div>

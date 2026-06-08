@@ -45,7 +45,7 @@ export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave
       >
         <h2 className="font-display text-[16px] font-semibold text-trail-text mb-4">{title}</h2>
 
-        <p className="text-[12px] font-semibold text-trail-muted mb-2">{L.activitiesToShow}</p>
+        <p className="text-caption font-semibold text-trail-muted mb-2">{L.activitiesToShow}</p>
         <div className="space-y-2 mb-1">
           {allKeys.map((key) => {
             const cfg = SPORT_CONFIG[key]
@@ -58,15 +58,15 @@ export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave
                   className="w-4 h-4"
                 />
                 <span className="text-[15px]">{cfg.emoji}</span>
-                <span className="text-[14px] text-trail-text">{sportLabel(key, t)}</span>
+                <span className="text-body text-trail-text">{sportLabel(key, t)}</span>
               </label>
             )
           })}
         </div>
-        <p className="text-[11px] text-trail-muted mb-4">{L.uncheckAllHidesBlock}</p>
+        <p className="text-micro text-trail-muted mb-4">{L.uncheckAllHidesBlock}</p>
 
-        <p className="text-[12px] font-semibold text-trail-muted mb-1">{L.defaultActivity}</p>
-        <p className="text-[11px] text-trail-muted mb-2">{L.shownFirst}</p>
+        <p className="text-caption font-semibold text-trail-muted mb-1">{L.defaultActivity}</p>
+        <p className="text-micro text-trail-muted mb-2">{L.shownFirst}</p>
         <div className="space-y-2 mb-5">
           {allKeys.map((key) => {
             const cfg = SPORT_CONFIG[key]
@@ -86,7 +86,7 @@ export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave
                   className="w-4 h-4"
                 />
                 <span className="text-[15px]">{cfg.emoji}</span>
-                <span className="text-[14px] text-trail-text">{sportLabel(key, t)}</span>
+                <span className="text-body text-trail-text">{sportLabel(key, t)}</span>
               </label>
             )
           })}
@@ -95,14 +95,14 @@ export function SportSettingsModal({ title, allKeys, visible, defaultKey, onSave
         {localVisible.length === 0 ? (
           <button
             onClick={() => { onHide?.(); onClose() }}
-            className="w-full py-2 rounded-[10px] bg-red-600 text-white font-semibold text-[14px]"
+            className="w-full py-2 rounded-[10px] bg-red-600 text-white font-semibold text-body"
           >
             {L.hideBlock}
           </button>
         ) : (
           <button
             onClick={() => onSave(localVisible, localDefault)}
-            className="w-full py-2 rounded-[10px] bg-trail-primary text-white font-semibold text-[14px]"
+            className="w-full py-2 rounded-[10px] bg-trail-primary text-white font-semibold text-body"
           >
             {L.close}
           </button>

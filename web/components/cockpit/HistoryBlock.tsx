@@ -231,20 +231,20 @@ function HistoryPill({
       className="rounded-[8px] bg-trail-surface border border-trail-border px-1.5 py-2 flex flex-col items-center gap-[2px]"
       style={{ flex: flex ? '1' : 'none', minWidth: flex ? 0 : 44 }}
     >
-      <span className="text-[11px] font-semibold text-trail-muted leading-none">{label}</span>
+      <span className="text-micro font-semibold text-trail-muted leading-none">{label}</span>
       {km > 0 ? (
         <>
-          <span className="text-[13px] font-bold leading-tight" style={{ color }}>
+          <span className="text-body-sm font-bold leading-tight" style={{ color }}>
             {km < 10 ? km.toFixed(1) : Math.round(km)}
           </span>
           <span className="text-[10px] text-trail-muted leading-none">km</span>
         </>
       ) : (
-        <span className="text-[13px] font-bold leading-tight text-trail-muted">—</span>
+        <span className="text-body-sm font-bold leading-tight text-trail-muted">—</span>
       )}
       {dPlus > 0 && (
         <>
-          <span className="text-[11px] font-semibold leading-tight" style={{ color: colors.seriesBlue }}>
+          <span className="text-micro font-semibold leading-tight" style={{ color: colors.seriesBlue }}>
             {Math.round(dPlus)}
           </span>
           <span className="text-[10px] text-trail-muted leading-none">m D+</span>
@@ -312,7 +312,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className="text-[11px] font-semibold px-2 py-0.5 rounded-full transition-colors"
+                className="text-micro font-semibold px-2 py-0.5 rounded-full transition-colors"
                 style={{
                   backgroundColor: period === p ? cfg.color : 'transparent',
                   color:           period === p ? '#fff' : colors.subtleText,
@@ -326,7 +326,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
           {/* ⋮ button */}
           <button
             onClick={() => setShowModal(true)}
-            className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
+            className="text-trail-muted hover:text-trail-text px-1 text-h2 leading-none"
             aria-label={L.aria.historySettings}
           >
             ⋮
@@ -346,7 +346,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <span className="text-[12px] font-semibold text-trail-muted tabular-nums">
+        <span className="text-caption font-semibold text-trail-muted tabular-nums">
           {activeView.periodLabel}
         </span>
         <button
@@ -389,7 +389,7 @@ export function HistoryBlock({ sportOverviews, onHide }: Props) {
                       />
                     ))
                   ) : (
-                    <div className="flex-1 text-center text-[12px] text-trail-muted py-3">
+                    <div className="flex-1 text-center text-caption text-trail-muted py-3">
                       {L.noData}
                     </div>
                   )}

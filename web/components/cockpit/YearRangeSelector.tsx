@@ -40,7 +40,7 @@ export function YearRangeSelector({ value, max, onChange, accent = ACCENT }: Pro
               type="button"
               disabled={disabled}
               onClick={() => onChange(n)}
-              className="text-[11px] font-semibold px-2 py-0.5 rounded-full transition-colors disabled:cursor-not-allowed"
+              className="text-micro font-semibold px-2 py-0.5 rounded-full transition-colors disabled:cursor-not-allowed"
               style={{ ...pillStyle(active), opacity: disabled ? 0.4 : 1 }}
             >
               {n}{L.yearShortSuffix}
@@ -50,7 +50,7 @@ export function YearRangeSelector({ value, max, onChange, accent = ACCENT }: Pro
         <button
           type="button"
           onClick={() => onChange(safeMax)}
-          className="text-[11px] font-semibold px-2 py-0.5 rounded-full transition-colors"
+          className="text-micro font-semibold px-2 py-0.5 rounded-full transition-colors"
           style={pillStyle(clamped === safeMax)}
         >
           {L.yearAll}
@@ -92,7 +92,7 @@ export function YearRangeSelector({ value, max, onChange, accent = ACCENT }: Pro
             ['--thumb-color' as string]: accent,
           }}
         />
-        <span className="text-[11px] text-trail-muted whitespace-nowrap">
+        <span className="text-micro text-trail-muted whitespace-nowrap">
           {L.yearLabel(clamped)}
         </span>
       </div>

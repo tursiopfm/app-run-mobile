@@ -69,7 +69,7 @@ export function ChargeBlock({ sportOverviews, onHide }: Props) {
           <TsbBadge tsb={activeSov.tsb} onClick={() => setShowFreshnessHelp(true)} />
           <button
             onClick={() => setShowModal(true)}
-            className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
+            className="text-trail-muted hover:text-trail-text px-1 text-h2 leading-none"
             aria-label={C.aria.chargeSettings}
           >
             ⋮
@@ -104,15 +104,15 @@ export function ChargeBlock({ sportOverviews, onHide }: Props) {
                     type="button"
                     onClick={() => setShowChargeHelp(true)}
                     aria-label={C.aria.chargeHelp}
-                    className="text-trail-muted hover:text-trail-text w-5 h-5 flex items-center justify-center text-[12px] leading-none"
+                    className="text-trail-muted hover:text-trail-text w-5 h-5 flex items-center justify-center text-caption leading-none"
                   >ⓘ</button>
                 }
               >
                 <div className="flex items-baseline gap-[2px] flex-nowrap">
-                  <span className="text-[13px] text-trail-muted">{C.atl7d} </span>
+                  <span className="text-body-sm text-trail-muted">{C.atl7d} </span>
                   <span className="text-[21px] font-bold font-data tabular-nums leading-none text-trail-text">{Math.round(sov.atl)}</span>
-                  <span className="text-[13px] text-trail-muted mx-[3px]">·</span>
-                  <span className="text-[13px] text-trail-muted">{C.ctl42d} </span>
+                  <span className="text-body-sm text-trail-muted mx-[3px]">·</span>
+                  <span className="text-body-sm text-trail-muted">{C.ctl42d} </span>
                   <span className="text-[21px] font-bold font-data tabular-nums leading-none text-trail-text">{Math.round(sov.ctl)}</span>
                 </div>
               </CockpitKpiTile>

@@ -71,7 +71,7 @@ export function WeekActivitiesBlock({ activities, onHide }: Props) {
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setShowMenu(s => !s)}
-              className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
+              className="text-trail-muted hover:text-trail-text px-1 text-h2 leading-none"
               aria-label={C.blockMenuAria}
             >
               ⋮
@@ -80,7 +80,7 @@ export function WeekActivitiesBlock({ activities, onHide }: Props) {
               <div className="absolute right-0 mt-1 w-32 rounded-[8px] bg-trail-surface border border-trail-border shadow-lg z-30">
                 <button
                   onClick={() => { setShowMenu(false); onHide() }}
-                  className="w-full px-3 py-2 text-left text-[12px] text-trail-text hover:bg-trail-card"
+                  className="w-full px-3 py-2 text-left text-caption text-trail-text hover:bg-trail-card"
                 >{C.blockHide}</button>
               </div>
             )}
@@ -89,7 +89,7 @@ export function WeekActivitiesBlock({ activities, onHide }: Props) {
       </div>
 
       {activities.length === 0 ? (
-        <p className="text-[13px] py-2" style={{ color: colors.subtleText }}>
+        <p className="text-body-sm py-2" style={{ color: colors.subtleText }}>
           {L.noActivityThisWeek}
         </p>
       ) : (
@@ -106,14 +106,14 @@ export function WeekActivitiesBlock({ activities, onHide }: Props) {
                 style={{ borderColor: colors.border }}
               >
                 <div className="flex items-baseline justify-between gap-2">
-                  <span suppressHydrationWarning className="text-[12px] font-semibold text-trail-muted flex-shrink-0">
+                  <span suppressHydrationWarning className="text-caption font-semibold text-trail-muted flex-shrink-0">
                     {fmtDayLabel(a.start_time, L.dayAbbr)}
                   </span>
-                  <span className="text-[14px] text-trail-text truncate flex-1 text-right" title={a.name}>
+                  <span className="text-body text-trail-text truncate flex-1 text-right" title={a.name}>
                     {a.name}
                   </span>
                 </div>
-                <div className="flex gap-[10px] mt-[2px] text-[12px]">
+                <div className="flex gap-[10px] mt-[2px] text-caption">
                   <span style={{ color: colors.chargeOrange }}>{fmtKm(dist)}</span>
                   <span style={{ color: colors.seriesGreen }}>{fmtDuration(dur)}</span>
                   <span style={{ color: colors.seriesBlue }}>D+ {fmtDPlus(dPlus)}</span>

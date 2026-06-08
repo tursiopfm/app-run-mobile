@@ -205,7 +205,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                       </button>
                       <button
                         onClick={() => setShowConfig(true)}
-                        className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
+                        className="text-trail-muted hover:text-trail-text px-1 text-h2 leading-none"
                         aria-label={L.aria.goalsSettings}
                       >
                         ⋮
@@ -260,7 +260,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                             unit="km"
                             color="#4ADE80"
                           />
-                          <p className="text-[12px] text-right mt-[3px]" style={{ color: diff >= 0 ? '#4ADE80' : '#ef4444' }}>
+                          <p className="text-caption text-right mt-[3px]" style={{ color: diff >= 0 ? '#4ADE80' : '#ef4444' }}>
                             {diffLabel}
                           </p>
                         </div>
@@ -326,7 +326,7 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                   weekKm:    planWeekly.km,
                   weekDPlus: planWeekly.dPlus,
                 }))}
-                className="w-full mb-4 text-[13px] font-semibold px-3 py-2 rounded-[8px] border border-trail-border bg-trail-surface text-trail-text hover:bg-trail-card transition-colors"
+                className="w-full mb-4 text-body-sm font-semibold px-3 py-2 rounded-[8px] border border-trail-border bg-trail-surface text-trail-text hover:bg-trail-card transition-colors"
               >
                 {L.goalEdit.loadFromPlan(Math.round(planWeekly.km), Math.round(planWeekly.dPlus))}
               </button>
@@ -352,18 +352,18 @@ export function GoalsBlock({ sportOverviews, onHide }: Props) {
                 onChange={(v) => setDraft((g) => ({ ...g, yearKm: v }))}
                 unit="km"
               />
-              <p className="text-[11px] text-trail-muted -mt-2 ml-0.5">{L.goalEdit.yearKmHint}</p>
+              <p className="text-micro text-trail-muted -mt-2 ml-0.5">{L.goalEdit.yearKmHint}</p>
             </div>
             <div className="flex justify-end gap-3 mt-5">
               <button
                 onClick={() => setEditSport(null)}
-                className="text-[14px] text-trail-muted px-4 py-2"
+                className="text-body text-trail-muted px-4 py-2"
               >
                 {L.goalEdit.cancel}
               </button>
               <button
                 onClick={saveEdit}
-                className="text-[14px] font-semibold px-4 py-2 rounded-[8px]"
+                className="text-body font-semibold px-4 py-2 rounded-[8px]"
                 style={{ backgroundColor: SPORT_CONFIG[editSport].color, color: '#fff' }}
               >
                 {L.goalEdit.save}
@@ -389,7 +389,7 @@ function GoalField({
 
   return (
     <div>
-      <label className="text-[13px] text-trail-muted block mb-1">{label}</label>
+      <label className="text-body-sm text-trail-muted block mb-1">{label}</label>
       <div className="flex items-center gap-2">
         <input
           type="number"
@@ -403,7 +403,7 @@ function GoalField({
           }}
           className="flex-1 bg-trail-surface border border-trail-border rounded-[6px] px-3 py-2 text-[15px] text-trail-text focus:outline-none"
         />
-        <span className="text-[13px] text-trail-muted w-6">{unit}</span>
+        <span className="text-body-sm text-trail-muted w-6">{unit}</span>
       </div>
     </div>
   )

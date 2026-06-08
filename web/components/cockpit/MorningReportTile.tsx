@@ -32,11 +32,11 @@ export function MorningReportTile() {
               <span style={{ fontSize: 18 }}>📋</span>
             </div>
             <div className="min-w-0">
-              <p className="text-[14px] font-semibold leading-tight text-trail-text">Rapport matinal du jour</p>
-              <p className="text-[11px] mt-0.5 text-trail-muted">{dateLabel(now)} · vu</p>
+              <p className="text-body font-semibold leading-tight text-trail-text">Rapport matinal du jour</p>
+              <p className="text-micro mt-0.5 text-trail-muted">{dateLabel(now)} · vu</p>
             </div>
           </div>
-          <span className="text-[18px] leading-none text-trail-muted">→</span>
+          <span className="text-h2 leading-none text-trail-muted">→</span>
         </div>
       </Link>
     )
@@ -70,7 +70,7 @@ export function MorningReportTile() {
         >
           {dateLabel(now)}
         </h2>
-        <p className="text-[11px] font-semibold text-trail-primary">Ouvrir →</p>
+        <p className="text-micro font-semibold text-trail-primary">Ouvrir →</p>
       </div>
     </Link>
   )

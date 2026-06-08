@@ -73,7 +73,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
           <TsbBadge tsb={sportOverviews.all.tsb} onClick={() => setShowFreshnessHelp(true)} />
           <button
             onClick={() => setShowModal(true)}
-            className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
+            className="text-trail-muted hover:text-trail-text px-1 text-h2 leading-none"
             aria-label={L.aria.activitiesSettings}
           >
             ⋮
@@ -109,7 +109,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
                   >
                     <div className="flex items-baseline gap-[3px]">
                       <span className="text-[21px] font-bold font-data tabular-nums leading-none text-trail-text">{sov.weekKm}</span>
-                      <span className="text-[14px] text-trail-muted">km</span>
+                      <span className="text-body text-trail-muted">km</span>
                     </div>
                   </CockpitKpiTile>
 
@@ -120,7 +120,7 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
                   >
                     <div className="flex items-baseline gap-[3px]">
                       <span className="text-[21px] font-bold font-data tabular-nums leading-none text-trail-text">{sov.weekDPlus}</span>
-                      <span className="text-[14px] text-trail-muted">m</span>
+                      <span className="text-body text-trail-muted">m</span>
                     </div>
                   </CockpitKpiTile>
                 </div>
@@ -134,8 +134,8 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
                     barValues={mNorm} barLabels={mLabels} barColor={scfg.color}
                   >
                     <div className="flex items-baseline gap-[3px]">
-                      <span className="text-[18px] font-bold font-data tabular-nums leading-none text-trail-text">{sov.ytdKm}</span>
-                      <span className="text-[14px] text-trail-muted">km</span>
+                      <span className="text-h2 font-bold font-data tabular-nums leading-none text-trail-text">{sov.ytdKm}</span>
+                      <span className="text-body text-trail-muted">km</span>
                     </div>
                   </CockpitKpiTile>
 
@@ -145,8 +145,8 @@ export function ActivitiesBlock({ sportOverviews, onHide }: Props) {
                     barValues={mdpNorm} barLabels={mdpLabels} barColor={colors.seriesBlue}
                   >
                     <div className="flex items-baseline gap-[3px]">
-                      <span className="text-[18px] font-bold font-data tabular-nums leading-none text-trail-text">{sov.ytdDPlus.toLocaleString('fr-FR')}</span>
-                      <span className="text-[14px] text-trail-muted">m</span>
+                      <span className="text-h2 font-bold font-data tabular-nums leading-none text-trail-text">{sov.ytdDPlus.toLocaleString('fr-FR')}</span>
+                      <span className="text-body text-trail-muted">m</span>
                     </div>
                   </CockpitKpiTile>
                 </div>

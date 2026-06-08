@@ -65,7 +65,7 @@ export function WeeklyStatsBlock({ sportOverviews, onHide }: Props) {
               <button
                 key={tab.key}
                 onClick={() => setChartType(tab.key)}
-                className="text-[11px] font-semibold px-[8px] py-[2px] rounded-[6px] transition-colors"
+                className="text-micro font-semibold px-[8px] py-[2px] rounded-[6px] transition-colors"
                 style={
                   chartType === tab.key
                     ? { backgroundColor: cfg.color, color: '#fff', border: `1px solid ${cfg.color}` }
@@ -78,7 +78,7 @@ export function WeeklyStatsBlock({ sportOverviews, onHide }: Props) {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="text-trail-muted hover:text-trail-text px-1 text-[18px] leading-none"
+            className="text-trail-muted hover:text-trail-text px-1 text-h2 leading-none"
             aria-label={L.aria.weeklySettings}
           >
             ⋮

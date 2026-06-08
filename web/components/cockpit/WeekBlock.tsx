@@ -60,7 +60,7 @@ export function WeekBlock({ sportOverviews, allSessions }: Props) {
               <button
                 key={sport}
                 onClick={() => setActiveSport(sport)}
-                className="text-[11px] font-semibold px-2 py-0.5 rounded-full transition-colors"
+                className="text-micro font-semibold px-2 py-0.5 rounded-full transition-colors"
                 style={{
                   backgroundColor: isActive ? scfg.color : 'transparent',
                   color:           isActive ? '#fff' : colors.subtleText,
