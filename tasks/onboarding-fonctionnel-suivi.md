@@ -28,9 +28,9 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` livré (date + commit).
 - [x] Proposition B : champ date course **optionnel** si mission ∈ {trail, route} → `onboarding_race_date` · `c6444b50`
 - [x] Emphase Mode Mission `charge` (bloc Charge mis en avant) · `7684d946`
 
-## Lot 4 — Édition dans Réglages (proposition D)
-- [ ] Section `/settings` « Mon profil sportif » : discipline / mission / mode (+ date course)
-- [ ] Bouton « Réappliquer les défauts d'affichage » (efface `cockpit_*_settings`)
+## Lot 4 — Édition dans Réglages (proposition D) — ✅ livré 2026-06-08 (branche `feat/onboarding-lot4-settings`)
+- [x] Section `/settings` « Mon profil sportif » : discipline + objectif (+ date course conditionnelle). FR codé en dur. Le **Mode** garde sa section « Mode d'affichage » dédiée existante (pas de doublon).
+- [x] Bouton « Réappliquer les défauts d'affichage » (efface les 8 `cockpit_*_settings` + `notifyChange()`)
 
 ## Lot 5 — Import manuel réel (2ᵉ temps, après lots 1–4)
 - [ ] Flow d'upload GPX/FIT

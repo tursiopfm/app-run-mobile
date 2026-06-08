@@ -1,4 +1,4 @@
-import { Plug2, Palette, Sparkles, LifeBuoy, User, Route, Compass } from 'lucide-react'
+import { Plug2, Palette, Sparkles, LifeBuoy, User, Route, Compass, Mountain } from 'lucide-react'
 import { StravaSection } from '@/components/settings/StravaSection'
 import { AppModeToggle } from '@/components/settings/AppModeToggle'
 import { getServerAppMode } from '@/lib/preferences/server'
@@ -8,6 +8,7 @@ import { AppearanceSection } from '@/components/settings/AppearanceSection'
 import { HelpAboutSection } from '@/components/settings/HelpAboutSection'
 import { IdentityPreview } from '@/components/settings/IdentityPreview'
 import { HrCalibrationTeaser } from '@/components/settings/HrCalibrationTeaser'
+import { MissionProfileSection } from '@/components/settings/MissionProfileSection'
 import { createClient } from '@/lib/database/supabase-server'
 import { getServerUser } from '@/lib/database/get-user'
 import { getServerT } from '@/lib/i18n/server'
@@ -86,11 +87,14 @@ export default async function SettingsPage({
   let commuteActiveCount = 0
   let commuteLabels: string[] = []
   let planAutoPushTitle = true
+  let discipline: string | null = null
+  let mission:    string | null = null
+  let raceDate:   string | null = null
 
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('first_name,last_name,avatar_url,max_hr,threshold_hr,hr_zone_method,plan_auto_push_title')
+      .select('first_name,last_name,avatar_url,max_hr,threshold_hr,hr_zone_method,plan_auto_push_title,onboarding_discipline,onboarding_mission,onboarding_race_date')
       .eq('id', user.id)
       .single()
 
@@ -100,6 +104,9 @@ export default async function SettingsPage({
     maxHr       = profile?.max_hr       ?? null
     thresholdHr = profile?.threshold_hr ?? null
     planAutoPushTitle = profile?.plan_auto_push_title ?? false
+    discipline = profile?.onboarding_discipline ?? null
+    mission    = profile?.onboarding_mission    ?? null
+    raceDate   = profile?.onboarding_race_date  ?? null
 
     const { data: connection } = await supabase
       .from('provider_connections')
@@ -218,6 +225,22 @@ export default async function SettingsPage({
         />
         <SectionCard>
           <AppModeToggle variant="row" initialMode={appMode} />
+        </SectionCard>
+      </section>
+
+      {/* ── Mon profil sportif ── */}
+      <section>
+        <SectionHeader
+          icon={Mountain}
+          title="Mon profil sportif"
+          subtitle="Discipline & objectif — pilotent ton cockpit et ton plan"
+        />
+        <SectionCard>
+          <MissionProfileSection
+            discipline={discipline}
+            mission={mission}
+            raceDate={raceDate}
+          />
         </SectionCard>
       </section>
 
