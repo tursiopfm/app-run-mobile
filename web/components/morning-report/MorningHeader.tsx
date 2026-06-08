@@ -35,7 +35,7 @@ export function MorningHeader({ date, firstName, raceName, daysToRace, weekIndex
           <div className="text-right">
             <p className="text-[10px] uppercase tracking-[0.15em] text-trail-muted">{raceName}</p>
             <p
-              className="text-[22px] leading-none text-trail-primary"
+              className="text-h1 leading-none text-trail-primary"
               style={{ fontFamily: "var(--font-data)" }}
             >
               J-{daysToRace}

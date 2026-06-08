@@ -43,15 +43,15 @@ export function WeatherCurrentBlock(props: Props) {
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px] flex flex-col">
       <div className="flex items-center justify-between mb-[6px]">
-        <h3 className="text-[13px] font-semibold text-trail-muted">Là-dehors</h3>
-        <span className="text-[14px]">{props.status === 'ready' ? weatherEmoji(props.data.current.weatherCode) : '⛅'}</span>
+        <h3 className="text-body-sm font-semibold text-trail-muted">Là-dehors</h3>
+        <span className="text-body">{props.status === 'ready' ? weatherEmoji(props.data.current.weatherCode) : '⛅'}</span>
       </div>
 
       {props.status === 'loading' && (
-        <p className="text-[11px] text-trail-muted">Chargement météo…</p>
+        <p className="text-micro text-trail-muted">Chargement météo…</p>
       )}
       {props.status === 'error' && (
-        <p className="text-[11px] text-trail-muted">Météo indisponible.</p>
+        <p className="text-micro text-trail-muted">Météo indisponible.</p>
       )}
       {props.status === 'ready' && (() => {
         const c = props.data.current
@@ -64,13 +64,13 @@ export function WeatherCurrentBlock(props: Props) {
         return (
           <>
             <div className="flex items-baseline gap-1.5">
-              <p className="text-[28px] leading-none text-trail-text" style={{ fontFamily: "var(--font-data)" }}>{c.tempC}°</p>
-              <p className="text-[11px] text-trail-muted">/{c.feelsLikeC}°</p>
+              <p className="text-display leading-none text-trail-text" style={{ fontFamily: "var(--font-data)" }}>{c.tempC}°</p>
+              <p className="text-micro text-trail-muted">/{c.feelsLikeC}°</p>
             </div>
             {props.locationLabel && (
               <p className="text-[10px] mt-0.5 text-trail-muted truncate">{props.locationLabel}</p>
             )}
-            <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-3 text-[11px] text-trail-text">
+            <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-3 text-micro text-trail-text">
               <div><span className="text-trail-muted">💨</span> {c.windKmh} km/h</div>
               <div><span className="text-trail-muted">💧</span> {c.precipPct}%</div>
               <div><span className="text-trail-muted">💦</span> {c.humidityPct}%</div>
@@ -78,13 +78,13 @@ export function WeatherCurrentBlock(props: Props) {
             </div>
             <div className="flex gap-1.5 mt-2.5">
               <span
-                className="inline-flex items-center rounded-full px-2.5 py-[3px] text-[12px] font-semibold leading-none border flex-1 justify-center"
+                className="inline-flex items-center rounded-full px-2.5 py-[3px] text-caption font-semibold leading-none border flex-1 justify-center"
                 style={{ background: uvBg, color: uvL.color, borderColor: uvBorder }}
               >
                 UV {props.data.uv.index} · {uvL.label}
               </span>
               <span
-                className="inline-flex items-center rounded-full px-2.5 py-[3px] text-[12px] font-semibold leading-none border flex-1 justify-center"
+                className="inline-flex items-center rounded-full px-2.5 py-[3px] text-caption font-semibold leading-none border flex-1 justify-center"
                 style={{ background: airBg, color: airL.color, borderColor: airBorder }}
               >
                 Air {props.data.airQuality.europeanAqi} · {airL.label}

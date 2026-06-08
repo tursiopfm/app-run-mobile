@@ -11,7 +11,7 @@ export function CoachAiBlock() {
     >
       <div className="flex items-center justify-between mb-[6px]">
         <div className="flex items-center gap-2">
-          <span className="text-[14px]">🧠</span>
+          <span className="text-body">🧠</span>
           <h3 className="text-[15px] font-semibold text-trail-muted font-display">Mot du coach</h3>
         </div>
         <span
@@ -21,7 +21,7 @@ export function CoachAiBlock() {
           IA · bientôt
         </span>
       </div>
-      <p className="text-[13px] leading-relaxed text-trail-muted italic">
+      <p className="text-body-sm leading-relaxed text-trail-muted italic">
         Bientôt — un mot personnalisé chaque matin selon ta forme, ta séance et la météo.
       </p>
     </div>

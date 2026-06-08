@@ -43,10 +43,10 @@ export function MorningReportClient({ data }: { data: MorningReportData }) {
   return (
     <div className="max-w-[420px] md:max-w-[860px] mx-auto p-3 sm:p-5 space-y-3">
       <header className="flex items-center justify-between mb-1 px-1">
-        <p className="text-[11px] text-trail-muted uppercase tracking-[0.15em]">Rapport matinal</p>
+        <p className="text-micro text-trail-muted uppercase tracking-[0.15em]">Rapport matinal</p>
         <Link
           href="/"
-          className="w-8 h-8 rounded-full flex items-center justify-center text-[14px] bg-trail-surface border border-trail-border text-trail-muted hover:text-trail-text"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-body bg-trail-surface border border-trail-border text-trail-muted hover:text-trail-text"
           aria-label="Fermer le rapport matinal"
         >
           ✕
@@ -80,7 +80,7 @@ export function MorningReportClient({ data }: { data: MorningReportData }) {
 
       <Link
         href="/"
-        className="block text-center py-3 mt-2 text-[13px] text-trail-muted hover:text-trail-text"
+        className="block text-center py-3 mt-2 text-body-sm text-trail-muted hover:text-trail-text"
       >
         ← Fermer le rapport
       </Link>

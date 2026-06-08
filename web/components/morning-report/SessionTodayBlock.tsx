@@ -27,7 +27,7 @@ export function SessionTodayBlock({ session }: { session: MorningTodaySession })
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
         <div className="flex items-center justify-between mb-[6px]">
           <h3 className="text-[15px] font-semibold text-trail-muted font-display">Séance du jour</h3>
-          <span className="text-[11px] text-trail-success">Repos</span>
+          <span className="text-micro text-trail-success">Repos</span>
         </div>
         <h2
           className="text-[26px] leading-none text-trail-text"
@@ -35,7 +35,7 @@ export function SessionTodayBlock({ session }: { session: MorningTodaySession })
         >
           Repos planifié
         </h2>
-        <p className="text-[12px] text-trail-muted mt-1">
+        <p className="text-caption text-trail-muted mt-1">
           Coupure prévue. Récup active OK si tu veux bouger un peu.
         </p>
       </div>
@@ -53,7 +53,7 @@ export function SessionTodayBlock({ session }: { session: MorningTodaySession })
       <div className="flex items-center justify-between mb-[6px]">
         <h3 className="text-[15px] font-semibold text-trail-muted font-display">Séance du jour</h3>
       </div>
-      {!session && <p className="text-[12px] text-trail-muted">Pas de séance prévue aujourd&apos;hui.</p>}
+      {!session && <p className="text-caption text-trail-muted">Pas de séance prévue aujourd&apos;hui.</p>}
       {session && (
         <>
           <h2
@@ -62,7 +62,7 @@ export function SessionTodayBlock({ session }: { session: MorningTodaySession })
           >
             {session.title}
           </h2>
-          <p className="text-[12px] text-trail-muted mt-1">{labelForType(session.type)}</p>
+          <p className="text-caption text-trail-muted mt-1">{labelForType(session.type)}</p>
           <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-trail-border">
             <Kpi label="Durée"    value={formatDuration(session.duration)} />
             <Kpi label="Distance" value={session.distance ? `${session.distance} km` : '—'} />
@@ -77,7 +77,7 @@ export function SessionTodayBlock({ session }: { session: MorningTodaySession })
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[10px] bg-trail-surface px-2 py-2 text-center">
-      <p className="text-[12px] font-semibold text-trail-muted">{label}</p>
+      <p className="text-caption font-semibold text-trail-muted">{label}</p>
       <p
         className="text-[20px] leading-none mt-0.5 text-trail-text"
         style={{ fontFamily: "var(--font-data)" }}

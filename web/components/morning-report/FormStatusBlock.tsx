@@ -57,8 +57,8 @@ export function FormStatusBlock({ payload }: { payload: ChargeSportPayload }) {
   return (
     <BlockCard title={L.blocks.status} helpTitle={L.blocks.status} helpBody={L.help.status}>
       <div className="mb-1">
-        <p className="text-[14px] font-bold text-trail-text leading-[18px]">{verdict.action}</p>
-        <p className="text-[12px] text-trail-muted mt-1 leading-[16px]">{verdict.reason}</p>
+        <p className="text-body font-bold text-trail-text leading-[18px]">{verdict.action}</p>
+        <p className="text-caption text-trail-muted mt-1 leading-[16px]">{verdict.reason}</p>
       </div>
       <div className="grid grid-cols-3 gap-2 mt-3">
         <KpiCell
@@ -112,8 +112,8 @@ function KpiCell({ label, labelColor, statusLabel, hint, onClick }: KpiCellProps
       aria-label={`${label} — voir les explications`}
       className="rounded-[10px] bg-trail-surface px-2 py-2.5 text-center hover:brightness-110 transition cursor-pointer w-full"
     >
-      <p className="text-[11px] font-semibold" style={{ color: labelColor }}>{label}</p>
-      <p className="text-[14px] font-display font-bold mt-1.5 leading-[17px] text-trail-text">
+      <p className="text-micro font-semibold" style={{ color: labelColor }}>{label}</p>
+      <p className="text-body font-display font-bold mt-1.5 leading-[17px] text-trail-text">
         {statusLabel}
       </p>
       <p className="text-[10px] font-medium mt-1 text-trail-muted leading-[13px]">

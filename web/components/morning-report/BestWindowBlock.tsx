@@ -29,9 +29,9 @@ export function BestWindowBlock(props: Props) {
     return (
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
         <div className="flex items-center justify-between mb-[6px]">
-          <h3 className="text-[11px] font-semibold text-trail-muted uppercase tracking-[0.08em]">Meilleur créneau aujourd&apos;hui</h3>
+          <h3 className="text-micro font-semibold text-trail-muted uppercase tracking-[0.08em]">Meilleur créneau aujourd&apos;hui</h3>
         </div>
-        <p className="text-[11px] text-trail-muted">
+        <p className="text-micro text-trail-muted">
           {props.status === 'loading' ? 'Calcul du meilleur créneau…' : 'Indisponible.'}
         </p>
       </div>
@@ -57,7 +57,7 @@ export function BestWindowBlock(props: Props) {
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       <div className="flex items-center justify-between mb-[6px]">
-        <h3 className="text-[11px] font-semibold text-trail-muted uppercase tracking-[0.08em]">
+        <h3 className="text-micro font-semibold text-trail-muted uppercase tracking-[0.08em]">
           Meilleur créneau aujourd&apos;hui
         </h3>
       </div>
@@ -81,7 +81,7 @@ export function BestWindowBlock(props: Props) {
       <div className="flex justify-between text-[9px] mt-1.5 text-trail-muted">
         <span>{START_HOUR}h</span><span>10h</span><span>14h</span><span>18h</span><span>{END_HOUR}h</span>
       </div>
-      <p className="text-[11px] mt-2.5 text-trail-text">
+      <p className="text-micro mt-2.5 text-trail-text">
         {best ? (
           <>
             <span className="font-bold text-trail-primary">

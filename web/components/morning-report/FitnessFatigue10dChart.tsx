@@ -40,13 +40,13 @@ export function FitnessFatigue10dChart({ dailyMetrics }: { dailyMetrics: DailyMe
         </ResponsiveContainer>
       </div>
       <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
-        <span className="flex items-center gap-1.5 text-[11px] text-trail-muted">
+        <span className="flex items-center gap-1.5 text-micro text-trail-muted">
           <span className="w-3 h-0.5 rounded-full" style={{ backgroundColor: colors.chargeOrange }} />{L.recentFatigue}
         </span>
-        <span className="flex items-center gap-1.5 text-[11px] text-trail-muted">
+        <span className="flex items-center gap-1.5 text-micro text-trail-muted">
           <span className="w-3 h-0.5 rounded-full" style={{ backgroundColor: colors.seriesBlue }} />{L.baseFitness}
         </span>
-        <span className="flex items-center gap-1.5 text-[11px] text-trail-muted">
+        <span className="flex items-center gap-1.5 text-micro text-trail-muted">
           <span className="w-3 h-2 rounded-sm" style={{ backgroundColor: colors.seriesYellow, opacity: 0.5 }} />{L.freshness}
         </span>
       </div>

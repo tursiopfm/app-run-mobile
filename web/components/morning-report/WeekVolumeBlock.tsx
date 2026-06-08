@@ -10,7 +10,7 @@ export function WeekVolumeBlock({ data }: { data: MorningWeekVolume }) {
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       <div className="flex items-center justify-between mb-[6px]">
-        <h3 className="text-[13px] font-semibold text-trail-muted">Volume semaine</h3>
+        <h3 className="text-body-sm font-semibold text-trail-muted">Volume semaine</h3>
       </div>
       <div className="flex items-baseline gap-2">
         <p className="text-[24px] leading-none text-trail-text" style={{ fontFamily: "var(--font-data)", letterSpacing: '0.02em' }}>

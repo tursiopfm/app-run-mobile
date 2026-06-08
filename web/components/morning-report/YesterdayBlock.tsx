@@ -20,7 +20,7 @@ export function YesterdayBlock({ act }: { act: MorningLastActivity | null }) {
     return (
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
         <h3 className="text-[15px] font-semibold text-trail-muted font-display">Hier</h3>
-        <p className="text-[12px] text-trail-muted mt-2">Aucune activité récente.</p>
+        <p className="text-caption text-trail-muted mt-2">Aucune activité récente.</p>
       </div>
     )
   }
