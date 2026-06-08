@@ -320,6 +320,7 @@ export function ActivityDetailClient({
 
   return (
     <div style={{ background: 'var(--trail-bg)', minHeight: '100vh', color: 'var(--trail-text)', fontFamily: 'var(--font-sans)' }}>
+      <div style={{ maxWidth: 720, margin: '0 auto' }}>
 
       {/* Map section */}
       <div style={{
@@ -534,6 +535,7 @@ export function ActivityDetailClient({
             )}
           </div>
         </>
+      </div>
       </div>
 
       {/* Edit modal */}

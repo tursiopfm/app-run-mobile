@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { splitPaceSec, fmtPaceSec } from '@/lib/activities/detail'
 import type { StravaSplit } from '@/lib/activities/detail'
 import { useT } from '@/lib/i18n/I18nProvider'
@@ -36,6 +37,7 @@ export function ActivitySplitsProfile({
   avgPaceSec: number
 }) {
   const L = useT().activities
+  const [hover, setHover] = useState<number | null>(null)
 
   // Points valides indexés par distance cumulée (axe x fidèle).
   const cum: number[] = []
@@ -98,6 +100,35 @@ export function ActivitySplitsProfile({
     </div>
   )
 
+  // Survol → point valide le plus proche (mappe la position curseur sur le viewBox).
+  const handlePointer = (clientX: number, svg: SVGSVGElement) => {
+    const rect = svg.getBoundingClientRect()
+    if (!rect.width) return
+    const svgX = ((clientX - rect.left) / rect.width) * W
+    let best = 0
+    let bestD = Infinity
+    for (let k = 0; k < pacePts.length; k++) {
+      const d = Math.abs(pacePts[k].x - svgX)
+      if (d < bestD) { bestD = d; best = k }
+    }
+    setHover(best)
+  }
+
+  const hoverData = (() => {
+    if (hover === null || hover >= pts.length) return null
+    const p = pts[hover]
+    const he = Math.round(p.s.elevation_difference)
+    return {
+      x: pacePts[hover].x,
+      y: pacePts[hover].y,
+      pct: Math.min(92, Math.max(8, (pacePts[hover].x / W) * 100)),
+      km: p.s.split,
+      pace: fmtPaceSec(p.pace),
+      elevTxt: he > 0 ? `↑${he} m` : he < 0 ? `↓${Math.abs(he)} m` : '—',
+      elevColor: he > 0 ? '#C7A553' : he < 0 ? '#6FA9C9' : 'var(--trail-muted)',
+    }
+  })()
+
   return (
     <div style={{ marginBottom: 16 }}>
       {/* Section header */}
@@ -115,7 +146,17 @@ export function ActivitySplitsProfile({
         background: 'linear-gradient(180deg, rgba(24,32,43,.5), rgba(11,15,20,0))',
         border: '1px solid var(--trail-border)', borderRadius: 14, padding: '14px 6px 8px', marginBottom: 12,
       }}>
-        <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={L.splitsProfileTitle(`${totalKm.toFixed(1)} km`)}>
+        <div style={{ position: 'relative' }}>
+        <svg
+          viewBox={`0 0 ${W} ${H}`} width="100%" role="img"
+          aria-label={L.splitsProfileTitle(`${totalKm.toFixed(1)} km`)}
+          style={{ display: 'block', cursor: 'crosshair', touchAction: 'pan-y' }}
+          onMouseMove={(e) => handlePointer(e.clientX, e.currentTarget)}
+          onMouseLeave={() => setHover(null)}
+          onTouchStart={(e) => handlePointer(e.touches[0].clientX, e.currentTarget)}
+          onTouchMove={(e) => handlePointer(e.touches[0].clientX, e.currentTarget)}
+          onTouchEnd={() => setHover(null)}
+        >
           <defs>
             <linearGradient id="tc-pace-g" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stopColor="#FF7900" stopOpacity="0.42" />
@@ -157,7 +198,38 @@ export function ActivitySplitsProfile({
           <circle cx={x(cum[fastest.i])} cy={yPace(fastest.pace)} r="4.5" fill="#FF7900" filter="url(#tc-glow)" />
           <circle cx={x(cum[fastest.i])} cy={yPace(fastest.pace)} r="2" fill="#fff" />
           <text x={x(cum[fastest.i])} y={yPace(fastest.pace) - 8} fill="#FF8A33" fontSize="9" fontWeight="700" textAnchor="middle" style={{ fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums' }}>★ {fmtPaceSec(minP)}</text>
+
+          {/* Hover guide + marker */}
+          {hoverData && (
+            <>
+              <line x1={hoverData.x} y1={PACE_TOP} x2={hoverData.x} y2={ELEV_BOT} stroke="#E2ECE9" strokeOpacity="0.22" strokeWidth="1" />
+              <circle cx={hoverData.x} cy={hoverData.y} r="4" fill="#fff" stroke="#FF7900" strokeWidth="2" />
+            </>
+          )}
         </svg>
+
+        {/* Hover tooltip */}
+        {hoverData && (
+          <div style={{
+            position: 'absolute', top: 2, left: `${hoverData.pct}%`, transform: 'translateX(-50%)',
+            pointerEvents: 'none', zIndex: 3, whiteSpace: 'nowrap',
+            background: 'var(--trail-card)', border: '1px solid var(--trail-border)',
+            borderRadius: 8, padding: '6px 9px', boxShadow: '0 4px 14px rgba(0,0,0,0.45)',
+          }}>
+            <div style={{ fontSize: 10, color: 'var(--trail-muted)', marginBottom: 4 }}>km {hoverData.km}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5 }}>
+              <i style={{ width: 8, height: 8, borderRadius: '50%', background: '#FF7900', flexShrink: 0 }} />
+              <span style={{ color: 'var(--trail-muted)' }}>{L.paceLabel}</span>
+              <span style={{ marginLeft: 'auto', fontWeight: 700, color: '#FF8A33', fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums' }}>{hoverData.pace}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, marginTop: 3 }}>
+              <i style={{ width: 8, height: 8, borderRadius: '50%', background: '#3a4a52', flexShrink: 0 }} />
+              <span style={{ color: 'var(--trail-muted)' }}>{L.splitsElevLabel}</span>
+              <span style={{ marginLeft: 'auto', fontWeight: 700, color: hoverData.elevColor, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums' }}>{hoverData.elevTxt}</span>
+            </div>
+          </div>
+        )}
+        </div>
 
         {/* Legend */}
         <div style={{ display: 'flex', gap: 18, padding: '2px 10px 0', fontSize: 11, color: 'var(--trail-muted)' }}>
