@@ -1,4 +1,4 @@
-export type Provider = 'strava' | 'garmin' | 'polar' | 'suunto' | 'coros' | 'fit_file'
+export type Provider = 'strava' | 'garmin' | 'polar' | 'suunto' | 'coros' | 'fit_file' | 'gpx'
 
 export type NormalizedActivity = {
   userId: string
