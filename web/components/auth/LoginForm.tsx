@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { BarChart3, Zap, Brain, Mountain } from 'lucide-react'
+import { BarChart3, Zap, Brain, CalendarDays, Eye, EyeOff } from 'lucide-react'
 import { createClient } from '@/lib/database/supabase-client'
 import { useT } from '@/lib/i18n/I18nProvider'
 
@@ -14,6 +14,9 @@ export function LoginForm() {
   const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [checkEmail, setCheckEmail] = useState(false)
@@ -31,6 +34,10 @@ export function LoginForm() {
         router.push('/dashboard')
         router.refresh()
       } else if (mode === 'signup') {
+        if (password !== confirmPassword) {
+          setError(A.pwMismatch)
+          return
+        }
         const { data, error } = await supabase.auth.signUp({ email, password })
         if (error) { setError(error.message); return }
         if (data.session) {
@@ -127,16 +134,57 @@ export function LoginForm() {
           />
           {mode !== 'forgot' && (
             <>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                minLength={mode === 'signup' ? 6 : undefined}
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                placeholder={A.passwordPh}
-                className="w-full bg-trail-surface border border-trail-border rounded-2xl px-4 py-3 text-sm text-trail-text outline-none focus:border-trail-accent placeholder:text-trail-muted"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  minLength={mode === 'signup' ? 6 : undefined}
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                  placeholder={A.passwordPh}
+                  className="w-full bg-trail-surface border border-trail-border rounded-2xl px-4 py-3 pr-12 text-sm text-trail-text outline-none focus:border-trail-accent placeholder:text-trail-muted"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  aria-label={showPassword ? A.hidePw : A.showPw}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-trail-muted hover:text-trail-text rounded-lg"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+
+              {mode === 'signup' && (
+                <>
+                  <div className="relative">
+                    <input
+                      type={showConfirm ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      autoComplete="new-password"
+                      placeholder={A.confirmPasswordPh}
+                      className="w-full bg-trail-surface border border-trail-border rounded-2xl px-4 py-3 pr-12 text-sm text-trail-text outline-none focus:border-trail-accent placeholder:text-trail-muted"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm(v => !v)}
+                      aria-label={showConfirm ? A.hidePw : A.showPw}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-trail-muted hover:text-trail-text rounded-lg"
+                    >
+                      {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {confirmPassword.length > 0 && (
+                    <p className={`text-xs px-1 text-left ${password === confirmPassword ? 'text-trail-success' : 'text-trail-danger'}`}>
+                      {password === confirmPassword ? A.pwMatch : A.pwMismatch}
+                    </p>
+                  )}
+                </>
+              )}
+
               {mode === 'login' && (
                 <div className="flex justify-end">
                   <button
@@ -184,10 +232,10 @@ export function LoginForm() {
       {/* Feature grid */}
       <div className="px-6 pb-16 grid grid-cols-2 gap-3 max-w-lg mx-auto w-full">
         {[
-          { icon: BarChart3, title: A.featCharge, desc: A.featChargeDesc },
-          { icon: Zap,       title: A.featEffort, desc: A.featEffortDesc },
-          { icon: Brain,     title: A.featCoach,  desc: A.featCoachDesc },
-          { icon: Mountain,  title: A.featUltra,  desc: A.featUltraDesc },
+          { icon: BarChart3,   title: A.featCharge, desc: A.featChargeDesc },
+          { icon: Zap,         title: A.featEffort, desc: A.featEffortDesc },
+          { icon: Brain,       title: A.featCoach,  desc: A.featCoachDesc },
+          { icon: CalendarDays, title: A.featPlan,  desc: A.featPlanDesc },
         ].map(({ icon: Icon, title, desc }) => (
           <div key={title} className="bg-trail-surface border border-trail-border rounded-2xl p-4">
             <Icon className="text-trail-primary mb-2" size={20} />

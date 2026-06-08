@@ -871,6 +871,11 @@ export type Dict = {
     appTagline: string
     emailPh: string
     passwordPh: string
+    confirmPasswordPh: string
+    pwMismatch: string
+    pwMatch: string
+    showPw: string
+    hidePw: string
     forgotPw: string
     btnSending: string
     btnLoggingIn: string
@@ -886,7 +891,7 @@ export type Dict = {
     featCharge: string; featChargeDesc: string
     featEffort: string; featEffortDesc: string
     featCoach: string; featCoachDesc: string
-    featUltra: string; featUltraDesc: string
+    featPlan: string; featPlanDesc: string
   }
   onboarding: {
     title: string
@@ -2835,9 +2840,14 @@ export const fr: Dict = {
     forgotSentTitle:  'Email envoyé',
     forgotSentBody:   'Un lien de réinitialisation a été envoyé à',
     backToLogin:      'Retour à la connexion',
-    appTagline:       'Pilotez votre entraînement trail & endurance avec précision',
+    appTagline:       'Pilote ton entraînement trail & endurance avec précision',
     emailPh:          'Email',
     passwordPh:       'Mot de passe',
+    confirmPasswordPh:'Confirmer le mot de passe',
+    pwMismatch:       'Les mots de passe ne correspondent pas',
+    pwMatch:          'Les mots de passe correspondent',
+    showPw:           'Afficher le mot de passe',
+    hidePw:           'Masquer le mot de passe',
     forgotPw:         'Mot de passe oublié ?',
     btnSending:       'Envoi…',
     btnLoggingIn:     'Connexion…',
@@ -2850,10 +2860,10 @@ export const fr: Dict = {
     createAccount:    'Créer un compte',
     loginAction:      'Se connecter',
     genericError:     'Erreur de connexion.',
-    featCharge:       'Charge',     featChargeDesc: 'ATL / CTL / TSB en temps réel',
-    featEffort:       'Effort',     featEffortDesc: 'Score effort multi-sports',
-    featCoach:        'Coach',      featCoachDesc:  'Analyse IA de vos séances',
-    featUltra:        'Ultra',      featUltraDesc:  'Préparation ultra trails',
+    featCharge:       'Anticipe ta fatigue', featChargeDesc: 'Forme, fraîcheur et charge suivies au jour le jour.',
+    featEffort:       'Pèse chaque sortie',  featEffortDesc: 'L\'effort réel de ta séance, pas juste les kilomètres.',
+    featCoach:        'Analyse tes séances', featCoachDesc:  'Une lecture claire de ce que chaque sortie t\'apporte.',
+    featPlan:         'Planifie ta saison',  featPlanDesc:   'Construis tes semaines jusqu\'au grand jour.',
   },
 
   onboarding: {
