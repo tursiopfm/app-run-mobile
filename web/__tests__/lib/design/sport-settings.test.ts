@@ -1,4 +1,10 @@
-import { defaultSportForDiscipline, withDefaultSport, readSportSettings } from '@/lib/design/sport-settings'
+import {
+  defaultSportForDiscipline,
+  withDefaultSport,
+  readSportSettings,
+  applyDisciplineDefaultToCockpit,
+  COCKPIT_SPORT_SETTINGS_KEYS,
+} from '@/lib/design/sport-settings'
 
 describe('defaultSportForDiscipline', () => {
   it('mappe les disciplines mono-sport', () => {
@@ -41,5 +47,61 @@ describe('readSportSettings + withDefaultSport (intégration)', () => {
   })
   it('sans discipline ni réglage : garde le défaut du bloc', () => {
     expect(readSportSettings(KEY, withDefaultSport(DEFAULTS, undefined)).default).toBe('run')
+  })
+})
+
+// Appliqué à la complétion de l'onboarding : la discipline force le défaut des
+// blocs Cockpit NON personnalisés (défaut incident 'run'), mais respecte un
+// défaut délibérément changé. Corrige le cas où un réglage LS résiduel bloquait
+// la discipline (bug du carrousel resté sur « course »).
+describe('applyDisciplineDefaultToCockpit', () => {
+  afterEach(() => localStorage.clear())
+
+  function read(key: string) {
+    return JSON.parse(localStorage.getItem(key) ?? 'null')
+  }
+
+  it('applique le sport sur tous les blocs sans réglage stocké', () => {
+    applyDisciplineDefaultToCockpit('natation')
+    for (const key of COCKPIT_SPORT_SETTINGS_KEYS) {
+      expect(read(key).default).toBe('swim')
+    }
+  })
+
+  it('écrase un défaut incident (=run) en préservant le visible personnalisé', () => {
+    const key = COCKPIT_SPORT_SETTINGS_KEYS[0]
+    localStorage.setItem(key, JSON.stringify({ visible: ['run', 'ride'], default: 'run' }))
+    applyDisciplineDefaultToCockpit('velo')
+    expect(read(key)).toEqual({ visible: ['run', 'ride'], default: 'ride' })
+  })
+
+  it('respecte un défaut délibérément changé (≠ run)', () => {
+    const key = COCKPIT_SPORT_SETTINGS_KEYS[0]
+    localStorage.setItem(key, JSON.stringify({ visible: ['run', 'ride', 'swim', 'all'], default: 'swim' }))
+    applyDisciplineDefaultToCockpit('velo')
+    expect(read(key).default).toBe('swim')
+  })
+
+  it('ajoute le sport au visible si l’utilisateur l’avait masqué', () => {
+    const key = COCKPIT_SPORT_SETTINGS_KEYS[0]
+    localStorage.setItem(key, JSON.stringify({ visible: ['run'], default: 'run' }))
+    applyDisciplineDefaultToCockpit('natation')
+    const s = read(key)
+    expect(s.default).toBe('swim')
+    expect(s.visible).toContain('swim')
+  })
+
+  it('triathlon → all sur les blocs vierges', () => {
+    applyDisciplineDefaultToCockpit('triathlon')
+    expect(read(COCKPIT_SPORT_SETTINGS_KEYS[0]).default).toBe('all')
+  })
+
+  it('ne touche à rien pour trail/route/null (pas de surcharge discipline)', () => {
+    applyDisciplineDefaultToCockpit('trail')
+    applyDisciplineDefaultToCockpit('route')
+    applyDisciplineDefaultToCockpit(null)
+    for (const key of COCKPIT_SPORT_SETTINGS_KEYS) {
+      expect(localStorage.getItem(key)).toBeNull()
+    }
   })
 })

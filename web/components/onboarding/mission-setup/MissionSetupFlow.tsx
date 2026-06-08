@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { TrajectoryLine } from '@/components/brand/TrajectoryLine'
+import { applyDisciplineDefaultToCockpit } from '@/lib/design/sport-settings'
 import { cn } from '@/lib/cn'
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -227,6 +228,9 @@ export function MissionSetupFlow({
       setBusy(false)
       return
     }
+    // Pose le sport de la discipline comme défaut des blocs Cockpit avant la
+    // navigation (sinon un réglage LS résiduel laisse les blocs sur « course »).
+    applyDisciplineDefaultToCockpit(discipline)
     router.push('/dashboard')
   }
 

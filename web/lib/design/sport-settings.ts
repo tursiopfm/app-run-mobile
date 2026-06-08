@@ -45,3 +45,58 @@ export function withDefaultSport<T extends { default: SportKey }>(
 ): T {
   return defaultSport ? { ...defaults, default: defaultSport } : defaults
 }
+
+// Clés localStorage des blocs Cockpit pilotés par sport (un défaut + un visible[]
+// chacun). Doit rester synchro avec les STORAGE_KEY des composants cockpit/*.
+export const COCKPIT_SPORT_SETTINGS_KEYS = [
+  'cockpit_activities_settings',
+  'cockpit_last_activity_settings',
+  'cockpit_history_settings',
+  'cockpit_goals_settings',
+  'cockpit_intensity_settings',
+  'cockpit_charge_settings',
+  'cockpit_weekly_settings',
+  'cockpit_cumul_settings',
+] as const
+
+const BASE_DEFAULT_SPORT: SportKey = 'run'
+const BASE_VISIBLE: SportKey[] = ['run', 'ride', 'swim', 'all']
+
+/**
+ * Applique le sport d'une discipline d'onboarding comme défaut des blocs Cockpit.
+ *
+ * À appeler à la complétion de l'onboarding. Le défaut discipline n'est qu'un
+ * repli au render (withDefaultSport) : tout réglage LS résiduel l'écrase
+ * (« LS-override-wins »). Sans cette passe, re-choisir une discipline laissait
+ * les blocs sur « course » dès qu'un réglage existait.
+ *
+ * Respecte les personnalisations : un bloc dont le défaut a été DÉLIBÉRÉMENT
+ * changé (≠ 'run') est laissé tel quel ; seuls les blocs vierges ou au défaut
+ * incident 'run' reçoivent le sport de la discipline. trail/route → no-op.
+ * Le `visible[]` éventuel est préservé (et complété si le sport y manquait).
+ */
+export function applyDisciplineDefaultToCockpit(
+  discipline: string | null | undefined,
+): void {
+  if (typeof window === 'undefined') return
+  const sport = defaultSportForDiscipline(discipline)
+  if (!sport) return
+
+  for (const key of COCKPIT_SPORT_SETTINGS_KEYS) {
+    try {
+      const raw = window.localStorage.getItem(key)
+      const saved = raw
+        ? (JSON.parse(raw) as { visible?: SportKey[]; default?: SportKey })
+        : null
+      // Défaut délibérément personnalisé : on n'y touche pas.
+      if (saved?.default && saved.default !== BASE_DEFAULT_SPORT) continue
+
+      const visible = saved?.visible?.length ? [...saved.visible] : [...BASE_VISIBLE]
+      if (!visible.includes(sport)) visible.push(sport)
+      window.localStorage.setItem(key, JSON.stringify({ visible, default: sport }))
+    } catch {
+      // Clé corrompue : on réécrit un réglage propre porté par la discipline.
+      window.localStorage.setItem(key, JSON.stringify({ visible: [...BASE_VISIBLE], default: sport }))
+    }
+  }
+}
