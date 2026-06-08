@@ -11,7 +11,7 @@ type Props = {
 
 export function DurationDistanceToggle({ value, onChange, size = 'sm' }: Props) {
   const L = useT().plan
-  const sizeCls = size === 'sm' ? 'text-[11px] py-1 px-2' : 'text-[13px] py-1.5 px-3'
+  const sizeCls = size === 'sm' ? 'text-micro py-1 px-2' : 'text-body-sm py-1.5 px-3'
   return (
     <div
       className="inline-flex rounded-[8px] bg-trail-surface border border-trail-border overflow-hidden"

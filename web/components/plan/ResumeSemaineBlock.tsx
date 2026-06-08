@@ -336,7 +336,7 @@ export function ResumeSemaineBlock({ reloadKey = 0, simplified = false }: Resume
       helpTitle={L.resumeTitle}
       helpBody={L.resumeHelp}
     >
-      <p className="text-[12px] text-trail-muted">
+      <p className="text-caption text-trail-muted">
         {L.weekRange(weekNumber, formatDM(weekStartISO), formatDM(weekEndISO))}
       </p>
 
@@ -350,9 +350,9 @@ export function ResumeSemaineBlock({ reloadKey = 0, simplified = false }: Resume
           className="flex-1 rounded-[10px] flex flex-col items-center py-2"
           style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}
         >
-          <span className="text-[11px] text-trail-muted">{formatDow(selectedDateISO, L.dowLong)}</span>
+          <span className="text-micro text-trail-muted">{formatDow(selectedDateISO, L.dowLong)}</span>
           <span
-            className="text-[18px] text-trail-text leading-tight font-display"
+            className="text-h2 text-trail-text leading-tight font-display"
             style={{ letterSpacing: '0.02em' }}
           >
             {formatLong(selectedDateISO, L.monthsShort)}
@@ -367,7 +367,7 @@ export function ResumeSemaineBlock({ reloadKey = 0, simplified = false }: Resume
           type="button"
           onClick={gotoToday}
           style={{ color: colors.chargeOrange }}
-          className="flex-shrink-0 text-[12px] font-semibold bg-transparent border-none cursor-pointer px-1"
+          className="flex-shrink-0 text-caption font-semibold bg-transparent border-none cursor-pointer px-1"
           aria-label={L.todayAria}
         >
           {L.today}
@@ -457,7 +457,7 @@ export function ResumeSemaineBlock({ reloadKey = 0, simplified = false }: Resume
       </div>
 
       {!loaded && (
-        <div className="text-center text-trail-muted text-[12px] mt-2" role="status">{L.loading}</div>
+        <div className="text-center text-trail-muted text-caption mt-2" role="status">{L.loading}</div>
       )}
     </BlockCard>
   )
@@ -520,14 +520,14 @@ function MetricTile({
         border: `1px solid ${open ? color : colors.border}`,
       }}
     >
-      <p className="text-[11px] text-trail-muted">{label}</p>
+      <p className="text-micro text-trail-muted">{label}</p>
       <p className="mt-[2px] flex items-baseline gap-[2px] min-w-0">
-        <span className="text-[18px] font-bold leading-none truncate font-display" style={{ color }}>{mainValue}</span>
+        <span className="text-h2 font-bold leading-none truncate font-display" style={{ color }}>{mainValue}</span>
         {mainUnit && (
-          <span className="text-[11px] text-trail-muted leading-none flex-shrink-0">{mainUnit}</span>
+          <span className="text-micro text-trail-muted leading-none flex-shrink-0">{mainUnit}</span>
         )}
       </p>
-      <p className="text-[11px] text-trail-muted mt-[2px] truncate">{sub}</p>
+      <p className="text-micro text-trail-muted mt-[2px] truncate">{sub}</p>
     </button>
   )
 }
@@ -544,10 +544,10 @@ function TilePopover({
         border: `1px solid ${color}`,
       }}
     >
-      <p className="text-[12px] font-semibold mb-[4px]" style={{ color }}>
+      <p className="text-caption font-semibold mb-[4px]" style={{ color }}>
         {label}
       </p>
-      <p className="text-[12px] text-trail-muted leading-[17px]">
+      <p className="text-caption text-trail-muted leading-[17px]">
         {explanation}
       </p>
     </div>
@@ -561,8 +561,8 @@ function ProgressLine({
   return (
     <div>
       <div className="flex justify-between mb-[6px]">
-        <span className="text-[12px] text-trail-muted">{label}</span>
-        <span className="text-[12px] font-semibold text-trail-text">
+        <span className="text-caption text-trail-muted">{label}</span>
+        <span className="text-caption font-semibold text-trail-text">
           {fmt1(current)} / {fmt1(target)} {unit}
         </span>
       </div>

@@ -304,7 +304,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
             type="button"
             onClick={handleAutoGenerate}
             disabled={saving || !race}
-            className="px-3 py-2 text-[13px] font-semibold text-trail-primary hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
+            className="px-3 py-2 text-body-sm font-semibold text-trail-primary hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
             aria-label={L.phaseEditorAutoGenAria}
             title={!race ? L.phaseEditorAutoGenTitleNoRace : L.phaseEditorAutoGenTitleOk}
           >
@@ -314,7 +314,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
 
         {error && (
           <div
-            className="mb-3 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-danger text-trail-danger text-[13px]"
+            className="mb-3 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-danger text-trail-danger text-body-sm"
             role="alert"
           >
             {error}
@@ -329,7 +329,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
           <SortableContext items={phases.map(p => p.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-2">
               {phases.length === 0 && (
-                <div className="text-center text-trail-muted text-[13px] py-6">
+                <div className="text-center text-trail-muted text-body-sm py-6">
                   {L.phaseEditorEmptyList}
                 </div>
               )}
@@ -357,9 +357,9 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
         <button
           type="button"
           onClick={handleAddPhase}
-          className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-[10px] border border-dashed border-trail-border text-trail-muted hover:border-trail-primary hover:text-trail-primary transition-colors text-[14px] font-semibold"
+          className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-[10px] border border-dashed border-trail-border text-trail-muted hover:border-trail-primary hover:text-trail-primary transition-colors text-body font-semibold"
         >
-          <span className="text-[18px] leading-none">+</span>
+          <span className="text-h2 leading-none">+</span>
           <span>{L.phaseEditorAddPhase}</span>
         </button>
 
@@ -368,7 +368,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="px-4 py-2 rounded-[10px] text-[14px] font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
+            className="px-4 py-2 rounded-[10px] text-body font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
           >
             {L.phaseEditorCancel}
           </button>
@@ -376,7 +376,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
             type="button"
             onClick={handleSave}
             disabled={saving || phases.length === 0 || validationError !== null}
-            className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-[14px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-body font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {L.phaseEditorSave}
           </button>
@@ -452,10 +452,10 @@ function SortablePhaseRow({
             aria-hidden
           />
           <div className="min-w-0 flex-1">
-            <div className="text-trail-text font-semibold text-[13px] truncate">
+            <div className="text-trail-text font-semibold text-body-sm truncate">
               {phase.label || L.phaseTypes[phase.type]}
             </div>
-            <div className="text-[11px] text-trail-muted truncate">
+            <div className="text-micro text-trail-muted truncate">
               {weekCount} {L.phaseEditorWeeksShort} · {formatDDMM(phase.startDate)} → {formatDDMM(phase.endDate)}
             </div>
           </div>
@@ -465,7 +465,7 @@ function SortablePhaseRow({
         <button
           type="button"
           onClick={onDelete}
-          className="text-[11px] font-semibold text-trail-danger hover:underline px-2 py-1 flex-shrink-0"
+          className="text-micro font-semibold text-trail-danger hover:underline px-2 py-1 flex-shrink-0"
           aria-label={L.phaseEditorDeleteAria(phase.label)}
         >
           {L.phaseEditorDelete}
@@ -497,7 +497,7 @@ function SortablePhaseRow({
               type="text"
               value={phase.label}
               onChange={(e) => onChange({ label: e.target.value })}
-              className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
+              className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-body-sm focus:outline-none focus:border-trail-primary"
             />
           </Field>
 
@@ -506,7 +506,7 @@ function SortablePhaseRow({
               <select
                 value={phase.type}
                 onChange={(e) => onTypeChange(e.target.value as PhaseType)}
-                className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
+                className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-body-sm focus:outline-none focus:border-trail-primary"
               >
                 {phaseTypeOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -520,7 +520,7 @@ function SortablePhaseRow({
                 value={phase.focus ?? ''}
                 onChange={(e) => onChange({ focus: e.target.value })}
                 placeholder={L.phaseEditorFieldFocusPh}
-                className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
+                className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-body-sm focus:outline-none focus:border-trail-primary"
               />
             </Field>
           </div>
@@ -531,7 +531,7 @@ function SortablePhaseRow({
                 type="date"
                 value={phase.startDate}
                 onChange={(e) => onChange({ startDate: e.target.value })}
-                className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
+                className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-body-sm focus:outline-none focus:border-trail-primary"
               />
             </Field>
             <Field label={L.phaseEditorFieldEnd} required>
@@ -539,17 +539,17 @@ function SortablePhaseRow({
                 type="date"
                 value={phase.endDate}
                 onChange={(e) => onChange({ endDate: e.target.value })}
-                className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
+                className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-body-sm focus:outline-none focus:border-trail-primary"
               />
             </Field>
           </div>
 
           {/* Objectifs semaine par semaine (km + D+) */}
           <div>
-            <div className="text-[11px] font-semibold text-trail-muted mb-2">
+            <div className="text-micro font-semibold text-trail-muted mb-2">
               {L.phaseEditorWeeklyGoals}
             </div>
-            <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1.5 items-center text-[12px]">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1.5 items-center text-caption">
               <span className="text-[10px] uppercase tracking-wide text-trail-muted">{L.phaseEditorWeekCol}</span>
               <span className="text-[10px] uppercase tracking-wide text-trail-muted text-right">{L.phaseEditorVolumeCol}</span>
               <span className="text-[10px] uppercase tracking-wide text-trail-muted text-right">{L.phaseEditorDPlusCol}</span>
@@ -567,7 +567,7 @@ function SortablePhaseRow({
                       min={0}
                       value={Number.isFinite(w.km) ? w.km : 0}
                       onChange={(e) => onWeeklyChange(i, 'km', Number(e.target.value) || 0)}
-                      className="w-[84px] pl-2 pr-[28px] py-1 rounded-[6px] bg-trail-card border border-trail-border text-trail-text text-right text-[12px] focus:outline-none focus:border-trail-primary"
+                      className="w-[84px] pl-2 pr-[28px] py-1 rounded-[6px] bg-trail-card border border-trail-border text-trail-text text-right text-caption focus:outline-none focus:border-trail-primary"
                       aria-label={L.phaseEditorVolumeInputAria(i + 1, phase.label)}
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-trail-muted pointer-events-none">km</span>
@@ -580,7 +580,7 @@ function SortablePhaseRow({
                       min={0}
                       value={Number.isFinite(w.dPlus) ? w.dPlus : 0}
                       onChange={(e) => onWeeklyChange(i, 'dPlus', Number(e.target.value) || 0)}
-                      className="w-[84px] pl-2 pr-[24px] py-1 rounded-[6px] bg-trail-card border border-trail-border text-trail-text text-right text-[12px] focus:outline-none focus:border-trail-primary"
+                      className="w-[84px] pl-2 pr-[24px] py-1 rounded-[6px] bg-trail-card border border-trail-border text-trail-text text-right text-caption focus:outline-none focus:border-trail-primary"
                       aria-label={L.phaseEditorDPlusInputAria(i + 1, phase.label)}
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-trail-muted pointer-events-none">m</span>
@@ -595,7 +595,7 @@ function SortablePhaseRow({
               rows={2}
               value={phase.description ?? ''}
               onChange={(e) => onChange({ description: e.target.value })}
-              className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary resize-none"
+              className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-body-sm focus:outline-none focus:border-trail-primary resize-none"
             />
           </Field>
         </div>
@@ -613,7 +613,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-[11px] font-semibold text-trail-muted mb-1 block">
+      <span className="text-micro font-semibold text-trail-muted mb-1 block">
         {label}
         {required && <span className="text-trail-danger ml-1">*</span>}
       </span>

@@ -179,7 +179,7 @@ export function ActivityTypesPrefsModal({
           >✕</button>
         </div>
 
-        <p className="text-[12px] text-trail-muted mb-3">
+        <p className="text-caption text-trail-muted mb-3">
           {L.typesPrefsIntro}
         </p>
 
@@ -207,7 +207,7 @@ export function ActivityTypesPrefsModal({
 
         {/* Ajout custom */}
         <div className="mb-4 p-3 rounded-[10px] bg-trail-surface border border-trail-border">
-          <p className="text-[12px] font-semibold text-trail-text mb-2">{L.typesPrefsAddTitle}</p>
+          <p className="text-caption font-semibold text-trail-text mb-2">{L.typesPrefsAddTitle}</p>
 
           <input
             type="text"
@@ -215,10 +215,10 @@ export function ActivityTypesPrefsModal({
             onChange={(e) => setNewLabel(e.target.value)}
             placeholder={L.typesPrefsAddPh}
             aria-label={L.typesPrefsAddAria}
-            className="w-full px-3 py-2 mb-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
+            className="w-full px-3 py-2 mb-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-body-sm focus:outline-none focus:border-trail-primary"
           />
 
-          <label className="block text-[11px] font-semibold text-trail-muted uppercase tracking-wider mb-1.5">
+          <label className="block text-micro font-semibold text-trail-muted uppercase tracking-wider mb-1.5">
             {L.typesPrefsCategory}
           </label>
           <div className="grid grid-cols-4 gap-1.5 mb-2">
@@ -230,7 +230,7 @@ export function ActivityTypesPrefsModal({
                   type="button"
                   onClick={() => setNewCategory(c)}
                   className={
-                    'text-center py-2 px-1 rounded-[8px] text-[12px] font-semibold border transition-colors ' +
+                    'text-center py-2 px-1 rounded-[8px] text-caption font-semibold border transition-colors ' +
                     (checked
                       ? 'border-trail-primary bg-trail-primary/10 text-trail-primary'
                       : 'border-trail-border bg-trail-card text-trail-muted hover:text-trail-text')
@@ -241,7 +241,7 @@ export function ActivityTypesPrefsModal({
               )
             })}
           </div>
-          <p className="mb-3 text-[11px] text-trail-muted italic">
+          <p className="mb-3 text-micro text-trail-muted italic">
             {L.typesPrefsCategoryHint}
           </p>
 
@@ -249,7 +249,7 @@ export function ActivityTypesPrefsModal({
             type="button"
             onClick={() => void addCustom()}
             disabled={!newLabel.trim()}
-            className="w-full px-3 py-2 rounded-[8px] bg-trail-primary text-black text-[13px] font-semibold disabled:opacity-50"
+            className="w-full px-3 py-2 rounded-[8px] bg-trail-primary text-black text-body-sm font-semibold disabled:opacity-50"
           >
             {L.typesPrefsAddBtn}
           </button>
@@ -259,14 +259,14 @@ export function ActivityTypesPrefsModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-[14px] font-semibold text-trail-text"
+            className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-body font-semibold text-trail-text"
           >
             {L.typesPrefsCancel}
           </button>
           <button
             type="button"
             onClick={save}
-            className="px-3 py-2 rounded-[10px] bg-trail-primary text-black text-[14px] font-semibold"
+            className="px-3 py-2 rounded-[10px] bg-trail-primary text-black text-body font-semibold"
           >
             {L.typesPrefsSave}
           </button>
@@ -331,10 +331,10 @@ function SortableRow({
           }}
           autoFocus
           aria-label={L.typesPrefsRenameAria(draft.label)}
-          className="flex-1 min-w-0 px-2 py-1 rounded-[6px] bg-trail-card border border-trail-primary text-trail-text text-[13px] focus:outline-none"
+          className="flex-1 min-w-0 px-2 py-1 rounded-[6px] bg-trail-card border border-trail-primary text-trail-text text-body-sm focus:outline-none"
         />
       ) : (
-        <span className="flex-1 text-[13px] text-trail-text truncate">{draft.label}</span>
+        <span className="flex-1 text-body-sm text-trail-text truncate">{draft.label}</span>
       )}
       {draft.type.category && (
         <span className="text-[10px] px-1.5 py-[2px] rounded bg-trail-card border border-trail-border text-trail-muted uppercase tracking-wider whitespace-nowrap">
@@ -347,7 +347,7 @@ function SortableRow({
             type="button"
             onClick={onStartRename}
             aria-label={L.typesPrefsRenameAria(draft.label)}
-            className="text-trail-muted text-[12px] hover:text-trail-primary"
+            className="text-trail-muted text-caption hover:text-trail-primary"
             title={L.typesPrefsRenameTitle}
           >
             ✎
@@ -356,7 +356,7 @@ function SortableRow({
             type="button"
             onClick={onDelete}
             aria-label={L.typesPrefsDeleteAria(draft.label)}
-            className="text-trail-danger text-[12px] font-semibold hover:underline"
+            className="text-trail-danger text-caption font-semibold hover:underline"
           >
             🗑
           </button>
@@ -368,7 +368,7 @@ function SortableRow({
             type="button"
             onClick={onCommitRename}
             aria-label={L.typesPrefsRenameConfirmAria}
-            className="text-trail-primary text-[12px] font-semibold"
+            className="text-trail-primary text-caption font-semibold"
             title={L.typesPrefsRenameConfirmTitle}
           >
             ✓
@@ -377,7 +377,7 @@ function SortableRow({
             type="button"
             onClick={onCancelRename}
             aria-label={L.typesPrefsRenameCancelAria}
-            className="text-trail-muted text-[12px]"
+            className="text-trail-muted text-caption"
             title={L.typesPrefsRenameCancelTitle}
           >
             ✕

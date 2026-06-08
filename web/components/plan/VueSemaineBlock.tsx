@@ -335,7 +335,7 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
           ariaLabel={L.weekNavPrevAria}
           onClick={() => gotoOffsetWeeks(-1)}
         />
-        <span className="text-[12px] text-trail-muted flex-1 text-center">
+        <span className="text-caption text-trail-muted flex-1 text-center">
           {L.weekRangeBetween(formatDM(weekDays[0]), formatDM(weekEndISO))}
         </span>
         <button
@@ -343,7 +343,7 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
           onClick={() => setWeekStartISO(currentMondayISO)}
           aria-pressed={isCurrentWeek}
           aria-label={L.weekCurrentAria}
-          className="rounded-full px-2 py-[3px] text-[11px] font-bold whitespace-nowrap transition-colors"
+          className="rounded-full px-2 py-[3px] text-micro font-bold whitespace-nowrap transition-colors"
           style={
             isCurrentWeek
               ? {
@@ -397,14 +397,14 @@ export function VueSemaineBlock({ reloadKey = 0 }: VueSemaineBlockProps = {}) {
           type="button"
           onClick={handleDuplicateWeek}
           disabled={duplicating || sessions.length === 0}
-          className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[13px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:border-trail-primary"
+          className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:border-trail-primary"
         >
           {duplicating ? L.weekDuplicating : L.weekDuplicateBtn}
         </button>
       </div>
 
       {!loaded && (
-        <div className="text-center text-trail-muted text-[12px] mt-2" role="status">{L.loading}</div>
+        <div className="text-center text-trail-muted text-caption mt-2" role="status">{L.loading}</div>
       )}
 
       <SessionEditorModal
@@ -543,7 +543,7 @@ function DayColumn({
         <button
           type="button"
           onClick={onAdd}
-          className="mt-auto w-full py-1 rounded-[6px] border border-dashed border-trail-border text-trail-muted text-[14px] hover:border-trail-primary hover:text-trail-primary leading-none"
+          className="mt-auto w-full py-1 rounded-[6px] border border-dashed border-trail-border text-trail-muted text-body hover:border-trail-primary hover:text-trail-primary leading-none"
           aria-label={L.weekAddSessionAria(iso)}
         >
           +
@@ -633,7 +633,7 @@ function DraggableSessionCard({
         </span>
       )}
       <div
-        className="text-[11px] text-trail-text leading-tight"
+        className="text-micro text-trail-text leading-tight"
         style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
       >
         {session.title}

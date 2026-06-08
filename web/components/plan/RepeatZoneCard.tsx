@@ -80,7 +80,7 @@ export function RepeatZoneCard({ zone, sessionType, intensityModeDisabled = fals
         {/* Header */}
         <div className="flex items-center gap-2 mb-3">
           <span className="text-trail-muted cursor-grab select-none" aria-hidden>⋮⋮</span>
-          <span className="text-[13px] font-semibold text-trail-text">{L.repeatZoneTitle}</span>
+          <span className="text-body-sm font-semibold text-trail-text">{L.repeatZoneTitle}</span>
           <input
             type="number"
             inputMode="numeric"
@@ -89,14 +89,14 @@ export function RepeatZoneCard({ zone, sessionType, intensityModeDisabled = fals
             value={zone.repeats}
             onChange={(e) => onChange({ ...zone, repeats: Math.max(1, Number(e.target.value) || 1) })}
             aria-label={L.repeatZoneRepeatsAria}
-            className="w-14 px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] text-center focus:outline-none focus:border-trail-primary"
+            className="w-14 px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-body-sm text-center focus:outline-none focus:border-trail-primary"
           />
-          <span className="text-[13px] text-trail-muted">{L.repeatZoneRepeatsTimes}</span>
+          <span className="text-body-sm text-trail-muted">{L.repeatZoneRepeatsTimes}</span>
           <button
             type="button"
             onClick={onDelete}
             aria-label={L.repeatZoneDeleteAria}
-            className="ml-auto text-trail-danger text-[12px] font-semibold hover:underline"
+            className="ml-auto text-trail-danger text-caption font-semibold hover:underline"
           >
             🗑
           </button>
@@ -123,12 +123,12 @@ export function RepeatZoneCard({ zone, sessionType, intensityModeDisabled = fals
         <button
           type="button"
           onClick={addStep}
-          className="mt-3 text-[12px] font-semibold text-trail-primary hover:underline"
+          className="mt-3 text-caption font-semibold text-trail-primary hover:underline"
         >
           {L.repeatZoneAddStep}
         </button>
 
-        <label className="mt-3 flex items-center gap-2 text-[12px] text-trail-text">
+        <label className="mt-3 flex items-center gap-2 text-caption text-trail-text">
           <input
             type="checkbox"
             checked={!!zone.skipLastRecovery}
@@ -195,17 +195,17 @@ function SortableStepRow({
         ⋮⋮
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-trail-text truncate">
+        <p className="text-body-sm font-semibold text-trail-text truncate">
           {step.label || defaultLabel}
         </p>
-        <p className="text-[11px] text-trail-muted">
+        <p className="text-micro text-trail-muted">
           {valueText} · {intensityText}
         </p>
       </div>
       <button
         type="button"
         onClick={onEdit}
-        className="text-[12px] font-semibold text-trail-primary hover:underline"
+        className="text-caption font-semibold text-trail-primary hover:underline"
       >
         {L.repeatStepEditBtn}
       </button>
@@ -213,7 +213,7 @@ function SortableStepRow({
         type="button"
         onClick={onDelete}
         aria-label={L.repeatStepDeleteAria}
-        className="text-trail-danger text-[12px] font-semibold hover:underline"
+        className="text-trail-danger text-caption font-semibold hover:underline"
       >
         🗑
       </button>

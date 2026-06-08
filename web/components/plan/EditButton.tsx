@@ -14,7 +14,7 @@ export function EditButton({ label, className = '', ...rest }: Props) {
     <button
       type="button"
       {...rest}
-      className={`px-2 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-muted hover:text-trail-text text-[12px] font-semibold ${className}`}
+      className={`px-2 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-muted hover:text-trail-text text-caption font-semibold ${className}`}
     >
       {displayLabel}
     </button>

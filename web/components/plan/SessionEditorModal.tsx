@@ -265,13 +265,13 @@ export function SessionEditorModal({
             <div className="flex items-start gap-2 min-w-0 flex-1">
               <span
                 aria-hidden="true"
-                className="flex-shrink-0 flex items-center justify-center rounded-full text-[11px] font-bold mt-[2px]"
+                className="flex-shrink-0 flex items-center justify-center rounded-full text-micro font-bold mt-[2px]"
                 style={{ backgroundColor: colors.greenOk, color: '#fff', width: 18, height: 18 }}
               >
                 ✓
               </span>
               <div className="min-w-0 flex-1">
-                <div className="text-[12px] font-semibold" style={{ color: colors.greenOk }}>
+                <div className="text-caption font-semibold" style={{ color: colors.greenOk }}>
                   {matchedActivities.length === 1
                     ? L.sessionMatchedOne
                     : L.sessionMatchedMany(matchedActivities.length)}
@@ -280,12 +280,12 @@ export function SessionEditorModal({
                   <Link
                     key={a.id}
                     href={`/activities/${a.id}`}
-                    className="block text-[13px] text-trail-text hover:underline truncate"
+                    className="block text-body-sm text-trail-text hover:underline truncate"
                     title={a.name || L.sessionMatchedLinkAria}
                   >
                     {a.name || L.sessionMatchedLinkAria}
                     {' '}
-                    <span className="text-trail-muted text-[11px]">
+                    <span className="text-trail-muted text-micro">
                       ({a.distanceKm.toFixed(1)} km
                       {a.elevationM > 0 ? ` · ${Math.round(a.elevationM)} m D+` : ''})
                     </span>
@@ -297,7 +297,7 @@ export function SessionEditorModal({
               <button
                 type="button"
                 onClick={() => onUnlink(draft.id, matchedActivities.map(a => a.id))}
-                className="flex-shrink-0 px-2 py-1 rounded-[8px] text-[12px] font-semibold text-trail-muted border border-trail-border hover:text-trail-text hover:border-trail-primary"
+                className="flex-shrink-0 px-2 py-1 rounded-[8px] text-caption font-semibold text-trail-muted border border-trail-border hover:text-trail-text hover:border-trail-primary"
                 aria-label={matchedActivities.length === 1
                   ? L.sessionUnlinkAriaOne
                   : L.sessionUnlinkAriaMany}
@@ -318,7 +318,7 @@ export function SessionEditorModal({
             }}
             role="status"
           >
-            <span className="text-[12px] font-semibold">
+            <span className="text-caption font-semibold">
               {L.addPrefillBanner(L.sessionTemplates[prefillTemplate.id]?.title ?? prefillTemplate.title)}
             </span>
           </div>
@@ -360,7 +360,7 @@ export function SessionEditorModal({
                 type="button"
                 onClick={handleDuplicate}
                 disabled={saving}
-                className="px-3 py-2 text-[13px] font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
+                className="px-3 py-2 text-body-sm font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
                 aria-label={L.sessionDuplicateAria}
               >
                 {L.sessionDuplicate}
@@ -371,7 +371,7 @@ export function SessionEditorModal({
                 type="button"
                 onClick={handleDelete}
                 disabled={saving}
-                className="px-3 py-2 text-[13px] font-semibold text-trail-danger hover:underline disabled:opacity-50"
+                className="px-3 py-2 text-body-sm font-semibold text-trail-danger hover:underline disabled:opacity-50"
                 aria-label={L.sessionDeleteAria}
               >
                 {L.sessionDelete}
@@ -383,7 +383,7 @@ export function SessionEditorModal({
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="px-4 py-2 rounded-[10px] text-[14px] font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
+              className="px-4 py-2 rounded-[10px] text-body font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
             >
               {L.sessionCancel}
             </button>
@@ -391,7 +391,7 @@ export function SessionEditorModal({
               type="button"
               onClick={handleSave}
               disabled={!canSave}
-              className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-[14px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-body font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {L.sessionSave}
             </button>
@@ -417,7 +417,7 @@ function TabButton({
       role="tab"
       aria-selected={active}
       onClick={onClick}
-      className={`flex-1 px-3 py-2 text-[13px] font-semibold transition-colors ${
+      className={`flex-1 px-3 py-2 text-body-sm font-semibold transition-colors ${
         active
           ? 'bg-trail-primary text-white'
           : 'text-trail-muted hover:text-trail-text hover:bg-trail-border/30'
@@ -447,7 +447,7 @@ function GeneralTab({
           value={draft.title}
           onChange={e => setDraft({ ...draft, title: e.target.value })}
           placeholder={L.sessionTitlePh}
-          className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+          className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
         />
       </Field>
 
@@ -470,7 +470,7 @@ function GeneralTab({
                 }),
               })
             }}
-            className="flex-1 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+            className="flex-1 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
           >
             {(['run', 'bike', 'swim', 'other'] as const).map(cat => {
               const optionsInCat = visibleTypes.filter(t => (t.category ?? 'other') === cat)
@@ -493,7 +493,7 @@ function GeneralTab({
           type="date"
           value={draft.date}
           onChange={e => setDraft({ ...draft, date: e.target.value })}
-          className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+          className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
         />
       </Field>
 
@@ -509,7 +509,7 @@ function GeneralTab({
             min={0}
             value={draft.distance ?? ''}
             onChange={e => setDraft({ ...draft, distance: e.target.value === '' ? undefined : Number(e.target.value) || 0 })}
-            className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+            className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
           />
         </Field>
         <Field label={L.sessionFieldElevation}>
@@ -519,7 +519,7 @@ function GeneralTab({
             min={0}
             value={draft.elevation ?? ''}
             onChange={e => setDraft({ ...draft, elevation: e.target.value === '' ? undefined : Number(e.target.value) || 0 })}
-            className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+            className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
           />
         </Field>
       </div>
@@ -548,7 +548,7 @@ function GeneralTab({
             onChargeEdit()
             setDraft({ ...draft, estimatedCharge: Number(e.target.value) || 0 })
           }}
-          className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+          className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
         />
       </Field>
     </div>
@@ -666,7 +666,7 @@ function StructureTab({
             key={k}
             type="button"
             onClick={() => addZone(k)}
-            className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
+            className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-caption font-semibold hover:border-trail-primary"
           >
             + {L.zoneKindLabels[k]}
           </button>
@@ -674,14 +674,14 @@ function StructureTab({
         <button
           type="button"
           onClick={() => setZones([...zones, makeDefaultRepeatZone()])}
-          className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
+          className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-caption font-semibold hover:border-trail-primary"
         >
           {L.sessionStructureAddRepeat}
         </button>
         <button
           type="button"
           onClick={() => addZone('cooldown')}
-          className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
+          className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-caption font-semibold hover:border-trail-primary"
         >
           + {L.zoneKindLabels.cooldown}
         </button>
@@ -717,7 +717,7 @@ function StructureTab({
               ),
             )}
             {zones.length === 0 && (
-              <div className="text-center text-trail-muted text-[12px] py-4">
+              <div className="text-center text-trail-muted text-caption py-4">
                 {L.sessionStructureEmpty}
               </div>
             )}
@@ -771,12 +771,12 @@ function SortableZoneRow({
                 style={{ backgroundColor: color }}
                 aria-hidden
               />
-              <span className="text-[11px] font-semibold text-trail-muted">{L.zoneKindLabels[zone.kind]}</span>
+              <span className="text-micro font-semibold text-trail-muted">{L.zoneKindLabels[zone.kind]}</span>
             </div>
             <button
               type="button"
               onClick={onDelete}
-              className="text-[11px] font-semibold text-trail-danger hover:underline"
+              className="text-micro font-semibold text-trail-danger hover:underline"
               aria-label={L.sessionStructureDeleteAria}
             >
               {L.sessionStructureDelete}
@@ -798,7 +798,7 @@ function SortableZoneRow({
                   onChange={e => onChange({ durationMin: Number(e.target.value) || 0 })}
                   placeholder="min"
                   aria-label={L.sessionDurationAria}
-                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption focus:outline-none focus:border-trail-primary"
                 />
               ) : (
                 <input
@@ -814,7 +814,7 @@ function SortableZoneRow({
                   }
                   placeholder="400"
                   aria-label={L.sessionDistanceAria}
-                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption focus:outline-none focus:border-trail-primary"
                 />
               )}
             </div>
@@ -829,7 +829,7 @@ function SortableZoneRow({
                   value={zone.intensity}
                   onChange={e => onChange({ intensity: Number(e.target.value) as IntensityLevel })}
                   aria-label={L.sessionIntensityZoneAria}
-                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption focus:outline-none focus:border-trail-primary"
                 >
                   {[1, 2, 3, 4, 5].map(i => (
                     <option key={i} value={i}>{L.sessionIntensityOption(i, L.intensityLevels[i as IntensityLevel])}</option>
@@ -850,7 +850,7 @@ function SortableZoneRow({
                   min={1}
                   value={zone.repeats ?? 1}
                   onChange={e => onChange({ repeats: Math.max(1, Number(e.target.value) || 1) })}
-                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption focus:outline-none focus:border-trail-primary"
                 />
               </Field>
             )}
@@ -863,7 +863,7 @@ function SortableZoneRow({
                 value={zone.label ?? ''}
                 onChange={e => onChange({ label: e.target.value })}
                 placeholder={L.sessionStructureLabelPh}
-                className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption focus:outline-none focus:border-trail-primary"
               />
             </Field>
           </div>
@@ -924,7 +924,7 @@ function NotesTab({
         value={draft.notes ?? ''}
         onChange={e => setDraft({ ...draft, notes: e.target.value })}
         placeholder={L.sessionNotesPh}
-        className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary resize-none"
+        className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary resize-none"
       />
     </Field>
   )
@@ -939,7 +939,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-[11px] font-semibold text-trail-muted mb-1 block">
+      <span className="text-micro font-semibold text-trail-muted mb-1 block">
         {label}
         {required && <span className="text-trail-danger ml-1">*</span>}
       </span>

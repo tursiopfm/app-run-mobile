@@ -35,9 +35,9 @@ export function PaceField({ value, onChange, placeholder = '5:30' }: Props) {
         onBlur={commit}
         placeholder={placeholder}
         aria-label={L.paceFieldAria}
-        className="w-20 px-2 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
+        className="w-20 px-2 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-body-sm focus:outline-none focus:border-trail-primary"
       />
-      <span className="text-[11px] text-trail-muted">/km</span>
+      <span className="text-micro text-trail-muted">/km</span>
     </div>
   )
 }

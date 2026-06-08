@@ -51,7 +51,7 @@ export function TemplateCard({
           onClick={(e) => { e.stopPropagation(); onDelete() }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={L.libTemplateDeleteAria(L.sessionTemplates[template.id]?.title ?? template.title)}
-          className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-trail-card border border-trail-border text-trail-muted hover:text-trail-danger hover:border-trail-danger text-[11px] leading-none z-10"
+          className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-trail-card border border-trail-border text-trail-muted hover:text-trail-danger hover:border-trail-danger text-micro leading-none z-10"
         >
           ✕
         </button>
@@ -60,7 +60,7 @@ export function TemplateCard({
         {meta.label}
       </p>
       <h4
-        className="mt-1 text-[14px] text-trail-text leading-tight"
+        className="mt-1 text-body text-trail-text leading-tight"
         style={{ fontFamily: "var(--font-data)", letterSpacing: '0.02em' }}
       >
         {L.sessionTemplates[template.id]?.title ?? template.title}

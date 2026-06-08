@@ -79,11 +79,11 @@ export function DayDetailPanel({ dateISO, onClose, reloadKey, onSessionsChanged 
   return (
     <div className="mt-3 rounded-[10px] bg-trail-surface border border-trail-border overflow-hidden animate-[slideDown_180ms_ease-out]">
       <div className="px-3 py-2 flex items-center justify-between border-b border-trail-border">
-        <p className="text-[13px] font-semibold text-trail-text">{formatLong(dateISO, L.monthsFull)}</p>
+        <p className="text-body-sm font-semibold text-trail-text">{formatLong(dateISO, L.monthsFull)}</p>
         <button
           type="button"
           onClick={onClose}
-          className="text-trail-muted hover:text-trail-text text-[14px]"
+          className="text-trail-muted hover:text-trail-text text-body"
           aria-label={L.dayDetailCloseAria}
         >✕</button>
       </div>
@@ -112,7 +112,7 @@ export function DayDetailPanel({ dateISO, onClose, reloadKey, onSessionsChanged 
                     />
                     <span
                       style={{ color: meta.color, fontFamily: "var(--font-data)", letterSpacing: '0.3px' }}
-                      className="text-[12px] truncate"
+                      className="text-caption truncate"
                     >
                       {meta.label}
                     </span>
@@ -120,8 +120,8 @@ export function DayDetailPanel({ dateISO, onClose, reloadKey, onSessionsChanged 
                 )
               })()}
             </div>
-            <p className="text-[13px] text-trail-text">{s.title}</p>
-            <p className="text-[11px] text-trail-muted mt-[2px]">
+            <p className="text-body-sm text-trail-text">{s.title}</p>
+            <p className="text-micro text-trail-muted mt-[2px]">
               {formatDurationHHmm(s.duration)}
               {s.distance ? ` · ${s.distance} ${L.weekKmShort}` : ''}
               {s.elevation ? ` · ${s.elevation} ${L.mDPlus}` : ''}
@@ -133,13 +133,13 @@ export function DayDetailPanel({ dateISO, onClose, reloadKey, onSessionsChanged 
           <button
             type="button"
             onClick={openCreate}
-            className="w-full py-2 rounded-[8px] border border-dashed border-trail-border text-trail-muted text-[13px] font-semibold hover:border-trail-primary hover:text-trail-primary"
+            className="w-full py-2 rounded-[8px] border border-dashed border-trail-border text-trail-muted text-body-sm font-semibold hover:border-trail-primary hover:text-trail-primary"
           >
             {sessions.length === 0 ? L.dayDetailCreate : L.dayDetailAdd}
           </button>
         )}
 
-        <div className="rounded-[6px] border border-dashed border-trail-border bg-trail-card/30 px-2 py-2 text-[11px] text-trail-muted italic">
+        <div className="rounded-[6px] border border-dashed border-trail-border bg-trail-card/30 px-2 py-2 text-micro text-trail-muted italic">
           {L.dayDetailCoachSoon}
         </div>
       </div>

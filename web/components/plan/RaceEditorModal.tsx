@@ -132,7 +132,7 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
               value={draft.name}
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
               placeholder={L.raceEditPhName}
-              className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+              className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
             />
           </Field>
 
@@ -141,7 +141,7 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
               type="date"
               value={draft.date}
               onChange={(e) => setDraft({ ...draft, date: e.target.value })}
-              className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+              className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
             />
           </Field>
 
@@ -156,7 +156,7 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
                 placeholder="0"
                 onChange={(e) => setDraft({ ...draft, distance: Number(e.target.value) || 0 })}
                 onFocus={(e) => e.currentTarget.select()}
-                className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+                className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
               />
             </Field>
 
@@ -170,7 +170,7 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
                 placeholder="0"
                 onChange={(e) => setDraft({ ...draft, elevation: Number(e.target.value) || 0 })}
                 onFocus={(e) => e.currentTarget.select()}
-                className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+                className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
               />
             </Field>
           </div>
@@ -179,7 +179,7 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
             <select
               value={draft.type}
               onChange={(e) => setDraft({ ...draft, type: e.target.value as RaceType })}
-              className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+              className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
             >
               {TYPE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -193,7 +193,7 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
               value={draft.location ?? ''}
               onChange={(e) => setDraft({ ...draft, location: e.target.value })}
               placeholder={L.raceEditPhLocation}
-              className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+              className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
             />
           </Field>
 
@@ -203,7 +203,7 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
               value={draft.notes ?? ''}
               onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
               placeholder={L.raceEditPhNotes}
-              className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary resize-none"
+              className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary resize-none"
             />
           </Field>
 
@@ -214,7 +214,7 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
               onChange={(e) => setDraft({ ...draft, isMain: e.target.checked })}
               className="w-4 h-4"
             />
-            <span className="text-[14px] text-trail-text">{L.raceEditMainCheckbox}</span>
+            <span className="text-body text-trail-text">{L.raceEditMainCheckbox}</span>
           </label>
         </div>
 
@@ -224,7 +224,7 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
               type="button"
               onClick={handleDelete}
               disabled={saving}
-              className="px-3 py-2 text-[14px] font-semibold text-trail-danger hover:underline disabled:opacity-50"
+              className="px-3 py-2 text-body font-semibold text-trail-danger hover:underline disabled:opacity-50"
               aria-label={L.raceEditDeleteAria}
             >
               {L.raceEditDelete}
@@ -238,7 +238,7 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="px-4 py-2 rounded-[10px] text-[14px] font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
+              className="px-4 py-2 rounded-[10px] text-body font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
             >
               {L.raceEditCancel}
             </button>
@@ -246,7 +246,7 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
               type="button"
               onClick={handleSave}
               disabled={!canSave}
-              className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-[14px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-body font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {L.raceEditSave}
             </button>
@@ -269,7 +269,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-[12px] font-semibold text-trail-muted mb-1 block">
+      <span className="text-caption font-semibold text-trail-muted mb-1 block">
         {label}
         {required && <span className="text-trail-danger ml-1">*</span>}
       </span>

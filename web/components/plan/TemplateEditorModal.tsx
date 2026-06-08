@@ -233,7 +233,7 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
                 type="button"
                 onClick={handleDuplicate}
                 disabled={saving}
-                className="px-3 py-2 text-[13px] font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
+                className="px-3 py-2 text-body-sm font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
               >
                 {L.templateDuplicate}
               </button>
@@ -243,7 +243,7 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
                 type="button"
                 onClick={handleDelete}
                 disabled={saving}
-                className="px-3 py-2 text-[13px] font-semibold text-trail-danger hover:underline disabled:opacity-50"
+                className="px-3 py-2 text-body-sm font-semibold text-trail-danger hover:underline disabled:opacity-50"
               >
                 {L.templateDelete}
               </button>
@@ -254,7 +254,7 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="px-4 py-2 rounded-[10px] text-[14px] font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
+              className="px-4 py-2 rounded-[10px] text-body font-semibold text-trail-muted hover:text-trail-text disabled:opacity-50"
             >
               {L.templateCancel}
             </button>
@@ -262,7 +262,7 @@ export function TemplateEditorModal({ template, open, onClose, onSaved }: Props)
               type="button"
               onClick={handleSave}
               disabled={!canSave}
-              className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-[14px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-body font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {L.templateSave}
             </button>
@@ -288,7 +288,7 @@ function TabButton({
       role="tab"
       aria-selected={active}
       onClick={onClick}
-      className={`flex-1 px-3 py-2 text-[13px] font-semibold transition-colors ${
+      className={`flex-1 px-3 py-2 text-body-sm font-semibold transition-colors ${
         active
           ? 'bg-trail-primary text-white'
           : 'text-trail-muted hover:text-trail-text hover:bg-trail-border/30'
@@ -321,7 +321,7 @@ function GeneralTab({
           value={draft.title}
           onChange={e => setDraft({ ...draft, title: e.target.value })}
           placeholder={L.templateTitlePh}
-          className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+          className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
         />
       </Field>
 
@@ -344,7 +344,7 @@ function GeneralTab({
                 }),
               })
             }}
-            className="flex-1 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+            className="flex-1 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
           >
             {(['run', 'bike', 'swim', 'other'] as const).map(cat => {
               const optionsInCat = visibleTypes.filter(t => (t.category ?? 'other') === cat)
@@ -377,7 +377,7 @@ function GeneralTab({
             min={0}
             value={draft.defaultDistance ?? ''}
             onChange={e => setDraft({ ...draft, defaultDistance: e.target.value === '' ? undefined : Number(e.target.value) || 0 })}
-            className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+            className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
           />
         </Field>
         <Field label={L.templateFieldElevation}>
@@ -387,7 +387,7 @@ function GeneralTab({
             min={0}
             value={draft.defaultElevation ?? ''}
             onChange={e => setDraft({ ...draft, defaultElevation: e.target.value === '' ? undefined : Number(e.target.value) || 0 })}
-            className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+            className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
           />
         </Field>
       </div>
@@ -412,13 +412,13 @@ function GeneralTab({
             {(draft.tags ?? []).map(t => (
               <span
                 key={t}
-                className="inline-flex items-center gap-1 px-2 py-[3px] rounded-full bg-trail-surface border border-trail-border text-[11px] text-trail-text"
+                className="inline-flex items-center gap-1 px-2 py-[3px] rounded-full bg-trail-surface border border-trail-border text-micro text-trail-text"
               >
                 {t}
                 <button
                   type="button"
                   onClick={() => onRemoveTag(t)}
-                  className="text-trail-muted hover:text-trail-danger text-[12px] leading-none"
+                  className="text-trail-muted hover:text-trail-danger text-caption leading-none"
                   aria-label={L.templateTagRemoveAria(t)}
                 >
                   ×
@@ -438,12 +438,12 @@ function GeneralTab({
                 }
               }}
               placeholder={L.templateTagsPh}
-              className="flex-1 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
+              className="flex-1 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body-sm focus:outline-none focus:border-trail-primary"
             />
             <button
               type="button"
               onClick={onAddTag}
-              className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
+              className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-caption font-semibold hover:border-trail-primary"
             >
               {L.templateTagAdd}
             </button>
@@ -564,7 +564,7 @@ function StructureTab({
             key={k}
             type="button"
             onClick={() => addZone(k)}
-            className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
+            className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-caption font-semibold hover:border-trail-primary"
           >
             + {L.zoneKindLabels[k]}
           </button>
@@ -572,14 +572,14 @@ function StructureTab({
         <button
           type="button"
           onClick={() => setZones([...zones, makeDefaultRepeatZone()])}
-          className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
+          className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-caption font-semibold hover:border-trail-primary"
         >
           {L.templateZoneAddRepeat}
         </button>
         <button
           type="button"
           onClick={() => addZone('cooldown')}
-          className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
+          className="px-3 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-caption font-semibold hover:border-trail-primary"
         >
           + {L.zoneKindLabels.cooldown}
         </button>
@@ -613,7 +613,7 @@ function StructureTab({
               ),
             )}
             {zones.length === 0 && (
-              <div className="text-center text-trail-muted text-[12px] py-4">
+              <div className="text-center text-trail-muted text-caption py-4">
                 {L.templateStructureEmpty}
               </div>
             )}
@@ -667,12 +667,12 @@ function SortableZoneRow({
                 style={{ backgroundColor: color }}
                 aria-hidden
               />
-              <span className="text-[11px] font-semibold text-trail-muted">{L.zoneKindLabels[zone.kind]}</span>
+              <span className="text-micro font-semibold text-trail-muted">{L.zoneKindLabels[zone.kind]}</span>
             </div>
             <button
               type="button"
               onClick={onDelete}
-              className="text-[11px] font-semibold text-trail-danger hover:underline"
+              className="text-micro font-semibold text-trail-danger hover:underline"
               aria-label={L.templateZoneDeleteAria}
             >
               {L.templateZoneDelete}
@@ -694,7 +694,7 @@ function SortableZoneRow({
                   onChange={e => onChange({ durationMin: Number(e.target.value) || 0 })}
                   placeholder="min"
                   aria-label={L.templateZoneDurationAria}
-                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption focus:outline-none focus:border-trail-primary"
                 />
               ) : (
                 <input
@@ -710,7 +710,7 @@ function SortableZoneRow({
                   }
                   placeholder="400"
                   aria-label={L.templateZoneDistanceAria}
-                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption focus:outline-none focus:border-trail-primary"
                 />
               )}
             </div>
@@ -725,7 +725,7 @@ function SortableZoneRow({
                   value={zone.intensity}
                   onChange={e => onChange({ intensity: Number(e.target.value) as IntensityLevel })}
                   aria-label={L.templateZoneIntensityAria}
-                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption focus:outline-none focus:border-trail-primary"
                 >
                   {[1, 2, 3, 4, 5].map(i => (
                     <option key={i} value={i}>{L.templateZoneIntensityOption(i, L.intensityLevels[i as IntensityLevel])}</option>
@@ -746,7 +746,7 @@ function SortableZoneRow({
                   min={1}
                   value={zone.repeats ?? 1}
                   onChange={e => onChange({ repeats: Math.max(1, Number(e.target.value) || 1) })}
-                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                  className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption focus:outline-none focus:border-trail-primary"
                 />
               </Field>
             )}
@@ -759,7 +759,7 @@ function SortableZoneRow({
                 value={zone.label ?? ''}
                 onChange={e => onChange({ label: e.target.value })}
                 placeholder={L.templateLabelFieldPh}
-                className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] focus:outline-none focus:border-trail-primary"
+                className="w-full px-2 py-1 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption focus:outline-none focus:border-trail-primary"
               />
             </Field>
           </div>
@@ -821,7 +821,7 @@ function NotesTab({
         value={draft.description ?? ''}
         onChange={e => setDraft({ ...draft, description: e.target.value })}
         placeholder={L.templateNotesPh}
-        className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary resize-none"
+        className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary resize-none"
       />
     </Field>
   )
@@ -836,7 +836,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-[11px] font-semibold text-trail-muted mb-1 block">
+      <span className="text-micro font-semibold text-trail-muted mb-1 block">
         {label}
         {required && <span className="text-trail-danger ml-1">*</span>}
       </span>

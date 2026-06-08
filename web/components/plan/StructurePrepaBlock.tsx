@@ -174,7 +174,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
         >
           <div className="flex flex-col items-center justify-center text-center py-6 px-4">
             <span className="text-[40px] leading-none mb-2" aria-hidden>🎯</span>
-            <p className="text-[13px] text-[color:var(--trail-muted)]">
+            <p className="text-body-sm text-[color:var(--trail-muted)]">
               {L.structureNoRaceMsg}
             </p>
           </div>
@@ -188,7 +188,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
         helpBody={L.structureHelpEmpty}
       >
         <div className="flex flex-col items-center justify-center text-center py-6 px-4">
-          <p className="text-[13px] text-[color:var(--trail-muted)] mb-4 max-w-xs">
+          <p className="text-body-sm text-[color:var(--trail-muted)] mb-4 max-w-xs">
             {L.structureGenerate(seedRace.name, seedRace.date)}
           </p>
           <button
@@ -213,7 +213,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
         helpBody={L.structureHelp}
       >
         <div className="flex flex-col items-center justify-center text-center py-6 px-4">
-          <p className="text-[13px] text-[color:var(--trail-muted)] mb-4 max-w-xs">
+          <p className="text-body-sm text-[color:var(--trail-muted)] mb-4 max-w-xs">
             {L.structureGenerateBuilt}
           </p>
           <button
@@ -245,7 +245,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
         helpBody={L.structureHelpInvalid}
       >
         <div className="flex flex-col items-center justify-center text-center py-6 px-4">
-          <p className="text-[13px] text-[color:var(--trail-muted)]">
+          <p className="text-body-sm text-[color:var(--trail-muted)]">
             {L.structureInvalidMsg}
           </p>
         </div>
@@ -288,7 +288,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
                 key={phase.id}
                 type="button"
                 onClick={() => setExpandedId(prev => prev === phase.id ? null : phase.id)}
-                className="relative flex flex-col items-center justify-center text-white text-[11px] font-semibold transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[color:var(--trail-primary)]"
+                className="relative flex flex-col items-center justify-center text-white text-micro font-semibold transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[color:var(--trail-primary)]"
                 style={{
                   flex: weeks,
                   backgroundColor: def.color,
@@ -361,13 +361,13 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
                 {expandedPhase.label}
               </h4>
               {expandedPhase.focus && (
-                <span className="text-[11px] text-[color:var(--trail-muted)] truncate">· {expandedPhase.focus}</span>
+                <span className="text-micro text-[color:var(--trail-muted)] truncate">· {expandedPhase.focus}</span>
               )}
             </div>
             <button
               type="button"
               onClick={() => setExpandedId(null)}
-              className="text-[11px] text-[color:var(--trail-muted)] hover:text-[color:var(--trail-text)]"
+              className="text-micro text-[color:var(--trail-muted)] hover:text-[color:var(--trail-text)]"
               aria-label={L.structureCollapseAria}
             >
               ✕
@@ -375,21 +375,21 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
           </div>
 
           {expandedPhase.description && (
-            <p className="text-[12px] text-[color:var(--trail-muted)] mb-3 leading-relaxed">
+            <p className="text-caption text-[color:var(--trail-muted)] mb-3 leading-relaxed">
               {expandedPhase.description}
             </p>
           )}
 
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[color:var(--trail-text)] mb-3">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-caption text-[color:var(--trail-text)] mb-3">
             <span><span className="text-[color:var(--trail-muted)]">{L.structureStartEnd}</span> {formatLongDate(expandedPhase.startDate, L.monthsShort)} → {formatLongDate(expandedPhase.endDate, L.monthsShort)}</span>
             <span><span className="text-[color:var(--trail-muted)]">{L.structureDuration}</span> {diffWeeks(expandedPhase.startDate, expandedPhase.endDate)} {L.structureWeeksSuffix}</span>
           </div>
 
           <div className="mb-3">
-            <div className="text-[11px] font-semibold text-[color:var(--trail-muted)] mb-2">
+            <div className="text-micro font-semibold text-[color:var(--trail-muted)] mb-2">
               {L.structureWeeklyGoals}
             </div>
-            <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1 items-center text-[12px]">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1 items-center text-caption">
               <span className="text-[10px] uppercase tracking-wide text-[color:var(--trail-muted)]">{L.structureWeekCol}</span>
               <span className="text-[10px] uppercase tracking-wide text-[color:var(--trail-muted)] text-right">{L.structureKmCol}</span>
               <span className="text-[10px] uppercase tracking-wide text-[color:var(--trail-muted)] text-right">{L.structureDPlusCol}</span>
@@ -409,7 +409,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
           <button
             type="button"
             onClick={() => openEditor(expandedPhase.id)}
-            className="px-3 py-2 rounded-[8px] bg-[color:var(--trail-card)] border border-[color:var(--trail-border)] text-[color:var(--trail-text)] text-[12px] font-semibold hover:border-[color:var(--trail-primary)]"
+            className="px-3 py-2 rounded-[8px] bg-[color:var(--trail-card)] border border-[color:var(--trail-border)] text-[color:var(--trail-text)] text-caption font-semibold hover:border-[color:var(--trail-primary)]"
             aria-label={L.structureEditCycleAria(expandedPhase.label)}
           >
             {L.structureEditCycle}

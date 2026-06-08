@@ -230,24 +230,24 @@ function RaceDetailDrawer({ race, L, onClose }: { race: Race; L: Dict['plan']; o
         className="w-full sm:max-w-md bg-[color:var(--trail-card)] border border-[color:var(--trail-border)] rounded-t-[16px] sm:rounded-[16px] p-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="font-display text-[18px] font-bold text-[color:var(--trail-text)] mb-1">{race.name}</h3>
-        <p className="text-[12px] text-[color:var(--trail-muted)] mb-3">
+        <h3 className="font-display text-h2 font-bold text-[color:var(--trail-text)] mb-1">{race.name}</h3>
+        <p className="text-caption text-[color:var(--trail-muted)] mb-3">
           {L.raceDrawerInfo(race.date, race.distance, race.elevation, race.priority)}
         </p>
         {race.location && (
-          <p className="text-[12px] text-[color:var(--trail-muted)] mb-2">📍 {race.location}</p>
+          <p className="text-caption text-[color:var(--trail-muted)] mb-2">📍 {race.location}</p>
         )}
         <div className="flex justify-between items-center mt-4">
           <a
             href={`/plan/courses/${race.id}`}
-            className="text-[12px] text-[color:var(--trail-primary)] font-semibold"
+            className="text-caption text-[color:var(--trail-primary)] font-semibold"
           >
             {L.raceDrawerSeeDetail}
           </a>
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 rounded-[8px] bg-[color:var(--trail-surface)] text-[12px] text-[color:var(--trail-text)]"
+            className="px-3 py-1.5 rounded-[8px] bg-[color:var(--trail-surface)] text-caption text-[color:var(--trail-text)]"
           >
             {L.raceDrawerClose}
           </button>

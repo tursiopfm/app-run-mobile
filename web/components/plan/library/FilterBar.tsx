@@ -145,7 +145,7 @@ function FilterPill({
   color?: string
   ariaLabel?: string
 }) {
-  let cls = 'flex-shrink-0 px-3 py-1 rounded-full text-[12px] font-semibold whitespace-nowrap transition-colors'
+  let cls = 'flex-shrink-0 px-3 py-1 rounded-full text-caption font-semibold whitespace-nowrap transition-colors'
   let inlineStyle: React.CSSProperties = { scrollSnapAlign: 'start' }
 
   if (isCustom) {
@@ -193,7 +193,7 @@ function ExpandToggle({
       onClick={onClick}
       aria-expanded={expanded}
       aria-label={expanded ? L.libFilterCollapseAria : L.libFilterExpandAria(count)}
-      className="group flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full border border-trail-primary/40 bg-trail-primary/5 text-trail-primary text-[12px] font-semibold hover:bg-trail-primary/15 hover:border-trail-primary/70 transition-colors"
+      className="group flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full border border-trail-primary/40 bg-trail-primary/5 text-trail-primary text-caption font-semibold hover:bg-trail-primary/15 hover:border-trail-primary/70 transition-colors"
     >
       <svg
         width="12"

@@ -111,13 +111,13 @@ export function ObjectifCourseBlock({ onChange }: Props) {
           <h3 className="text-[20px] text-trail-text mb-1 font-display">
             {L.objectifEmpty}
           </h3>
-          <p className="text-[13px] text-trail-muted mb-4 max-w-xs">
+          <p className="text-body-sm text-trail-muted mb-4 max-w-xs">
             {L.objectifEmptyHint}
           </p>
           <button
             type="button"
             onClick={openCreate}
-            className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-[14px] font-semibold"
+            className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-body font-semibold"
             aria-label={L.objectifFirstAria}
             disabled={!loaded}
           >
@@ -190,18 +190,18 @@ function MainRaceCard({ race, L, onSelect }: { race: Race; L: Dict['plan']; onSe
     >
       <div className="flex items-start justify-between gap-3">
         <h3
-          className="text-[22px] leading-tight text-trail-text min-w-0 flex-1 truncate"
+          className="text-h1 leading-tight text-trail-text min-w-0 flex-1 truncate"
           style={{ fontFamily: "var(--font-data)" }}
           title={race.name}
         >
           {race.name}
         </h3>
         {isPast ? (
-          <span className="text-[12px] text-trail-muted whitespace-nowrap flex-shrink-0 mt-1">{L.racePast}</span>
+          <span className="text-caption text-trail-muted whitespace-nowrap flex-shrink-0 mt-1">{L.racePast}</span>
         ) : (
           <div className="flex flex-col items-end leading-none flex-shrink-0">
             <span
-              className="text-[28px] leading-none text-trail-text"
+              className="text-display leading-none text-trail-text"
               style={{ fontFamily: "var(--font-data)" }}
               aria-label={L.raceJMinusAria(daysLeft)}
             >
@@ -243,24 +243,24 @@ function CompactRaceCard({ race, L, onSelect }: { race: Race; L: Dict['plan']; o
       <RacePriorityChip race={race} L={L} size={24} />
       <div className="flex items-center gap-2 min-w-0 flex-1">
         <span
-          className="text-[13px] font-semibold text-trail-text truncate"
+          className="text-body-sm font-semibold text-trail-text truncate"
           title={race.name}
         >
           {race.name}
         </span>
         {!isPast && (
           <span
-            className="text-[14px] leading-none text-trail-text flex-shrink-0"
+            className="text-body leading-none text-trail-text flex-shrink-0"
             style={{ fontFamily: "var(--font-data)" }}
             aria-label={L.raceJMinusAria(daysLeft)}
           >
             J-{daysLeft}
           </span>
         )}
-        <span className="text-[11px] text-trail-muted flex-shrink-0">
+        <span className="text-micro text-trail-muted flex-shrink-0">
           {formatShortDate(race.date, L.monthsShort)}
         </span>
-        <span className="text-[11px] text-trail-muted flex-shrink-0">
+        <span className="text-micro text-trail-muted flex-shrink-0">
           · {race.distance} km
         </span>
       </div>
@@ -295,7 +295,7 @@ function RacePriorityChip({ race, L, size = 28 }: { race: Race; L: Dict['plan'];
 function Pill({ bg, color, label }: { bg: string; color: string; label: string }) {
   return (
     <span
-      className="px-[10px] py-[4px] rounded-full text-[12px] font-semibold whitespace-nowrap"
+      className="px-[10px] py-[4px] rounded-full text-caption font-semibold whitespace-nowrap"
       style={{ backgroundColor: bg, color }}
     >
       {label}

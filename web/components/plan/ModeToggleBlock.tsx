@@ -35,7 +35,7 @@ export function ModeToggleBlock() {
           role="tab"
           aria-selected="true"
           aria-label={L.modeAriaManual}
-          className="flex-1 px-3 py-2 bg-trail-primary text-white text-[13px] font-semibold cursor-default"
+          className="flex-1 px-3 py-2 bg-trail-primary text-white text-body-sm font-semibold cursor-default"
         >
           {L.modeManual}
         </button>
@@ -47,7 +47,7 @@ export function ModeToggleBlock() {
           aria-selected="false"
           aria-label={L.modeAriaAi}
           onClick={handleClickIA}
-          className="flex-1 px-3 py-2 text-trail-text/50 text-[13px] font-semibold flex items-center justify-center gap-2 hover:bg-trail-border/30 transition-colors"
+          className="flex-1 px-3 py-2 text-trail-text/50 text-body-sm font-semibold flex items-center justify-center gap-2 hover:bg-trail-border/30 transition-colors"
         >
           <span>{L.modeAiCoach}</span>
           <span className="px-[6px] py-[2px] rounded-full text-[10px] font-semibold bg-trail-border/60 text-trail-muted leading-none">
@@ -61,7 +61,7 @@ export function ModeToggleBlock() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed left-1/2 -translate-x-1/2 bottom-6 z-50 px-4 py-3 rounded-[10px] bg-trail-card border border-trail-border shadow-2xl text-[13px] text-trail-text animate-[fadeIn_120ms_ease-out]"
+          className="fixed left-1/2 -translate-x-1/2 bottom-6 z-50 px-4 py-3 rounded-[10px] bg-trail-card border border-trail-border shadow-2xl text-body-sm text-trail-text animate-[fadeIn_120ms_ease-out]"
           style={{ maxWidth: 'calc(100vw - 32px)' }}
         >
           {toast}

@@ -35,13 +35,13 @@ export function RepeatStepEditor({ step, sessionType: _sessionType, intensityMod
         </h2>
 
         <label className="block mb-3">
-          <span className="text-[11px] font-semibold text-trail-muted mb-1 block">{L.repeatStepLabelField}</span>
+          <span className="text-micro font-semibold text-trail-muted mb-1 block">{L.repeatStepLabelField}</span>
           <input
             type="text"
             value={draft.label ?? ''}
             onChange={(e) => setDraft({ ...draft, label: e.target.value || undefined })}
             placeholder={draft.stepKind === 'effort' ? L.repeatStepLabelEffortPh : L.repeatStepLabelRecoveryPh}
-            className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+            className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
           />
         </label>
 
@@ -66,7 +66,7 @@ export function RepeatStepEditor({ step, sessionType: _sessionType, intensityMod
               }
               placeholder="min"
               aria-label={L.repeatStepDurationAria}
-              className="w-24 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+              className="w-24 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
             />
           ) : (
             <div className="flex items-center gap-1">
@@ -84,9 +84,9 @@ export function RepeatStepEditor({ step, sessionType: _sessionType, intensityMod
                 }
                 placeholder="400"
                 aria-label={L.repeatStepDistanceAria}
-                className="w-24 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+                className="w-24 px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
               />
-              <span className="text-[11px] text-trail-muted">m</span>
+              <span className="text-micro text-trail-muted">m</span>
             </div>
           )}
         </div>
@@ -106,7 +106,7 @@ export function RepeatStepEditor({ step, sessionType: _sessionType, intensityMod
                 setDraft({ ...draft, intensity: Number(e.target.value) as IntensityLevel })
               }
               aria-label={L.repeatStepIntensityAria}
-              className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-[14px] focus:outline-none focus:border-trail-primary"
+              className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
             >
               <option value={1}>{L.repeatStepIntensityOptionRecup}</option>
               <option value={2}>{L.repeatStepIntensityOptionEnd}</option>
@@ -127,14 +127,14 @@ export function RepeatStepEditor({ step, sessionType: _sessionType, intensityMod
           <button
             type="button"
             onClick={onCancel}
-            className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-[14px] font-semibold text-trail-text"
+            className="px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-body font-semibold text-trail-text"
           >
             {L.repeatStepCancel}
           </button>
           <button
             type="button"
             onClick={() => onSave(draft)}
-            className="px-3 py-2 rounded-[10px] bg-trail-primary text-black text-[14px] font-semibold"
+            className="px-3 py-2 rounded-[10px] bg-trail-primary text-black text-body font-semibold"
           >
             {L.repeatStepSave}
           </button>

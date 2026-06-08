@@ -115,13 +115,13 @@ export function SessionAddSheet({ open, dateISO, onClose, onPickTemplate, onCrea
         <div className="px-4 pt-2 pb-3 flex items-start justify-between border-b border-trail-border">
           <div>
             <h2 className="font-display text-[16px] font-semibold text-trail-text">{L.addTitle}</h2>
-            <p className="text-[12px] text-trail-muted mt-[2px]">{formatLong(dateISO, L.monthsFull)}</p>
+            <p className="text-caption text-trail-muted mt-[2px]">{formatLong(dateISO, L.monthsFull)}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label={L.addCloseAria}
-            className="w-7 h-7 rounded-full bg-trail-card border border-trail-border text-trail-muted hover:text-trail-text text-[14px] leading-none"
+            className="w-7 h-7 rounded-full bg-trail-card border border-trail-border text-trail-muted hover:text-trail-text text-body leading-none"
           >✕</button>
         </div>
 
@@ -129,12 +129,12 @@ export function SessionAddSheet({ open, dateISO, onClose, onPickTemplate, onCrea
           <button
             type="button"
             onClick={onCreateBlank}
-            className="w-full py-3 rounded-[12px] bg-trail-primary text-white text-[14px] font-bold flex items-center justify-center hover:opacity-90"
+            className="w-full py-3 rounded-[12px] bg-trail-primary text-white text-body font-bold flex items-center justify-center hover:opacity-90"
           >
             {L.addCreateBtn}
           </button>
 
-          <div className="flex items-center gap-2 my-4 text-trail-muted text-[11px] font-semibold uppercase tracking-wider">
+          <div className="flex items-center gap-2 my-4 text-trail-muted text-micro font-semibold uppercase tracking-wider">
             <div className="flex-1 h-px bg-trail-border" />
             <span>{L.addOrLibrary}</span>
             <div className="flex-1 h-px bg-trail-border" />
@@ -145,7 +145,7 @@ export function SessionAddSheet({ open, dateISO, onClose, onPickTemplate, onCrea
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={L.addSearchPh}
-            className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary mb-2"
+            className="w-full px-3 py-2 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-body-sm focus:outline-none focus:border-trail-primary mb-2"
             aria-label={L.libSearchAria}
           />
 
@@ -158,16 +158,16 @@ export function SessionAddSheet({ open, dateISO, onClose, onPickTemplate, onCrea
           />
 
           {isLibraryEmpty ? (
-            <div className="mt-6 text-center text-trail-muted text-[13px]">
+            <div className="mt-6 text-center text-trail-muted text-body-sm">
               {L.addEmpty}
             </div>
           ) : filtered.length === 0 ? (
             <div className="mt-6 text-center">
-              <p className="text-trail-muted text-[13px] mb-2">{L.addNoMatch}</p>
+              <p className="text-trail-muted text-body-sm mb-2">{L.addNoMatch}</p>
               <button
                 type="button"
                 onClick={resetFilters}
-                className="px-3 py-1.5 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] font-semibold hover:border-trail-primary"
+                className="px-3 py-1.5 rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption font-semibold hover:border-trail-primary"
               >
                 {L.addReset}
               </button>

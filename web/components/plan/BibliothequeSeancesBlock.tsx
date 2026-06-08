@@ -161,7 +161,7 @@ export function BibliothequeSeancesBlock() {
             type="button"
             onClick={requestResetDefaults}
             disabled={hiddenSystemIds.length === 0}
-            className="mt-4 w-full py-2 rounded-[10px] bg-trail-surface border border-trail-border text-[13px] font-semibold text-trail-text hover:border-trail-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-4 w-full py-2 rounded-[10px] bg-trail-surface border border-trail-border text-body-sm font-semibold text-trail-text hover:border-trail-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {L.libResetDefaults}
             {hiddenSystemIds.length > 0 && <span className="ml-1 text-trail-muted">({hiddenSystemIds.length})</span>}
@@ -172,7 +172,7 @@ export function BibliothequeSeancesBlock() {
         <button
           type="button"
           onClick={openCreate}
-          className="px-2 py-1 rounded-[8px] bg-trail-primary text-white text-[11px] font-semibold whitespace-nowrap"
+          className="px-2 py-1 rounded-[8px] bg-trail-primary text-white text-micro font-semibold whitespace-nowrap"
           aria-label={L.libNewBtnAria}
         >{L.libNewBtn}</button>
       }
@@ -196,7 +196,7 @@ export function BibliothequeSeancesBlock() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={L.libSearchPh}
-          className="w-full px-3 py-2 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[13px] focus:outline-none focus:border-trail-primary"
+          className="w-full px-3 py-2 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-body-sm focus:outline-none focus:border-trail-primary"
           aria-label={L.libSearchAria}
         />
       </div>
@@ -218,7 +218,7 @@ export function BibliothequeSeancesBlock() {
           />
         ))}
         {filtered.length === 0 && (
-          <div className="col-span-full text-center text-trail-muted text-[12px] py-4">
+          <div className="col-span-full text-center text-trail-muted text-caption py-4">
             {L.libNoMatch}
           </div>
         )}
@@ -228,7 +228,7 @@ export function BibliothequeSeancesBlock() {
           type="button"
           onClick={() => setShowAllTemplates(v => !v)}
           aria-expanded={showAllTemplates}
-          className="mt-2 w-full py-2 rounded-[8px] border border-trail-border bg-trail-surface text-trail-muted hover:text-trail-text hover:border-trail-primary text-[12px] font-semibold transition-colors"
+          className="mt-2 w-full py-2 rounded-[8px] border border-trail-border bg-trail-surface text-trail-muted hover:text-trail-text hover:border-trail-primary text-caption font-semibold transition-colors"
         >
           {showAllTemplates ? L.libShowLess : L.libShowMore(filtered.length - COLLAPSED_TEMPLATES_COUNT)}
         </button>

@@ -147,13 +147,13 @@ export function CalendrierMoisBlock({ reloadKey = 0, onSessionsChanged }: Calend
             type="button"
             onClick={() => gotoMonth(-1)}
             aria-label={L.calMonthPrev}
-            className="w-7 h-7 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[14px] font-bold flex items-center justify-center"
+            className="w-7 h-7 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-body font-bold flex items-center justify-center"
           >‹</button>
           <button
             type="button"
             onClick={() => gotoMonth(1)}
             aria-label={L.calMonthNext}
-            className="w-7 h-7 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-[14px] font-bold flex items-center justify-center"
+            className="w-7 h-7 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-body font-bold flex items-center justify-center"
           >›</button>
         </div>
       }
@@ -162,7 +162,7 @@ export function CalendrierMoisBlock({ reloadKey = 0, onSessionsChanged }: Calend
         {L.calDayShort.map((d, i) => (
           <p
             key={i}
-            className="text-[11px] font-bold text-trail-muted text-center"
+            className="text-micro font-bold text-trail-muted text-center"
           >
             {d}
           </p>
@@ -190,7 +190,7 @@ export function CalendrierMoisBlock({ reloadKey = 0, onSessionsChanged }: Calend
       </div>
 
       {!loaded && (
-        <div className="text-center text-trail-muted text-[12px] mt-2" role="status">{L.loading}</div>
+        <div className="text-center text-trail-muted text-caption mt-2" role="status">{L.loading}</div>
       )}
 
       {openDayISO && (

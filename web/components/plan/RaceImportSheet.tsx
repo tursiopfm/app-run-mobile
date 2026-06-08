@@ -106,7 +106,7 @@ export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
 
         {status !== 'preview' && (
           <>
-            <div className="flex gap-2 text-[12px]">
+            <div className="flex gap-2 text-caption">
               {(['url', 'pdf', 'image', 'text'] as const).map((t) => (
                 <button
                   key={t}
@@ -129,7 +129,7 @@ export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://..."
-                className="w-full p-2 rounded bg-trail-surface text-[13px]"
+                className="w-full p-2 rounded bg-trail-surface text-body-sm"
               />
             )}
             {tab === 'text' && (
@@ -138,7 +138,7 @@ export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
                 onChange={(e) => setText(e.target.value)}
                 rows={6}
                 placeholder="Colle le tableau ici..."
-                className="w-full p-2 rounded bg-trail-surface text-[13px]"
+                className="w-full p-2 rounded bg-trail-surface text-body-sm"
               />
             )}
             {tab === 'pdf' && (
@@ -158,7 +158,7 @@ export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
               type="button"
               onClick={extract}
               disabled={status === 'extracting'}
-              className="w-full py-2 rounded bg-trail-primary text-white text-[13px] font-semibold disabled:opacity-50"
+              className="w-full py-2 rounded bg-trail-primary text-white text-body-sm font-semibold disabled:opacity-50"
             >
               {status === 'extracting' ? 'Extraction…' : 'Extraire'}
             </button>
@@ -167,7 +167,7 @@ export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
 
         {status === 'preview' && (
           <>
-            <p className="text-[12px] text-trail-muted">
+            <p className="text-caption text-trail-muted">
               Vérifie les chiffres, corrige ce qui doit l&apos;être, puis sauvegarde.
             </p>
             <WaypointsTable
@@ -178,7 +178,7 @@ export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
               <button
                 type="button"
                 onClick={() => { setStatus('idle'); setDraft([]) }}
-                className="flex-1 py-2 rounded border border-trail-border text-[13px]"
+                className="flex-1 py-2 rounded border border-trail-border text-body-sm"
               >
                 Annuler
               </button>
@@ -186,7 +186,7 @@ export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
                 type="button"
                 onClick={save}
                 disabled={(status as string) === 'saving' || draft.length === 0}
-                className="flex-1 py-2 rounded bg-trail-primary text-white text-[13px] font-semibold disabled:opacity-50"
+                className="flex-1 py-2 rounded bg-trail-primary text-white text-body-sm font-semibold disabled:opacity-50"
               >
                 {(status as string) === 'saving' ? 'Sauvegarde…' : 'Sauvegarder'}
               </button>
@@ -195,7 +195,7 @@ export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
         )}
 
         {error && (
-          <div className="text-[12px] text-trail-danger">
+          <div className="text-caption text-trail-danger">
             {error}
             <button
               type="button"

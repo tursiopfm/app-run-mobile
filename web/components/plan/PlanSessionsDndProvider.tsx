@@ -150,7 +150,7 @@ function GhostCard({ active, isDeleteIntent }: { active: ActivePayload; isDelete
   if (isDeleteIntent) {
     return (
       <div
-        className="rounded-[8px] px-2 py-1 text-[11px] font-semibold shadow-2xl flex items-center gap-1"
+        className="rounded-[8px] px-2 py-1 text-micro font-semibold shadow-2xl flex items-center gap-1"
         style={{
           backgroundColor: 'rgba(220, 38, 38, 0.95)',  // red-600 fond opaque pour ressortir
           border: '2px solid #DC2626',
@@ -168,7 +168,7 @@ function GhostCard({ active, isDeleteIntent }: { active: ActivePayload; isDelete
 
   return (
     <div
-      className="rounded-[8px] px-2 py-1 text-[11px] font-semibold text-trail-text shadow-2xl"
+      className="rounded-[8px] px-2 py-1 text-micro font-semibold text-trail-text shadow-2xl"
       style={{
         backgroundColor: colors.cardBg,
         border: `1px solid ${colors.border}`,

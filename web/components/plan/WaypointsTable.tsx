@@ -76,9 +76,9 @@ export function WaypointsTable({ waypoints, onChange, readOnly }: Props) {
   return (
     <div className="space-y-2">
       <div className="overflow-x-auto">
-        <table className="w-full text-[12px] text-trail-text">
+        <table className="w-full text-caption text-trail-text">
           <thead>
-            <tr className="text-trail-muted text-[11px]">
+            <tr className="text-trail-muted text-micro">
               <th className="text-left p-1">Point</th>
               <th className="text-right p-1">Dist</th>
               <th className="text-right p-1">Inter</th>
@@ -164,7 +164,7 @@ export function WaypointsTable({ waypoints, onChange, readOnly }: Props) {
                         value={w.cutoffKind ?? 'unknown'}
                         onChange={(e) => update(i, { cutoffKind: e.target.value as CutoffKind })}
                         disabled={readOnly}
-                        className="bg-transparent outline-none text-[11px]"
+                        className="bg-transparent outline-none text-micro"
                       >
                         {KIND_OPTIONS.map((o) => (
                           <option key={o.value} value={o.value}>{o.label}</option>
@@ -191,7 +191,7 @@ export function WaypointsTable({ waypoints, onChange, readOnly }: Props) {
                       type="button"
                       onClick={() => remove(i)}
                       aria-label={`Supprimer ${w.name || 'ligne'}`}
-                      className="text-trail-danger text-[14px]"
+                      className="text-trail-danger text-body"
                     >
                       ×
                     </button>
@@ -206,7 +206,7 @@ export function WaypointsTable({ waypoints, onChange, readOnly }: Props) {
         <button
           type="button"
           onClick={add}
-          className="text-[12px] text-trail-primary underline"
+          className="text-caption text-trail-primary underline"
         >
           + Ajouter une ligne
         </button>

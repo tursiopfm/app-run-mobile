@@ -64,7 +64,7 @@ export function DurationField({ value, onChange }: Props) {
         onChange={e => { setText(e.target.value); if (error) setError(false) }}
         onBlur={commit}
         onKeyDown={e => { if (e.key === 'Enter') { e.currentTarget.blur() } }}
-        className={`w-full px-3 py-2 rounded-[10px] bg-trail-surface border ${error ? 'border-trail-danger' : 'border-trail-border'} text-trail-text text-[14px] focus:outline-none focus:border-trail-primary`}
+        className={`w-full px-3 py-2 rounded-[10px] bg-trail-surface border ${error ? 'border-trail-danger' : 'border-trail-border'} text-trail-text text-body focus:outline-none focus:border-trail-primary`}
         aria-label={L.durationFieldAria}
       />
       {error && <p className="text-[10px] text-trail-danger mt-1">{L.durationFieldFormatErr}</p>}
