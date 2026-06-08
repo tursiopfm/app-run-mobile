@@ -37,7 +37,7 @@ export function ActivitySplits({
       {/* Axis legend: slower ← | avg | → faster */}
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--trail-muted)', marginBottom: 8, padding: '0 2px' }}>
         <span>← {L.splitsSlower}</span>
-        <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{L.splitsAvg} {fmtPaceSec(avgPaceSec)}</span>
+        <span style={{ fontWeight: 700, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums' }}>{L.splitsAvg} {fmtPaceSec(avgPaceSec)}</span>
         <span>{L.splitsFaster} →</span>
       </div>
 
@@ -85,7 +85,7 @@ export function ActivitySplits({
               style={{
                 width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, fontWeight: 700, fontVariantNumeric: 'tabular-nums',
+                fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums',
                 background: isBest ? 'var(--trail-primary)' : 'var(--trail-card)',
                 border: `1px solid ${isBest ? 'var(--trail-primary)' : 'var(--trail-border)'}`,
                 color: isBest ? '#0B0F14' : 'var(--trail-muted)',
@@ -105,14 +105,14 @@ export function ActivitySplits({
             {/* Pace */}
             <span style={{
               fontSize: 14, fontWeight: 800, width: 42, textAlign: 'right',
-              color, flexShrink: 0, fontVariantNumeric: 'tabular-nums',
+              color, flexShrink: 0, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums',
             }}>
               {fmtPaceSec(pace)}
             </span>
 
             {/* Elevation */}
             <span style={{
-              fontSize: 12, width: 40, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums',
+              fontSize: 12, width: 40, textAlign: 'right', flexShrink: 0, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums',
               color: elev > 0 ? '#C7A553' : elev < 0 ? '#6FA9C9' : 'var(--trail-muted)',
             }}>
               {elev > 0 ? `↑${elev}m` : elev < 0 ? `↓${Math.abs(elev)}m` : ''}

@@ -64,7 +64,7 @@ export function WeatherCurrentBlock(props: Props) {
         return (
           <>
             <div className="flex items-baseline gap-1.5">
-              <p className="text-[28px] leading-none text-trail-text" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{c.tempC}°</p>
+              <p className="text-[28px] leading-none text-trail-text" style={{ fontFamily: "var(--font-data)" }}>{c.tempC}°</p>
               <p className="text-[11px] text-trail-muted">/{c.feelsLikeC}°</p>
             </div>
             {props.locationLabel && (

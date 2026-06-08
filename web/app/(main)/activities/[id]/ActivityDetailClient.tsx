@@ -319,7 +319,7 @@ export function ActivityDetailClient({
   const activityAsActivityRow = activity as unknown as ActivityRow
 
   return (
-    <div style={{ background: 'var(--trail-bg)', minHeight: '100vh', color: 'var(--trail-text)', fontFamily: "-apple-system, 'Inter', sans-serif" }}>
+    <div style={{ background: 'var(--trail-bg)', minHeight: '100vh', color: 'var(--trail-text)', fontFamily: 'var(--font-sans)' }}>
 
       {/* Map section */}
       <div style={{

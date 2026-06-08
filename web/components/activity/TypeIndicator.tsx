@@ -57,7 +57,7 @@ export default function TypeIndicator({ type, onClick, className }: TypeIndicato
   }
 
   const valueStyle: React.CSSProperties = {
-    fontFamily: "'Bebas Neue', sans-serif",
+    fontFamily: "var(--font-data)",
     fontSize: '11px',
     lineHeight: 1,
     letterSpacing: '0.3px',

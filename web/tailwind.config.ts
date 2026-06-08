@@ -69,9 +69,10 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans:    ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['var(--font-space-grotesk)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        body:    ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans:    ['var(--font-manrope)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['var(--font-manrope)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        body:    ['var(--font-manrope)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono:    ['var(--font-jetbrains-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       fontSize: {
         '10':  ['10px', { lineHeight: '1.2' }],

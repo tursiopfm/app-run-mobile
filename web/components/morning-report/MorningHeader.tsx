@@ -26,7 +26,7 @@ export function MorningHeader({ date, firstName, raceName, daysToRace, weekIndex
           <p className="text-[10px] uppercase tracking-[0.15em] text-trail-muted">{dateLabel}</p>
           <h1
             className="text-[26px] leading-none mt-1 text-trail-text"
-            style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.02em' }}
+            style={{ fontFamily: "var(--font-data)", letterSpacing: '0.02em' }}
           >
             {greeting}
           </h1>
@@ -36,7 +36,7 @@ export function MorningHeader({ date, firstName, raceName, daysToRace, weekIndex
             <p className="text-[10px] uppercase tracking-[0.15em] text-trail-muted">{raceName}</p>
             <p
               className="text-[22px] leading-none text-trail-primary"
-              style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+              style={{ fontFamily: "var(--font-data)" }}
             >
               J-{daysToRace}
             </p>

@@ -111,7 +111,7 @@ export function DayDetailPanel({ dateISO, onClose, reloadKey, onSessionsChanged 
                       }}
                     />
                     <span
-                      style={{ color: meta.color, fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.3px' }}
+                      style={{ color: meta.color, fontFamily: "var(--font-data)", letterSpacing: '0.3px' }}
                       className="text-[12px] truncate"
                     >
                       {meta.label}

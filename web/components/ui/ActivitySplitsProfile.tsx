@@ -93,7 +93,7 @@ export function ActivitySplitsProfile({
   const callout = (label: string, value: string, hint: string, color: string) => (
     <div style={{ background: 'var(--trail-card)', border: '1px solid var(--trail-border)', borderRadius: 11, padding: 11 }}>
       <div style={{ fontSize: 10.5, color: 'var(--trail-muted)', marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 19, fontWeight: 800, lineHeight: 1, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 19, fontWeight: 800, lineHeight: 1, color, fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       <div style={{ fontSize: 10, color: 'var(--trail-muted)', marginTop: 4 }}>{hint}</div>
     </div>
   )
@@ -132,7 +132,7 @@ export function ActivitySplitsProfile({
             <line key={k} x1={x(k * 1000)} y1={PACE_TOP} x2={x(k * 1000)} y2={ELEV_BOT} stroke="#1c2530" strokeWidth="1" />
           ))}
           {ticks.map(k => (
-            <text key={`t${k}`} x={x(k * 1000)} y={H - 2} fill="#5A6E69" fontSize="8" textAnchor="middle" style={{ fontVariantNumeric: 'tabular-nums' }}>{k}</text>
+            <text key={`t${k}`} x={x(k * 1000)} y={H - 2} fill="#5A6E69" fontSize="8" textAnchor="middle" style={{ fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums' }}>{k}</text>
           ))}
 
           {/* Elevation silhouette */}
@@ -148,7 +148,7 @@ export function ActivitySplitsProfile({
             <>
               <circle cx={x(cum[slowest.i])} cy={yPace(slowest.pace)} r="3.5" fill="#38BDF8" />
               {slowElev > 0 && (
-                <text x={x(cum[slowest.i])} y={yPace(slowest.pace) - 7} fill="#7FC6E8" fontSize="8.5" textAnchor="middle" style={{ fontVariantNumeric: 'tabular-nums' }}>⛰ +{slowElev}</text>
+                <text x={x(cum[slowest.i])} y={yPace(slowest.pace) - 7} fill="#7FC6E8" fontSize="8.5" textAnchor="middle" style={{ fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums' }}>⛰ +{slowElev}</text>
               )}
             </>
           )}
@@ -156,7 +156,7 @@ export function ActivitySplitsProfile({
           {/* Fastest marker */}
           <circle cx={x(cum[fastest.i])} cy={yPace(fastest.pace)} r="4.5" fill="#FF7900" filter="url(#tc-glow)" />
           <circle cx={x(cum[fastest.i])} cy={yPace(fastest.pace)} r="2" fill="#fff" />
-          <text x={x(cum[fastest.i])} y={yPace(fastest.pace) - 8} fill="#FF8A33" fontSize="9" fontWeight="700" textAnchor="middle" style={{ fontVariantNumeric: 'tabular-nums' }}>★ {fmtPaceSec(minP)}</text>
+          <text x={x(cum[fastest.i])} y={yPace(fastest.pace) - 8} fill="#FF8A33" fontSize="9" fontWeight="700" textAnchor="middle" style={{ fontFamily: 'var(--font-data)', fontVariantNumeric: 'tabular-nums' }}>★ {fmtPaceSec(minP)}</text>
         </svg>
 
         {/* Legend */}

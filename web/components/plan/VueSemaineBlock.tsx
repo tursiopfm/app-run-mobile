@@ -522,7 +522,7 @@ function DayColumn({
           className={`text-[16px] leading-none ${
             isToday ? 'text-trail-primary' : 'text-trail-text'
           }`}
-          style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+          style={{ fontFamily: "var(--font-data)" }}
         >
           {dayNum}
         </div>

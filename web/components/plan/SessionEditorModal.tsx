@@ -977,7 +977,7 @@ function TypeBadge({ type, types, L }: { type: SessionType; types: ActivityType[
       />
       <span
         style={{
-          fontFamily: "'Bebas Neue', sans-serif",
+          fontFamily: "var(--font-data)",
           fontSize: 12,
           color: meta.color,
           letterSpacing: '0.3px',

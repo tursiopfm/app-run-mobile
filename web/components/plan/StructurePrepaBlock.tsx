@@ -357,7 +357,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
                 style={{ backgroundColor: PHASE_DEFINITIONS[expandedPhase.type].color }}
                 aria-hidden
               />
-              <h4 className="text-[color:var(--trail-text)] truncate" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 16 }}>
+              <h4 className="text-[color:var(--trail-text)] truncate" style={{ fontFamily: "var(--font-data)", fontSize: 16 }}>
                 {expandedPhase.label}
               </h4>
               {expandedPhase.focus && (

@@ -103,7 +103,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-4 space-y-2">
         <h1
           className="text-[28px] leading-tight text-trail-text"
-          style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+          style={{ fontFamily: "var(--font-data)" }}
         >
           {race.name}
         </h1>

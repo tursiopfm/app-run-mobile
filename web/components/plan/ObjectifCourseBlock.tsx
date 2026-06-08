@@ -1,7 +1,7 @@
 'use client'
 
 // Bloc Objectif Course : liste multi-races (1 principale + N secondaires).
-// La principale s'affiche en grande carte (Bebas Neue + countdown J-XX) ; les
+// La principale s'affiche en grande carte (chiffres var(--font-data) + countdown J-XX) ; les
 // autres en cartes compactes (1 ligne). CTA "+ Nouvelle course" en bas.
 // La data vient de getRaces() (Supabase ou localStorage selon contexte).
 
@@ -191,7 +191,7 @@ function MainRaceCard({ race, L, onSelect }: { race: Race; L: Dict['plan']; onSe
       <div className="flex items-start justify-between gap-3">
         <h3
           className="text-[22px] leading-tight text-trail-text min-w-0 flex-1 truncate"
-          style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+          style={{ fontFamily: "var(--font-data)" }}
           title={race.name}
         >
           {race.name}
@@ -202,7 +202,7 @@ function MainRaceCard({ race, L, onSelect }: { race: Race; L: Dict['plan']; onSe
           <div className="flex flex-col items-end leading-none flex-shrink-0">
             <span
               className="text-[28px] leading-none text-trail-text"
-              style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+              style={{ fontFamily: "var(--font-data)" }}
               aria-label={L.raceJMinusAria(daysLeft)}
             >
               J-{daysLeft}
@@ -251,7 +251,7 @@ function CompactRaceCard({ race, L, onSelect }: { race: Race; L: Dict['plan']; o
         {!isPast && (
           <span
             className="text-[14px] leading-none text-trail-text flex-shrink-0"
-            style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+            style={{ fontFamily: "var(--font-data)" }}
             aria-label={L.raceJMinusAria(daysLeft)}
           >
             J-{daysLeft}

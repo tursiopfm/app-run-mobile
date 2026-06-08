@@ -87,7 +87,7 @@ export default function ChargeIndicator({
   }
 
   const valueStyle: React.CSSProperties = {
-    fontFamily: "'Bebas Neue', sans-serif",
+    fontFamily: "var(--font-data)",
     fontSize: 11,
     lineHeight: 1,
     color,

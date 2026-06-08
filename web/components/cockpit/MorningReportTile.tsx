@@ -66,7 +66,7 @@ export function MorningReportTile() {
       <div className="flex items-end justify-between">
         <h2
           className="text-[24px] leading-none text-trail-text"
-          style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.02em' }}
+          style={{ fontFamily: "var(--font-data)", letterSpacing: '0.02em' }}
         >
           {dateLabel(now)}
         </h2>

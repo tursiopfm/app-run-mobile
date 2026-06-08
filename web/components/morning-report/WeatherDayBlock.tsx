@@ -53,7 +53,7 @@ export function WeatherDayBlock(props: Props) {
           <div key={p.h} className="rounded-[8px] py-1.5 text-center bg-trail-surface">
             <p className="text-[10px] text-trail-muted">{p.h}</p>
             <p className="text-[18px] leading-none mt-1">{p.icon}</p>
-            <p className="text-[16px] leading-none mt-1 text-trail-text" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{p.temp}</p>
+            <p className="text-[16px] leading-none mt-1 text-trail-text" style={{ fontFamily: "var(--font-data)" }}>{p.temp}</p>
           </div>
         ))}
       </div>

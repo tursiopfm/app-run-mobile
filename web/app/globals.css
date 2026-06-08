@@ -2,8 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body { font-family: var(--font-sans); }
+}
+
 /* ── Palette Sombre (défaut) ─────────────────────────── */
 :root {
+  /* Police brand : alias des variables next/font posées sur <html>.
+     --font-sans = Manrope (texte/UI) · --font-data = JetBrains Mono (chiffres) */
+  --font-sans: var(--font-manrope);
+  --font-data: var(--font-jetbrains-mono);
+
   --trail-bg:               var(--ink-900);
   --trail-surface:          var(--ink-800);
   --trail-card:             var(--ink-700);

@@ -1,22 +1,24 @@
 import type { Metadata, Viewport } from 'next'
-import { Space_Grotesk, Inter } from 'next/font/google'
+import { Manrope, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-space-grotesk',
-})
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-})
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { InstallPrompt } from '@/components/ui/InstallPrompt'
 import { ServiceWorkerRegistrar } from '@/components/ui/ServiceWorkerRegistrar'
 import { I18nProvider } from '@/lib/i18n/I18nProvider'
 import { getServerLang } from '@/lib/i18n/server'
+
+// Police « brand » : Manrope pour le texte/UI, JetBrains Mono pour les chiffres
+// (allures, distances, valeurs — look « instrument cockpit »).
+const manrope = Manrope({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-manrope',
+})
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-jetbrains-mono',
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://trailcockpit.run'),
@@ -66,7 +68,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const lang = getServerLang()
   return (
-    <html lang={lang} suppressHydrationWarning className={`${spaceGrotesk.variable} ${inter.variable}`}>
+    <html lang={lang} suppressHydrationWarning className={`${manrope.variable} ${jetbrainsMono.variable}`}>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
       </head>

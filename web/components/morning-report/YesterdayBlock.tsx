@@ -50,7 +50,7 @@ function Cell({ label, value }: { label: string; value: string }) {
       <p className="text-[10px] text-trail-muted">{label}</p>
       <p
         className="text-[20px] leading-none mt-1 text-trail-text"
-        style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+        style={{ fontFamily: "var(--font-data)" }}
       >
         {value}
       </p>

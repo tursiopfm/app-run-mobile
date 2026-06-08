@@ -61,7 +61,7 @@ export function TemplateCard({
       </p>
       <h4
         className="mt-1 text-[14px] text-trail-text leading-tight"
-        style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.02em' }}
+        style={{ fontFamily: "var(--font-data)", letterSpacing: '0.02em' }}
       >
         {L.sessionTemplates[template.id]?.title ?? template.title}
       </h4>

@@ -10,11 +10,11 @@ export function MonthlyVolumeBlock({ km, dPlus }: Props) {
       </div>
       <div className="flex-1 flex flex-col justify-center gap-1.5">
         <div className="flex items-baseline gap-1">
-          <p className="text-[22px] leading-none text-trail-primary" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{Math.round(km)}</p>
+          <p className="text-[22px] leading-none text-trail-primary" style={{ fontFamily: "var(--font-data)" }}>{Math.round(km)}</p>
           <p className="text-[11px] text-trail-muted">km</p>
         </div>
         <div className="flex items-baseline gap-1">
-          <p className="text-[22px] leading-none text-trail-accent" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>{Math.round(dPlus)}</p>
+          <p className="text-[22px] leading-none text-trail-accent" style={{ fontFamily: "var(--font-data)" }}>{Math.round(dPlus)}</p>
           <p className="text-[11px] text-trail-muted">m D+</p>
         </div>
       </div>

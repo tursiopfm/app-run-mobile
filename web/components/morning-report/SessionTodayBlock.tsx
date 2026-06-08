@@ -31,7 +31,7 @@ export function SessionTodayBlock({ session }: { session: MorningTodaySession })
         </div>
         <h2
           className="text-[26px] leading-none text-trail-text"
-          style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.02em' }}
+          style={{ fontFamily: "var(--font-data)", letterSpacing: '0.02em' }}
         >
           Repos planifié
         </h2>
@@ -58,7 +58,7 @@ export function SessionTodayBlock({ session }: { session: MorningTodaySession })
         <>
           <h2
             className="text-[26px] leading-none text-trail-text"
-            style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.02em' }}
+            style={{ fontFamily: "var(--font-data)", letterSpacing: '0.02em' }}
           >
             {session.title}
           </h2>
@@ -80,7 +80,7 @@ function Kpi({ label, value }: { label: string; value: string }) {
       <p className="text-[12px] font-semibold text-trail-muted">{label}</p>
       <p
         className="text-[20px] leading-none mt-0.5 text-trail-text"
-        style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+        style={{ fontFamily: "var(--font-data)" }}
       >
         {value}
       </p>

@@ -27,11 +27,6 @@
 
 ## Priorité moyenne
 
-### Police « brand » app-wide (Manrope + JetBrains Mono)
-- **Quoi** : les mockups splits V2 validés utilisaient Manrope (UI) + JetBrains Mono (chiffres tabulaires). La refonte splits livrée s'en tient à la police actuelle de l'app (`-apple-system, 'Inter'`) + `tabular-nums`, pour ne pas toucher tout le shell. Décision à part : charger ces webfonts (via `next/font`) et basculer la police de base de l'app.
-- **Pourquoi** : cohérence visuelle avec les mockups / identité de marque, mais impacte tout l'app (layout, CSS global, perf de chargement) → à traiter globalement, pas dans une PR splits.
-- **Identifié** : 2026-06-08
-
 ### Migrer le profil FC (zones cardiaques) vers Supabase
 - **Quoi** : actuellement stocké en `localStorage` (clés `tc_athlete_hr` et `tc_hr_zone_method`).
 - **Problème** : le profil ne suit pas l'utilisateur entre appareils. En local dev, profil vide → l'intensité s'affiche "Non mesurée" pour toutes les activités même avec `avg_hr` en base.
