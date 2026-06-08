@@ -112,3 +112,27 @@ describe('LoginForm — reset par code', () => {
     })
   })
 })
+
+describe('LoginForm — connexion', () => {
+  it('se connecte et redirige vers /dashboard', async () => {
+    auth.signInWithPassword.mockResolvedValue({ error: null })
+    renderForm()
+    type(/^email$/i, 'me@runner.io')
+    fireEvent.change(screen.getAllByPlaceholderText(/mot de passe/i)[0], { target: { value: 'pass123' } })
+    fireEvent.click(screen.getByRole('button', { name: /se connecter/i }))
+    await waitFor(() => {
+      expect(auth.signInWithPassword).toHaveBeenCalledWith({ email: 'me@runner.io', password: 'pass123' })
+      expect(mockPush).toHaveBeenCalledWith('/dashboard')
+    })
+  })
+
+  it('affiche une erreur si identifiants invalides', async () => {
+    auth.signInWithPassword.mockResolvedValue({ error: { message: 'Invalid login credentials' } })
+    renderForm()
+    type(/^email$/i, 'me@runner.io')
+    fireEvent.change(screen.getAllByPlaceholderText(/mot de passe/i)[0], { target: { value: 'wrong' } })
+    fireEvent.click(screen.getByRole('button', { name: /se connecter/i }))
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Invalid login credentials'))
+    expect(mockPush).not.toHaveBeenCalled()
+  })
+})
