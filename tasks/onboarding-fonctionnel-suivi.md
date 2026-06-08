@@ -20,13 +20,13 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` livré (date + commit).
 - [x] `MISSION_VISIBLE` (Mode Mission) respecte le sport par défaut (mêmes composants → héritent de `defaultSport`, rien à changer) · `60b06fee`
 - [x] Test contrat LS-override-wins (`readSportSettings` + `withDefaultSport`)
 
-## Lot 3 — Mission → bibliothèque Plan + séance clé + renommage route
-- [ ] Renommage « Préparer un marathon » → « Préparer une course sur route » (10 km, semi, marathon), id `route`
-- [ ] Migration SQL (`onboarding_race_date` + backfill `marathon`→`route`) — **à coller dans Supabase SQL Editor**
-- [ ] Curation biblio par tags selon `onboarding_mission` (trail / route / libre)
-- [ ] Séance clé épinglée en tête (trail→`co-4x4min`, route→`se-2x20`)
-- [ ] Proposition B : champ date course **optionnel** si mission ∈ {trail, route} → `onboarding_race_date`
-- [ ] Emphase Mode Mission `charge` (charge + freshness)
+## Lot 3 — Mission → bibliothèque Plan + séance clé + renommage route — ✅ livré 2026-06-08 (branche `feat/onboarding-lot3-mission-biblio`)
+- [x] Renommage « Préparer un marathon » → « Préparer une course sur route » (10 km, semi, marathon), id `route` · `c6444b50`
+- [x] Migration SQL 034 (`onboarding_race_date` + backfill `marathon`→`route`) · `f59d7903` — ⚠️ **à coller dans Supabase SQL Editor**
+- [x] Curation biblio par `type` selon `onboarding_mission` (ordonnancement non destructif ; route=footing/seuil/VMA/SL/course, trail=footing/SL/tempo/côtes/course ; charge/libre inchangé) · `fb173440`
+- [x] Séance clé épinglée en tête (trail→`co-4x4min`, route→`se-2x20`) · `fb173440`
+- [x] Proposition B : champ date course **optionnel** si mission ∈ {trail, route} → `onboarding_race_date` · `c6444b50`
+- [x] Emphase Mode Mission `charge` (bloc Charge mis en avant) · `7684d946`
 
 ## Lot 4 — Édition dans Réglages (proposition D)
 - [ ] Section `/settings` « Mon profil sportif » : discipline / mission / mode (+ date course)
