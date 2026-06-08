@@ -334,7 +334,8 @@ export function MissionSetupFlow({
                     className="group flex items-center gap-3.5 rounded-xl border border-ink-600 bg-ink-700 p-4 text-left hover:-translate-y-0.5 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
                   >
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: 'rgba(252,76,2,0.15)', color: '#FC4C02' }}>
-                      <Activity size={22} />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/strava/strava-mark.svg" alt="" width={22} height={22} className="block" />
                     </span>
                     <div className="flex-1">
                       <p className="font-display text-[15px] font-semibold tracking-tight text-fg-primary">Strava</p>
