@@ -67,4 +67,60 @@ describe('MissionSetupFlow', () => {
     expect(mockPush).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: /entrer dans le cockpit/i })).not.toBeDisabled()
   })
+
+  // Helper : avance jusqu'à l'étape Zones FC (5) en sélectionnant le minimum.
+  function gotoHrStep() {
+    render(<MissionSetupFlow />)
+    fireEvent.click(screen.getByRole('button', { name: /continuer/i }))           // 1→2
+    fireEvent.click(screen.getByRole('button', { name: /^trail/i }))              // discipline
+    fireEvent.click(screen.getByRole('button', { name: /continuer/i }))           // 2→3
+    fireEvent.click(screen.getByRole('button', { name: /préparer un trail/i }))   // mission
+    fireEvent.click(screen.getByRole('button', { name: /continuer/i }))           // 3→4
+    fireEvent.click(screen.getByRole('button', { name: /mode mission/i }))        // mode
+    fireEvent.click(screen.getByRole('button', { name: /continuer/i }))           // 4→5 (Zones FC)
+  }
+
+  it('le flow compte 6 étapes', () => {
+    render(<MissionSetupFlow />)
+    expect(screen.getByText(/étape 1 sur 6/i)).toBeInTheDocument()
+  })
+
+  it('« Déduire automatiquement » persiste hr_zone_method=deduced', async () => {
+    gotoHrStep()
+    fireEvent.click(screen.getByRole('button', { name: /déduire automatiquement/i }))
+    await waitFor(() => {
+      const calls = (global.fetch as jest.Mock).mock.calls
+      const bodies = calls.map(c => JSON.parse(c[1].body))
+      expect(bodies.some(b => b.hr_zone_method === 'deduced')).toBe(true)
+    })
+  })
+
+  it('le fallback FC max persiste pct_max + max_hr', async () => {
+    gotoHrStep()
+    fireEvent.click(screen.getByRole('button', { name: /je connais ma fc max/i }))
+    fireEvent.change(screen.getByLabelText(/fc max/i), { target: { value: '190' } })
+    fireEvent.click(screen.getByRole('button', { name: /valider mes zones/i }))
+    await waitFor(() => {
+      const calls = (global.fetch as jest.Mock).mock.calls
+      const bodies = calls.map(c => JSON.parse(c[1].body))
+      expect(bodies.some(b => b.hr_zone_method === 'pct_max' && b.max_hr === 190)).toBe(true)
+    })
+  })
+
+  it('le fallback année de naissance persiste auto + birth_year', async () => {
+    gotoHrStep()
+    fireEvent.click(screen.getByRole('button', { name: /je connais ma fc max/i }))
+    fireEvent.click(screen.getByRole('button', { name: /je ne la connais pas/i }))
+    fireEvent.change(screen.getByLabelText(/année de naissance/i), { target: { value: '1988' } })
+    fireEvent.click(screen.getByRole('button', { name: /valider mes zones/i }))
+    await waitFor(() => {
+      const bodies = (global.fetch as jest.Mock).mock.calls.map(c => JSON.parse(c[1].body))
+      expect(bodies.some(b => b.hr_zone_method === 'auto' && b.birth_year === 1988)).toBe(true)
+    })
+  })
+
+  it('l\'étape Zones FC est skippable (Continuer actif sans choix FC)', () => {
+    gotoHrStep()
+    expect(screen.getByRole('button', { name: /continuer/i })).not.toBeDisabled()
+  })
 })

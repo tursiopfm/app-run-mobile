@@ -6,7 +6,7 @@ import {
   ArrowRight, ArrowLeft, Check,
   Mountain, Footprints, Bike, Waves, Medal,
   Activity, TrendingUp, Compass, BarChart3,
-  Upload, Watch, Rocket,
+  Upload, Watch, Rocket, HeartPulse,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -50,7 +50,7 @@ const MODES: (Option & { points: string[] })[] = [
   { id: 'expert',  label: 'Mode Expert',  desc: 'Données complètes.',        icon: BarChart3, accent: 'var(--data-bike)', points: ['Charge & fatigue', 'Graphiques avancés', 'Cockpit complet'] },
 ]
 
-const TOTAL = 5
+const TOTAL = 6
 
 function ringStyle(accent: string, extra?: CSSProperties): CSSProperties {
   return { ['--tw-ring-color' as string]: accent, ...extra } as CSSProperties
@@ -127,6 +127,8 @@ export function MissionSetupFlow({
 }) {
   const router = useRouter()
   // Retour d'un échec OAuth → on réaffiche directement l'étape Données.
+  // Invariant : l'étape Données est la dernière (step === TOTAL) ; le callback
+  // OAuth y renvoie. Toute renumérotation des étapes doit préserver ça.
   const [step, setStep] = useState(stravaStatus ? TOTAL : 1)
   const [done, setDone] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -135,6 +137,37 @@ export function MissionSetupFlow({
   const [mission, setMission] = useState<string | null>(initialAnswers?.mission ?? null)
   const [mode, setMode] = useState<string | null>(initialAnswers?.mode ?? null)
   const [dataSource, setDataSource] = useState<string | null>(initialAnswers?.dataSource ?? null)
+  const [hrMethod, setHrMethod] = useState<'deduced' | 'pct_max' | 'auto' | null>(null)
+  const [showManualHr, setShowManualHr] = useState(false)
+  const [showAgeHr, setShowAgeHr] = useState(false)
+  const [maxHrInput, setMaxHrInput] = useState('')
+  const [birthYearInput, setBirthYearInput] = useState('')
+
+  function chooseDeduced() {
+    setHrMethod('deduced')
+    void persist({ hr_zone_method: 'deduced' })
+  }
+
+  // Bornes de plausibilité : on n'enregistre une FC max / année de naissance
+  // que si la valeur est physiologiquement crédible — sinon une faute de frappe
+  // (max_hr: 1, naissance 2024) corromprait silencieusement les zones FC.
+  const currentYear = new Date().getFullYear()
+  const maxHrNum = Number(maxHrInput)
+  const birthYearNum = Number(birthYearInput)
+  const hrInputValid = showAgeHr
+    ? Number.isFinite(birthYearNum) && birthYearNum > 1900 && birthYearNum <= currentYear - 10
+    : Number.isFinite(maxHrNum) && maxHrNum >= 100 && maxHrNum <= 250
+
+  function validateManualHr() {
+    if (!hrInputValid) return
+    if (showAgeHr) {
+      setHrMethod('auto')
+      void persist({ hr_zone_method: 'auto', birth_year: birthYearNum })
+    } else {
+      setHrMethod('pct_max')
+      void persist({ hr_zone_method: 'pct_max', max_hr: maxHrNum })
+    }
+  }
 
   const errorMsg =
     stravaStatus === 'already_linked' ? 'Ce compte Strava est déjà connecté à un autre compte Trail Cockpit.'
@@ -321,7 +354,66 @@ export function MissionSetupFlow({
             )}
 
             {step === 5 && (
-              <StepShell stepKey={5} eyebrow="Données" title="Connecte tes données"
+              <StepShell stepKey={5} eyebrow="Fréquence cardiaque" title="Tes zones de FC"
+                subtitle="Tes zones FC alimentent l'intensité, la charge et la fraîcheur. Tu pourras affiner dans Réglages.">
+                <div className="grid gap-2.5">
+                  <SelectTile
+                    icon={HeartPulse}
+                    title="Déduire automatiquement"
+                    desc="Recommandé · on analyse ton historique Strava"
+                    accent="var(--primary)"
+                    selected={hrMethod === 'deduced'}
+                    onClick={chooseDeduced}
+                  />
+
+                  {!showManualHr ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowManualHr(true)}
+                      className="text-left font-body text-[13px] text-fg-muted underline underline-offset-2 hover:text-fg-primary px-1 py-2"
+                    >
+                      Je connais ma FC max
+                    </button>
+                  ) : (
+                    <div className="rounded-xl border border-ink-600 bg-ink-700 p-4 grid gap-3">
+                      {!showAgeHr ? (
+                        <label className="grid gap-1.5">
+                          <span className="font-body text-[12.5px] text-fg-muted">FC max (bpm)</span>
+                          <input
+                            type="number" inputMode="numeric" value={maxHrInput}
+                            onChange={(e) => setMaxHrInput(e.target.value)}
+                            placeholder="ex. 190"
+                            className="rounded-lg border border-ink-600 bg-ink-800 px-3 py-2.5 text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                          />
+                          <button type="button" onClick={() => { setShowAgeHr(true); setMaxHrInput('') }}
+                            className="justify-self-start font-body text-[12px] text-fg-muted underline underline-offset-2 hover:text-fg-primary">
+                            Je ne la connais pas
+                          </button>
+                        </label>
+                      ) : (
+                        <label className="grid gap-1.5">
+                          <span className="font-body text-[12.5px] text-fg-muted">Année de naissance</span>
+                          <input
+                            type="number" inputMode="numeric" value={birthYearInput}
+                            onChange={(e) => setBirthYearInput(e.target.value)}
+                            placeholder="ex. 1988"
+                            className="rounded-lg border border-ink-600 bg-ink-800 px-3 py-2.5 text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                          />
+                          <span className="font-body text-[11px] text-fg-muted">On estimera ta FC max par l&apos;âge.</span>
+                        </label>
+                      )}
+                      <Button onClick={validateManualHr} disabled={!hrInputValid}>Valider mes zones</Button>
+                      {(hrMethod === 'pct_max' || hrMethod === 'auto') && (
+                        <p className="font-body text-[12px] text-primary-text">Zones enregistrées ✓</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </StepShell>
+            )}
+
+            {step === 6 && (
+              <StepShell stepKey={6} eyebrow="Données" title="Connecte tes données"
                 subtitle="Synchronise tes activités pour activer le cockpit.">
                 {errorMsg && (
                   <p role="alert" className="mb-3 text-sm text-red-400 bg-red-500/10 border border-red-500/25 rounded-xl px-3 py-2.5">
