@@ -71,7 +71,7 @@ export default async function DashboardPage() {
       .order('start_time', { ascending: false }),
     supabase
       .from('profiles')
-      .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year, onboarding_completed_at, hr_zone_method, hr_zones_custom, onboarding_discipline')
+      .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year, onboarding_completed_at, hr_zone_method, hr_zones_custom, onboarding_discipline, onboarding_mission')
       .eq('id', user.id)
       .maybeSingle(),
   ])
@@ -110,6 +110,7 @@ export default async function DashboardPage() {
         mode={mode}
         freshnessPayload={freshnessPayload}
         discipline={athleteProfile?.onboarding_discipline ?? null}
+        mission={athleteProfile?.onboarding_mission ?? null}
       />
     </div>
   )
