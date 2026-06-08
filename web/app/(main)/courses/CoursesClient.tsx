@@ -228,7 +228,7 @@ function SegmentButton({ label, selected, onClick }: { label: string; selected: 
 function SummaryPill({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div className="flex-1 rounded-[10px] px-[8px] py-[6px] text-center" style={{ backgroundColor: colors.surface }}>
-      <p className="text-[18px] font-bold font-data tabular-nums" style={{ color }}>{value}</p>
+      <p className="text-h2 font-bold font-data tabular-nums" style={{ color }}>{value}</p>
       <p className="text-[10px] text-trail-muted mt-[2px]">{label}</p>
     </div>
   )
@@ -237,10 +237,10 @@ function SummaryPill({ label, value, color }: { label: string; value: string; co
 function MetricTile({ label, value, unit, color }: { label: string; value: string; unit: string; color: string }) {
   return (
     <div className="rounded-[10px] px-[10px] py-[8px] flex-shrink-0" style={{ backgroundColor: colors.surface }}>
-      <p className="text-[11px] text-trail-muted">{label}</p>
+      <p className="text-micro text-trail-muted">{label}</p>
       <div className="flex items-baseline gap-[3px] mt-[2px]">
         <span className="text-[17px] font-bold" style={{ color }}>{value}</span>
-        {unit && <span className="text-[11px] text-trail-muted">{unit}</span>}
+        {unit && <span className="text-micro text-trail-muted">{unit}</span>}
       </div>
     </div>
   )
@@ -262,7 +262,7 @@ function RecordFilterChip({ label, active, onClick }: { label: string; active: b
   return (
     <button
       onClick={onClick}
-      className="flex-shrink-0 rounded-full px-3 py-[5px] border text-[12px] font-semibold"
+      className="flex-shrink-0 rounded-full px-3 py-[5px] border text-caption font-semibold"
       style={{
         backgroundColor: active ? `${colors.chargeOrange}26` : colors.surface,
         borderColor:     active ? colors.chargeOrange : colors.border,
@@ -279,7 +279,7 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
   return (
     <button
       onClick={onClick}
-      className="rounded-full px-4 py-[6px] border text-[13px] font-semibold"
+      className="rounded-full px-4 py-[6px] border text-body-sm font-semibold"
       style={{
         backgroundColor: active ? `${colors.chargeOrange}26` : 'transparent',
         borderColor:     active ? colors.chargeOrange : colors.border,
@@ -305,7 +305,7 @@ function FilterIconChip({
   return (
     <button
       onClick={onClick}
-      className="rounded-full border text-[12px] font-semibold flex items-center gap-[5px] flex-shrink-0"
+      className="rounded-full border text-caption font-semibold flex items-center gap-[5px] flex-shrink-0"
       style={{
         backgroundColor: active ? `${accent}26` : 'transparent',
         borderColor:     active ? accent : colors.border,
@@ -333,7 +333,7 @@ function SortButtons({
   const btn = (dir: SortDir, symbol: string, active: boolean) => (
     <button
       onClick={() => onSort(field, dir)}
-      className="w-8 h-8 flex items-center justify-center rounded-[6px] border text-[14px]"
+      className="w-8 h-8 flex items-center justify-center rounded-[6px] border text-body"
       style={{
         backgroundColor: active ? `${colors.chargeOrange}26` : colors.surface,
         borderColor:     active ? colors.chargeOrange : colors.border,
@@ -352,8 +352,8 @@ function SortButtons({
   )
 }
 
-const inputCls = 'rounded-[8px] border px-3 py-[5px] text-[13px] flex-1 min-w-0'
-const dateInputCls = 'rounded-[8px] border px-2 py-[5px] text-[13px] flex-1 min-w-0'
+const inputCls = 'rounded-[8px] border px-3 py-[5px] text-body-sm flex-1 min-w-0'
+const dateInputCls = 'rounded-[8px] border px-2 py-[5px] text-body-sm flex-1 min-w-0'
 
 function inputStyle() {
   return {
@@ -379,11 +379,11 @@ function FilterRow({
   const A = useT().activities
   return (
     <div>
-      <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{label}</p>
+      <p className="text-body-sm font-semibold text-trail-text mb-[3px]">{label}</p>
       <div className="flex items-center gap-2">
-        <span className="text-[11px] text-trail-muted shrink-0 mr-1">{A.fromLabel}</span>
+        <span className="text-micro text-trail-muted shrink-0 mr-1">{A.fromLabel}</span>
         {left}
-        <span className="text-[11px] text-trail-muted shrink-0 mx-1">{A.toLabel}</span>
+        <span className="text-micro text-trail-muted shrink-0 mx-1">{A.toLabel}</span>
         {right}
         <SortButtons field={sortField} activeField={activeField} activeDir={activeDir} onSort={onSort} />
       </div>
@@ -417,22 +417,22 @@ function PastRaceCard({ activity, onClick }: { activity: ActivityRow; onClick: (
       style={{ cursor: 'pointer' }}
     >
       <div className="flex items-baseline justify-between gap-3">
-        <p className="text-[14px] font-semibold text-trail-text truncate flex-1 min-w-0">{activity.name}</p>
-        <span className="text-[12px] flex-shrink-0" style={{ color: colors.subtleText }}>
+        <p className="text-body font-semibold text-trail-text truncate flex-1 min-w-0">{activity.name}</p>
+        <span className="text-caption flex-shrink-0" style={{ color: colors.subtleText }}>
           {fmtDateShort(activity.start_time)}
         </span>
       </div>
       <div className="grid grid-cols-3 gap-2 mt-[4px]">
         <div className="flex items-baseline gap-1">
-          <span className="text-[13px] font-bold text-trail-text">{hasDist ? fmt1(distanceM! / 1000) : '—'}</span>
-          {hasDist && <span className="text-[11px] text-trail-muted">km</span>}
+          <span className="text-body-sm font-bold text-trail-text">{hasDist ? fmt1(distanceM! / 1000) : '—'}</span>
+          {hasDist && <span className="text-micro text-trail-muted">km</span>}
         </div>
         <div className="flex items-baseline gap-1">
-          <span className="text-[13px] font-bold text-trail-text">{hasElev ? Math.round(elevation!).toString() : '—'}</span>
-          {hasElev && <span className="text-[11px] text-trail-muted">m D+</span>}
+          <span className="text-body-sm font-bold text-trail-text">{hasElev ? Math.round(elevation!).toString() : '—'}</span>
+          {hasElev && <span className="text-micro text-trail-muted">m D+</span>}
         </div>
         <div>
-          <span className="text-[13px] font-bold text-trail-text">{hasDur ? fmtChrono(duration) : '—'}</span>
+          <span className="text-body-sm font-bold text-trail-text">{hasDur ? fmtChrono(duration) : '—'}</span>
         </div>
       </div>
     </button>
@@ -506,7 +506,7 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
         </button>
         <button
           onClick={onClose}
-          className="text-[14px] font-bold"
+          className="text-body font-bold"
           style={{ color: colors.chargeOrange, cursor: 'pointer' }}
         >
           {A.apply}
@@ -518,7 +518,7 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
           className="rounded-[12px] border p-4 space-y-4"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
         >
-          <p className="text-[14px] font-semibold text-trail-text">{A.searchByLabel}</p>
+          <p className="text-body font-semibold text-trail-text">{A.searchByLabel}</p>
 
           <div className="flex gap-2 flex-wrap">
             {FIELDS.map(f => (
@@ -529,13 +529,13 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 
           {state.field === 'Titre' && (
             <div>
-              <p className="text-[12px] text-trail-muted mb-1">{A.searchTitleLabel}</p>
+              <p className="text-caption text-trail-muted mb-1">{A.searchTitleLabel}</p>
               <input
                 autoFocus
                 type="text"
                 value={state.title}
                 onChange={e => setState({ ...state, title: e.target.value })}
-                className="rounded-[8px] border px-3 py-2 text-[14px] w-full"
+                className="rounded-[8px] border px-3 py-2 text-body w-full"
                 style={si}
               />
             </div>
@@ -543,11 +543,11 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 
           {state.field === 'Distance' && (
             <div className="space-y-2">
-              <p className="text-[12px] text-trail-muted">{A.searchDistanceLabel}</p>
+              <p className="text-caption text-trail-muted">{A.searchDistanceLabel}</p>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] text-trail-muted">{A.fromLabel}</span>
+                <span className="text-micro text-trail-muted">{A.fromLabel}</span>
                 <input type="text" value={state.distFrom} onChange={e => setState({ ...state, distFrom: e.target.value })} placeholder="km" className={inputCls} style={si} />
-                <span className="text-[11px] text-trail-muted">{A.toLabel}</span>
+                <span className="text-micro text-trail-muted">{A.toLabel}</span>
                 <input type="text" value={state.distTo}   onChange={e => setState({ ...state, distTo: e.target.value })}   placeholder="km" className={inputCls} style={si} />
               </div>
             </div>
@@ -555,11 +555,11 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 
           {state.field === 'Durée' && (
             <div className="space-y-2">
-              <p className="text-[12px] text-trail-muted">{A.searchDurationLabel}</p>
+              <p className="text-caption text-trail-muted">{A.searchDurationLabel}</p>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] text-trail-muted">{A.fromLabel}</span>
+                <span className="text-micro text-trail-muted">{A.fromLabel}</span>
                 <input type="text" value={state.durFrom} onChange={e => setState({ ...state, durFrom: e.target.value })} placeholder="h:mm:ss" className={inputCls} style={si} />
-                <span className="text-[11px] text-trail-muted">{A.toLabel}</span>
+                <span className="text-micro text-trail-muted">{A.toLabel}</span>
                 <input type="text" value={state.durTo}   onChange={e => setState({ ...state, durTo: e.target.value })}   placeholder="h:mm:ss" className={inputCls} style={si} />
               </div>
             </div>
@@ -567,11 +567,11 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 
           {state.field === 'D+' && (
             <div className="space-y-2">
-              <p className="text-[12px] text-trail-muted">{A.searchElevationLabel}</p>
+              <p className="text-caption text-trail-muted">{A.searchElevationLabel}</p>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] text-trail-muted">{A.fromLabel}</span>
+                <span className="text-micro text-trail-muted">{A.fromLabel}</span>
                 <input type="text" value={state.dPlusFrom} onChange={e => setState({ ...state, dPlusFrom: e.target.value })} placeholder="m" className={inputCls} style={si} />
-                <span className="text-[11px] text-trail-muted">{A.toLabel}</span>
+                <span className="text-micro text-trail-muted">{A.toLabel}</span>
                 <input type="text" value={state.dPlusTo}   onChange={e => setState({ ...state, dPlusTo: e.target.value })}   placeholder="m" className={inputCls} style={si} />
               </div>
             </div>
@@ -579,7 +579,7 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 
           <button
             onClick={onReset}
-            className="w-full py-2 rounded-[10px] border text-[13px] font-semibold"
+            className="w-full py-2 rounded-[10px] border text-body-sm font-semibold"
             style={{ borderColor: colors.border, color: colors.subtleText, backgroundColor: 'transparent', cursor: 'pointer' }}
           >
             {A.reset}
@@ -588,20 +588,20 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 
         {hasInput && (
           <>
-            <p className="text-[13px] text-trail-muted px-1">{A.resultsCount(results.length)}</p>
+            <p className="text-body-sm text-trail-muted px-1">{A.resultsCount(results.length)}</p>
             {results.length === 0 ? (
               <div
                 className="rounded-[12px] border p-[10px]"
                 style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
               >
-                <p className="text-[13px]" style={{ color: colors.subtleText }}>{A.noRaceFound}</p>
+                <p className="text-body-sm" style={{ color: colors.subtleText }}>{A.noRaceFound}</p>
               </div>
             ) : (
               <div>
                 {visibleResults.map(a => <PastRaceCard key={a.id} activity={a} onClick={() => onNavigate(a.id)} />)}
                 {visibleCount < results.length && (
                   <div ref={sentinelRef} className="h-8 flex items-center justify-center">
-                    <span className="text-[12px]" style={{ color: colors.subtleText }}>…</span>
+                    <span className="text-caption" style={{ color: colors.subtleText }}>…</span>
                   </div>
                 )}
               </div>
@@ -649,15 +649,15 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
           className="rounded-[12px] border p-3 space-y-3"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
         >
-          <p className="text-[14px] font-bold text-trail-text">{A.sortFilterTitle}</p>
+          <p className="text-body font-bold text-trail-text">{A.sortFilterTitle}</p>
 
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{A.activityFieldLabel}</p>
+            <p className="text-body-sm font-semibold text-trail-text mb-[3px]">{A.activityFieldLabel}</p>
             <div className="flex items-center gap-2">
               <select
                 value={state.sport}
                 onChange={e => setState({ ...state, sport: e.target.value })}
-                className="rounded-[8px] border px-3 py-[5px] text-[13px] flex-1"
+                className="rounded-[8px] border px-3 py-[5px] text-body-sm flex-1"
                 style={{ ...si, cursor: 'pointer' }}
               >
                 <option value="Toutes">{A.allOption}</option>
@@ -670,7 +670,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
           </div>
 
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{A.distanceTypeLabel}</p>
+            <p className="text-body-sm font-semibold text-trail-text mb-[3px]">{A.distanceTypeLabel}</p>
             <div className="flex gap-[6px] overflow-x-auto pb-1">
               {DISTANCE_TYPE_OPTIONS.map(opt => (
                 <FilterIconChip
@@ -684,9 +684,9 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
           </div>
 
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{A.dateLabel}</p>
+            <p className="text-body-sm font-semibold text-trail-text mb-[3px]">{A.dateLabel}</p>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-trail-muted shrink-0 mr-1">{A.fromLabel}</span>
+              <span className="text-micro text-trail-muted shrink-0 mr-1">{A.fromLabel}</span>
               <input
                 type="date"
                 value={state.dateFrom}
@@ -694,7 +694,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
                 className={dateInputCls}
                 style={si}
               />
-              <span className="text-[11px] text-trail-muted shrink-0 mx-1">{A.toLabel}</span>
+              <span className="text-micro text-trail-muted shrink-0 mx-1">{A.toLabel}</span>
               <input
                 type="date"
                 value={state.dateTo}
@@ -738,14 +738,14 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
         <div className="flex gap-3 pb-4">
           <button
             onClick={onReset}
-            className="flex-1 py-3 rounded-[12px] border text-[14px] font-semibold"
+            className="flex-1 py-3 rounded-[12px] border text-body font-semibold"
             style={{ borderColor: colors.border, color: colors.subtleText, backgroundColor: 'transparent', cursor: 'pointer' }}
           >
             {A.reset}
           </button>
           <button
             onClick={onClose}
-            className="flex-1 py-3 rounded-[12px] text-[14px] font-bold"
+            className="flex-1 py-3 rounded-[12px] text-body font-bold"
             style={{ backgroundColor: colors.chargeOrange, color: '#fff', cursor: 'pointer' }}
           >
             {A.apply}
@@ -769,12 +769,12 @@ function UpcomingRaceCard({ race, onClick }: { race: Race; onClick: () => void }
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="flex-1 min-w-0">
           <p className="text-[15px] font-semibold text-trail-text truncate">{race.name}</p>
-          <p className="text-[12px] text-trail-muted mt-[2px]">
+          <p className="text-caption text-trail-muted mt-[2px]">
             {fmtDateLong(race.date)}{race.location ? ` · ${race.location}` : ''}
           </p>
         </div>
         <span
-          className="inline-flex items-center rounded-full px-2 py-[3px] text-[12px] font-bold flex-shrink-0"
+          className="inline-flex items-center rounded-full px-2 py-[3px] text-caption font-bold flex-shrink-0"
           style={{
             backgroundColor: `${colors.chargeOrange}26`,
             color: colors.chargeOrange,
@@ -789,8 +789,8 @@ function UpcomingRaceCard({ race, onClick }: { race: Race; onClick: () => void }
         <MetricTile label="D+"        value={race.elevation > 0 ? race.elevation.toString() : '—'} unit="m" color={colors.chargeOrange} />
         {race.isMain && (
           <div className="rounded-[10px] px-[10px] py-[8px] flex-shrink-0" style={{ backgroundColor: colors.surface }}>
-            <p className="text-[11px] text-trail-muted">Objectif</p>
-            <span className="text-[14px] font-bold" style={{ color: colors.seriesYellow }}>Principal</span>
+            <p className="text-micro text-trail-muted">Objectif</p>
+            <span className="text-body font-bold" style={{ color: colors.seriesYellow }}>Principal</span>
           </div>
         )}
       </div>
@@ -804,13 +804,13 @@ function RecordCard({ record }: { record: PersonalRecord }) {
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
       <div className="flex items-center justify-between mb-[4px]">
         <div className="flex items-center gap-[6px]">
-          <span className="text-[11px] font-semibold" style={{ color: colors.chargeOrange }}>Record</span>
+          <span className="text-micro font-semibold" style={{ color: colors.chargeOrange }}>Record</span>
           <SourceBadge source={record.source} />
-          <span className="text-[11px] text-trail-muted">{SPORT_LABEL[record.sport]}</span>
+          <span className="text-micro text-trail-muted">{SPORT_LABEL[record.sport]}</span>
         </div>
-        {record.date && <span className="text-[11px] text-trail-muted">{fmtDateLong(record.date)}</span>}
+        {record.date && <span className="text-micro text-trail-muted">{fmtDateLong(record.date)}</span>}
       </div>
-      <p className="text-[14px] font-semibold text-trail-text mb-[6px]">{record.label}</p>
+      <p className="text-body font-semibold text-trail-text mb-[6px]">{record.label}</p>
       <div className="flex gap-[6px]">
         <MetricTile label={record.label} value={record.valueLabel} unit="" color={colors.chargeOrange} />
         {record.distanceKm && (
@@ -855,7 +855,7 @@ function RecordsView({ records }: { records: PersonalRecord[] }) {
           ))}
         </div>
         {filtered.length === 0 ? (
-          <p className="text-[13px] text-trail-muted">{A.raceRecordsEmpty}</p>
+          <p className="text-body-sm text-trail-muted">{A.raceRecordsEmpty}</p>
         ) : (
           <div className="space-y-[10px]">
             {filtered.map(r => <RecordCard key={r.id} record={r} />)}
@@ -1099,7 +1099,7 @@ export default function CoursesClient({
           titleClassName="text-[15px] font-semibold text-trail-text font-display"
         >
           {upcomingRaces.length === 0 ? (
-            <p className="text-[13px] text-trail-muted">{L.noRacePlanned}</p>
+            <p className="text-body-sm text-trail-muted">{L.noRacePlanned}</p>
           ) : (
             <div className="space-y-[10px]">
               {upcomingRaces.map(r => (
@@ -1152,7 +1152,7 @@ export default function CoursesClient({
                 <circle cx="11" cy="11" r="7" stroke={hasActiveSearch ? colors.chargeOrange : colors.subtleText} strokeWidth="2" />
                 <path d="M16.5 16.5L21 21" stroke={hasActiveSearch ? colors.chargeOrange : colors.subtleText} strokeWidth="2" strokeLinecap="round" />
               </svg>
-              <span className="text-[14px]" style={{ color: hasActiveSearch ? colors.chargeOrange : colors.subtleText }}>
+              <span className="text-body" style={{ color: hasActiveSearch ? colors.chargeOrange : colors.subtleText }}>
                 {L.headerSearch}
               </span>
             </button>
@@ -1176,13 +1176,13 @@ export default function CoursesClient({
           </div>
 
           {(hasActiveSearch || hasActiveFilter) && (
-            <p className="text-[13px] text-trail-muted px-1 mb-[6px]">
+            <p className="text-body-sm text-trail-muted px-1 mb-[6px]">
               {L.resultsCount(filtered.length)}
             </p>
           )}
 
           {filtered.length === 0 ? (
-            <p className="text-[13px] text-trail-muted">
+            <p className="text-body-sm text-trail-muted">
               {courseActivities.length === 0
                 ? L.noRaceLogged
                 : L.noRaceMatch}
@@ -1194,7 +1194,7 @@ export default function CoursesClient({
               ))}
               {visibleCount < filtered.length && (
                 <div ref={sentinelRef} className="h-8 flex items-center justify-center">
-                  <span className="text-[12px]" style={{ color: colors.subtleText }}>…</span>
+                  <span className="text-caption" style={{ color: colors.subtleText }}>…</span>
                 </div>
               )}
             </div>
@@ -1222,7 +1222,7 @@ export default function CoursesClient({
         >
           <span className="text-[32px] mb-3">🏆</span>
           <p className="text-[16px] font-bold text-trail-text mb-2 font-display">Records</p>
-          <p className="text-[14px]" style={{ color: colors.subtleText }}>Bientôt disponible</p>
+          <p className="text-body" style={{ color: colors.subtleText }}>Bientôt disponible</p>
         </div>
       )}
 

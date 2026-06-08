@@ -74,11 +74,11 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   if (!race) {
     return (
       <div className="px-3 py-6 max-w-lg md:max-w-4xl mx-auto text-center">
-        <p className="text-trail-muted text-[14px]">Course introuvable.</p>
+        <p className="text-trail-muted text-body">Course introuvable.</p>
         <button
           type="button"
           onClick={() => router.push('/plan')}
-          className="mt-3 text-trail-primary text-[13px] font-semibold underline"
+          className="mt-3 text-trail-primary text-body-sm font-semibold underline"
         >
           Retour au plan
         </button>
@@ -92,7 +92,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="text-[13px] text-trail-muted hover:text-trail-text"
+          className="text-body-sm text-trail-muted hover:text-trail-text"
           aria-label="Retour"
         >
           ← Retour
@@ -102,12 +102,12 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
 
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-4 space-y-2">
         <h1
-          className="text-[28px] leading-tight text-trail-text"
+          className="text-display leading-tight text-trail-text"
           style={{ fontFamily: "var(--font-data)" }}
         >
           {race.name}
         </h1>
-        <p className="text-[13px] text-trail-muted">
+        <p className="text-body-sm text-trail-muted">
           {formatLongDate(race.date)}{race.location ? ` — ${race.location}` : ''}
         </p>
         <div className="flex flex-wrap gap-2 mt-2">
@@ -116,7 +116,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
           <Pill bg="var(--trail-surface)" color="var(--trail-text)" label={race.type} />
           {race.isMain && (
             <span
-              className="px-[10px] py-[4px] rounded-full text-[11px] font-bold whitespace-nowrap"
+              className="px-[10px] py-[4px] rounded-full text-micro font-bold whitespace-nowrap"
               style={{ backgroundColor: `${colors.chargeOrange}26`, color: colors.chargeOrange }}
             >
               Principale
@@ -130,7 +130,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
           <button
             type="button"
             onClick={() => setImportOpen(true)}
-            className="text-[12px] text-trail-primary underline"
+            className="text-caption text-trail-primary underline"
           >
             Importer le tableau (URL / PDF / Image / Texte)
           </button>
@@ -144,7 +144,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
             <button
               type="button"
               onClick={() => setImportOpen(true)}
-              className="mt-2 text-[12px] text-trail-primary underline"
+              className="mt-2 text-caption text-trail-primary underline"
             >
               Ré-importer
             </button>
@@ -154,25 +154,25 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
 
       <Section title="Profil de la course">
         <div className="h-[120px] rounded-[8px] bg-trail-surface border border-dashed border-trail-border flex items-center justify-center">
-          <p className="text-[12px] text-trail-muted">Profil dénivelé — bientôt</p>
+          <p className="text-caption text-trail-muted">Profil dénivelé — bientôt</p>
         </div>
       </Section>
 
       <Section title="Site web">
-        <p className="text-[12px] text-trail-muted">Bientôt — lien officiel de la course.</p>
+        <p className="text-caption text-trail-muted">Bientôt — lien officiel de la course.</p>
       </Section>
 
       <Section title="Notes">
         {race.notes
-          ? <p className="text-[13px] text-trail-text whitespace-pre-wrap">{race.notes}</p>
-          : <p className="text-[12px] text-trail-muted italic">Aucune note.</p>}
+          ? <p className="text-body-sm text-trail-text whitespace-pre-wrap">{race.notes}</p>
+          : <p className="text-caption text-trail-muted italic">Aucune note.</p>}
       </Section>
 
       <button
         type="button"
         onClick={handleDelete}
         disabled={deleting}
-        className="w-full mt-4 px-4 py-2 rounded-[10px] border border-trail-danger/40 text-trail-danger text-[13px] font-semibold disabled:opacity-50"
+        className="w-full mt-4 px-4 py-2 rounded-[10px] border border-trail-danger/40 text-trail-danger text-body-sm font-semibold disabled:opacity-50"
       >
         {deleting ? 'Suppression…' : 'Supprimer cette course'}
       </button>
@@ -196,7 +196,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-4">
-      <h2 className="text-[14px] font-semibold text-trail-muted mb-2 font-display">{title}</h2>
+      <h2 className="text-body font-semibold text-trail-muted mb-2 font-display">{title}</h2>
       {children}
     </div>
   )
@@ -205,7 +205,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Pill({ bg, color, label }: { bg: string; color: string; label: string }) {
   return (
     <span
-      className="px-[10px] py-[4px] rounded-full text-[12px] font-semibold whitespace-nowrap"
+      className="px-[10px] py-[4px] rounded-full text-caption font-semibold whitespace-nowrap"
       style={{ backgroundColor: bg, color }}
     >
       {label}
