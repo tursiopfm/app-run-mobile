@@ -3,6 +3,7 @@ import {
   withDefaultSport,
   readSportSettings,
   applyDisciplineDefaultToCockpit,
+  setCockpitDefaultSport,
   clearCockpitSportSettings,
   COCKPIT_SPORT_SETTINGS_KEYS,
 } from '@/lib/design/sport-settings'
@@ -104,6 +105,65 @@ describe('applyDisciplineDefaultToCockpit', () => {
     for (const key of COCKPIT_SPORT_SETTINGS_KEYS) {
       expect(localStorage.getItem(key)).toBeNull()
     }
+  })
+})
+
+// Changement explicite de discipline dans les Réglages : ce signal fort re-pointe
+// le défaut sport de TOUS les blocs Cockpit sur la discipline (SANS garde de
+// personnalisation, contrairement à applyDisciplineDefaultToCockpit), trail/route
+// inclus → 'run'. SAUF le bloc Charge, qui reste indépendant (vue « Toutes »).
+describe('setCockpitDefaultSport', () => {
+  afterEach(() => localStorage.clear())
+
+  function read(key: string) {
+    return JSON.parse(localStorage.getItem(key) ?? 'null')
+  }
+
+  const CHARGE_KEY = 'cockpit_charge_settings'
+  const nonChargeKeys = COCKPIT_SPORT_SETTINGS_KEYS.filter((k) => k !== CHARGE_KEY)
+
+  it('re-pointe TOUS les blocs (hors Charge) même sur un défaut déjà personnalisé', () => {
+    // État « bloqué en natation » : tous les blocs en swim (cas du bug signalé).
+    for (const key of COCKPIT_SPORT_SETTINGS_KEYS) {
+      localStorage.setItem(key, JSON.stringify({ visible: ['run', 'ride', 'swim', 'all'], default: 'swim' }))
+    }
+    setCockpitDefaultSport('velo')
+    for (const key of nonChargeKeys) {
+      expect(read(key).default).toBe('ride')
+    }
+  })
+
+  it('trail/route/inconnu → run (re-pointe vraiment, pas de no-op)', () => {
+    for (const key of COCKPIT_SPORT_SETTINGS_KEYS) {
+      localStorage.setItem(key, JSON.stringify({ visible: ['run', 'ride', 'swim', 'all'], default: 'swim' }))
+    }
+    setCockpitDefaultSport('trail')
+    for (const key of nonChargeKeys) {
+      expect(read(key).default).toBe('run')
+    }
+  })
+
+  it('laisse le bloc Charge intact (vue « Toutes » indépendante)', () => {
+    localStorage.setItem(CHARGE_KEY, JSON.stringify({ visible: ['run', 'ride', 'swim', 'all'], default: 'all' }))
+    setCockpitDefaultSport('velo')
+    expect(read(CHARGE_KEY).default).toBe('all')
+  })
+
+  it('préserve le visible personnalisé et y ajoute le sport si manquant', () => {
+    const key = nonChargeKeys[0]
+    localStorage.setItem(key, JSON.stringify({ visible: ['run', 'ride'], default: 'run' }))
+    setCockpitDefaultSport('natation')
+    const s = read(key)
+    expect(s.default).toBe('swim')
+    expect(s.visible).toEqual(['run', 'ride', 'swim'])
+  })
+
+  it('écrit un réglage propre sur les blocs vierges (hors Charge)', () => {
+    setCockpitDefaultSport('triathlon')
+    for (const key of nonChargeKeys) {
+      expect(read(key).default).toBe('all')
+    }
+    expect(localStorage.getItem(CHARGE_KEY)).toBeNull()
   })
 })
 

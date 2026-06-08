@@ -62,6 +62,10 @@ export const COCKPIT_SPORT_SETTINGS_KEYS = [
 const BASE_DEFAULT_SPORT: SportKey = 'run'
 const BASE_VISIBLE: SportKey[] = ['run', 'ride', 'swim', 'all']
 
+// Le bloc Charge garde une vue « Toutes » indépendante : il ne suit jamais la
+// discipline (en Mode Mission il est masqué, en Expert l'user le pilote seul).
+const CHARGE_SETTINGS_KEY = 'cockpit_charge_settings'
+
 /**
  * Applique le sport d'une discipline d'onboarding comme défaut des blocs Cockpit.
  *
@@ -96,6 +100,42 @@ export function applyDisciplineDefaultToCockpit(
       window.localStorage.setItem(key, JSON.stringify({ visible, default: sport }))
     } catch {
       // Clé corrompue : on réécrit un réglage propre porté par la discipline.
+      window.localStorage.setItem(key, JSON.stringify({ visible: [...BASE_VISIBLE], default: sport }))
+    }
+  }
+}
+
+/**
+ * Re-pointe le défaut sport de TOUS les blocs Cockpit (sauf Charge) sur le sport
+ * de la discipline. À appeler quand l'utilisateur change EXPLICITEMENT sa
+ * discipline dans les Réglages : ce choix prime sur les défauts par bloc, donc —
+ * contrairement à `applyDisciplineDefaultToCockpit` — aucune garde de
+ * personnalisation (un défaut déjà ≠ 'run' est quand même réécrit). C'est ce qui
+ * débloque le cas « bloc resté sur natation après changement de discipline » :
+ * `router.refresh()` met à jour la prop `defaultSport` côté serveur, mais le
+ * réglage localStorage prime (LS-override-wins) et doit donc être réconcilié ici.
+ *
+ * trail/route/inconnu → 'run' (et non un no-op : on veut vraiment quitter le
+ * sport précédent). Le `visible[]` éventuel est préservé (et complété). Le bloc
+ * Charge est volontairement laissé intact (vue « Toutes » indépendante).
+ */
+export function setCockpitDefaultSport(
+  discipline: string | null | undefined,
+): void {
+  if (typeof window === 'undefined') return
+  const sport = defaultSportForDiscipline(discipline) ?? BASE_DEFAULT_SPORT
+
+  for (const key of COCKPIT_SPORT_SETTINGS_KEYS) {
+    if (key === CHARGE_SETTINGS_KEY) continue
+    try {
+      const raw = window.localStorage.getItem(key)
+      const saved = raw
+        ? (JSON.parse(raw) as { visible?: SportKey[]; default?: SportKey })
+        : null
+      const visible = saved?.visible?.length ? [...saved.visible] : [...BASE_VISIBLE]
+      if (!visible.includes(sport)) visible.push(sport)
+      window.localStorage.setItem(key, JSON.stringify({ visible, default: sport }))
+    } catch {
       window.localStorage.setItem(key, JSON.stringify({ visible: [...BASE_VISIBLE], default: sport }))
     }
   }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { setCockpitDefaultSport } from '@/lib/design/sport-settings'
 
 // ── Options ────────────────────────────────────────────────────────────────
 
@@ -88,6 +89,11 @@ export function MissionProfileSection({ discipline, mission, raceDate }: Props) 
   // l'app relise la nouvelle valeur sans F5 manuel. Même pattern qu'AppModeToggle.
   async function handleDisciplineChange(id: string) {
     setSelectedDiscipline(id)
+    // Re-pointe le défaut sport des blocs Cockpit (sauf Charge) sur la nouvelle
+    // discipline : le refresh ne met à jour que la prop serveur `defaultSport`,
+    // or le réglage localStorage prime (LS-override-wins) — sans cette passe le
+    // bloc resterait figé sur l'ancien sport (ex. Cumul km/mois bloqué natation).
+    setCockpitDefaultSport(id)
     await patchProfile({ onboarding_discipline: id })
     router.refresh()
   }
