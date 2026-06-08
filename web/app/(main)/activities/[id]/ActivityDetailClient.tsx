@@ -320,7 +320,7 @@ export function ActivityDetailClient({
 
   return (
     <div style={{ background: 'var(--trail-bg)', minHeight: '100vh', color: 'var(--trail-text)', fontFamily: 'var(--font-sans)' }}>
-      <div style={{ maxWidth: 720, margin: '0 auto' }}>
+      <div className="max-w-lg md:max-w-4xl mx-auto w-full">
 
       {/* Map section */}
       <div style={{
