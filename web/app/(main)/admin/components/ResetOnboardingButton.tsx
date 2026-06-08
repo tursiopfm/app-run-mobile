@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { RotateCcw } from 'lucide-react'
+import { clearCockpitSportSettings } from '@/lib/design/sport-settings'
+import { APP_MODE_KEY } from '@/lib/preferences/app-mode'
 
 export function ResetOnboardingButton() {
   const [loading, setLoading] = useState(false)
@@ -15,6 +17,10 @@ export function ResetOnboardingButton() {
       setLoading(false)
       return
     }
+    // Ardoise vierge côté client : le re-jeu réappliquera mode + discipline.
+    // (Le serveur a déjà purgé les pendants DB synchronisés.)
+    try { localStorage.removeItem(APP_MODE_KEY) } catch { /* private mode */ }
+    clearCockpitSportSettings()
     // Le gate onboarding_completed_at est null → /onboarding réaffiche le flow.
     router.push('/onboarding')
   }

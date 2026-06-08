@@ -100,3 +100,17 @@ export function applyDisciplineDefaultToCockpit(
     }
   }
 }
+
+/**
+ * Efface les réglages sport des blocs Cockpit en localStorage. Appelé par le
+ * reset onboarding admin (« Rejouer l'onboarding ») pour repartir d'une ardoise
+ * vierge : la discipline re-choisie est alors ré-appliquée proprement à la
+ * complétion. Sans ça, un défaut résiduel (≠ 'run') serait vu comme une
+ * personnalisation et bloquerait le re-jeu.
+ */
+export function clearCockpitSportSettings(): void {
+  if (typeof window === 'undefined') return
+  for (const key of COCKPIT_SPORT_SETTINGS_KEYS) {
+    try { window.localStorage.removeItem(key) } catch { /* quota / private mode */ }
+  }
+}

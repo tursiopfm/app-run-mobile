@@ -12,6 +12,21 @@ export async function POST() {
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const supabase = createServiceClient()
+
+  // Efface aussi les préférences semées par l'onboarding et synchronisées en DB,
+  // sinon le re-jeu est bloqué : app_mode garde son ancienne valeur (guard
+  // seed-once) et cockpit_goals_settings serait ré-hydraté (cloud→localStorage)
+  // par-dessus la nouvelle discipline. Lecture-merge pour préserver le reste
+  // (ordres de blocs, largeurs, cibles d'objectifs…).
+  const { data: prof } = await supabase
+    .from('profiles')
+    .select('ui_preferences')
+    .eq('id', user.id)
+    .maybeSingle()
+  const prefs = { ...((prof?.ui_preferences ?? {}) as Record<string, unknown>) }
+  delete prefs.app_mode
+  delete prefs.cockpit_goals_settings
+
   const { error } = await supabase
     .from('profiles')
     .update({
@@ -21,6 +36,7 @@ export async function POST() {
       onboarding_mission: null,
       onboarding_mode: null,
       onboarding_data_source: null,
+      ui_preferences: prefs,
     })
     .eq('id', user.id)
 

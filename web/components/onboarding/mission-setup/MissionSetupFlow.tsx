@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { TrajectoryLine } from '@/components/brand/TrajectoryLine'
 import { applyDisciplineDefaultToCockpit } from '@/lib/design/sport-settings'
+import { APP_MODE_KEY } from '@/lib/preferences/app-mode'
 import { cn } from '@/lib/cn'
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -231,6 +232,12 @@ export function MissionSetupFlow({
     // Pose le sport de la discipline comme défaut des blocs Cockpit avant la
     // navigation (sinon un réglage LS résiduel laisse les blocs sur « course »).
     applyDisciplineDefaultToCockpit(discipline)
+    // Reflète le Mode choisi en localStorage tout de suite : le serveur a semé
+    // app_mode en DB, mais on évite ainsi le flash expert→mission au 1er render
+    // du dashboard (avant l'hydratation cloud→localStorage).
+    if (mode === 'mission' || mode === 'expert') {
+      try { localStorage.setItem(APP_MODE_KEY, JSON.stringify(mode)) } catch { /* private mode */ }
+    }
     router.push('/dashboard')
   }
 

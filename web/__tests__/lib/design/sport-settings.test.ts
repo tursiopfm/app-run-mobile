@@ -3,6 +3,7 @@ import {
   withDefaultSport,
   readSportSettings,
   applyDisciplineDefaultToCockpit,
+  clearCockpitSportSettings,
   COCKPIT_SPORT_SETTINGS_KEYS,
 } from '@/lib/design/sport-settings'
 
@@ -103,5 +104,33 @@ describe('applyDisciplineDefaultToCockpit', () => {
     for (const key of COCKPIT_SPORT_SETTINGS_KEYS) {
       expect(localStorage.getItem(key)).toBeNull()
     }
+  })
+})
+
+// Reset onboarding admin : on efface les réglages sport des blocs pour que le
+// re-jeu réapplique proprement la discipline (sinon le défaut résiduel bloque).
+describe('clearCockpitSportSettings', () => {
+  afterEach(() => localStorage.clear())
+
+  it('supprime toutes les clés cockpit_*_settings', () => {
+    for (const key of COCKPIT_SPORT_SETTINGS_KEYS) {
+      localStorage.setItem(key, JSON.stringify({ visible: ['run'], default: 'swim' }))
+    }
+    clearCockpitSportSettings()
+    for (const key of COCKPIT_SPORT_SETTINGS_KEYS) {
+      expect(localStorage.getItem(key)).toBeNull()
+    }
+  })
+
+  it('après reset, une nouvelle discipline est ré-appliquée (re-jeu débloqué)', () => {
+    // Simule l'état « bloqué en natation » : tous les blocs en swim.
+    applyDisciplineDefaultToCockpit('natation')
+    // Re-jeu vélo SANS reset → resté en swim (perçu comme personnalisé).
+    applyDisciplineDefaultToCockpit('velo')
+    expect(JSON.parse(localStorage.getItem(COCKPIT_SPORT_SETTINGS_KEYS[0])!).default).toBe('swim')
+    // Avec reset → la nouvelle discipline prend bien.
+    clearCockpitSportSettings()
+    applyDisciplineDefaultToCockpit('velo')
+    expect(JSON.parse(localStorage.getItem(COCKPIT_SPORT_SETTINGS_KEYS[0])!).default).toBe('ride')
   })
 })
