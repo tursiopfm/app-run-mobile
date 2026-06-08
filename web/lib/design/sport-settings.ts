@@ -1,3 +1,5 @@
+import type { SportKey } from '@/lib/design/sports'
+
 // Helper sync pour les blocs Cockpit qui persistent leurs préférences
 // (visible[], default sport) en localStorage. Permet le lazy-init de useState :
 //
@@ -15,4 +17,31 @@ export function readSportSettings<T extends object>(storageKey: string, defaults
   } catch {
     return defaults
   }
+}
+
+/**
+ * Sport par défaut à appliquer aux blocs cockpit selon la discipline
+ * d'onboarding. `undefined` = pas de surcharge (le bloc garde son défaut).
+ * trail/route restent sur le défaut par bloc (« laisse tous les blocs »).
+ */
+export function defaultSportForDiscipline(
+  discipline: string | null | undefined,
+): SportKey | undefined {
+  switch (discipline) {
+    case 'velo':      return 'ride'
+    case 'natation':  return 'swim'
+    case 'triathlon': return 'all'
+    default:          return undefined
+  }
+}
+
+/**
+ * Renvoie une copie des `defaults` avec `default` surchargé par `defaultSport`
+ * s'il est fourni. Sinon renvoie `defaults` inchangé (même référence).
+ */
+export function withDefaultSport<T extends { default: SportKey }>(
+  defaults: T,
+  defaultSport?: SportKey,
+): T {
+  return defaultSport ? { ...defaults, default: defaultSport } : defaults
 }
