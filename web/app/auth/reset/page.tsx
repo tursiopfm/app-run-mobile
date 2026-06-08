@@ -15,18 +15,27 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    let recovered = false
+    let settled = false
+    const markReady = () => {
+      settled = true
+      setExpired(false)
+      setReady(true)
+    }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        recovered = true
-        setExpired(false)
-        setReady(true)
-      }
+    // Flow serveur (lien e-mail → /auth/confirm avec token_hash) : verifyOtp a déjà
+    // posé la session de récupération en cookie, l'URL d'arrivée est « propre ».
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user && !settled) markReady()
     })
 
+    // Flow implicite (token dans le #hash de l'URL) : supabase-js émet PASSWORD_RECOVERY.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') markReady()
+    })
+
+    // Ni session ni event → lien réellement invalide ou expiré.
     const timer = setTimeout(() => {
-      if (!recovered) setExpired(true)
+      if (!settled) setExpired(true)
     }, 5000)
 
     return () => {
