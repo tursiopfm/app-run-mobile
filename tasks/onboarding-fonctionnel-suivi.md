@@ -32,9 +32,11 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` livré (date + commit).
 - [x] Section `/settings` « Mon profil sportif » : discipline + objectif (+ date course conditionnelle). FR codé en dur. Le **Mode** garde sa section « Mode d'affichage » dédiée existante (pas de doublon).
 - [x] Bouton « Réappliquer les défauts d'affichage » (efface les 8 `cockpit_*_settings` + `notifyChange()`)
 
-## Lot 5 — Import manuel réel (2ᵉ temps, après lots 1–4)
-- [ ] Flow d'upload GPX/FIT
-- [ ] Bannière dashboard « Ajoute ta première activité » tant qu'aucune activité (amorce non bloquante)
+## Lot 5 — Import manuel réel (2ᵉ temps, après lots 1–4) — ✅ livré 2026-06-08 (branche `feat/onboarding-lot5-import`)
+- [x] Flow d'upload **GPX** : parser pur `parseGpx` + `gpxToNormalized` (provider `gpx`, dédup hash) + route `POST /api/activities/import-file` (multipart, CES via profil FC) + carte Réglages « Import manuel » conforme Strava (sélecteur de sport)
+- [x] Bannière dashboard « Ajoute ta première activité » tant qu'aucune activité (amorce non bloquante)
+- [ ] **FIT** (fast-follow, hors v1) : parsing binaire `.fit` via lib
+- [ ] Dédup cross-provider avec Strava (raffinement futur, accepté pour l'instant)
 
 ## Hors périmètre (acté)
 - Générateur de plan daté automatique
