@@ -63,11 +63,23 @@ describe('applyDisciplineDefaultToCockpit', () => {
     return JSON.parse(localStorage.getItem(key) ?? 'null')
   }
 
-  it('applique le sport sur tous les blocs sans réglage stocké', () => {
+  it('applique le sport sur tous les blocs (sauf Charge) sans réglage stocké', () => {
     applyDisciplineDefaultToCockpit('natation')
     for (const key of COCKPIT_SPORT_SETTINGS_KEYS) {
+      if (key === 'cockpit_charge_settings') continue
       expect(read(key).default).toBe('swim')
     }
+  })
+
+  it('épargne le bloc Charge (charge globale = Toutes, jamais la discipline)', () => {
+    applyDisciplineDefaultToCockpit('natation')
+    expect(localStorage.getItem('cockpit_charge_settings')).toBeNull()
+  })
+
+  it('ne réécrit pas un réglage Charge existant', () => {
+    localStorage.setItem('cockpit_charge_settings', JSON.stringify({ visible: ['all', 'run'], default: 'all' }))
+    applyDisciplineDefaultToCockpit('velo')
+    expect(read('cockpit_charge_settings').default).toBe('all')
   })
 
   it('écrase un défaut incident (=run) en préservant le visible personnalisé', () => {

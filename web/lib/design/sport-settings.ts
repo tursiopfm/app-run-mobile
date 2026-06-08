@@ -87,6 +87,8 @@ export function applyDisciplineDefaultToCockpit(
   if (!sport) return
 
   for (const key of COCKPIT_SPORT_SETTINGS_KEYS) {
+    // Le bloc Charge = charge globale (« Toutes »), il ne suit jamais la discipline.
+    if (key === CHARGE_SETTINGS_KEY) continue
     try {
       const raw = window.localStorage.getItem(key)
       const saved = raw
