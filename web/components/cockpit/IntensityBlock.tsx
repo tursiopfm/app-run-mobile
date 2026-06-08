@@ -14,7 +14,7 @@ import { TypeIcon, UnknownTypeIcon } from '@/components/activity/indicatorIcons'
 import { useT } from '@/lib/i18n/I18nProvider'
 
 type Settings = { visible: SportKey[]; default: SportKey }
-const DEFAULT_SETTINGS: Settings = { visible: ['run', 'ride', 'swim', 'all'], default: 'all' }
+const DEFAULT_SETTINGS: Settings = { visible: ['run', 'ride', 'swim', 'all'], default: 'run' }
 const STORAGE_KEY = 'cockpit_intensity_settings'
 
 const UNDEFINED_COLOR = '#6B7280'
