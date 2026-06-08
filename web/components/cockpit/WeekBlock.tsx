@@ -10,6 +10,7 @@ import { useT } from '@/lib/i18n/I18nProvider'
 type Props = {
   sportOverviews: Record<SportKey, SportOverview>
   allSessions: { day: string; label: string; volumeKm: number; dPlus: number; durationSec: number }[]
+  defaultSport?: SportKey
 }
 
 const DAY_ABBR = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
@@ -21,10 +22,10 @@ function fmtDuration(totalSec: number): string {
   return h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m}min`
 }
 
-export function WeekBlock({ sportOverviews, allSessions }: Props) {
+export function WeekBlock({ sportOverviews, allSessions, defaultSport }: Props) {
   const t = useT()
   const L = t.cockpit
-  const [activeSport, setActiveSport] = useState<SportKey>('run')
+  const [activeSport, setActiveSport] = useState<SportKey>(defaultSport ?? 'run')
 
   const sessions = activeSport === 'all'
     ? allSessions

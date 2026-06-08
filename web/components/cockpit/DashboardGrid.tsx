@@ -57,7 +57,7 @@ export function DashboardGrid({ sportOverviews, weekSessions, latestPerSport, we
     { id: 'history',        label: L.history,        emoji: '📅', desktopCols: 2, render: () => <BlockWithHide>{(onHide) => <HistoryBlock         sportOverviews={sportOverviews} onHide={onHide} defaultSport={defaultSport} />}</BlockWithHide> },
     { id: 'cumul',          label: L.cumul,          emoji: '📈', desktopCols: 2, render: () => <BlockWithHide>{(onHide) => <CumulBlock           sportOverviews={sportOverviews} onHide={onHide} defaultSport={defaultSport} />}</BlockWithHide> },
     { id: 'intensity',      label: L.intensity,      emoji: '🔥', render: () => <BlockWithHide>{(onHide) => <IntensityBlock       sportOverviews={sportOverviews} onHide={onHide} defaultSport={defaultSport} />}</BlockWithHide> },
-    { id: 'week',           label: L.week,           emoji: '🗓️', desktopCols: 2, render: () => <WeekBlock sportOverviews={sportOverviews} allSessions={weekSessions} /> },
+    { id: 'week',           label: L.week,           emoji: '🗓️', desktopCols: 2, render: () => <WeekBlock sportOverviews={sportOverviews} allSessions={weekSessions} defaultSport={defaultSport} /> },
     { id: 'weekActivities', label: L.weekActivities, emoji: '📋', desktopCols: 2, render: () => <BlockWithHide>{(onHide) => <WeekActivitiesBlock  activities={weekActivities} onHide={onHide} />}</BlockWithHide> },
   ]
 

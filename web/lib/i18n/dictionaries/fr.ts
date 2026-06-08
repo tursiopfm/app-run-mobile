@@ -1100,9 +1100,9 @@ export const fr: Dict = {
     all:            'Toutes',
     abbr: {
       run:  'RUN',
-      bike: 'BIKE',
-      swim: 'SWIM',
-      all:  'ALL',
+      bike: 'VÉLO',
+      swim: 'NATATION',
+      all:  'TOUTES',
     },
   },
 
