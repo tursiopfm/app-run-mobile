@@ -124,7 +124,7 @@ export function DesktopSidebar({ isAdmin, displayName, mode = 'expert' }: Props)
               >
                 <Icon size={20} strokeWidth={active ? 2.4 : 1.8} className="shrink-0" />
                 {expanded && (
-                  <span className="text-[13px] font-medium whitespace-nowrap">{label}</span>
+                  <span className="text-body-sm font-medium whitespace-nowrap">{label}</span>
                 )}
                 {!expanded && (
                   <span className="pointer-events-none absolute left-14 top-1/2 -translate-y-1/2 px-2 py-1 rounded-md bg-trail-card border border-trail-border text-trail-text text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">
@@ -158,7 +158,7 @@ export function DesktopSidebar({ isAdmin, displayName, mode = 'expert' }: Props)
           >
             <Settings size={20} strokeWidth={1.8} className="shrink-0" />
             {expanded && (
-              <span className="text-[13px] font-medium whitespace-nowrap">Réglages</span>
+              <span className="text-body-sm font-medium whitespace-nowrap">Réglages</span>
             )}
             {!expanded && (
               <span className="pointer-events-none absolute left-14 top-1/2 -translate-y-1/2 px-2 py-1 rounded-md bg-trail-card border border-trail-border text-trail-text text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">
@@ -179,7 +179,7 @@ export function DesktopSidebar({ isAdmin, displayName, mode = 'expert' }: Props)
               {initials}
             </div>
             {expanded && displayName && (
-              <span className="text-[13px] font-medium text-trail-text truncate">{displayName}</span>
+              <span className="text-body-sm font-medium text-trail-text truncate">{displayName}</span>
             )}
           </Link>
         </div>
