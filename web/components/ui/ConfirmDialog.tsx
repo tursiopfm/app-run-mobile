@@ -61,21 +61,21 @@ export function ConfirmDialog({
         >
           {title}
         </h2>
-        <p className="text-[13px] text-trail-muted leading-[19px] whitespace-pre-line mb-5">
+        <p className="text-body-sm text-trail-muted leading-[19px] whitespace-pre-line mb-5">
           {message}
         </p>
         <div className="flex justify-end gap-2">
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-[14px] font-semibold text-trail-text hover:border-trail-primary"
+            className="px-4 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-body font-semibold text-trail-text hover:border-trail-primary"
           >
             {cancelLabel}
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className={`px-4 py-2 rounded-[10px] text-[14px] font-semibold ${confirmCls}`}
+            className={`px-4 py-2 rounded-[10px] text-body font-semibold ${confirmCls}`}
           >
             {confirmLabel}
           </button>

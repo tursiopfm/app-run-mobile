@@ -30,7 +30,7 @@ export function ProgressRow({
 
   return (
     <div className={className}>
-      <p className="text-[12px] font-semibold text-trail-text leading-tight">
+      <p className="text-caption font-semibold text-trail-text leading-tight">
         {label} &bull; {formatVal(current)} / {formatVal(target)} ({pct}%){unit ? ` ${unit}` : ''}
       </p>
       <div className="mt-1 h-4 rounded-sm overflow-hidden" style={{ backgroundColor: bgColor }}>

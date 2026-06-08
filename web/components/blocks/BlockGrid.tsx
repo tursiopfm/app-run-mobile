@@ -212,7 +212,7 @@ function AddBlockPanel({
               className="w-full flex items-center gap-3 px-4 py-3 rounded-[10px] bg-trail-surface border border-trail-border hover:border-trail-primary transition-colors text-left"
             >
               <span className="text-[20px]">{b.emoji}</span>
-              <span className="text-[14px] font-semibold text-trail-text">{b.label}</span>
+              <span className="text-body font-semibold text-trail-text">{b.label}</span>
               <span className="ml-auto text-trail-primary text-[20px] leading-none">+</span>
             </button>
           ))}
@@ -446,7 +446,7 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
           className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-[12px] border border-dashed border-trail-border text-trail-muted hover:border-trail-primary hover:text-trail-primary transition-colors"
         >
           <span className="text-[20px] leading-none">+</span>
-          <span className="text-[14px] font-semibold">{resolvedAddLabel}</span>
+          <span className="text-body font-semibold">{resolvedAddLabel}</span>
         </button>
       )}
       {showAdd && (

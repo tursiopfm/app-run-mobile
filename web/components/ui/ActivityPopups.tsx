@@ -75,7 +75,7 @@ function FullScreenSheet({ title, onClose, children }: {
 
         <button
           onClick={onClose}
-          className="mt-5 w-full py-3 rounded-[12px] text-[14px] font-bold"
+          className="mt-5 w-full py-3 rounded-[12px] text-body font-bold"
           style={{ backgroundColor: colors.chargeOrange, color: '#fff', cursor: 'pointer' }}
         >
           {L.popupClose}
@@ -95,7 +95,7 @@ export function EffortPopup({ ces, onClose }: { ces: number | null; onClose: () 
     <FullScreenSheet title={L.popupChargeTitle} onClose={onClose}>
       <div className="flex items-center gap-3 mb-3">
         <DumbbellIcon color="#F59E0B" size={36} />
-        <p className="text-[14px]" style={{ color: colors.subtleText }}>
+        <p className="text-body" style={{ color: colors.subtleText }}>
           {L.popupChargeIntro}
         </p>
       </div>
@@ -115,13 +115,13 @@ export function EffortPopup({ ces, onClose }: { ces: number | null; onClose: () 
               <DumbbellIcon color={r.color} size={28} />
               <div className="flex-1 min-w-0">
                 <p
-                  className="text-[13px] font-bold"
+                  className="text-body-sm font-bold"
                   style={{ color: r.color, opacity: active ? 1 : 0.85 }}
                 >
                   {r.label}
                 </p>
                 <p
-                  className="text-[12px]"
+                  className="text-caption"
                   style={{ color: colors.subtleText, opacity: active ? 1 : 0.75 }}
                 >
                   {L.cesRanges[r.key]}
@@ -147,7 +147,7 @@ export function IntensityPopup({
   const L = useT().activities
   return (
     <FullScreenSheet title={L.popupIntensityTitle} onClose={onClose}>
-      <p className="text-[12px] mb-4" style={{ color: colors.subtleText }}>
+      <p className="text-caption mb-4" style={{ color: colors.subtleText }}>
         {L.popupIntensityIntro}
       </p>
 
@@ -171,16 +171,16 @@ export function IntensityPopup({
               </div>
               <div className="flex-1 min-w-0">
                 <p
-                  className="text-[13px] font-bold"
+                  className="text-body-sm font-bold"
                   style={{ color: active ? color : colors.text }}
                 >
                   {label}
                 </p>
-                <p className="text-[12px] mt-[2px]" style={{ color: colors.subtleText }}>
+                <p className="text-caption mt-[2px]" style={{ color: colors.subtleText }}>
                   {L.intensityDesc[opt.key]}
                 </p>
                 <p
-                  className="text-[11px] mt-[3px] font-mono"
+                  className="text-micro mt-[3px] font-mono"
                   style={{ color: colors.subtleText, opacity: 0.85 }}
                 >
                   {L.rulePrefix}{L.intensityRule[opt.key]}
@@ -195,15 +195,15 @@ export function IntensityPopup({
         className="rounded-[10px] px-3 py-[10px] mb-3"
         style={{ backgroundColor: `${colors.chargeOrange}10`, border: `1px solid ${colors.chargeOrange}30` }}
       >
-        <p className="text-[12px] font-semibold mb-1" style={{ color: colors.text }}>
+        <p className="text-caption font-semibold mb-1" style={{ color: colors.text }}>
           {L.popupShortNote}
         </p>
-        <p className="text-[11px]" style={{ color: colors.subtleText }}
+        <p className="text-micro" style={{ color: colors.subtleText }}
           dangerouslySetInnerHTML={{ __html: L.popupShortIntervalsHtml }}
         />
       </div>
 
-      <p className="text-[11px]" style={{ color: colors.subtleText, opacity: 0.7 }}>
+      <p className="text-micro" style={{ color: colors.subtleText, opacity: 0.7 }}>
         {L.popupRefs}
       </p>
     </FullScreenSheet>
@@ -222,7 +222,7 @@ export function WorkoutTypePopup({
   const L = useT().activities
   return (
     <FullScreenSheet title={L.popupWorkoutTypeTitle} onClose={onClose}>
-      <p className="text-[12px] mb-4" style={{ color: colors.subtleText }}>
+      <p className="text-caption mb-4" style={{ color: colors.subtleText }}>
         {L.popupWorkoutTypeIntro}
       </p>
 
@@ -245,16 +245,16 @@ export function WorkoutTypePopup({
               </div>
               <div className="flex-1 min-w-0">
                 <p
-                  className="text-[13px] font-bold"
+                  className="text-body-sm font-bold"
                   style={{ color: active ? color : colors.text }}
                 >
                   {label}
                 </p>
-                <p className="text-[12px] mt-[2px]" style={{ color: colors.subtleText }}>
+                <p className="text-caption mt-[2px]" style={{ color: colors.subtleText }}>
                   {L.workoutTypeDesc[opt.value]}
                 </p>
                 <p
-                  className="text-[11px] mt-[3px] font-mono"
+                  className="text-micro mt-[3px] font-mono"
                   style={{ color: colors.subtleText, opacity: 0.85 }}
                 >
                   {L.rulePrefix}{L.workoutTypeRule[opt.value]}
@@ -279,16 +279,16 @@ export function WorkoutTypePopup({
               </div>
               <div className="flex-1 min-w-0">
                 <p
-                  className="text-[13px] font-bold italic"
+                  className="text-body-sm font-bold italic"
                   style={{ color: active ? '#9CA3AF' : colors.text }}
                 >
                   {L.sessionTypeUndefined}
                 </p>
-                <p className="text-[12px] mt-[2px]" style={{ color: colors.subtleText }}>
+                <p className="text-caption mt-[2px]" style={{ color: colors.subtleText }}>
                   {L.workoutTypeUndefinedDesc}
                 </p>
                 <p
-                  className="text-[11px] mt-[3px] font-mono"
+                  className="text-micro mt-[3px] font-mono"
                   style={{ color: colors.subtleText, opacity: 0.85 }}
                 >
                   {L.rulePrefix}{L.workoutTypeUndefinedRule}

@@ -39,8 +39,8 @@ const VARIANT_COLOR: Record<BadgeVariant, string> = {
 }
 
 const sizes = {
-  sm: 'text-[11px] px-2 py-[2px] gap-1',
-  md: 'text-[13px] px-2.5 py-[4px] gap-1.5',
+  sm: 'text-micro px-2 py-[2px] gap-1',
+  md: 'text-body-sm px-2.5 py-[4px] gap-1.5',
 } as const
 
 export function Badge({

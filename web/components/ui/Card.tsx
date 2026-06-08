@@ -74,7 +74,7 @@ export function CardTitle({ className, children, ...props }: HTMLAttributes<HTML
 
 export function CardContent({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('font-body text-[13px] text-trail-muted leading-relaxed', className)} {...props}>
+    <div className={cn('font-body text-body-sm text-trail-muted leading-relaxed', className)} {...props}>
       {children}
     </div>
   )

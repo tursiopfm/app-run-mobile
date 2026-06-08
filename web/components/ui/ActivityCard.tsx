@@ -37,7 +37,7 @@ function TypeBadge({ type }: { type: string }) {
   const label = sportLabel[type] ?? type
   return (
     <span
-      className="inline-flex items-center rounded-full px-2 py-[3px] text-[14px] font-semibold leading-none border"
+      className="inline-flex items-center rounded-full px-2 py-[3px] text-body font-semibold leading-none border"
       style={{
         backgroundColor: toHex(color, 0.16),
         borderColor:     toHex(color, 0.35),
@@ -56,7 +56,7 @@ function MetricTile({ label, value, unit, color }: {
     <div className="rounded-[8px] bg-trail-surface px-[7px] py-[6px] flex-shrink-0">
       <p className="text-[10px] text-trail-muted">{label}</p>
       <div className="flex items-baseline gap-[2px] mt-[1px]">
-        <span className="text-[14px] font-bold" style={{ color }}>{value}</span>
+        <span className="text-body font-bold" style={{ color }}>{value}</span>
         {unit && <span className="text-[10px] text-trail-muted">{unit}</span>}
       </div>
     </div>
@@ -192,7 +192,7 @@ export function ActivityCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-[6px]">
               <TypeBadge type={effectiveSport} />
-              <span suppressHydrationWarning className="text-[13px] text-trail-muted">{fmtDate(a.start_time)}</span>
+              <span suppressHydrationWarning className="text-body-sm text-trail-muted">{fmtDate(a.start_time)}</span>
             </div>
             <p className="text-[15px] font-medium mt-[6px] text-trail-text break-words leading-tight">
               {a.name}

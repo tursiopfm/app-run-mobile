@@ -101,7 +101,7 @@ export function WhatsNewModal() {
 
         <ul className="space-y-2.5">
           {BULLETS.map(({ emoji, label }) => (
-            <li key={label} className="flex gap-2.5 text-[13px] text-trail-text leading-relaxed">
+            <li key={label} className="flex gap-2.5 text-body-sm text-trail-text leading-relaxed">
               <span aria-hidden className="shrink-0">{emoji}</span>
               <span>{label}</span>
             </li>
@@ -110,7 +110,7 @@ export function WhatsNewModal() {
 
         <button
           onClick={() => void dismiss()}
-          className="mt-5 w-full rounded-[10px] bg-trail-primary py-2.5 text-[14px] font-semibold text-white hover:bg-trail-primary-dim transition-colors"
+          className="mt-5 w-full rounded-[10px] bg-trail-primary py-2.5 text-body font-semibold text-white hover:bg-trail-primary-dim transition-colors"
         >
           Compris
         </button>

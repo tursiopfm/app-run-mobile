@@ -29,13 +29,13 @@ function Row({ row, isActive }: { row: KpiHelpRow; isActive: boolean }) {
       }}
     >
       <div className="flex items-baseline justify-between gap-2 mb-1">
-        <span className="text-[14px] font-semibold" style={{ color: row.color }}>
+        <span className="text-body font-semibold" style={{ color: row.color }}>
           {row.label}
         </span>
-        <span className="text-[11px] font-medium text-trail-muted">{row.range}</span>
+        <span className="text-micro font-medium text-trail-muted">{row.range}</span>
       </div>
-      <p className="text-[12px] text-trail-text leading-[17px] mb-1">{row.meaning}</p>
-      <p className="text-[12px] text-trail-muted leading-[17px]">{row.advice}</p>
+      <p className="text-caption text-trail-text leading-[17px] mb-1">{row.meaning}</p>
+      <p className="text-caption text-trail-muted leading-[17px]">{row.advice}</p>
     </div>
   )
 }
@@ -43,7 +43,7 @@ function Row({ row, isActive }: { row: KpiHelpRow; isActive: boolean }) {
 export function KpiHelpSheet({ title, intro, rows, currentId, onClose }: Props) {
   const body = (
     <div className="flex flex-col gap-2">
-      <p className="text-[12px] text-trail-muted leading-[18px] mb-1">{intro}</p>
+      <p className="text-caption text-trail-muted leading-[18px] mb-1">{intro}</p>
       {rows.map((row) => (
         <Row key={row.id} row={row} isActive={row.id === currentId} />
       ))}

@@ -33,9 +33,9 @@ export function CockpitKpiTile({
       {/* Period label row */}
       <div className="flex items-center justify-between gap-[3px]">
         <div className="flex items-center gap-[3px] min-w-0">
-          {icon && <span className="text-[14px] leading-none">{icon}</span>}
+          {icon && <span className="text-body leading-none">{icon}</span>}
           <span
-            className="text-[11px] font-semibold text-trail-muted leading-tight truncate"
+            className="text-micro font-semibold text-trail-muted leading-tight truncate"
             style={{ maxWidth: '100%' }}
           >
             {title}
@@ -54,7 +54,7 @@ export function CockpitKpiTile({
       <div className="h-[2px]" />
 
       {/* Subline */}
-      <div className="text-[12px] text-trail-muted leading-tight truncate">{subline}</div>
+      <div className="text-caption text-trail-muted leading-tight truncate">{subline}</div>
 
       {/* 4px gap (mt-auto pour plaquer la BarStrip en bas quand la tuile est étirée par la grid) */}
       <div className="mt-auto h-[4px]" />

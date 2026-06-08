@@ -45,19 +45,19 @@ export function BlockCard({ title, helpTitle, helpBody, children, rightSlot, tit
           <button
             aria-label={C.blockHelpAria}
             onClick={() => setShowHelp(true)}
-            className="text-trail-muted hover:text-trail-text w-7 h-7 flex items-center justify-center text-[14px]"
+            className="text-trail-muted hover:text-trail-text w-7 h-7 flex items-center justify-center text-body"
           >ⓘ</button>
           <div className="relative" ref={menuRef}>
             <button
               aria-label={C.blockMenuAria}
               onClick={() => setShowMenu(s => !s)}
-              className="text-trail-muted hover:text-trail-text w-7 h-7 flex items-center justify-center text-[18px] leading-none"
+              className="text-trail-muted hover:text-trail-text w-7 h-7 flex items-center justify-center text-h2 leading-none"
             >⋮</button>
             {showMenu && (
               <div className="absolute right-0 mt-1 w-32 rounded-[8px] bg-trail-surface border border-trail-border shadow-lg z-30">
                 <button
                   onClick={() => { setShowMenu(false); hideSelf() }}
-                  className="w-full px-3 py-2 text-left text-[12px] text-trail-text hover:bg-trail-card"
+                  className="w-full px-3 py-2 text-left text-caption text-trail-text hover:bg-trail-card"
                 >{C.blockHide}</button>
               </div>
             )}

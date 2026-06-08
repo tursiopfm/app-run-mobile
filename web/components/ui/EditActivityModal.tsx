@@ -50,7 +50,7 @@ function SectionCard({ title, children }: { title: string; children: React.React
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1">
-      <p className="text-[12px] text-trail-muted">{label}</p>
+      <p className="text-caption text-trail-muted">{label}</p>
       {children}
     </div>
   )
@@ -81,7 +81,7 @@ function ChipRow({
           <button
             key={value}
             onClick={() => onSelect(value)}
-            className="rounded-full border text-[13px] font-semibold flex-shrink-0 flex items-center gap-[6px]"
+            className="rounded-full border text-body-sm font-semibold flex-shrink-0 flex items-center gap-[6px]"
             style={{
               backgroundColor: active ? `${accent}26` : 'transparent',
               borderColor:     active ? accent : colors.border,
@@ -222,8 +222,8 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
     }
   }
 
-  const inputCls = 'rounded-[8px] border px-3 py-[8px] text-[14px] w-full'
-  const btnBase  = 'flex-1 py-3 rounded-[12px] text-[14px] font-bold'
+  const inputCls = 'rounded-[8px] border px-3 py-[8px] text-body w-full'
+  const btnBase  = 'flex-1 py-3 rounded-[12px] text-body font-bold'
 
   if (typeof document === 'undefined') return null
   return createPortal(
@@ -241,7 +241,7 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
           </svg>
           <span className="font-display text-[16px] font-semibold text-trail-text">{L.editTitle}</span>
         </button>
-        <span className="text-[13px] text-trail-muted">{fmtModalDate(a.start_time)}</span>
+        <span className="text-body-sm text-trail-muted">{fmtModalDate(a.start_time)}</span>
       </div>
 
       {/* Body — scrollable */}
@@ -351,7 +351,7 @@ export function EditActivityModal({ activity: a, hrZones = [], onSaved, onDelete
 
         {/* Erreur */}
         {error && (
-          <p className="text-[13px] px-1" style={{ color: '#ef4444' }}>{error}</p>
+          <p className="text-body-sm px-1" style={{ color: '#ef4444' }}>{error}</p>
         )}
 
         {/* Boutons */}

@@ -40,7 +40,7 @@ export function WeekTable({ sessions, className = '' }: WeekTableProps) {
       style={{ width: w, minWidth: w, height: hH }}
       className="flex items-center px-1.5 bg-trail-header border-[0.5px] border-trail-border shrink-0"
     >
-      <span className={`text-[11px] text-trail-text leading-none ${bold ? 'font-semibold' : ''}`}>
+      <span className={`text-micro text-trail-text leading-none ${bold ? 'font-semibold' : ''}`}>
         {text}
       </span>
     </div>
@@ -51,7 +51,7 @@ export function WeekTable({ sessions, className = '' }: WeekTableProps) {
       style={{ width: w, minWidth: w, height: bH }}
       className="flex items-center px-1.5 bg-trail-surface border-[0.5px] border-trail-border shrink-0"
     >
-      <span className={`text-[11px] text-trail-text leading-none ${bold ? 'font-semibold' : ''}`}>
+      <span className={`text-micro text-trail-text leading-none ${bold ? 'font-semibold' : ''}`}>
         {text}
       </span>
     </div>

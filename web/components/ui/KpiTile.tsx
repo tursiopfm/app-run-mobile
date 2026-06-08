@@ -31,7 +31,7 @@ export function KpiTile({
       {/* Header band — bg-trail-header, title in sport color */}
       <div className="bg-trail-header px-2 py-1 flex items-center justify-between">
         <span
-          className="text-[12px] font-bold leading-tight flex-1 min-w-0 truncate"
+          className="text-caption font-bold leading-tight flex-1 min-w-0 truncate"
           style={{ color: titleColor }}
         >
           {title}
@@ -47,14 +47,14 @@ export function KpiTile({
         >
           {mainValue}
           {unit && (
-            <span className="text-[11px] font-normal ml-1 text-trail-muted">{unit}</span>
+            <span className="text-micro font-normal ml-1 text-trail-muted">{unit}</span>
           )}
         </p>
         {subline1 && (
-          <p className="text-[11px] text-trail-muted mt-0.5 leading-tight">{subline1}</p>
+          <p className="text-micro text-trail-muted mt-0.5 leading-tight">{subline1}</p>
         )}
         {subline2 && (
-          <p className="text-[11px] text-trail-muted mt-1 leading-tight">{subline2}</p>
+          <p className="text-micro text-trail-muted mt-1 leading-tight">{subline2}</p>
         )}
       </div>
     </div>
