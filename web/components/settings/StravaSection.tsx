@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Activity, RefreshCw, LogOut } from 'lucide-react'
+import { RefreshCw, LogOut } from 'lucide-react'
 import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
@@ -85,7 +85,8 @@ export function StravaSection({ isConnected, athleteName, planAutoPushTitle, not
       )}
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-[10px] bg-[#FC4C02]/15 border border-[#FC4C02]/30 flex items-center justify-center flex-shrink-0">
-          <Activity size={14} className="text-[#FC4C02]" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/strava/strava-mark.svg" alt="" width={14} height={14} className="block" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-micro font-semibold uppercase tracking-wider text-trail-muted">Strava</p>
@@ -131,12 +132,9 @@ export function StravaSection({ isConnected, athleteName, planAutoPushTitle, not
           </button>
         </div>
       ) : (
-        <a
-          href="/api/strava/connect"
-          className="flex items-center justify-center gap-2 w-full px-3 py-[8px] rounded-[8px] bg-[#FC4C02] hover:bg-[#FC4C02]/90 text-white text-caption font-bold uppercase tracking-wider transition-colors"
-        >
-          <Activity size={13} />
-          {L.stravaConnectMyAccount}
+        <a href="/api/strava/connect" className="flex justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/strava/connect-with-strava.svg" alt={L.stravaConnectMyAccount} height={48} style={{ height: 48, width: 'auto', display: 'block' }} />
         </a>
       )}
 
@@ -169,6 +167,13 @@ export function StravaSection({ isConnected, athleteName, planAutoPushTitle, not
               }
             />
           </button>
+        </div>
+      )}
+
+      {isConnected && (
+        <div className="flex items-center justify-center pt-[6px]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/strava/powered-by-strava.svg" alt="Powered by Strava" height={18} style={{ height: 18, width: 'auto', display: 'block' }} />
         </div>
       )}
 

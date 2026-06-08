@@ -15,6 +15,7 @@ import ChargeIndicator from '@/components/activity/ChargeIndicator'
 import IntensityIndicator from '@/components/activity/IntensityIndicator'
 import TypeIndicator from '@/components/activity/TypeIndicator'
 import { fmtPaceSec, fmtDurationSec } from '@/lib/activities/detail'
+import { stravaActivityUrl } from '@/lib/providers/strava/links'
 import { formatActivityDateTimeLong } from '@/lib/activities/format-datetime'
 import type { StravaSplit, StravaLap } from '@/lib/activities/detail'
 import { vapPaceSec } from '@/lib/activities/vap'
@@ -56,6 +57,8 @@ export type ActivityDetail = {
     map?: { summary_polyline?: string }
     [key: string]: unknown
   } | null
+  provider: string
+  provider_activity_id: string | null
 }
 
 // ── Dynamic map import ─────────────────────────────────────────────────────────
@@ -404,28 +407,48 @@ export function ActivityDetailClient({
       <div style={{ padding: '0 16px', marginTop: 0, position: 'relative', zIndex: 20, background: 'var(--trail-bg)' }}>
 
         {/* Activity header */}
-        <div style={{ paddingTop: 14, paddingBottom: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-            <SportBadge type={effectiveSport} />
-            <span style={{ fontSize: 11, color: 'var(--trail-muted)' }}>{fmtDetailDate(a.start_time)}</span>
+        <div style={{ paddingTop: 14, paddingBottom: 12, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <SportBadge type={effectiveSport} />
+              <span style={{ fontSize: 11, color: 'var(--trail-muted)' }}>{fmtDetailDate(a.start_time)}</span>
+            </div>
+            <div style={{ fontSize: 17, fontWeight: 700, fontFamily: 'var(--font-data)', color: 'var(--trail-text)', lineHeight: 1.15, marginBottom: 10 }}>
+              {a.name}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+              <ChargeIndicator
+                value={a.ces ?? 0}
+                onClick={() => setPopup('effort')}
+              />
+              <IntensityIndicator
+                level={intensityKey ? INTENSITY_KEY_TO_LEVEL[intensityKey] : null}
+                onClick={intensityKey ? () => setPopup('intensity') : undefined}
+              />
+              <TypeIndicator
+                type={workoutTypeKey}
+                onClick={() => setPopup('workoutType')}
+              />
+            </div>
           </div>
-          <div style={{ fontSize: 17, fontWeight: 700, fontFamily: 'var(--font-data)', color: 'var(--trail-text)', lineHeight: 1.15, marginBottom: 10 }}>
-            {a.name}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
-            <ChargeIndicator
-              value={a.ces ?? 0}
-              onClick={() => setPopup('effort')}
-            />
-            <IntensityIndicator
-              level={intensityKey ? INTENSITY_KEY_TO_LEVEL[intensityKey] : null}
-              onClick={intensityKey ? () => setPopup('intensity') : undefined}
-            />
-            <TypeIndicator
-              type={workoutTypeKey}
-              onClick={() => setPopup('workoutType')}
-            />
-          </div>
+          {a.provider === 'strava' && a.provider_activity_id && (
+            <a
+              href={stravaActivityUrl(a.provider_activity_id)}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                flexShrink: 0,
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: 'rgba(252,76,2,0.10)', border: '1px solid rgba(252,76,2,0.35)',
+                color: '#FC4C02', borderRadius: 999, padding: '6px 12px',
+                fontSize: 12, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap',
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/strava/strava-mark.svg" alt="" width={14} height={14} style={{ display: 'block' }} />
+              {A.detailViewOnStrava}
+            </a>
+          )}
         </div>
 
         {/* Stats grid 3×2 */}

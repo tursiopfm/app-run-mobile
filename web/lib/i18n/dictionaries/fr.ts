@@ -327,6 +327,7 @@ export type Dict = {
 
     detailCardio: string; detailPerformance: string; detailTime: string
     detailHrAvg: string; detailHrMax: string; detailCalories: string; detailSufferStrava: string
+    detailViewOnStrava: string
     detailActiveTime: string; detailTotalTime: string
     detailAvgPace: string; detailMaxPace: string; detailAvgSpeed: string; detailMaxSpeed: string
     detailVap: string; detailAvgCadence: string; detailAvgPower: string; detailMaxPower: string
@@ -1854,6 +1855,7 @@ export const fr: Dict = {
     detailHrMax:            'FC max',
     detailCalories:         'Calories',
     detailSufferStrava:     'Efforts Relatifs (Strava)',
+    detailViewOnStrava:     'Voir sur Strava',
     detailActiveTime:       'Temps actif',
     detailTotalTime:        'Temps total',
     detailAvgPace:          'Allure moy.',

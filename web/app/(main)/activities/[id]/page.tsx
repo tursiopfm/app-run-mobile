@@ -27,7 +27,7 @@ export default async function ActivityDetailPage({
 
   if (!row) notFound()
 
-  const activity = row as ActivityDetail & { provider: string; provider_activity_id: string | null }
+  const activity = row as ActivityDetail
 
   // Fetch splits and laps if needed
   let splits: StravaSplit[] | null = null

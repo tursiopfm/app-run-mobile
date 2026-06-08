@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<!--
+  Status: Implémenté · 2026-06-08 · Code: web/components/settings/StravaSection.tsx, web/app/(main)/activities/[id]/ActivityDetailClient.tsx
+  Trail Cockpit — MOCKUP de conformité « Marque Strava ». Charte « Deep Mission ».
+  Propose l'implémentation des 3 exigences déclarées dans le dossier API Strava + le bouton officiel :
+    1. Attribution  — « Powered by Strava » dans Réglages › Compte & Sync
+    2. Deep Links   — « Voir sur Strava » dans la vue Détail d'activité
+    3. Marks        — usage du nom/logo Strava conforme aux guidelines couleur & typo
+   (+) Connect     — bouton officiel « Connect with Strava » (exigence Strava sur l'action OAuth)
+
+  ⚠ Les logos ci-dessous sont des REPRÉSENTATIONS pour le mockup. En production il FAUT
+    utiliser les assets officiels téléchargés sur https://developers.strava.com/guidelines
+    (lockups « Powered by Strava » / « Compatible with Strava » / « Connect with Strava »,
+    blanc ou orange) — ne jamais recolorer ni redessiner le logo.
+
+  Couleurs : palette Deep Mission réelle de l'app (web/app/globals.css).
+  Point clé : l'orange APP = #FF7900 ; l'orange STRAVA = #FC4C02. Ne pas confondre.
+-->
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Trail Cockpit — Conformité Marque Strava</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+  :root {
+    --bg:        #0B0F14;
+    --surface:   #121821;
+    --card:      #18202B;
+    --border:    #25303E;
+    --line-2:    #34414F;
+    --text:      #E2ECE9;
+    --muted:     #8BA8A3;
+    --faint:     #5A6E69;
+    --app-orange:    #FF7900;   /* orange Trail Cockpit */
+    --strava:        #FC4C02;   /* orange officiel Strava */
+    --strava-dim:    #E04402;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(120% 70% at 50% -10%, rgba(252,76,2,0.08) 0%, rgba(252,76,2,0) 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px 64px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  /* ---------- En-tête ---------- */
+  .head { text-align: center; margin-bottom: 14px; }
+  .brand {
+    font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--text);
+  }
+  .brand .o { color: var(--app-orange); }
+  .h1 {
+    font-family: 'Space Grotesk', sans-serif; font-size: 30px; font-weight: 600;
+    margin: 18px 0 8px; letter-spacing: -0.01em;
+  }
+  .sub {
+    font-size: 14px; color: var(--muted); margin: 0 auto; max-width: 620px; line-height: 1.6;
+  }
+
+  /* bandeau couleur app vs strava */
+  .colornote {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    margin: 22px auto 32px; max-width: 560px;
+  }
+  .chip {
+    display: flex; align-items: center; gap: 9px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 999px; padding: 7px 14px 7px 8px;
+    font-size: 12px; color: var(--muted); font-weight: 500;
+  }
+  .chip b { color: var(--text); font-weight: 600; }
+  .dot { width: 18px; height: 18px; border-radius: 6px; flex: 0 0 auto; }
+
+  /* ---------- Grille de panneaux ---------- */
+  .grid {
+    display: grid; gap: 20px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+  }
+  .panel.span { grid-column: 1 / -1; }
+  .panel-accent { height: 3px; background: linear-gradient(90deg, rgba(252,76,2,0) 0%, var(--strava) 50%, rgba(252,76,2,0) 100%); }
+  .panel-body { padding: 22px 22px 24px; }
+
+  .tag {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: 'Space Grotesk', sans-serif; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--strava);
+    background: rgba(252,76,2,0.10); border: 1px solid rgba(252,76,2,0.30);
+    border-radius: 999px; padding: 4px 11px; margin-bottom: 14px;
+  }
+  .tag .n {
+    width: 16px; height: 16px; border-radius: 50%; background: var(--strava);
+    color: #fff; font-size: 10px; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .ptitle { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 600; margin: 0 0 4px; }
+  .pdesc { font-size: 12.5px; color: var(--muted); line-height: 1.55; margin: 0 0 18px; }
+
+  /* mini-libellé "rendu in-app" */
+  .mock-label {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--faint); font-weight: 600; margin: 0 0 8px;
+  }
+
+  /* ---------- Logo Strava (REPRÉSENTATION) ---------- */
+  .strava-logo { display: inline-flex; align-items: center; gap: 8px; }
+  .strava-mark { width: 18px; height: 18px; display: block; }
+  .strava-word {
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+
+  /* lockup "Powered by / Compatible with" */
+  .lockup {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  }
+  .lockup .pre { color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; font-size: 10px; }
+
+  /* ---------- Carte Réglages (réplique StravaSection) ---------- */
+  .settings-card { background: var(--card); border-radius: 12px; padding: 13px; }
+  .row { display: flex; align-items: center; gap: 12px; }
+  .icon-box {
+    width: 34px; height: 34px; border-radius: 10px; flex: 0 0 auto;
+    background: rgba(252,76,2,0.14); border: 1px solid rgba(252,76,2,0.32);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .kicker { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .val { font-size: 14px; color: var(--text); }
+  .status {
+    margin-left: auto; display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    background: rgba(16,185,129,0.15); color: #34D399;
+    border: 1px solid rgba(16,185,129,0.30); border-radius: 999px; padding: 4px 10px;
+  }
+  .status .pulse { width: 6px; height: 6px; border-radius: 50%; background: #34D399; }
+  .btnrow { display: flex; gap: 8px; margin-top: 12px; }
+  .btn-ghost {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 8px; font-size: 12px; font-weight: 600; cursor: default;
+  }
+  .btn-logout {
+    display: flex; align-items: center; gap: 6px;
+    border: 1px solid rgba(239,68,68,0.25); color: #F87171;
+    border-radius: 999px; padding: 7px 12px; font-size: 11px; font-weight: 600;
+  }
+
+  /* bandeau attribution dans la carte */
+  .attrib {
+    margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+
+  /* ---------- Bouton officiel Connect with Strava ---------- */
+  .connect-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; background: var(--strava); color: #fff;
+    border-radius: 8px; padding: 11px 16px; font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.02em; cursor: default;
+    border: none;
+  }
+  .connect-btn:hover { background: var(--strava-dim); }
+
+  /* ---------- Détail activité ---------- */
+  .act-head {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+    background: var(--card); border-radius: 12px; padding: 16px;
+  }
+  .act-pillrow { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .act-pill {
+    display: inline-flex; align-items: center; border: 1px solid rgba(252,76,2,0.45);
+    color: var(--strava); border-radius: 999px; padding: 2px 11px; font-size: 11px; font-weight: 700;
+  }
+  .act-date { font-size: 12px; color: var(--muted); }
+  .act-title { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 600; margin: 0; line-height: 1.25; }
+  .act-badges { display: flex; gap: 8px; margin-top: 13px; flex-wrap: wrap; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 10px; font-size: 11px; font-weight: 600; color: var(--text);
+  }
+  .badge .b-k { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .view-strava {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(252,76,2,0.10); border: 1px solid rgba(252,76,2,0.35);
+    color: var(--strava); border-radius: 999px; padding: 7px 14px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
+    font-family: 'Space Grotesk', sans-serif; cursor: default; flex: 0 0 auto;
+  }
+  .deeplink-note {
+    margin-top: 14px; font-size: 11px; color: var(--faint); font-family: 'Inter', monospace;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px;
+  }
+  .deeplink-note code { color: var(--strava); }
+
+  /* ---------- Marks / swatches ---------- */
+  .swatches { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .swatch { flex: 1; min-width: 130px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .swatch .fill { height: 56px; }
+  .swatch .meta { padding: 9px 11px; }
+  .swatch .name { font-size: 12px; font-weight: 600; }
+  .swatch .hex { font-size: 11px; color: var(--muted); font-family: 'Space Grotesk', monospace; letter-spacing: 0.04em; }
+
+  .dodont { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 520px) { .dodont { grid-template-columns: 1fr; } }
+  .dd { border-radius: 10px; padding: 12px 13px; font-size: 11.5px; line-height: 1.5; }
+  .do  { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); }
+  .dont{ background: rgba(239,68,68,0.07);  border: 1px solid rgba(239,68,68,0.22); }
+  .dd h4 { margin: 0 0 7px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-family: 'Space Grotesk', sans-serif; }
+  .do h4 { color: #34D399; } .dont h4 { color: #F87171; }
+  .dd ul { margin: 0; padding-left: 16px; color: var(--muted); }
+  .dd li { margin-bottom: 4px; }
+
+  .lockup-samples { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+  .lockup-box {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px;
+  }
+  .lockup-box.onlight { background: #F4F7F6; border-color: #D6E1DD; }
+  .lockup-box .cap { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
+  .lockup-box.onlight .cap { color: #5F7771; }
+
+  /* ---------- Checklist ---------- */
+  .check { display: grid; gap: 10px; }
+  .check-item { display: flex; gap: 12px; align-items: flex-start; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .check-mark { width: 22px; height: 22px; border-radius: 6px; flex: 0 0 auto; background: rgba(252,76,2,0.14); border: 1px solid rgba(252,76,2,0.30); color: var(--strava); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+  .check-item .t { font-size: 13px; font-weight: 600; }
+  .check-item .d { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+  .check-item .where { font-size: 11px; color: var(--strava); font-family: 'Space Grotesk', monospace; margin-top: 5px; }
+
+  .foot { text-align: center; font-size: 11px; color: var(--faint); margin-top: 34px; line-height: 1.7; }
+  .foot a { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ EN-TÊTE ============ -->
+  <header class="head">
+    <div class="brand"><span class="o">Trail</span>&nbsp;Cockpit</div>
+    <h1 class="h1">Conformité Marque Strava</h1>
+    <p class="sub">
+      Implémentation des exigences déclarées au dossier API Strava : attribution «&nbsp;Powered by Strava&nbsp;»,
+      deep links «&nbsp;Voir sur Strava&nbsp;», et usage du logo conforme aux guidelines couleur &amp; typo.
+    </p>
+
+    <div class="colornote">
+      <span class="chip"><span class="dot" style="background:var(--app-orange)"></span><b>#FF7900</b>&nbsp;Orange Trail Cockpit</span>
+      <span class="chip"><span class="dot" style="background:var(--strava)"></span><b>#FC4C02</b>&nbsp;Orange officiel Strava</span>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- ============ PANNEAU 1 — ATTRIBUTION (RÉGLAGES) ============ -->
+    <section class="panel">
+      <div class="panel-accent"></div>
+      <div class="panel-body">
+        <span class="tag"><span class="n">1</span>Attribution</span>
+        <h2 class="ptitle">Réglages › Compte &amp; Sync</h2>
+        <p class="pdesc">Le lockup «&nbsp;Powered by Strava&nbsp;» s'ajoute en pied de la carte de connexion Strava — visible dès que le compte est lié.</p>
+
+        <p class="mock-label">Carte connectée — rendu in-app</p>
+        <div class="settings-card">
+          <div class="row">
+            <span class="icon-box">
+              <!-- REPRÉSENTATION du mark Strava -->
+              <svg class="strava-mark" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2 4.5 16h4.2L12 9.2 15.3 16h-3.1L9.6 21 12 16h4.4L12 2z" fill="#FC4C02"/>
+              </svg>
+            </span>
+            <div>
+              <div class="kicker">Strava</div>
+              <div class="val">Franck&nbsp;M.</div>
+            </div>
+            <span class="status"><span class="pulse"></span>Connecté</span>
+          </div>
+          <div class="btnrow">
+            <span class="btn-ghost">↻ Synchroniser</span>
+            <span class="btn-logout">⎋ Délier</span>
+          </div>
+          <!-- ATTRIBUTION officielle -->
+          <div class="attrib">
+            <span class="lockup">
+              <span class="pre">Powered by</span>
+              <span class="strava-logo">
+                <svg class="strava-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4.5 16h4.2L12 9.2 15.3 16h-3.1L9.6 21 12 16h4.4L12 2z" fill="#FC4C02"/></svg>
+                <span class="strava-word" style="color:#FC4C02; font-size:13px;">Strava</span>
+              </span>
+            </span>
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--faint);margin:12px 0 0;line-height:1.55;">
+          → En prod, remplacer le lockup par l'asset officiel «&nbsp;Powered by Strava&nbsp;» (blanc sur fond sombre).
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ PANNEAU (+) — CONNECT WITH STRAVA ============ -->
+    <section class="panel">
+      <div class="panel-accent"></div>
+      <div class="panel-body">
+        <span class="tag"><span class="n">+</span>Bouton officiel</span>
+        <h2 class="ptitle">«&nbsp;Connect with Strava&nbsp;»</h2>
+        <p class="pdesc">Sur l'état déconnecté, l'action OAuth doit utiliser le bouton officiel Strava (orange #FC4C02), pas un bouton custom.</p>
+
+        <p class="mock-label">Carte déconnectée — rendu in-app</p>
+        <div class="settings-card">
+          <div class="row" style="margin-bottom:13px;">
+            <span class="icon-box">
+              <svg class="strava-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4.5 16h4.2L12 9.2 15.3 16h-3.1L9.6 21 12 16h4.4L12 2z" fill="#FC4C02"/></svg>
+            </span>
+            <div>
+              <div class="kicker">Strava</div>
+              <div class="val" style="color:var(--muted)">Aucun compte lié</div>
+            </div>
+            <span class="status" style="background:rgba(245,158,11,0.15);color:#FBBF24;border-color:rgba(245,158,11,0.30)">
+              <span class="pulse" style="background:#FBBF24"></span>Hors ligne
+            </span>
+          </div>
+          <button class="connect-btn">
+            <svg class="strava-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4.5 16h4.2L12 9.2 15.3 16h-3.1L9.6 21 12 16h4.4L12 2z" fill="#ffffff"/></svg>
+            Connect with Strava
+          </button>
+        </div>
+        <p style="font-size:11px;color:var(--faint);margin:12px 0 0;line-height:1.55;">
+          → Remplace le bouton orange custom actuel par l'asset bouton officiel «&nbsp;Connect with Strava&nbsp;».
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ PANNEAU 2 — DEEP LINK (DÉTAIL ACTIVITÉ) ============ -->
+    <section class="panel span">
+      <div class="panel-accent"></div>
+      <div class="panel-body">
+        <span class="tag"><span class="n">2</span>Deep Links</span>
+        <h2 class="ptitle">Détail d'activité › «&nbsp;Voir sur Strava&nbsp;»</h2>
+        <p class="pdesc">Toute activité importée de Strava doit offrir un lien retour vers sa page Strava d'origine. Placé <b style="color:var(--text)">en haut à droite de l'en-tête</b>, au niveau du titre/date.</p>
+
+        <p class="mock-label">En-tête du détail — rendu in-app (emplacement validé)</p>
+        <div class="act-head">
+          <div style="min-width:0;">
+            <div class="act-pillrow">
+              <span class="act-pill">Course</span>
+              <span class="act-date">7 juin 2026 · 09:02</span>
+            </div>
+            <h3 class="act-title">SL bois de Verrières 🌲 Ultra marin J-19 🌊</h3>
+            <div class="act-badges">
+              <span class="badge"><span class="b-k">Charge</span> 311</span>
+              <span class="badge" style="color:var(--app-orange)">Tempo</span>
+              <span class="badge">👟 Sortie Longue</span>
+            </div>
+          </div>
+          <a class="view-strava">
+            <svg class="strava-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4.5 16h4.2L12 9.2 15.3 16h-3.1L9.6 21 12 16h4.4L12 2z" fill="#FC4C02"/></svg>
+            Voir sur Strava ↗
+          </a>
+        </div>
+        <div class="deeplink-note">
+          href = <code>https://www.strava.com/activities/{provider_activity_id}</code>
+          &nbsp;·&nbsp; target=_blank rel="noopener" &nbsp;·&nbsp; affiché seulement si <code>provider = 'strava'</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PANNEAU 3 — MARKS ============ -->
+    <section class="panel span">
+      <div class="panel-accent"></div>
+      <div class="panel-body">
+        <span class="tag"><span class="n">3</span>Marks</span>
+        <h2 class="ptitle">Usage du nom &amp; logo Strava</h2>
+        <p class="pdesc">Couleur et typo alignées sur les guidelines Strava. L'orange Strava (#FC4C02) est réservé aux éléments Strava — distinct de l'orange app (#FF7900).</p>
+
+        <div class="swatches">
+          <div class="swatch">
+            <div class="fill" style="background:#FC4C02"></div>
+            <div class="meta"><div class="name">Strava Orange</div><div class="hex">#FC4C02</div></div>
+          </div>
+          <div class="swatch">
+            <div class="fill" style="background:#FFFFFF"></div>
+            <div class="meta"><div class="name">Logo blanc</div><div class="hex">#FFFFFF · fond sombre</div></div>
+          </div>
+          <div class="swatch">
+            <div class="fill" style="background:#FF7900"></div>
+            <div class="meta"><div class="name">Orange App ✗</div><div class="hex">#FF7900 · jamais pour Strava</div></div>
+          </div>
+        </div>
+
+        <p class="mock-label">Lockups officiels (à intégrer depuis brand assets)</p>
+        <div class="lockup-samples">
+          <div class="lockup-box">
+            <span class="lockup"><span class="pre">Powered by</span>
+              <span class="strava-logo"><svg class="strava-mark" viewBox="0 0 24 24"><path d="M12 2 4.5 16h4.2L12 9.2 15.3 16h-3.1L9.6 21 12 16h4.4L12 2z" fill="#FC4C02"/></svg><span class="strava-word" style="color:#FC4C02;font-size:13px;">Strava</span></span>
+            </span>
+            <span class="cap">sur fond sombre</span>
+          </div>
+          <div class="lockup-box onlight">
+            <span class="lockup"><span class="pre" style="color:#5F7771">Compatible with</span>
+              <span class="strava-logo"><svg class="strava-mark" viewBox="0 0 24 24"><path d="M12 2 4.5 16h4.2L12 9.2 15.3 16h-3.1L9.6 21 12 16h4.4L12 2z" fill="#FC4C02"/></svg><span class="strava-word" style="color:#FC4C02;font-size:13px;">Strava</span></span>
+            </span>
+            <span class="cap">sur fond clair</span>
+          </div>
+        </div>
+
+        <div class="dodont">
+          <div class="dd do">
+            <h4>✓ À faire</h4>
+            <ul>
+              <li>Orange officiel #FC4C02 pour tout élément Strava.</li>
+              <li>Assets logo téléchargés tels quels (SVG officiel).</li>
+              <li>Zone de respiration autour du logo préservée.</li>
+              <li>Nom écrit «&nbsp;Strava&nbsp;» (jamais «&nbsp;STRAVA&nbsp;» ni «&nbsp;strava&nbsp;»).</li>
+            </ul>
+          </div>
+          <div class="dd dont">
+            <h4>✗ À éviter</h4>
+            <ul>
+              <li>Recolorer le logo avec l'orange app #FF7900.</li>
+              <li>Redessiner / étirer / incliner le mark.</li>
+              <li>Suggérer un endossement de Strava («&nbsp;officiel&nbsp;»).</li>
+              <li>Logo trop petit ou sur fond contrastant mal.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PANNEAU 4 — CHECKLIST ============ -->
+    <section class="panel span">
+      <div class="panel-accent"></div>
+      <div class="panel-body">
+        <span class="tag">Récap conformité</span>
+        <h2 class="ptitle">Où vit chaque exigence</h2>
+        <div class="check">
+          <div class="check-item">
+            <span class="check-mark">1</span>
+            <div>
+              <div class="t">Attribution «&nbsp;Powered by Strava&nbsp;»</div>
+              <div class="d">Pied de la carte Strava, état connecté.</div>
+              <div class="where">web/components/settings/StravaSection.tsx</div>
+            </div>
+          </div>
+          <div class="check-item">
+            <span class="check-mark">2</span>
+            <div>
+              <div class="t">Deep link «&nbsp;Voir sur Strava&nbsp;»</div>
+              <div class="d">Action d'en-tête du détail, vers strava.com/activities/{id}.</div>
+              <div class="where">web/app/(main)/activities/[id]/ActivityDetailClient.tsx</div>
+            </div>
+          </div>
+          <div class="check-item">
+            <span class="check-mark">3</span>
+            <div>
+              <div class="t">Marks (couleur &amp; typo)</div>
+              <div class="d">Orange #FC4C02 + assets officiels partout où Strava apparaît.</div>
+              <div class="where">tokens / assets — public/strava/*.svg</div>
+            </div>
+          </div>
+          <div class="check-item">
+            <span class="check-mark">+</span>
+            <div>
+              <div class="t">Bouton «&nbsp;Connect with Strava&nbsp;»</div>
+              <div class="d">Remplace le bouton custom sur l'état déconnecté.</div>
+              <div class="where">web/components/settings/StravaSection.tsx</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <p class="foot">
+    Mockup — charte Deep Mission · les logos sont des représentations.<br />
+    Assets officiels &amp; règles : <a href="https://developers.strava.com/guidelines">developers.strava.com/guidelines</a>
+  </p>
+
+</div>
+</body>
+</html>
