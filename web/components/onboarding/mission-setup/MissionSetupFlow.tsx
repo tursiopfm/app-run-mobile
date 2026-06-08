@@ -110,9 +110,9 @@ function StepShell({ eyebrow, title, subtitle, children, stepKey }: {
 }) {
   return (
     <div key={stepKey} className="animate-[stepIn_320ms_cubic-bezier(0.32,0.72,0,1)]">
-      <p className="font-body text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-text">{eyebrow}</p>
+      <p className="font-body text-micro font-semibold uppercase tracking-[0.22em] text-primary-text">{eyebrow}</p>
       <h2 className="font-display text-[26px] font-bold leading-tight tracking-tight text-fg-primary mt-1.5">{title}</h2>
-      {subtitle && <p className="font-body text-[14px] text-fg-muted leading-relaxed mt-2">{subtitle}</p>}
+      {subtitle && <p className="font-body text-body text-fg-muted leading-relaxed mt-2">{subtitle}</p>}
       <div className="mt-6">{children}</div>
     </div>
   )
@@ -202,7 +202,7 @@ export function MissionSetupFlow({
     <main className="min-h-screen bg-ink-900 text-fg-primary flex flex-col">
       <header className="mx-auto w-full max-w-md px-5 pt-6">
         <div className="flex items-center justify-between">
-          <span className="font-display text-[14px] font-bold tracking-widest uppercase">
+          <span className="font-display text-body font-bold tracking-widest uppercase">
             <span className="text-primary-text">Mission</span>
             <span className="text-fg-primary"> Setup</span>
           </span>
@@ -218,7 +218,7 @@ export function MissionSetupFlow({
                 />
               ))}
             </div>
-            <p className="font-body text-[11px] text-fg-muted mt-2">Étape {step} sur {TOTAL}</p>
+            <p className="font-body text-micro text-fg-muted mt-2">Étape {step} sur {TOTAL}</p>
           </div>
         )}
       </header>
@@ -239,7 +239,7 @@ export function MissionSetupFlow({
                   <div className="h-28 w-full">
                     <TrajectoryLine orientation="horizontal" animated duration={1.8} />
                   </div>
-                  <p className="font-display text-center text-[18px] font-semibold tracking-tight text-fg-primary mt-2">
+                  <p className="font-display text-center text-h2 font-semibold tracking-tight text-fg-primary mt-2">
                     Préparer. <span className="text-primary-text">Piloter.</span> Accomplir.
                   </p>
                 </div>
@@ -310,7 +310,7 @@ export function MissionSetupFlow({
                         </div>
                         <div className="mt-3 flex flex-wrap gap-1.5 pl-14">
                           {m.points.map(p => (
-                            <span key={p} className="font-body text-[11px] text-fg-secondary rounded-full bg-ink-600/70 px-2 py-0.5">{p}</span>
+                            <span key={p} className="font-body text-micro text-fg-secondary rounded-full bg-ink-600/70 px-2 py-0.5">{p}</span>
                           ))}
                         </div>
                       </button>
@@ -418,7 +418,7 @@ function CompletionScreen({ discipline, mission, mode, busy, error, onEnter }: {
         <Check size={26} strokeWidth={3} />
       </span>
       <h2 className="font-display text-[24px] font-bold tracking-tight text-fg-primary mt-4">Mission prête</h2>
-      <p className="font-body text-[14px] text-fg-muted mt-1.5 max-w-xs">
+      <p className="font-body text-body text-fg-muted mt-1.5 max-w-xs">
         Ton cockpit est configuré. Préparer. Piloter. Accomplir.
       </p>
 
