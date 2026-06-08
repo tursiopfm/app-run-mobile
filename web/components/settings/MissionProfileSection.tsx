@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { usePreferences } from '@/lib/preferences/PreferencesProvider'
 
 // ── Options ────────────────────────────────────────────────────────────────
 
@@ -18,18 +17,6 @@ const MISSION_OPTIONS: { id: string; label: string }[] = [
   { id: 'route',  label: 'Préparer une course sur route' },
   { id: 'charge', label: 'Suivre ma charge' },
   { id: 'libre',  label: 'Progresser sans objectif' },
-]
-
-// Keys removed from localStorage on "reapply defaults"
-const COCKPIT_SETTINGS_KEYS = [
-  'cockpit_activities_settings',
-  'cockpit_last_activity_settings',
-  'cockpit_weekly_settings',
-  'cockpit_goals_settings',
-  'cockpit_charge_settings',
-  'cockpit_history_settings',
-  'cockpit_cumul_settings',
-  'cockpit_intensity_settings',
 ]
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -86,12 +73,9 @@ function PillOption({
 // ── Component ──────────────────────────────────────────────────────────────
 
 export function MissionProfileSection({ discipline, mission, raceDate }: Props) {
-  const { notifyChange } = usePreferences()
-
   const [selectedDiscipline, setSelectedDiscipline] = useState<string | null>(discipline)
   const [selectedMission,    setSelectedMission]    = useState<string | null>(mission)
   const [selectedRaceDate,   setSelectedRaceDate]   = useState<string | null>(raceDate)
-  const [reapplied,          setReapplied]          = useState(false)
 
   const showRaceDate =
     selectedMission === 'trail' || selectedMission === 'route'
@@ -116,14 +100,6 @@ export function MissionProfileSection({ discipline, mission, raceDate }: Props) 
     const val = e.target.value || null
     setSelectedRaceDate(val)
     patchProfile({ onboarding_race_date: val })
-  }
-
-  function handleReapplyDefaults() {
-    COCKPIT_SETTINGS_KEYS.forEach(key => {
-      try { localStorage.removeItem(key) } catch { /* silent */ }
-    })
-    notifyChange()
-    setReapplied(true)
   }
 
   return (
@@ -190,34 +166,6 @@ export function MissionProfileSection({ discipline, mission, raceDate }: Props) 
           />
         </div>
       )}
-
-      {/* ── Réappliquer les défauts d'affichage ── */}
-      <div className="pt-[2px]">
-        <div className="rounded-[10px] bg-trail-surface border border-trail-border px-3 py-[10px] space-y-[8px]">
-          <div>
-            <p className="text-body-sm font-semibold text-trail-text leading-snug">
-              Réappliquer les défauts d&apos;affichage
-            </p>
-            <p className="text-micro text-trail-muted leading-snug mt-[2px]">
-              Réinitialise le sport affiché par défaut dans les blocs du cockpit selon ta discipline.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleReapplyDefaults}
-              className="rounded-[8px] border border-trail-border bg-trail-card px-3 py-[6px] text-body-sm font-semibold text-trail-text hover:border-trail-primary hover:text-trail-primary transition-colors"
-            >
-              Réinitialiser
-            </button>
-            {reapplied && (
-              <span className="text-caption text-trail-primary font-semibold">
-                Défauts réappliqués ✓
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
 
     </div>
   )
