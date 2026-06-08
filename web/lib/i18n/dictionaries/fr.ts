@@ -1664,7 +1664,7 @@ export const fr: Dict = {
     mapUnavailable:           'Carte non disponible',
     splitsBest:               (pace: string) => `★ Meilleur ${pace}`,
     splitsCount:              'segments',
-    splitsSlower:             'plus lent',
+    splitsSlower:             'moins rapide',
     splitsFaster:             'plus rapide',
     splitsAvg:                'moy',
     splitsProfileTitle:       (dist: string) => `Profil sur ${dist}`,

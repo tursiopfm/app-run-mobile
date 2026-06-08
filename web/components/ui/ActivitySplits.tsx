@@ -120,6 +120,15 @@ export function ActivitySplits({
           </div>
         )
       })}
+
+      {/* Color scale legend */}
+      <div style={{ marginTop: 16 }}>
+        <div style={{ height: 8, borderRadius: 4, background: 'linear-gradient(90deg, #38BDF8 0%, #4ADE80 33%, #FBBF24 66%, #FF7900 100%)' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5, fontSize: 10, color: 'var(--trail-muted)' }}>
+          <span>{L.splitsSlower}</span>
+          <span>{L.splitsFaster}</span>
+        </div>
+      </div>
     </div>
   )
 }
