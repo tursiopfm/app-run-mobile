@@ -118,7 +118,6 @@ export default async function DashboardPage() {
         mode={mode}
         freshnessPayload={freshnessPayload}
         discipline={athleteProfile?.onboarding_discipline ?? null}
-        mission={athleteProfile?.onboarding_mission ?? null}
       />
     </div>
   )

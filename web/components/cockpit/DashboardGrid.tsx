@@ -30,7 +30,6 @@ type Props = {
   mode?: AppMode
   freshnessPayload?: ChargeSportPayload | null
   discipline?: string | null
-  mission?: string | null
 }
 
 const DEFAULT_ORDER = ['morningReport', 'activities', 'charge', 'lastActivity', 'goals', 'weekly', 'history', 'cumul', 'intensity', 'week', 'weekActivities']
@@ -45,7 +44,7 @@ function BlockWithHide({ children }: { children: (onHide: () => void) => React.R
   return <>{children(hideSelf)}</>
 }
 
-export function DashboardGrid({ sportOverviews, weekSessions, latestPerSport, weekActivities, athleteProfile, mode = 'expert', freshnessPayload, discipline, mission }: Props) {
+export function DashboardGrid({ sportOverviews, weekSessions, latestPerSport, weekActivities, athleteProfile, mode = 'expert', freshnessPayload, discipline }: Props) {
   const L = useT().cockpit.blockLabel
   const defaultSport = defaultSportForDiscipline(discipline)
   const blocks: BlockDef[] = [
@@ -70,14 +69,11 @@ export function DashboardGrid({ sportOverviews, weekSessions, latestPerSport, we
     blocks.push({ id: 'freshness', label: 'Fraîcheur', emoji: '🌬️', render: () => <FreshnessCard payload={fp} /> })
   }
 
-  let missionVisible = mode === 'mission'
+  // Mode Mission : sous-ensemble fixe (lecture seule), sans le bloc Charge
+  // (réservé à l'Expert) — la Fraîcheur en donne la version simplifiée.
+  const missionVisible = mode === 'mission'
     ? MISSION_VISIBLE.filter(id => id !== 'freshness' || freshnessPayload != null)
     : undefined
-  // Emphase Charge : si l'objectif d'onboarding est « Suivre ma charge », on met
-  // le bloc Charge en avant (juste après le rapport matinal) en Mode Mission.
-  if (missionVisible && mission === 'charge' && !missionVisible.includes('charge')) {
-    missionVisible = ['morningReport', 'charge', ...missionVisible.filter(id => id !== 'morningReport')]
-  }
 
   return (
     <BlockGrid
