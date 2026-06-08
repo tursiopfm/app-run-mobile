@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Strava">
-  <!-- REPRÉSENTATION — remplacer par le mark officiel Strava avant prod (https://developers.strava.com/guidelines) -->
-  <path d="M12 2 4.5 16h4.2L12 9.2 15.3 16h-3.1L9.6 21 12 16h4.4L12 2z" fill="#FC4C02"/>
+  <!-- Mark Strava officiel à deux chevrons (orange plein + V plus clair), tracé d'après web/public/strava/strava_logo.jpg. -->
+  <path d="M8.21 9.359l2.836 5.598h4.172L10.463 0 3.463 13.828h4.169L8.21 9.359Z" fill="#FC4C02"/>
+  <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066Z" fill="#FC8B5C"/>
 </svg>
