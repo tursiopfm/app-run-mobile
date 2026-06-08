@@ -132,7 +132,7 @@ export function StravaSection({ isConnected, athleteName, planAutoPushTitle, not
           </button>
         </div>
       ) : (
-        <a href="/api/strava/connect" aria-label={L.stravaConnectMyAccount} className="flex justify-center">
+        <a href="/api/strava/connect" className="flex justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/strava/connect-with-strava.svg" alt={L.stravaConnectMyAccount} height={48} style={{ height: 48, width: 'auto', display: 'block' }} />
         </a>
