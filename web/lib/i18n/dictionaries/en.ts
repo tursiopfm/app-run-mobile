@@ -742,6 +742,7 @@ export const en: Dict = {
     detailHrMax:            'Max HR',
     detailCalories:         'Calories',
     detailSufferStrava:     'Relative Effort (Strava)',
+    detailViewOnStrava:     'View on Strava',
     detailActiveTime:       'Active time',
     detailTotalTime:        'Total time',
     detailAvgPace:          'Avg. pace',
