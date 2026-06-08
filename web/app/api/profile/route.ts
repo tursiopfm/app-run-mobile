@@ -17,6 +17,7 @@ export async function PATCH(req: NextRequest) {
     'hr_zone_method', 'hr_zones_custom', 'hr_method_updated_at',
     'plan_auto_push_title', 'onboarding_skipped',
     'onboarding_discipline', 'onboarding_mission', 'onboarding_mode', 'onboarding_data_source',
+    'onboarding_race_date',
   ]
   const update: Record<string, unknown> = {}
   for (const key of allowed) {

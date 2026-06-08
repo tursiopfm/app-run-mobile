@@ -123,4 +123,17 @@ describe('MissionSetupFlow', () => {
     gotoHrStep()
     expect(screen.getByRole('button', { name: /continuer/i })).not.toBeDisabled()
   })
+
+  it('affiche un champ date de course optionnel pour mission=route et le persiste', async () => {
+    render(<MissionSetupFlow />)
+    fireEvent.click(screen.getByRole('button', { name: /continuer/i }))            // 1→2
+    fireEvent.click(screen.getByRole('button', { name: /^trail/i }))               // discipline
+    fireEvent.click(screen.getByRole('button', { name: /continuer/i }))            // 2→3 (Mission)
+    fireEvent.click(screen.getByRole('button', { name: /préparer une course sur route/i }))
+    fireEvent.change(screen.getByLabelText(/date de course/i), { target: { value: '2026-10-18' } })
+    await waitFor(() => {
+      const bodies = (global.fetch as jest.Mock).mock.calls.map(c => JSON.parse(c[1].body))
+      expect(bodies.some(b => b.onboarding_race_date === '2026-10-18')).toBe(true)
+    })
+  })
 })

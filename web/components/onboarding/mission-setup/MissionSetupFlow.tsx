@@ -28,6 +28,7 @@ export type OnboardingAnswers = {
   mission: string | null
   mode: string | null
   dataSource: string | null
+  raceDate: string | null
 }
 
 const DISCIPLINES: Option[] = [
@@ -40,7 +41,7 @@ const DISCIPLINES: Option[] = [
 
 const MISSIONS: Option[] = [
   { id: 'trail',    label: 'Préparer un trail',             desc: 'Objectif daté, plan progressif', icon: Mountain,    accent: 'var(--data-run)' },
-  { id: 'marathon', label: 'Préparer un marathon',          desc: 'Route, allure cible',            icon: Footprints,  accent: 'var(--data-run)' },
+  { id: 'route',    label: 'Préparer une course sur route', desc: '10 km, semi, marathon',          icon: Footprints,  accent: 'var(--data-run)' },
   { id: 'charge',   label: 'Suivre ma charge',              desc: 'Fatigue, fraîcheur, forme',      icon: Activity,    accent: 'var(--data-charge)' },
   { id: 'libre',    label: 'Progresser sans objectif précis', desc: 'Rester régulier, voir ses tendances', icon: TrendingUp, accent: 'var(--data-bike)' },
 ]
@@ -137,6 +138,7 @@ export function MissionSetupFlow({
   const [mission, setMission] = useState<string | null>(initialAnswers?.mission ?? null)
   const [mode, setMode] = useState<string | null>(initialAnswers?.mode ?? null)
   const [dataSource, setDataSource] = useState<string | null>(initialAnswers?.dataSource ?? null)
+  const [raceDate, setRaceDate] = useState<string | null>(initialAnswers?.raceDate ?? null)
   const [hrMethod, setHrMethod] = useState<'deduced' | 'pct_max' | 'auto' | null>(null)
   const [showManualHr, setShowManualHr] = useState(false)
   const [showAgeHr, setShowAgeHr] = useState(false)
@@ -187,6 +189,7 @@ export function MissionSetupFlow({
       onboarding_mission: mission,
       onboarding_mode: mode,
       onboarding_data_source: dataSource,
+      onboarding_race_date: raceDate,
     }
   }
 
@@ -300,6 +303,18 @@ export function MissionSetupFlow({
                       selected={mission === m.id} onClick={() => selectAndPersist('onboarding_mission', m.id, setMission)} />
                   ))}
                 </div>
+                {(mission === 'trail' || mission === 'route') && (
+                  <label className="mt-4 grid gap-1.5">
+                    <span className="font-body text-[12.5px] text-fg-muted">As-tu une date de course&nbsp;? (optionnel)</span>
+                    <input
+                      type="date"
+                      aria-label="Date de course"
+                      value={raceDate ?? ''}
+                      onChange={(e) => { const v = e.target.value || null; setRaceDate(v); void persist({ onboarding_race_date: v }) }}
+                      className="rounded-lg border border-ink-600 bg-ink-800 px-3 py-2.5 text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    />
+                  </label>
+                )}
               </StepShell>
             )}
 

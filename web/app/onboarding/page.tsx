@@ -15,7 +15,7 @@ export default async function OnboardingPage({
   const supabase = await createClient()
   const { data: profile } = await supabase
     .from('profiles')
-    .select('onboarding_completed_at, onboarding_discipline, onboarding_mission, onboarding_mode, onboarding_data_source')
+    .select('onboarding_completed_at, onboarding_discipline, onboarding_mission, onboarding_mode, onboarding_data_source, onboarding_race_date')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -29,6 +29,7 @@ export default async function OnboardingPage({
         mission: profile?.onboarding_mission ?? null,
         mode: profile?.onboarding_mode ?? null,
         dataSource: profile?.onboarding_data_source ?? null,
+        raceDate: profile?.onboarding_race_date ?? null,
       }}
     />
   )
