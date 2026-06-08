@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getServerUser } from '@/lib/database/get-user'
 import { DashboardGrid } from '@/components/cockpit/DashboardGrid'
+import { FirstActivityBanner } from '@/components/cockpit/FirstActivityBanner'
 import { MorningReportAutoOpen } from '@/components/morning-report/MorningReportAutoOpen'
 import { getDashboardData } from '@/lib/data/dashboard'
 import { getChargePageData } from '@/lib/data/charge'
@@ -58,6 +59,7 @@ export default async function DashboardPage() {
     latestPerSport,
     { data: weekRows },
     { data: athleteProfile },
+    { count: activityCount },
   ] = await Promise.all([
     getDashboardData(user.id),
     fetchLatestPerSport(supabase, user.id),
@@ -74,6 +76,11 @@ export default async function DashboardPage() {
       .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year, onboarding_completed_at, hr_zone_method, hr_zones_custom, onboarding_discipline, onboarding_mission')
       .eq('id', user.id)
       .maybeSingle(),
+    supabase
+      .from('activities')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .is('deleted_at', null),
   ])
 
   if (!athleteProfile?.onboarding_completed_at) {
@@ -101,6 +108,7 @@ export default async function DashboardPage() {
   return (
     <div className="px-2 py-2 max-w-lg mx-auto md:max-w-none md:px-6">
       <MorningReportAutoOpen createdAt={user.created_at} />
+      {activityCount === 0 && <FirstActivityBanner />}
       <DashboardGrid
         sportOverviews={sportOverviews}
         weekSessions={weekSessions}
