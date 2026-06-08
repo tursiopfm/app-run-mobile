@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 // ── Options ────────────────────────────────────────────────────────────────
 
@@ -73,6 +74,8 @@ function PillOption({
 // ── Component ──────────────────────────────────────────────────────────────
 
 export function MissionProfileSection({ discipline, mission, raceDate }: Props) {
+  const router = useRouter()
+
   const [selectedDiscipline, setSelectedDiscipline] = useState<string | null>(discipline)
   const [selectedMission,    setSelectedMission]    = useState<string | null>(mission)
   const [selectedRaceDate,   setSelectedRaceDate]   = useState<string | null>(raceDate)
@@ -80,26 +83,33 @@ export function MissionProfileSection({ discipline, mission, raceDate }: Props) 
   const showRaceDate =
     selectedMission === 'trail' || selectedMission === 'route'
 
-  function handleDisciplineChange(id: string) {
+  // Enregistre puis router.refresh() : la discipline/objectif/date sont lus
+  // côté serveur (Cockpit, blocs) → on invalide le Router Cache pour que toute
+  // l'app relise la nouvelle valeur sans F5 manuel. Même pattern qu'AppModeToggle.
+  async function handleDisciplineChange(id: string) {
     setSelectedDiscipline(id)
-    patchProfile({ onboarding_discipline: id })
+    await patchProfile({ onboarding_discipline: id })
+    router.refresh()
   }
 
-  function handleMissionChange(id: string) {
+  async function handleMissionChange(id: string) {
     setSelectedMission(id)
-    patchProfile({ onboarding_mission: id })
-    // If the new mission hides the race date, clear it
+    // If the new mission hides the race date, clear it (même PATCH atomique)
     const newShowsDate = id === 'trail' || id === 'route'
+    const patch: Record<string, string | null> = { onboarding_mission: id }
     if (!newShowsDate && selectedRaceDate) {
       setSelectedRaceDate(null)
-      patchProfile({ onboarding_race_date: null })
+      patch.onboarding_race_date = null
     }
+    await patchProfile(patch)
+    router.refresh()
   }
 
-  function handleRaceDateChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleRaceDateChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value || null
     setSelectedRaceDate(val)
-    patchProfile({ onboarding_race_date: val })
+    await patchProfile({ onboarding_race_date: val })
+    router.refresh()
   }
 
   return (
