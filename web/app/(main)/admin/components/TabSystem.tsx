@@ -1,8 +1,21 @@
 import { ENV_SECTIONS } from '@/lib/admin/system-env'
+import { ResetOnboardingButton } from './ResetOnboardingButton'
 
 export async function TabSystem() {
   return (
     <div className="space-y-4">
+      {/* Tests / Dev */}
+      <div className="bg-trail-card border border-trail-border rounded-2xl p-4 space-y-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-trail-primary">Tests / Dev</p>
+          <p className="text-xs text-trail-muted mt-0.5">Outils de test pour ton propre compte</p>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-trail-muted">Onboarding « Mission Setup »</span>
+          <ResetOnboardingButton />
+        </div>
+      </div>
+
       {ENV_SECTIONS.map(section => (
         <div key={section.title} className="bg-trail-card border border-trail-border rounded-2xl p-4 space-y-3">
           <div>
