@@ -37,7 +37,7 @@ export function HrZonesDisplay({ method: methodProp, maxHr, restingHr, aerobicTh
   if (result.zones.length === 0) {
     return (
       <div className="rounded-[10px] px-[12px] py-[10px]" style={{ backgroundColor: colors.surface }}>
-        <p className="text-[12px] text-trail-muted">
+        <p className="text-caption text-trail-muted">
           {L.hrZonesMissing}{' '}
           <span className="font-semibold text-trail-text">{result.missing.join(', ')}</span>
         </p>
@@ -51,18 +51,18 @@ export function HrZonesDisplay({ method: methodProp, maxHr, restingHr, aerobicTh
       <div className="flex gap-[6px]">
         <div className="flex-1 rounded-[8px] px-[8px] py-[6px] text-center" style={{ backgroundColor: colors.surface }}>
           <p className="text-[9px] text-trail-muted mb-[2px]">{L.hrZonesMethodLabel}</p>
-          <p className="text-[11px] font-bold" style={{ color: colors.chargeOrange }}>{METHOD_LABELS[method]}</p>
+          <p className="text-micro font-bold" style={{ color: colors.chargeOrange }}>{METHOD_LABELS[method]}</p>
         </div>
         {result.confidence && (
           <div className="flex-1 rounded-[8px] px-[8px] py-[6px] text-center" style={{ backgroundColor: colors.surface }}>
             <p className="text-[9px] text-trail-muted mb-[2px]">{L.hrZonesConfidenceLabel}</p>
-            <p className="text-[11px] font-bold" style={{ color: '#4caf50' }}>{result.confidence}</p>
+            <p className="text-micro font-bold" style={{ color: '#4caf50' }}>{result.confidence}</p>
           </div>
         )}
         {result.maxHrUsed && (
           <div className="flex-1 rounded-[8px] px-[8px] py-[6px] text-center" style={{ backgroundColor: colors.surface }}>
             <p className="text-[9px] text-trail-muted mb-[2px]">{L.hrZonesMaxLabel}</p>
-            <p className="text-[11px] font-bold text-trail-text">{result.maxHrUsed}</p>
+            <p className="text-micro font-bold text-trail-text">{result.maxHrUsed}</p>
           </div>
         )}
       </div>
@@ -76,10 +76,10 @@ export function HrZonesDisplay({ method: methodProp, maxHr, restingHr, aerobicTh
             style={{ borderBottom: i < result.zones.length - 1 ? `1px solid ${colors.border}` : 'none' }}
           >
             <div className="rounded-full flex-shrink-0" style={{ width: 8, height: 8, backgroundColor: z.color }} />
-            <span className="text-[12px] flex-1" style={{ color: colors.subtleText }}>
+            <span className="text-caption flex-1" style={{ color: colors.subtleText }}>
               Z{z.zone} — {ZONE_NAMES_DICT[z.zone - 1] ?? z.name}
             </span>
-            <span className="text-[12px] font-bold" style={{ color: z.color }}>
+            <span className="text-caption font-bold" style={{ color: z.color }}>
               {z.min == null ? `≤ ${z.max}` : `${z.min} – ${z.max}`}
             </span>
           </div>

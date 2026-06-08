@@ -19,10 +19,10 @@ export default async function CommuteRoutesPage() {
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <p className="text-[22px] font-display font-bold text-trail-text leading-tight">
+          <p className="text-h1 font-display font-bold text-trail-text leading-tight">
             Trajets domicile-travail
           </p>
-          <p className="text-[12px] text-trail-muted leading-[16px] mt-1">
+          <p className="text-caption text-trail-muted leading-[16px] mt-1">
             Configure tes trajets Runtaf / Vélotaf pour que les activités soient détectées et
             renommées automatiquement (aller et retour).
           </p>

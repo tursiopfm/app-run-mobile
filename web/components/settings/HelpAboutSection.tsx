@@ -25,8 +25,8 @@ export function HelpAboutSection() {
               <LifeBuoy size={13} className="text-trail-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] text-trail-text">{L.helpAndSupport}</p>
-              <p className="text-[11px] text-trail-muted">{L.helpAndSupportSub}</p>
+              <p className="text-body-sm text-trail-text">{L.helpAndSupport}</p>
+              <p className="text-micro text-trail-muted">{L.helpAndSupportSub}</p>
             </div>
             <ChevronRight size={14} className="text-trail-muted flex-shrink-0" />
           </Link>
@@ -46,7 +46,7 @@ export function HelpAboutSection() {
             <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
               <Mail size={13} className="text-trail-muted" />
             </div>
-            <p className="flex-1 text-[13px] text-trail-text">{L.contactLabel}</p>
+            <p className="flex-1 text-body-sm text-trail-text">{L.contactLabel}</p>
             <span className="text-[10px] text-trail-muted/70 flex-shrink-0">›</span>
           </a>
 
@@ -55,8 +55,8 @@ export function HelpAboutSection() {
               <Tag size={13} className="text-trail-muted" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-trail-muted">{L.versionLabel}</p>
-              <p className="text-[13px] text-trail-text">v{APP_VERSION} · {L.versionBuild}</p>
+              <p className="text-micro font-semibold uppercase tracking-wider text-trail-muted">{L.versionLabel}</p>
+              <p className="text-body-sm text-trail-text">v{APP_VERSION} · {L.versionBuild}</p>
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 px-2 py-[2px] rounded-full border border-emerald-500/30 bg-emerald-500/10 flex-shrink-0">
               {L.versionUpToDate}

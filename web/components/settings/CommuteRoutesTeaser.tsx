@@ -27,8 +27,8 @@ export function CommuteRoutesTeaser({ routesCount, activeCount, labels }: Props)
         <Route size={18} className="text-trail-primary" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-trail-text">Trajets domicile-travail</p>
-        <p className="text-[11px] text-trail-muted truncate mt-[2px]">{subtitle}</p>
+        <p className="text-body-sm font-semibold text-trail-text">Trajets domicile-travail</p>
+        <p className="text-micro text-trail-muted truncate mt-[2px]">{subtitle}</p>
       </div>
       <ChevronRight size={16} className="text-trail-muted flex-shrink-0 group-hover:text-trail-text transition-colors" />
     </Link>

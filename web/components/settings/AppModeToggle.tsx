@@ -40,7 +40,7 @@ export function AppModeToggle({ variant = 'row', initialMode = 'expert' }: Props
         }}
         aria-label={`Basculer en mode ${label}`}
         title={`Passer en mode ${label}`}
-        className="inline-flex items-center gap-1.5 rounded-full border border-trail-border bg-trail-card px-2.5 py-1 text-[11px] font-semibold text-trail-text hover:border-trail-primary transition-colors"
+        className="inline-flex items-center gap-1.5 rounded-full border border-trail-border bg-trail-card px-2.5 py-1 text-micro font-semibold text-trail-text hover:border-trail-primary transition-colors"
         style={{ visibility: mounted ? 'visible' : 'hidden' }}
       >
         <Icon size={13} className="text-trail-primary" />
@@ -73,9 +73,9 @@ export function AppModeToggle({ variant = 'row', initialMode = 'expert' }: Props
           >
             <span className="flex items-center gap-2">
               <Icon size={16} className={active ? 'text-trail-primary' : 'text-trail-muted'} />
-              <span className="text-[14px] font-semibold text-trail-text">{label}</span>
+              <span className="text-body font-semibold text-trail-text">{label}</span>
             </span>
-            <span className="mt-1 block text-[12px] text-trail-muted leading-snug">{desc}</span>
+            <span className="mt-1 block text-caption text-trail-muted leading-snug">{desc}</span>
           </button>
         )
       })}

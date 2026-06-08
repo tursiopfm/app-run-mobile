@@ -107,12 +107,12 @@ export function HrCalibrationCard({
   return (
     <div className="space-y-[10px]">
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[10px]">
-        <p className="text-[14px] font-bold text-trail-text">{L.hrMethodCardTitle}</p>
+        <p className="text-body font-bold text-trail-text">{L.hrMethodCardTitle}</p>
         <HrZoneMethod value={method} onChange={setMethod} />
       </div>
 
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[8px]">
-        <p className="text-[14px] font-bold text-trail-text">{L.hrDataCardTitle}</p>
+        <p className="text-body font-bold text-trail-text">{L.hrDataCardTitle}</p>
         <HrCardioFields
           method={method}
           state={state}
@@ -125,7 +125,7 @@ export function HrCalibrationCard({
       <button
         onClick={save}
         disabled={status === 'saving'}
-        className="w-full rounded-[12px] py-[11px] text-[14px] font-bold text-white"
+        className="w-full rounded-[12px] py-[11px] text-body font-bold text-white"
         style={{
           backgroundColor: status === 'error' ? '#ef4444'
             : status === 'saved' ? '#4caf50'
@@ -154,7 +154,7 @@ export function HrCalibrationCard({
       />
 
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[10px]">
-        <p className="text-[14px] font-bold text-trail-text">{L.hrZonesCardTitle}</p>
+        <p className="text-body font-bold text-trail-text">{L.hrZonesCardTitle}</p>
         <HrZonesDisplay
           method={method}
           maxHr={method === 'deduced' ? (deduced.maxHrObserved ?? state.max_hr) : state.max_hr}

@@ -40,13 +40,13 @@ export function ExpertModeHint() {
           <BarChart3 className="text-trail-primary" size={24} />
         </div>
         <h2 className="font-display text-[17px] font-bold text-trail-text">Mode Expert activé</h2>
-        <p className="mt-2 text-[13px] text-trail-muted leading-relaxed">
+        <p className="mt-2 text-body-sm text-trail-muted leading-relaxed">
           Tu as maintenant accès au cockpit complet. Pour revenir au Mode Mission,
           va dans <span className="font-semibold text-trail-text">Réglages → Mode d’affichage</span>.
         </p>
         <button
           onClick={() => setOpen(false)}
-          className="mt-4 w-full rounded-[10px] bg-trail-primary py-2.5 text-[14px] font-semibold text-white hover:bg-trail-primary-dim transition-colors"
+          className="mt-4 w-full rounded-[10px] bg-trail-primary py-2.5 text-body font-semibold text-white hover:bg-trail-primary-dim transition-colors"
         >
           Compris
         </button>

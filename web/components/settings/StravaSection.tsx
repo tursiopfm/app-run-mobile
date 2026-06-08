@@ -79,7 +79,7 @@ export function StravaSection({ isConnected, athleteName, planAutoPushTitle, not
   return (
     <div className="rounded-[10px] bg-trail-surface px-3 py-[10px] space-y-[10px]">
       {noticeMsg && (
-        <p role="alert" className="text-[12px] text-red-400 bg-red-500/10 border border-red-500/25 rounded-[8px] px-3 py-2">
+        <p role="alert" className="text-caption text-red-400 bg-red-500/10 border border-red-500/25 rounded-[8px] px-3 py-2">
           {noticeMsg}
         </p>
       )}
@@ -88,8 +88,8 @@ export function StravaSection({ isConnected, athleteName, planAutoPushTitle, not
           <Activity size={14} className="text-[#FC4C02]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-trail-muted">Strava</p>
-          <p className="text-[13px] text-trail-text truncate">
+          <p className="text-micro font-semibold uppercase tracking-wider text-trail-muted">Strava</p>
+          <p className="text-body-sm text-trail-text truncate">
             {isConnected ? (athleteName ?? L.stravaAccountConnected) : L.stravaNoAccount}
           </p>
         </div>
@@ -116,7 +116,7 @@ export function StravaSection({ isConnected, athleteName, planAutoPushTitle, not
           <button
             onClick={handleSync}
             disabled={syncing}
-            className="flex items-center justify-center gap-[6px] flex-1 px-3 py-[7px] rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-[12px] font-semibold hover:bg-trail-border/40 transition-colors disabled:opacity-50"
+            className="flex items-center justify-center gap-[6px] flex-1 px-3 py-[7px] rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption font-semibold hover:bg-trail-border/40 transition-colors disabled:opacity-50"
           >
             <RefreshCw size={12} className={syncing ? 'animate-spin' : ''} />
             {syncing ? L.syncShort : L.syncLabel}
@@ -124,7 +124,7 @@ export function StravaSection({ isConnected, athleteName, planAutoPushTitle, not
           <button
             onClick={handleDisconnect}
             disabled={disconnecting}
-            className="flex items-center gap-[6px] px-3 py-[6px] rounded-full border border-red-500/25 text-red-400 text-[11px] font-semibold tracking-wide hover:bg-red-500/10 transition-colors disabled:opacity-50 flex-shrink-0"
+            className="flex items-center gap-[6px] px-3 py-[6px] rounded-full border border-red-500/25 text-red-400 text-micro font-semibold tracking-wide hover:bg-red-500/10 transition-colors disabled:opacity-50 flex-shrink-0"
           >
             <LogOut size={12} />
             {disconnecting ? '…' : L.logoutLabel}
@@ -133,7 +133,7 @@ export function StravaSection({ isConnected, athleteName, planAutoPushTitle, not
       ) : (
         <a
           href="/api/strava/connect"
-          className="flex items-center justify-center gap-2 w-full px-3 py-[8px] rounded-[8px] bg-[#FC4C02] hover:bg-[#FC4C02]/90 text-white text-[12px] font-bold uppercase tracking-wider transition-colors"
+          className="flex items-center justify-center gap-2 w-full px-3 py-[8px] rounded-[8px] bg-[#FC4C02] hover:bg-[#FC4C02]/90 text-white text-caption font-bold uppercase tracking-wider transition-colors"
         >
           <Activity size={13} />
           {L.stravaConnectMyAccount}
@@ -143,10 +143,10 @@ export function StravaSection({ isConnected, athleteName, planAutoPushTitle, not
       {isConnected && (
         <div className="flex items-start gap-3 px-1 py-[6px]">
           <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-semibold text-trail-text leading-tight">
+            <p className="text-caption font-semibold text-trail-text leading-tight">
               {L.planAutoPushTitleLabel}
             </p>
-            <p className="text-[11px] text-trail-muted leading-[15px] mt-[2px]">
+            <p className="text-micro text-trail-muted leading-[15px] mt-[2px]">
               {L.planAutoPushTitleHint}
             </p>
           </div>
@@ -173,7 +173,7 @@ export function StravaSection({ isConnected, athleteName, planAutoPushTitle, not
       )}
 
       {syncMsg && (
-        <p className="text-[11px] text-trail-muted text-center pt-[2px]">{syncMsg}</p>
+        <p className="text-micro text-trail-muted text-center pt-[2px]">{syncMsg}</p>
       )}
     </div>
   )

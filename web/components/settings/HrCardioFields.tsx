@@ -41,7 +41,7 @@ function Field({ label, value, onChange, unit, disabled, info, alert }: {
         border: alert ? '1px dashed #fb923c' : 'none',
       }}
     >
-      <p className="text-[11px] text-trail-muted mb-[4px] flex items-center gap-[4px]">
+      <p className="text-micro text-trail-muted mb-[4px] flex items-center gap-[4px]">
         {label}{info}
       </p>
       <div className="flex items-center gap-[6px]">
@@ -57,7 +57,7 @@ function Field({ label, value, onChange, unit, disabled, info, alert }: {
           className="flex-1 bg-transparent text-[15px] font-semibold outline-none"
           style={{ color: value ? colors.text : colors.subtleText, minWidth: 0 }}
         />
-        {unit && <span className="text-[12px] text-trail-muted flex-shrink-0">{unit}</span>}
+        {unit && <span className="text-caption text-trail-muted flex-shrink-0">{unit}</span>}
       </div>
     </div>
   )
@@ -97,7 +97,7 @@ export function HrCardioFields({
         <Field label={L.hrFieldThresholdTest30} unit="bpm" value={state.threshold_hr} onChange={v => set('threshold_hr', v)} />
         <button
           onClick={() => setProtocolOpen(true)}
-          className="rounded-[8px] px-[10px] py-[6px] text-[12px] font-semibold border"
+          className="rounded-[8px] px-[10px] py-[6px] text-caption font-semibold border"
           style={{ borderColor: colors.border, color: colors.text }}
         >
           {L.hrSeeProtocol}
@@ -142,7 +142,7 @@ export function HrCardioFields({
       </>}
 
       {method === 'deduced' && (
-        <div className="rounded-[10px] p-[12px] text-[12px]" style={{ backgroundColor: colors.surface }}>
+        <div className="rounded-[10px] p-[12px] text-caption" style={{ backgroundColor: colors.surface }}>
           <p className="text-trail-muted mb-2">{L.hrDeducedTitle}</p>
           <ul className="space-y-1 text-trail-text">
             <li>• {L.hrDeducedMaxObs} : <strong>{deduced.maxHrObserved ?? '—'} bpm</strong></li>
@@ -151,13 +151,13 @@ export function HrCardioFields({
           </ul>
           <button
             onClick={onRecompute}
-            className="mt-3 rounded-[8px] px-[10px] py-[6px] text-[12px] font-semibold border"
+            className="mt-3 rounded-[8px] px-[10px] py-[6px] text-caption font-semibold border"
             style={{ borderColor: colors.border, color: colors.text }}
           >
             {L.hrRecomputeBtn}
           </button>
           {deduced.maxHrObserved == null && (
-            <p className="text-[11px] text-trail-muted mt-2">{L.hrNoActivityFC}</p>
+            <p className="text-micro text-trail-muted mt-2">{L.hrNoActivityFC}</p>
           )}
         </div>
       )}

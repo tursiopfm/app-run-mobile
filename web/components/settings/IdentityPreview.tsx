@@ -38,8 +38,8 @@ export function IdentityPreview({
           : <User size={20} className="text-trail-muted" />}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-semibold text-trail-text truncate">{fullName}</p>
-        <p className="text-[11px] text-trail-muted truncate">{email ?? '—'}</p>
+        <p className="text-body font-semibold text-trail-text truncate">{fullName}</p>
+        <p className="text-micro text-trail-muted truncate">{email ?? '—'}</p>
         <p className="text-[10px] text-trail-muted/80 mt-[1px]">
           {L.memberSince(formatDate(accountCreatedAt, locale))}
         </p>

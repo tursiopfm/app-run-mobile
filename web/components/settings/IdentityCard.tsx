@@ -163,7 +163,7 @@ export function IdentityCard({
           <p className="font-display text-[16px] font-bold text-trail-text truncate">{fullName}</p>
           <div className="flex items-center gap-1 mt-[2px]">
             <Mail size={11} className="text-trail-muted flex-shrink-0" />
-            <p className="text-[12px] text-trail-muted truncate">{email ?? '—'}</p>
+            <p className="text-caption text-trail-muted truncate">{email ?? '—'}</p>
           </div>
           {currentHasCustom && !avatarUploading && (
             <button
@@ -178,7 +178,7 @@ export function IdentityCard({
       </div>
 
       {avatarError && (
-        <p className="text-[11px] text-red-500">{L.identityAvatarError}</p>
+        <p className="text-micro text-red-500">{L.identityAvatarError}</p>
       )}
 
       {/* ── Champs éditables ── */}
@@ -190,7 +190,7 @@ export function IdentityCard({
               value={first}
               onChange={e => setFirst(e.target.value)}
               placeholder={L.identityFirstName}
-              className="w-full rounded-[8px] bg-trail-surface border border-trail-border px-2 py-[6px] text-[14px] text-trail-text outline-none focus:border-trail-primary"
+              className="w-full rounded-[8px] bg-trail-surface border border-trail-border px-2 py-[6px] text-body text-trail-text outline-none focus:border-trail-primary"
             />
           </Field>
           <Field label={L.identityLastName}>
@@ -199,7 +199,7 @@ export function IdentityCard({
               value={last}
               onChange={e => setLast(e.target.value)}
               placeholder={L.identityLastName}
-              className="w-full rounded-[8px] bg-trail-surface border border-trail-border px-2 py-[6px] text-[14px] text-trail-text outline-none focus:border-trail-primary"
+              className="w-full rounded-[8px] bg-trail-surface border border-trail-border px-2 py-[6px] text-body text-trail-text outline-none focus:border-trail-primary"
             />
           </Field>
         </div>
@@ -210,7 +210,7 @@ export function IdentityCard({
             value={bdate}
             onChange={e => setBdate(e.target.value)}
             max={new Date().toISOString().slice(0, 10)}
-            className="w-full rounded-[8px] bg-trail-surface border border-trail-border px-2 py-[6px] text-[14px] text-trail-text outline-none focus:border-trail-primary"
+            className="w-full rounded-[8px] bg-trail-surface border border-trail-border px-2 py-[6px] text-body text-trail-text outline-none focus:border-trail-primary"
           />
         </Field>
 
@@ -223,7 +223,7 @@ export function IdentityCard({
                   key={opt.value}
                   type="button"
                   onClick={() => setSexVal(active ? null : opt.value)}
-                  className={`flex-1 rounded-[8px] px-2 py-[6px] text-[12px] font-medium transition-colors border ${
+                  className={`flex-1 rounded-[8px] px-2 py-[6px] text-caption font-medium transition-colors border ${
                     active
                       ? 'bg-trail-primary/15 border-trail-primary text-trail-primary'
                       : 'bg-trail-surface border-trail-border text-trail-muted hover:text-trail-text'
@@ -244,7 +244,7 @@ export function IdentityCard({
       <button
         onClick={save}
         disabled={!dirty || status === 'saving'}
-        className="w-full rounded-[10px] py-[10px] text-[13px] font-bold text-white transition-opacity"
+        className="w-full rounded-[10px] py-[10px] text-body-sm font-bold text-white transition-opacity"
         style={{
           backgroundColor: status === 'error' ? '#ef4444'
             : status === 'saved' ? '#4caf50'
@@ -261,14 +261,14 @@ export function IdentityCard({
       </button>
 
       {/* ── Meta (lecture seule) ── */}
-      <div className="grid grid-cols-2 gap-[8px] text-[12px] pt-[2px]">
+      <div className="grid grid-cols-2 gap-[8px] text-caption pt-[2px]">
         <div className="rounded-[10px] bg-trail-surface px-3 py-[8px]">
           <p className="text-[10px] uppercase tracking-wider text-trail-muted">{L.identityAccountCreated}</p>
-          <p className="text-[13px] text-trail-text mt-[2px]">{formatDate(accountCreatedAt, locale)}</p>
+          <p className="text-body-sm text-trail-text mt-[2px]">{formatDate(accountCreatedAt, locale)}</p>
         </div>
         <div className="rounded-[10px] bg-trail-surface px-3 py-[8px]">
           <p className="text-[10px] uppercase tracking-wider text-trail-muted">{L.identitySubscription}</p>
-          <p className="text-[13px] text-trail-text mt-[2px]">{L.identitySubscriptionFree}</p>
+          <p className="text-body-sm text-trail-text mt-[2px]">{L.identitySubscriptionFree}</p>
         </div>
       </div>
     </div>

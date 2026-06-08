@@ -77,7 +77,7 @@ export function CustomZonesEditor({
     <div className="space-y-[6px]">
       {zones.map((z, i) => (
         <div key={z.zone} className="flex items-center gap-[8px]">
-          <span className="text-[12px] font-bold text-trail-text w-[24px]">{L.customZonesZ(z.zone)}</span>
+          <span className="text-caption font-bold text-trail-text w-[24px]">{L.customZonesZ(z.zone)}</span>
           <div className="flex-1 rounded-[8px] px-[10px] py-[6px]" style={{ backgroundColor: colors.surface }}>
             <p className="text-[10px] text-trail-muted">{L.customZonesMin}</p>
             <input
@@ -86,7 +86,7 @@ export function CustomZonesEditor({
               disabled={z.zone === 1}
               placeholder={z.zone === 1 ? '—' : ''}
               onChange={e => update(i, 'min', e.target.value)}
-              className="bg-transparent text-[14px] font-semibold outline-none w-full text-trail-text"
+              className="bg-transparent text-body font-semibold outline-none w-full text-trail-text"
             />
           </div>
           <div className="flex-1 rounded-[8px] px-[10px] py-[6px]" style={{ backgroundColor: colors.surface }}>
@@ -95,17 +95,17 @@ export function CustomZonesEditor({
               type="number" inputMode="numeric"
               value={z.max ?? ''}
               onChange={e => update(i, 'max', e.target.value)}
-              className="bg-transparent text-[14px] font-semibold outline-none w-full text-trail-text"
+              className="bg-transparent text-body font-semibold outline-none w-full text-trail-text"
             />
           </div>
         </div>
       ))}
       {errors.length > 0 && (
-        <ul className="text-[11px] mt-2" style={{ color: '#f87171' }}>
+        <ul className="text-micro mt-2" style={{ color: '#f87171' }}>
           {errors.map((e, i) => <li key={i}>• {e}</li>)}
         </ul>
       )}
-      <p className="text-[11px] text-trail-muted leading-[16px]">{L.customZonesHint}</p>
+      <p className="text-micro text-trail-muted leading-[16px]">{L.customZonesHint}</p>
     </div>
   )
 }

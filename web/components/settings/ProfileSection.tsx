@@ -24,7 +24,7 @@ function FieldInput({
 }) {
   return (
     <div className="rounded-[10px] px-[12px] py-[8px]" style={{ backgroundColor: colors.surface }}>
-      <p className="text-[11px] text-trail-muted mb-[4px]">{label}</p>
+      <p className="text-micro text-trail-muted mb-[4px]">{label}</p>
       <div className="flex items-center gap-[6px]">
         <input
           type={type}
@@ -34,7 +34,7 @@ function FieldInput({
           className="flex-1 bg-transparent text-[15px] font-semibold outline-none"
           style={{ color: colors.text, minWidth: 0 }}
         />
-        {unit && <span className="text-[12px] text-trail-muted flex-shrink-0">{unit}</span>}
+        {unit && <span className="text-caption text-trail-muted flex-shrink-0">{unit}</span>}
       </div>
     </div>
   )
@@ -105,7 +105,7 @@ export function ProfileSection({ initial }: { initial: ProfileData }) {
       <button
         onClick={handleSave}
         disabled={status === 'saving'}
-        className="w-full rounded-[12px] py-[10px] text-[14px] font-bold text-white mt-[4px]"
+        className="w-full rounded-[12px] py-[10px] text-body font-bold text-white mt-[4px]"
         style={{
           backgroundColor: status === 'error' ? '#ef4444'
             : status === 'saved' ? colors.greenOk

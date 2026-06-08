@@ -75,7 +75,7 @@ export function HrSourcesPanel({
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[10px]">
       <div className="flex items-center justify-between">
-        <p className="text-[14px] font-bold text-trail-text">{L.hrSourcesTitle}</p>
+        <p className="text-body font-bold text-trail-text">{L.hrSourcesTitle}</p>
         <span
           className="text-[10px] font-bold px-[8px] py-[2px] rounded-full"
           style={{ backgroundColor: meta.badgeBg, color: meta.color }}
@@ -84,7 +84,7 @@ export function HrSourcesPanel({
         </span>
       </div>
 
-      <table className="w-full text-[12px]">
+      <table className="w-full text-caption">
         <thead>
           <tr style={{ color: colors.subtleText }}>
             <th className="text-left font-medium py-[4px] text-[10px] uppercase">{L.hrSourcesValueCol}</th>
@@ -102,15 +102,15 @@ export function HrSourcesPanel({
                 <td className="py-[6px] text-right font-semibold" style={{ color: active ? colors.text : colors.subtleText }}>
                   {r.value != null ? `${r.value} bpm` : '—'}
                 </td>
-                <td className="py-[6px] text-right text-[11px]" style={{ color: r.source.color }}>{r.source.tag}</td>
-                <td className="py-[6px] text-right text-[11px]" style={{ color: colors.subtleText }}>{formatRelative(r.date, L, locale)}</td>
+                <td className="py-[6px] text-right text-micro" style={{ color: r.source.color }}>{r.source.tag}</td>
+                <td className="py-[6px] text-right text-micro" style={{ color: colors.subtleText }}>{formatRelative(r.date, L, locale)}</td>
               </tr>
             )
           })}
         </tbody>
       </table>
 
-      <p className="text-[11px] text-trail-muted leading-[16px] pl-2" style={{ borderLeft: '3px solid #22c55e' }}>
+      <p className="text-micro text-trail-muted leading-[16px] pl-2" style={{ borderLeft: '3px solid #22c55e' }}>
         {L.hrSourcesFootnote}
       </p>
     </div>

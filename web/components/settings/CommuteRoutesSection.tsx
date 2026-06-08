@@ -67,7 +67,7 @@ function TextInput({
       value={value}
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-[8px] bg-trail-surface border border-trail-border px-2 py-[6px] text-[14px] text-trail-text outline-none focus:border-trail-primary"
+      className="w-full rounded-[8px] bg-trail-surface border border-trail-border px-2 py-[6px] text-body text-trail-text outline-none focus:border-trail-primary"
     />
   )
 }
@@ -82,7 +82,7 @@ function NumberInput({
       type="number"
       value={Number.isFinite(value) ? value : ''}
       onChange={e => onChange(Number(e.target.value))}
-      className="w-full rounded-[8px] bg-trail-surface border border-trail-border px-2 py-[6px] text-[14px] text-trail-text outline-none focus:border-trail-primary"
+      className="w-full rounded-[8px] bg-trail-surface border border-trail-border px-2 py-[6px] text-body text-trail-text outline-none focus:border-trail-primary"
     />
   )
 }
@@ -170,26 +170,26 @@ export function CommuteRoutesSection() {
 
   return (
     <div className="space-y-[12px]">
-      <p className="text-[12px] text-trail-muted leading-[16px]">
+      <p className="text-caption text-trail-muted leading-[16px]">
         Configure tes trajets domicile-travail pour que les activités Runtaf / Vélotaf soient
         détectées et renommées automatiquement (aller et retour).
       </p>
 
       {/* ── Liste des trajets ── */}
       {loading && (
-        <p className="text-[12px] text-trail-muted px-1">Chargement…</p>
+        <p className="text-caption text-trail-muted px-1">Chargement…</p>
       )}
 
       {error && !loading && (
         <div className="flex items-center gap-2 px-3 py-[8px] rounded-[10px] bg-red-500/10 border border-red-500/25">
           <AlertTriangle size={13} className="text-red-400 flex-shrink-0" />
-          <p className="text-[12px] text-red-400">{error}</p>
+          <p className="text-caption text-red-400">{error}</p>
         </div>
       )}
 
       {!loading && !error && routes.length === 0 && (
         <div className="px-3 py-[10px] rounded-[10px] bg-trail-surface">
-          <p className="text-[12px] text-trail-muted">
+          <p className="text-caption text-trail-muted">
             Aucun trajet configuré pour l&apos;instant. Ajoute-en un ci-dessous.
           </p>
         </div>
@@ -213,8 +213,8 @@ export function CommuteRoutesSection() {
 
       {/* ── Appliquer à l'historique ── */}
       <div className="rounded-[12px] bg-trail-surface border border-trail-border p-[12px] space-y-[8px]">
-        <p className="text-[13px] font-bold text-trail-text">Appliquer à l&apos;historique</p>
-        <p className="text-[11px] text-trail-muted leading-[15px]">
+        <p className="text-body-sm font-bold text-trail-text">Appliquer à l&apos;historique</p>
+        <p className="text-micro text-trail-muted leading-[15px]">
           Détecte les activités déjà importées qui correspondent à tes trajets et leur attribue le bon numéro.
         </p>
 
@@ -227,7 +227,7 @@ export function CommuteRoutesSection() {
             className="mt-[2px] w-[14px] h-[14px] accent-trail-primary cursor-pointer"
           />
           <span className="flex-1">
-            <span className="block text-[12px] font-semibold text-trail-text">Réécrire aussi les titres sur Strava</span>
+            <span className="block text-caption font-semibold text-trail-text">Réécrire aussi les titres sur Strava</span>
             <span className="block text-[10px] text-trail-muted leading-[14px] mt-[2px]">
               Coche pour pousser les titres sur Strava. Décoche pour ne mettre à jour que la base de TrailCockpit (les titres Strava restent tels quels).
             </span>
@@ -238,7 +238,7 @@ export function CommuteRoutesSection() {
           type="button"
           onClick={handleApply}
           disabled={applying || routes.length === 0}
-          className="flex items-center gap-[6px] px-3 py-[8px] rounded-[10px] bg-trail-primary/15 border border-trail-primary text-trail-primary text-[12px] font-semibold tracking-wide hover:bg-trail-primary/25 transition-colors disabled:opacity-50"
+          className="flex items-center gap-[6px] px-3 py-[8px] rounded-[10px] bg-trail-primary/15 border border-trail-primary text-trail-primary text-caption font-semibold tracking-wide hover:bg-trail-primary/25 transition-colors disabled:opacity-50"
         >
           {applying
             ? <div className="w-3 h-3 border-2 border-trail-primary border-t-transparent rounded-full animate-spin" />
@@ -246,14 +246,14 @@ export function CommuteRoutesSection() {
           {applying ? 'Analyse en cours…' : 'Appliquer maintenant'}
         </button>
         {applyResult && (
-          <p className="text-[12px] text-trail-text">
+          <p className="text-caption text-trail-text">
             {applyResult.matched} activité{applyResult.matched > 1 ? 's' : ''} détectée
             {applyResult.matched > 1 ? 's' : ''}, {applyResult.renamed} renommée
             {applyResult.renamed > 1 ? 's' : ''}.
           </p>
         )}
         {applyError && (
-          <p className="text-[12px] text-red-400">L&apos;application a échoué. Réessaie plus tard.</p>
+          <p className="text-caption text-red-400">L&apos;application a échoué. Réessaie plus tard.</p>
         )}
       </div>
     </div>
@@ -306,8 +306,8 @@ function RouteCard({
           <Icon size={15} className="text-trail-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[14px] font-bold text-trail-text truncate">{route.label}</p>
-          <p className="text-[11px] text-trail-muted">
+          <p className="text-body font-bold text-trail-text truncate">{route.label}</p>
+          <p className="text-micro text-trail-muted">
             {route.sportType} · réf {formatKm(route.refDistanceM)} · ±{route.distanceTolPct}%
           </p>
         </div>
@@ -334,14 +334,14 @@ function RouteCard({
       </div>
 
       {/* Aperçu des titres */}
-      <div className="grid grid-cols-1 gap-[4px] text-[12px]">
+      <div className="grid grid-cols-1 gap-[4px] text-caption">
         <div className="rounded-[8px] bg-trail-surface px-2 py-[6px]">
           <p className="text-[10px] uppercase tracking-wider text-trail-muted">Aller</p>
-          <p className="text-[13px] text-trail-text truncate">{PREVIEW_PREFIX}{route.outboundTitle}</p>
+          <p className="text-body-sm text-trail-text truncate">{PREVIEW_PREFIX}{route.outboundTitle}</p>
         </div>
         <div className="rounded-[8px] bg-trail-surface px-2 py-[6px]">
           <p className="text-[10px] uppercase tracking-wider text-trail-muted">Retour</p>
-          <p className="text-[13px] text-trail-text truncate">{PREVIEW_PREFIX}{route.returnTitle}</p>
+          <p className="text-body-sm text-trail-text truncate">{PREVIEW_PREFIX}{route.returnTitle}</p>
         </div>
       </div>
 
@@ -350,7 +350,7 @@ function RouteCard({
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="text-[11px] text-trail-primary font-semibold underline underline-offset-2"
+          className="text-micro text-trail-primary font-semibold underline underline-offset-2"
         >
           Modifier les titres & tolérances
         </button>
@@ -385,14 +385,14 @@ function RouteCard({
             <button
               type="button"
               onClick={saveEdit}
-              className="flex-1 rounded-[10px] py-[8px] text-[12px] font-bold text-trail-primary bg-trail-primary/15 border border-trail-primary hover:bg-trail-primary/25 transition-colors"
+              className="flex-1 rounded-[10px] py-[8px] text-caption font-bold text-trail-primary bg-trail-primary/15 border border-trail-primary hover:bg-trail-primary/25 transition-colors"
             >
               Enregistrer
             </button>
             <button
               type="button"
               onClick={cancelEdit}
-              className="flex-1 rounded-[10px] py-[8px] text-[12px] font-semibold text-trail-muted bg-trail-surface border border-trail-border hover:text-trail-text transition-colors"
+              className="flex-1 rounded-[10px] py-[8px] text-caption font-semibold text-trail-muted bg-trail-surface border border-trail-border hover:text-trail-text transition-colors"
             >
               Annuler
             </button>
@@ -493,7 +493,7 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
       <button
         type="button"
         onClick={openForm}
-        className="w-full flex items-center justify-center gap-[6px] rounded-[12px] border border-dashed border-trail-border py-[10px] text-[13px] font-semibold text-trail-primary hover:bg-trail-surface transition-colors"
+        className="w-full flex items-center justify-center gap-[6px] rounded-[12px] border border-dashed border-trail-border py-[10px] text-body-sm font-semibold text-trail-primary hover:bg-trail-surface transition-colors"
       >
         <Plus size={15} />
         Ajouter un trajet
@@ -503,7 +503,7 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
 
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[12px]">
-      <p className="text-[13px] font-bold text-trail-text">Ajouter un trajet</p>
+      <p className="text-body-sm font-bold text-trail-text">Ajouter un trajet</p>
 
       {/* Nom */}
       <div>
@@ -515,18 +515,18 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
       <div>
         <FieldLabel>Activité de référence (un aller domicile → travail)</FieldLabel>
         {candidatesLoading ? (
-          <p className="text-[12px] text-trail-muted">Chargement des activités…</p>
+          <p className="text-caption text-trail-muted">Chargement des activités…</p>
         ) : candidatesError ? (
-          <p className="text-[12px] text-red-400">Impossible de charger tes activités.</p>
+          <p className="text-caption text-red-400">Impossible de charger tes activités.</p>
         ) : candidates.length === 0 ? (
-          <p className="text-[12px] text-trail-muted">
+          <p className="text-caption text-trail-muted">
             Aucune activité course / vélo trouvée. Importe d&apos;abord tes activités.
           </p>
         ) : (
           <select
             value={fromActivityId}
             onChange={e => setFromActivityId(e.target.value)}
-            className="w-full rounded-[8px] bg-trail-surface border border-trail-border px-2 py-[6px] text-[14px] text-trail-text outline-none focus:border-trail-primary"
+            className="w-full rounded-[8px] bg-trail-surface border border-trail-border px-2 py-[6px] text-body text-trail-text outline-none focus:border-trail-primary"
           >
             <option value="">— Choisir une activité —</option>
             {candidates.map(a => (
@@ -548,14 +548,14 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
 
         {/* Aller */}
         <div className="space-y-[6px]">
-          <div className="flex items-center gap-[6px] text-[11px] text-trail-muted">
+          <div className="flex items-center gap-[6px] text-micro text-trail-muted">
             <span className="w-[8px] h-[8px] rounded-full bg-trail-primary" aria-hidden />
             <span className="font-bold uppercase tracking-wider text-trail-text">Aller</span>
             <span className="text-[10px]">matin · départ Home</span>
           </div>
           <div className="flex items-stretch gap-[6px]">
             <div
-              className="flex items-center px-[10px] rounded-[8px] bg-trail-surface border border-trail-border text-[12px] font-bold tracking-wide text-trail-muted whitespace-nowrap select-none"
+              className="flex items-center px-[10px] rounded-[8px] bg-trail-surface border border-trail-border text-caption font-bold tracking-wide text-trail-muted whitespace-nowrap select-none"
               title="Numéro auto-incrémenté par jour"
             >
               {CHIP_LABEL}
@@ -568,14 +568,14 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
 
         {/* Retour */}
         <div className="space-y-[6px]">
-          <div className="flex items-center gap-[6px] text-[11px] text-trail-muted">
+          <div className="flex items-center gap-[6px] text-micro text-trail-muted">
             <span className="w-[8px] h-[8px] rounded-full bg-sky-400" aria-hidden />
             <span className="font-bold uppercase tracking-wider text-trail-text">Retour</span>
             <span className="text-[10px]">soir · départ Office</span>
           </div>
           <div className="flex items-stretch gap-[6px]">
             <div
-              className="flex items-center px-[10px] rounded-[8px] bg-trail-surface border border-trail-border text-[12px] font-bold tracking-wide text-trail-muted whitespace-nowrap select-none"
+              className="flex items-center px-[10px] rounded-[8px] bg-trail-surface border border-trail-border text-caption font-bold tracking-wide text-trail-muted whitespace-nowrap select-none"
               title="Numéro auto-incrémenté par jour"
             >
               {CHIP_LABEL}
@@ -596,7 +596,7 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
         <button
           type="button"
           onClick={() => setAdvancedOpen(v => !v)}
-          className="flex items-center gap-[4px] text-[11px] font-semibold text-trail-muted hover:text-trail-text transition-colors"
+          className="flex items-center gap-[4px] text-micro font-semibold text-trail-muted hover:text-trail-text transition-colors"
         >
           {advancedOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
           Options avancées
@@ -620,7 +620,7 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
       </div>
 
       {submitError && (
-        <p className="text-[12px] text-red-400">{submitError}</p>
+        <p className="text-caption text-red-400">{submitError}</p>
       )}
 
       {/* Actions */}
@@ -629,7 +629,7 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
           type="button"
           onClick={handleCreate}
           disabled={submitting}
-          className="flex-1 rounded-[10px] py-[9px] text-[13px] font-bold text-trail-primary bg-trail-primary/15 border border-trail-primary hover:bg-trail-primary/25 transition-colors disabled:opacity-50"
+          className="flex-1 rounded-[10px] py-[9px] text-body-sm font-bold text-trail-primary bg-trail-primary/15 border border-trail-primary hover:bg-trail-primary/25 transition-colors disabled:opacity-50"
         >
           {submitting ? 'Création…' : 'Créer'}
         </button>
@@ -637,7 +637,7 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
           type="button"
           onClick={() => { reset(); setOpen(false) }}
           disabled={submitting}
-          className="flex-1 rounded-[10px] py-[9px] text-[13px] font-semibold text-trail-muted bg-trail-surface border border-trail-border hover:text-trail-text transition-colors disabled:opacity-50"
+          className="flex-1 rounded-[10px] py-[9px] text-body-sm font-semibold text-trail-muted bg-trail-surface border border-trail-border hover:text-trail-text transition-colors disabled:opacity-50"
         >
           Annuler
         </button>

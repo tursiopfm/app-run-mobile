@@ -25,8 +25,8 @@ function SectionHeader({
         <Icon size={14} className="text-trail-primary" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-bold text-trail-text leading-tight font-display">{title}</p>
-        <p className="text-[11px] text-trail-muted leading-tight mt-[1px]">{subtitle}</p>
+        <p className="text-body font-bold text-trail-text leading-tight font-display">{title}</p>
+        <p className="text-micro text-trail-muted leading-tight mt-[1px]">{subtitle}</p>
       </div>
     </div>
   )
@@ -144,10 +144,10 @@ export default async function SettingsPage({
         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-trail-primary">
           {settingsLabels.title}
         </p>
-        <p className="text-[22px] font-display font-bold text-trail-text leading-tight mt-[2px]">
+        <p className="text-h1 font-display font-bold text-trail-text leading-tight mt-[2px]">
           {settingsLabels.pageHeroSubtitle}
         </p>
-        <p className="text-[12px] text-trail-muted leading-[16px] mt-[6px] max-w-[360px]">
+        <p className="text-caption text-trail-muted leading-[16px] mt-[6px] max-w-[360px]">
           {settingsLabels.pageHeroIntro}
         </p>
       </div>
@@ -254,7 +254,7 @@ export default async function SettingsPage({
                       className="flex items-start gap-[10px] px-3 py-[8px] rounded-[10px] bg-trail-surface"
                     >
                       <div className="flex-shrink-0 mt-[6px] w-[6px] h-[6px] rounded-full bg-trail-primary" />
-                      <p className="text-[13px] text-trail-text leading-[18px]">{text}</p>
+                      <p className="text-body-sm text-trail-text leading-[18px]">{text}</p>
                     </div>
                   ))}
                 </div>

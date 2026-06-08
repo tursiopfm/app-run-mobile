@@ -47,13 +47,13 @@ export function HrZoneMethod({ value, onChange }: { value: Method; onChange: (m:
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[14px] font-semibold text-trail-text">{methods[m.value].label}</span>
-                  <span className="text-[11px] font-bold px-[6px] py-[1px] rounded-full"
+                  <span className="text-body font-semibold text-trail-text">{methods[m.value].label}</span>
+                  <span className="text-micro font-bold px-[6px] py-[1px] rounded-full"
                     style={{ backgroundColor: m.badgeBg, color: m.color }}>
                     {methods[m.value].badge}
                   </span>
                 </div>
-                <p className="text-[12px] text-trail-muted mt-[2px] leading-[16px]">{methods[m.value].description}</p>
+                <p className="text-caption text-trail-muted mt-[2px] leading-[16px]">{methods[m.value].description}</p>
               </div>
             </div>
           </button>

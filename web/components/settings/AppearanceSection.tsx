@@ -17,7 +17,7 @@ function ActionChip({
   return (
     <button
       onClick={onClick}
-      className="flex-shrink-0 rounded-full px-3 py-[6px] border text-[12px] font-semibold"
+      className="flex-shrink-0 rounded-full px-3 py-[6px] border text-caption font-semibold"
       style={{
         backgroundColor: active ? `${colors.chargeOrange}2B` : colors.surface,
         borderColor:     active ? colors.chargeOrange : colors.border,
@@ -40,8 +40,8 @@ function SettingsRow({
       className="flex items-center justify-between rounded-[12px]"
       style={{ padding: '10px 12px', backgroundColor: colors.surface }}
     >
-      <span className="text-[14px] text-trail-muted">{title}</span>
-      <span className="text-[14px] font-semibold" style={{ color: accent }}>{value}</span>
+      <span className="text-body text-trail-muted">{title}</span>
+      <span className="text-body font-semibold" style={{ color: accent }}>{value}</span>
     </div>
   )
 }
@@ -96,7 +96,7 @@ export function AppearanceSection() {
           />
         ))}
       </div>
-      <p className="text-[11px] text-trail-muted leading-[16px] mt-[10px]">
+      <p className="text-micro text-trail-muted leading-[16px] mt-[10px]">
         {themeDesc[activeOption.value]}
       </p>
 

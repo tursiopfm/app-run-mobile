@@ -36,7 +36,7 @@ export function HrCalibrationTeaser({ method, maxHr, thresholdHr }: Props) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-[13px] font-semibold text-trail-text">
+          <p className="text-body-sm font-semibold text-trail-text">
             {L.hrCalibrationTitle}
           </p>
           {meta && methodDict && (
@@ -48,7 +48,7 @@ export function HrCalibrationTeaser({ method, maxHr, thresholdHr }: Props) {
             </span>
           )}
         </div>
-        <p className="text-[11px] text-trail-muted truncate mt-[2px]">{subtitle}</p>
+        <p className="text-micro text-trail-muted truncate mt-[2px]">{subtitle}</p>
       </div>
       <ChevronRight size={16} className="text-trail-muted flex-shrink-0 group-hover:text-trail-text transition-colors" />
     </Link>

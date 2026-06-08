@@ -36,13 +36,13 @@ export function AccountSection() {
           <Mail size={14} className="text-trail-muted" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-trail-muted">{L.emailLabel}</p>
-          <p className="text-[13px] text-trail-text truncate">{email}</p>
+          <p className="text-micro font-semibold uppercase tracking-wider text-trail-muted">{L.emailLabel}</p>
+          <p className="text-body-sm text-trail-text truncate">{email}</p>
         </div>
         <button
           onClick={handleLogout}
           disabled={loggingOut}
-          className="flex items-center gap-[6px] px-3 py-[6px] rounded-full border border-red-500/25 text-red-400 text-[11px] font-semibold tracking-wide hover:bg-red-500/10 transition-colors disabled:opacity-50 flex-shrink-0"
+          className="flex items-center gap-[6px] px-3 py-[6px] rounded-full border border-red-500/25 text-red-400 text-micro font-semibold tracking-wide hover:bg-red-500/10 transition-colors disabled:opacity-50 flex-shrink-0"
         >
           <LogOut size={12} />
           {loggingOut ? '…' : L.logoutLabel}

@@ -27,10 +27,10 @@ export function RestingHrInfoPopover({ open, onClose }: { open: boolean; onClose
   return (
     <div
       ref={ref}
-      className="absolute z-40 mt-2 rounded-[10px] p-[12px] w-[300px] text-[11px] space-y-[8px]"
+      className="absolute z-40 mt-2 rounded-[10px] p-[12px] w-[300px] text-micro space-y-[8px]"
       style={{ backgroundColor: colors.cardBg, border: `1px solid ${colors.chargeOrange}`, color: colors.text }}
     >
-      <p className="text-[13px] font-bold">{L.restingTitle}</p>
+      <p className="text-body-sm font-bold">{L.restingTitle}</p>
 
       <div>
         <p className="font-semibold" style={{ color: '#22c55e' }}>{L.restingManualTitle}</p>
