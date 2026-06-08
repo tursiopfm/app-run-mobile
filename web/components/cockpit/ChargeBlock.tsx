@@ -5,7 +5,7 @@ import { useState } from 'react'
 import type { SportOverview } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import { sportLabel } from '@/lib/design/sports-i18n'
-import { readSportSettings } from '@/lib/design/sport-settings'
+import { readSportSettings, withDefaultSport } from '@/lib/design/sport-settings'
 import { CockpitKpiTile } from '@/components/ui/CockpitKpiTile'
 import { TsbBadge } from '@/components/ui/TsbBadge'
 import { FreshnessHelpSheet } from '@/components/ui/FreshnessHelpSheet'
@@ -27,15 +27,15 @@ function normalizeTsb(arr: number[]): number[] {
   return arr.map((v) => (v - min) / range)
 }
 
-type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
+type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void; defaultSport?: SportKey }
 
-export function ChargeBlock({ sportOverviews, onHide }: Props) {
+export function ChargeBlock({ sportOverviews, onHide, defaultSport }: Props) {
   const t = useT()
   const L = t.charge
   const C = t.cockpit
-  const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
+  const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, withDefaultSport(DEFAULT_SETTINGS, defaultSport)))
   const [currentIdx, setCurrentIdx] = useState(() => {
-    const s = readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS)
+    const s = readSportSettings(STORAGE_KEY, withDefaultSport(DEFAULT_SETTINGS, defaultSport))
     return Math.max(0, s.visible.indexOf(s.default))
   })
   const [showModal,  setShowModal]  = useState(false)

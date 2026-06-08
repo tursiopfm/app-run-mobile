@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react'
 import type { SportOverview, DailyHistoryEntry } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import { sportLabel } from '@/lib/design/sports-i18n'
-import { readSportSettings } from '@/lib/design/sport-settings'
+import { readSportSettings, withDefaultSport } from '@/lib/design/sport-settings'
 import { SportSettingsModal } from './SportSettingsModal'
 import { SportsCarousel } from './SportsCarousel'
 import { colors } from '@/lib/design/colors'
@@ -51,6 +51,7 @@ function sumPills(pills: Pill[]): { totalKm: number; totalDPlus: number } {
 type Props = {
   sportOverviews: Record<SportKey, SportOverview>
   onHide?: () => void
+  defaultSport?: SportKey
 }
 
 // ── Date helpers ──────────────────────────────────────────────────────────
@@ -256,12 +257,12 @@ function HistoryPill({
 
 // ── HistoryBlock ──────────────────────────────────────────────────────────
 
-export function HistoryBlock({ sportOverviews, onHide }: Props) {
+export function HistoryBlock({ sportOverviews, onHide, defaultSport }: Props) {
   const t = useT()
   const L = t.cockpit
-  const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
+  const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, withDefaultSport(DEFAULT_SETTINGS, defaultSport)))
   const [currentIdx, setCurrentIdx] = useState(() => {
-    const s = readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS)
+    const s = readSportSettings(STORAGE_KEY, withDefaultSport(DEFAULT_SETTINGS, defaultSport))
     return Math.max(0, s.visible.indexOf(s.default))
   })
   const [showModal,  setShowModal]  = useState(false)

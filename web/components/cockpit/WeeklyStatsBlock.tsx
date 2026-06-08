@@ -5,7 +5,7 @@ import { useState } from 'react'
 import type { SportOverview } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import { sportLabel } from '@/lib/design/sports-i18n'
-import { readSportSettings } from '@/lib/design/sport-settings'
+import { readSportSettings, withDefaultSport } from '@/lib/design/sport-settings'
 import { CockpitComboChart, type ComboPoint } from '@/components/charts/CockpitComboChart'
 import { CockpitLineChart } from '@/components/charts/CockpitLineChart'
 import { SportSettingsModal } from './SportSettingsModal'
@@ -18,14 +18,14 @@ type Settings = { visible: SportKey[]; default: SportKey }
 const DEFAULT_SETTINGS: Settings = { visible: ['run', 'ride', 'swim', 'all'], default: 'run' }
 const STORAGE_KEY = 'cockpit_weekly_settings'
 
-type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void }
+type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void; defaultSport?: SportKey }
 
-export function WeeklyStatsBlock({ sportOverviews, onHide }: Props) {
+export function WeeklyStatsBlock({ sportOverviews, onHide, defaultSport }: Props) {
   const t = useT()
   const L = t.cockpit
-  const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS))
+  const [settings,   setSettings]   = useState<Settings>(() => readSportSettings(STORAGE_KEY, withDefaultSport(DEFAULT_SETTINGS, defaultSport)))
   const [currentIdx, setCurrentIdx] = useState(() => {
-    const s = readSportSettings(STORAGE_KEY, DEFAULT_SETTINGS)
+    const s = readSportSettings(STORAGE_KEY, withDefaultSport(DEFAULT_SETTINGS, defaultSport))
     return Math.max(0, s.visible.indexOf(s.default))
   })
   const [showModal,  setShowModal]  = useState(false)
