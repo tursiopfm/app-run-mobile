@@ -147,7 +147,7 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
   return (
     <button
       onClick={onClick}
-      className="rounded-full px-4 py-[6px] border text-[13px] font-semibold"
+      className="rounded-full px-4 py-[6px] border text-body-sm font-semibold"
       style={{
         backgroundColor: active ? `${colors.chargeOrange}26` : 'transparent',
         borderColor:     active ? colors.chargeOrange : colors.border,
@@ -179,7 +179,7 @@ function FilterChip({
   return (
     <button
       onClick={onClick}
-      className="rounded-full border text-[12px] font-semibold flex items-center gap-[5px] flex-shrink-0"
+      className="rounded-full border text-caption font-semibold flex items-center gap-[5px] flex-shrink-0"
       style={{
         backgroundColor: active ? `${accent}26` : 'transparent',
         borderColor:     active ? accent : colors.border,
@@ -207,7 +207,7 @@ function SortButtons({
   const btn = (dir: SortDir, symbol: string, active: boolean) => (
     <button
       onClick={() => onSort(field, dir)}
-      className="w-8 h-8 flex items-center justify-center rounded-[6px] border text-[14px]"
+      className="w-8 h-8 flex items-center justify-center rounded-[6px] border text-body"
       style={{
         backgroundColor: active ? `${colors.chargeOrange}26` : colors.surface,
         borderColor:     active ? colors.chargeOrange : colors.border,
@@ -226,8 +226,8 @@ function SortButtons({
   )
 }
 
-const inputCls = 'rounded-[8px] border px-3 py-[5px] text-[13px] flex-1 min-w-0'
-const dateInputCls = 'rounded-[8px] border px-2 py-[5px] text-[13px] flex-1 min-w-0'
+const inputCls = 'rounded-[8px] border px-3 py-[5px] text-body-sm flex-1 min-w-0'
+const dateInputCls = 'rounded-[8px] border px-2 py-[5px] text-body-sm flex-1 min-w-0'
 
 function inputStyle() {
   return {
@@ -253,11 +253,11 @@ function FilterRow({
   const L = useT().activities
   return (
     <div>
-      <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{label}</p>
+      <p className="text-body-sm font-semibold text-trail-text mb-[3px]">{label}</p>
       <div className="flex items-center gap-2">
-        <span className="text-[11px] text-trail-muted shrink-0 mr-1">{L.fromLabel}</span>
+        <span className="text-micro text-trail-muted shrink-0 mr-1">{L.fromLabel}</span>
         {left}
-        <span className="text-[11px] text-trail-muted shrink-0 mx-1">{L.toLabel}</span>
+        <span className="text-micro text-trail-muted shrink-0 mx-1">{L.toLabel}</span>
         {right}
         <SortButtons field={sortField} activeField={activeField} activeDir={activeDir} onSort={onSort} />
       </div>
@@ -333,7 +333,7 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
         </button>
         <button
           onClick={onClose}
-          className="text-[14px] font-bold"
+          className="text-body font-bold"
           style={{ color: colors.chargeOrange, cursor: 'pointer' }}
         >
           {L.apply}
@@ -348,7 +348,7 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
           className="rounded-[12px] border p-4 space-y-4"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
         >
-          <p className="text-[14px] font-semibold text-trail-text">{L.searchByLabel}</p>
+          <p className="text-body font-semibold text-trail-text">{L.searchByLabel}</p>
 
           <div className="flex gap-2 flex-wrap">
             {FIELDS.map(f => (
@@ -359,13 +359,13 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 
           {state.field === 'Titre' && (
             <div>
-              <p className="text-[12px] text-trail-muted mb-1">{L.searchTitleLabel}</p>
+              <p className="text-caption text-trail-muted mb-1">{L.searchTitleLabel}</p>
               <input
                 autoFocus
                 type="text"
                 value={state.title}
                 onChange={e => setState({ ...state, title: e.target.value })}
-                className="rounded-[8px] border px-3 py-2 text-[14px] w-full"
+                className="rounded-[8px] border px-3 py-2 text-body w-full"
                 style={si}
               />
             </div>
@@ -373,11 +373,11 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 
           {state.field === 'Distance' && (
             <div className="space-y-2">
-              <p className="text-[12px] text-trail-muted">{L.searchDistanceLabel}</p>
+              <p className="text-caption text-trail-muted">{L.searchDistanceLabel}</p>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] text-trail-muted">{L.fromLabel}</span>
+                <span className="text-micro text-trail-muted">{L.fromLabel}</span>
                 <input type="text" value={state.distFrom} onChange={e => setState({ ...state, distFrom: e.target.value })} placeholder="km" className={inputCls} style={si} />
-                <span className="text-[11px] text-trail-muted">{L.toLabel}</span>
+                <span className="text-micro text-trail-muted">{L.toLabel}</span>
                 <input type="text" value={state.distTo}   onChange={e => setState({ ...state, distTo: e.target.value })}   placeholder="km" className={inputCls} style={si} />
               </div>
             </div>
@@ -385,11 +385,11 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 
           {state.field === 'Durée' && (
             <div className="space-y-2">
-              <p className="text-[12px] text-trail-muted">{L.searchDurationLabel}</p>
+              <p className="text-caption text-trail-muted">{L.searchDurationLabel}</p>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] text-trail-muted">{L.fromLabel}</span>
+                <span className="text-micro text-trail-muted">{L.fromLabel}</span>
                 <input type="text" value={state.durFrom} onChange={e => setState({ ...state, durFrom: e.target.value })} placeholder="h:mm:ss" className={inputCls} style={si} />
-                <span className="text-[11px] text-trail-muted">{L.toLabel}</span>
+                <span className="text-micro text-trail-muted">{L.toLabel}</span>
                 <input type="text" value={state.durTo}   onChange={e => setState({ ...state, durTo: e.target.value })}   placeholder="h:mm:ss" className={inputCls} style={si} />
               </div>
             </div>
@@ -397,11 +397,11 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 
           {state.field === 'D+' && (
             <div className="space-y-2">
-              <p className="text-[12px] text-trail-muted">{L.searchElevationLabel}</p>
+              <p className="text-caption text-trail-muted">{L.searchElevationLabel}</p>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] text-trail-muted">{L.fromLabel}</span>
+                <span className="text-micro text-trail-muted">{L.fromLabel}</span>
                 <input type="text" value={state.dPlusFrom} onChange={e => setState({ ...state, dPlusFrom: e.target.value })} placeholder="m" className={inputCls} style={si} />
-                <span className="text-[11px] text-trail-muted">{L.toLabel}</span>
+                <span className="text-micro text-trail-muted">{L.toLabel}</span>
                 <input type="text" value={state.dPlusTo}   onChange={e => setState({ ...state, dPlusTo: e.target.value })}   placeholder="m" className={inputCls} style={si} />
               </div>
             </div>
@@ -409,7 +409,7 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
 
           <button
             onClick={onReset}
-            className="w-full py-2 rounded-[10px] border text-[13px] font-semibold"
+            className="w-full py-2 rounded-[10px] border text-body-sm font-semibold"
             style={{ borderColor: colors.border, color: colors.subtleText, backgroundColor: 'transparent', cursor: 'pointer' }}
           >
             {L.reset}
@@ -419,20 +419,20 @@ function SearchPanel({ state, setState, activities, onClose, onNavigate, onReset
         {/* Live results */}
         {hasInput && (
           <>
-            <p className="text-[13px] text-trail-muted px-1">{L.resultsCount(results.length)}</p>
+            <p className="text-body-sm text-trail-muted px-1">{L.resultsCount(results.length)}</p>
             {results.length === 0 ? (
               <div
                 className="rounded-[12px] border p-[10px]"
                 style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
               >
-                <p className="text-[13px]" style={{ color: colors.subtleText }}>{L.noResults}</p>
+                <p className="text-body-sm" style={{ color: colors.subtleText }}>{L.noResults}</p>
               </div>
             ) : (
               <div className="space-y-[10px]">
                 {visibleResults.map(a => <ActivityCard key={a.id} activity={a} onClick={() => onNavigate(a.id)} />)}
                 {visibleCount < results.length && (
                   <div ref={sentinelRef} className="h-8 flex items-center justify-center">
-                    <span className="text-[12px]" style={{ color: colors.subtleText }}>…</span>
+                    <span className="text-caption" style={{ color: colors.subtleText }}>…</span>
                   </div>
                 )}
               </div>
@@ -481,15 +481,15 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
           className="rounded-[12px] border p-3 space-y-3"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
         >
-          <p className="text-[14px] font-bold text-trail-text">{L.sortFilterTitle}</p>
+          <p className="text-body font-bold text-trail-text">{L.sortFilterTitle}</p>
 
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{L.activityFieldLabel}</p>
+            <p className="text-body-sm font-semibold text-trail-text mb-[3px]">{L.activityFieldLabel}</p>
             <div className="flex items-center gap-2">
               <select
                 value={state.sport}
                 onChange={e => setState({ ...state, sport: e.target.value })}
-                className="rounded-[8px] border px-3 py-[5px] text-[13px] flex-1"
+                className="rounded-[8px] border px-3 py-[5px] text-body-sm flex-1"
                 style={{ ...si, cursor: 'pointer' }}
               >
                 <option value="Toutes">{L.allOption}</option>
@@ -502,7 +502,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
           </div>
 
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{L.intensityFieldLabel}</p>
+            <p className="text-body-sm font-semibold text-trail-text mb-[3px]">{L.intensityFieldLabel}</p>
             <div className="flex gap-[6px] overflow-x-auto pb-1">
               <FilterChip
                 label={L.allOption}
@@ -526,7 +526,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
           </div>
 
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{L.sessionTypeFieldLabel}</p>
+            <p className="text-body-sm font-semibold text-trail-text mb-[3px]">{L.sessionTypeFieldLabel}</p>
             <div className="flex gap-[6px] overflow-x-auto pb-1">
               <FilterChip
                 label={L.allMascAria}
@@ -554,9 +554,9 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
           </div>
 
           <div>
-            <p className="text-[13px] font-semibold text-trail-text mb-[3px]">{L.dateLabel}</p>
+            <p className="text-body-sm font-semibold text-trail-text mb-[3px]">{L.dateLabel}</p>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-trail-muted shrink-0 mr-1">{L.fromLabel}</span>
+              <span className="text-micro text-trail-muted shrink-0 mr-1">{L.fromLabel}</span>
               <input
                 type="date"
                 value={state.dateFrom}
@@ -564,7 +564,7 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
                 className={dateInputCls}
                 style={si}
               />
-              <span className="text-[11px] text-trail-muted shrink-0 mx-1">{L.toLabel}</span>
+              <span className="text-micro text-trail-muted shrink-0 mx-1">{L.toLabel}</span>
               <input
                 type="date"
                 value={state.dateTo}
@@ -608,14 +608,14 @@ function FilterPanel({ state, setState, sportTypes, onClose, onReset }: {
         <div className="flex gap-3 pb-4">
           <button
             onClick={onReset}
-            className="flex-1 py-3 rounded-[12px] border text-[14px] font-semibold"
+            className="flex-1 py-3 rounded-[12px] border text-body font-semibold"
             style={{ borderColor: colors.border, color: colors.subtleText, backgroundColor: 'transparent', cursor: 'pointer' }}
           >
             {L.reset}
           </button>
           <button
             onClick={onClose}
-            className="flex-1 py-3 rounded-[12px] text-[14px] font-bold"
+            className="flex-1 py-3 rounded-[12px] text-body font-bold"
             style={{ backgroundColor: colors.chargeOrange, color: '#fff', cursor: 'pointer' }}
           >
             {L.apply}
@@ -879,7 +879,7 @@ export default function ActivitiesClient({
               <circle cx="11" cy="11" r="7" stroke={hasActiveSearch ? colors.chargeOrange : colors.subtleText} strokeWidth="2" />
               <path d="M16.5 16.5L21 21" stroke={hasActiveSearch ? colors.chargeOrange : colors.subtleText} strokeWidth="2" strokeLinecap="round" />
             </svg>
-            <span className="text-[14px]" style={{ color: hasActiveSearch ? colors.chargeOrange : colors.subtleText }}>
+            <span className="text-body" style={{ color: hasActiveSearch ? colors.chargeOrange : colors.subtleText }}>
               {L_main.headerSearch}
             </span>
           </button>
@@ -903,13 +903,13 @@ export default function ActivitiesClient({
         </div>
 
         {(hasActiveSearch || hasActiveFilter) && (
-          <p className="text-[13px] text-trail-muted px-1 mb-[6px]">
+          <p className="text-body-sm text-trail-muted px-1 mb-[6px]">
             {L_main.resultsCount(filtered.length)}
             {loadingMore ? L_main.historyLoadingHint : ''}
           </p>
         )}
         {loadingMore && !(hasActiveSearch || hasActiveFilter) && (
-          <p className="text-[12px] text-trail-muted px-1 mb-[6px]">
+          <p className="text-caption text-trail-muted px-1 mb-[6px]">
             {L_main.historyLoading}
           </p>
         )}
@@ -919,7 +919,7 @@ export default function ActivitiesClient({
             className="rounded-[12px] border p-[10px]"
             style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
           >
-            <p className="text-[14px]" style={{ color: colors.subtleText }}>
+            <p className="text-body" style={{ color: colors.subtleText }}>
               {localActivities.length === 0
                 ? L_main.connectStravaImport
                 : L_main.noActivityMatch}
@@ -932,7 +932,7 @@ export default function ActivitiesClient({
             ))}
             {visibleCount < filtered.length && (
               <div ref={sentinelRef} className="h-8 flex items-center justify-center">
-                <span className="text-[12px]" style={{ color: colors.subtleText }}>…</span>
+                <span className="text-caption" style={{ color: colors.subtleText }}>…</span>
               </div>
             )}
           </div>
