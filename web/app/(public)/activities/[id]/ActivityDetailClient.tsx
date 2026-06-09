@@ -267,9 +267,9 @@ export function ActivityDetailClient({
   const hrZones = (() => {
     if (!athleteProfile) return []
     try {
-      const method = (athleteProfile.hr_zone_method
-        ?? (typeof window !== 'undefined' ? localStorage.getItem('tc_hr_zone_method') : null)
-        ?? 'pct_max') as HrZoneMethod
+      // La méthode vient du profil (Supabase). Pas de fallback localStorage :
+      // en vue publique, ce serait celui du VISITEUR, pas du propriétaire.
+      const method = (athleteProfile.hr_zone_method ?? 'pct_max') as HrZoneMethod
       return calculateHrZones({
         method,
         maxHr:              athleteProfile.max_hr,
