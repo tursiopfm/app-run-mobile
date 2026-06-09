@@ -13,6 +13,10 @@ jest.mock('@/lib/database/supabase-server', () => ({
   createServiceClient: jest.fn(),
 }))
 
+jest.mock('@/lib/providers/strava/streams', () => ({
+  unpackStreams: jest.fn(() => ({ heartrate: [120, 130], time: [0, 1] })),
+}))
+
 type Result = { data: unknown; error: unknown }
 
 function builder(result: Result) {
@@ -76,5 +80,15 @@ describe('getPublicActivity', () => {
     const res = await getPublicActivity('abc')
     expect(res!.splits).toHaveLength(1)
     expect(res!.laps).toHaveLength(2)
+  })
+
+  it('peuple hrStream quand avg_hr et streams_gz sont présents', async () => {
+    ;(createServiceClient as jest.Mock).mockReturnValue(mockClient({
+      activities: builder({ data: { ...ACTIVITY_ROW, avg_hr: 145 }, error: null }),
+      profiles: builder({ data: null, error: null }),
+      activity_streams: builder({ data: { streams_gz: 'fake-gz' }, error: null }),
+    }))
+    const res = await getPublicActivity('abc')
+    expect(res!.hrStream).toEqual({ heartrate: [120, 130], time: [0, 1] })
   })
 })

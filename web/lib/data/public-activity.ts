@@ -49,27 +49,25 @@ export const getPublicActivity = cache(async (id: string): Promise<PublicActivit
   const splits = Array.isArray(rawSplits) ? (rawSplits as unknown as StravaSplit[]) : null
   const laps = Array.isArray(rawLaps) ? (rawLaps as unknown as StravaLap[]) : null
 
-  // Profil FC du propriétaire (zones FC)
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year, hr_zone_method, hr_zones_custom')
-    .eq('id', ownerId)
-    .maybeSingle()
+  // Profil FC du propriétaire (zones FC) + courbe FC : requêtes indépendantes,
+  // lancées en parallèle. La courbe n'est lue que si l'activité a une FC.
+  const [{ data: profile }, { data: streamRow }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year, hr_zone_method, hr_zones_custom')
+      .eq('id', ownerId)
+      .maybeSingle(),
+    activity.avg_hr
+      ? supabase.from('activity_streams').select('streams_gz').eq('activity_id', id).maybeSingle()
+      : Promise.resolve({ data: null as { streams_gz?: unknown } | null }),
+  ])
 
-  // Courbe FC (seulement si l'activité a une FC)
   let hrStream: { heartrate: number[]; time: number[] } | null = null
-  if (activity.avg_hr) {
-    const { data: streamRow } = await supabase
-      .from('activity_streams')
-      .select('streams_gz')
-      .eq('activity_id', id)
-      .maybeSingle()
-    if (streamRow?.streams_gz) {
-      try {
-        const s = unpackStreams(String(streamRow.streams_gz))
-        if (s.heartrate?.length && s.time?.length) hrStream = { heartrate: s.heartrate, time: s.time }
-      } catch { /* stream corrompu → fallback estimation côté client */ }
-    }
+  if (streamRow?.streams_gz) {
+    try {
+      const s = unpackStreams(String(streamRow.streams_gz))
+      if (s.heartrate?.length && s.time?.length) hrStream = { heartrate: s.heartrate, time: s.time }
+    } catch { /* stream corrompu → fallback estimation côté client */ }
   }
 
   return {
