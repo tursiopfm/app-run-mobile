@@ -51,7 +51,7 @@ export function garminSummaryToMapped(userId: string, a: GarminSummaryActivity):
     avgHr: a.avgHr != null ? Math.round(a.avgHr) : null,
     maxHr: a.maxHr != null ? Math.round(a.maxHr) : null,
     avgPower: null,
-    calories: a.calories ?? null,
+    calories: a.calories != null ? Math.round(a.calories) : null,
     externalTrainingLoad: null,
     rawPayload: { source: 'garmin_gdpr', summary: a },
   }

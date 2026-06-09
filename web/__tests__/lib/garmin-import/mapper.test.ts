@@ -51,3 +51,8 @@ test('incohérence vitesse/distance/durée → warning mais mappe quand même', 
   expect(out.result).not.toBeNull()
   expect(out.warning?.field).toBe('avgSpeed')
 })
+
+test('calories fractionnaires Garmin → arrondies (colonne integer)', () => {
+  const { normalized } = garminSummaryToMapped('u', { ...base, calories: 100.56047999999998 }).result!
+  expect(normalized.calories).toBe(101)
+})
