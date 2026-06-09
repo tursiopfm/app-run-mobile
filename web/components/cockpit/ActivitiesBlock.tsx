@@ -11,6 +11,7 @@ import { TsbBadge } from '@/components/ui/TsbBadge'
 import { FreshnessHelpSheet } from '@/components/ui/FreshnessHelpSheet'
 import { SportSettingsModal } from './SportSettingsModal'
 import { SportsCarousel } from './SportsCarousel'
+import { SportDots } from './SportDots'
 import { colors } from '@/lib/design/colors'
 import { kpiStatusFreshness } from '@/lib/analytics/charge-kpi-status'
 import { useT } from '@/lib/i18n/I18nProvider'
@@ -157,20 +158,7 @@ export function ActivitiesBlock({ sportOverviews, onHide, defaultSport }: Props)
       />
 
       {/* Dots */}
-      {visibleSports.length > 1 && (
-        <div className="flex justify-center gap-[6px] mt-[8px]">
-          {visibleSports.map((sportKey, i) => (
-            <button
-              key={sportKey}
-              onClick={() => setCurrentIdx(i)}
-              aria-label={L.aria.sportN(i + 1)}
-              className={`w-[6px] h-[6px] rounded-full transition-colors ${
-                i === safeIdx ? 'bg-trail-text' : 'bg-trail-border'
-              }`}
-            />
-          ))}
-        </div>
-      )}
+      <SportDots sports={visibleSports} activeIdx={safeIdx} onSelect={setCurrentIdx} />
 
       {showModal && (
         <SportSettingsModal

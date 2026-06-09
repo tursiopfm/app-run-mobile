@@ -9,6 +9,7 @@ import { readSportSettings, withDefaultSport } from '@/lib/design/sport-settings
 import { CockpitPieChart, type PieSlice } from '@/components/charts/CockpitPieChart'
 import { SportSettingsModal } from './SportSettingsModal'
 import { SportsCarousel } from './SportsCarousel'
+import { SportDots } from './SportDots'
 import { SESSION_TYPE_COLORS, SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
 import { TypeIcon, UnknownTypeIcon } from '@/components/activity/indicatorIcons'
 import { useT } from '@/lib/i18n/I18nProvider'
@@ -83,20 +84,7 @@ export function IntensityBlock({ sportOverviews, onHide, defaultSport }: Props) 
       />
 
       {/* Dots */}
-      {visibleSports.length > 1 && (
-        <div className="flex justify-center gap-[6px] mt-[8px]">
-          {visibleSports.map((sportKey, i) => (
-            <button
-              key={sportKey}
-              onClick={() => setCurrentIdx(i)}
-              aria-label={L.aria.sportN(i + 1)}
-              className={`w-[6px] h-[6px] rounded-full transition-colors ${
-                i === safeIdx ? 'bg-trail-text' : 'bg-trail-border'
-              }`}
-            />
-          ))}
-        </div>
-      )}
+      <SportDots sports={visibleSports} activeIdx={safeIdx} onSelect={setCurrentIdx} />
 
       {showModal && (
         <SportSettingsModal

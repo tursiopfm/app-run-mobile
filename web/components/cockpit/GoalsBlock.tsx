@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { GoalProgressRow } from '@/components/ui/GoalProgressRow'
 import { SportSettingsModal } from './SportSettingsModal'
 import { SportsCarousel } from './SportsCarousel'
+import { SportDots } from './SportDots'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import { sportLabel } from '@/lib/design/sports-i18n'
 import type { SportOverview } from '@/lib/data/dashboard'
@@ -273,25 +274,7 @@ export function GoalsBlock({ sportOverviews, onHide, defaultSport }: Props) {
           })}
         />
 
-        {visibleSports.length > 1 && (
-          <div className="flex justify-center gap-1.5 pb-2">
-            {visibleSports.map((sport, i) => (
-              <button
-                key={sport}
-                onClick={() => setActiveIdx(i)}
-                className="rounded-full transition-all"
-                style={{
-                  width:           i === activeIdx ? 16 : 6,
-                  height:          6,
-                  backgroundColor: i === activeIdx
-                    ? SPORT_CONFIG[visibleSports[activeIdx]].color
-                    : 'rgba(255,255,255,0.25)',
-                }}
-                aria-label={sportLabel(sport, t)}
-              />
-            ))}
-          </div>
-        )}
+        <SportDots sports={visibleSports} activeIdx={activeIdx} onSelect={setActiveIdx} className="pb-2" />
       </div>
 
       {showConfig && (

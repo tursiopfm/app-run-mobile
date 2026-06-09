@@ -6,6 +6,7 @@ import { ActivityCard, type ActivityRow } from '@/components/ui/ActivityCard'
 import { EditActivityModal } from '@/components/ui/EditActivityModal'
 import { SportSettingsModal } from './SportSettingsModal'
 import { SportsCarousel } from './SportsCarousel'
+import { SportDots } from './SportDots'
 import { SPORT_CONFIG, ALL_SPORT_KEYS, type SportKey } from '@/lib/design/sports'
 import { sportLabel } from '@/lib/design/sports-i18n'
 import { readSportSettings, withDefaultSport } from '@/lib/design/sport-settings'
@@ -140,20 +141,7 @@ export function LastActivityBlock({ latestPerSport, athleteProfile, onHide, defa
         })}
       />
 
-      {visibleSports.length > 1 && (
-        <div className="flex justify-center gap-[6px] mt-[8px]">
-          {visibleSports.map((sportKey, i) => (
-            <button
-              key={sportKey}
-              onClick={() => setCurrentIdx(i)}
-              aria-label={L.aria.sportN(i + 1)}
-              className={`w-[6px] h-[6px] rounded-full transition-colors ${
-                i === safeIdx ? 'bg-trail-text' : 'bg-trail-border'
-              }`}
-            />
-          ))}
-        </div>
-      )}
+      <SportDots sports={visibleSports} activeIdx={safeIdx} onSelect={setCurrentIdx} />
 
       {showModal && (
         <SportSettingsModal
