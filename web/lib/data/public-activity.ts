@@ -11,7 +11,7 @@ export type PublicAthleteProfile = {
   threshold_hr: number | null
   birth_year: number | null
   hr_zone_method: string | null
-  hr_zones_custom: unknown
+  hr_zones_custom: { zone: number; min: number | null; max: number | null }[] | null
 }
 
 export type PublicActivity = {
