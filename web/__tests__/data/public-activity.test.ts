@@ -1,3 +1,11 @@
+// React 18.3.1 (résolu par Jest) n'expose pas `cache` (présent dans la canary
+// utilisée par Next.js 14). On le shim localement en identité — scope limité à
+// ce fichier, pas de mock global de React.
+jest.mock('react', () => ({
+  ...jest.requireActual('react'),
+  cache: (fn: unknown) => fn,
+}))
+
 import { getPublicActivity } from '@/lib/data/public-activity'
 import { createServiceClient } from '@/lib/database/supabase-server'
 
