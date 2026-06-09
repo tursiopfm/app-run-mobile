@@ -29,7 +29,11 @@ export default async function PublicLayout({ children }: { children: ReactNode }
           style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
         >
           <div className="flex items-center justify-between max-w-lg mx-auto">
-            <Link href="/" className="text-base font-bold tracking-widest uppercase font-display">
+            <Link
+              href="/"
+              aria-label="Trail Cockpit — accueil"
+              className="text-base font-bold tracking-widest uppercase font-display"
+            >
               <span className="text-trail-primary">Trail</span>
               <span className="text-trail-text"> Cockpit</span>
             </Link>
@@ -42,9 +46,10 @@ export default async function PublicLayout({ children }: { children: ReactNode }
           </div>
         </header>
 
+        {/* Le contenu (ActivityDetailClient) gère sa propre largeur max. */}
         <div className="flex-1 min-w-0">{children}</div>
 
-        <div
+        <footer
           className="sticky bottom-0 z-40 bg-trail-header border-t border-trail-border px-4 py-3"
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
         >
@@ -52,12 +57,13 @@ export default async function PublicLayout({ children }: { children: ReactNode }
             <span className="text-sm text-trail-muted">Créé sur Trail Cockpit</span>
             <Link
               href="/signup"
+              aria-label="Découvrir Trail Cockpit et créer un compte"
               className="text-sm font-semibold rounded-full px-4 py-2 bg-trail-primary text-white"
             >
               Découvrir
             </Link>
           </div>
-        </div>
+        </footer>
       </div>
     </PreferencesProvider>
   )
