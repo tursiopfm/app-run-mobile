@@ -201,6 +201,12 @@ C:\Users\Franc\app-run-mobile\web> npm run dev
 - **Pourquoi** : finitions remontées en review finale, non-bloquantes pour le PR.
 - **Identifié** : 2026-05-27
 
+### Détail activité — enrichissement Strava gelé par `laps = []`
+- **Quoi** : dans `web/app/(public)/activities/[id]/page.tsx`, quand Strava ne renvoie pas de laps, on persiste `raw_payload.laps = []`. Aux visites suivantes `!laps` est faux (tableau vide non nul) → tout le bloc d'enrichissement Strava (condition `!splits || !laps`) est définitivement court-circuité, gelant splits + laps si l'activité est éditée plus tard côté Strava.
+- **Pourquoi** : footgun latent remonté en review du PR « partage public ». Pré-existant (porté verbatim depuis l'ancienne page), non introduit par ce PR, non-bloquant.
+- **À faire** : tester `laps === null` au lieu de `!laps` dans la condition d'enrichissement, ou ne pas persister un tableau `laps`/`splits` vide.
+- **Identifié** : 2026-06-09
+
 ---
 
 ## Modèle de fiche pour un nouvel item

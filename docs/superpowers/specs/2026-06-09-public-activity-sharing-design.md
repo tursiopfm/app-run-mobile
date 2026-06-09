@@ -1,6 +1,6 @@
 # Partage public des activités — Design
 
-> **Status: Spec** · 2026-06-09
+> **Status: Implémenté** · 2026-06-09 · Code: web/app/(public)/activities/[id]/, web/lib/data/public-activity.ts
 
 ## Objectif
 
