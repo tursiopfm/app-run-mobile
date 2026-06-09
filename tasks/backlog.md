@@ -201,6 +201,12 @@ C:\Users\Franc\app-run-mobile\web> npm run dev
 - **Pourquoi** : finitions remontées en review finale, non-bloquantes pour le PR.
 - **Identifié** : 2026-05-27
 
+### Partage public — filtrer `raw_payload` envoyé au visiteur anonyme
+- **Quoi** : la page publique `/activities/[id]` sérialise tout `raw_payload` vers le client (prop `activity.raw_payload`). Pour un visiteur anonyme, ça expose des champs Strava bruts non affichés (athlete id, gear, device, éventuels `start_latlng`/`end_latlng`). Le tracé (polyline) est déjà public par design, donc l'incrément est modéré, mais idéalement n'envoyer au client que les champs réellement rendus (polyline, splits_metric, laps).
+- **Pourquoi** : minimiser la surface de données du propriétaire exposée au public (remonté en review finale du PR « partage public »).
+- **À faire** : construire un `raw_payload` réduit (allowlist) dans `getPublicActivity` quand le lecteur n'est pas le propriétaire, ou côté `ActivityDetail`.
+- **Identifié** : 2026-06-09
+
 ### Détail activité — enrichissement Strava gelé par `laps = []`
 - **Quoi** : dans `web/app/(public)/activities/[id]/page.tsx`, quand Strava ne renvoie pas de laps, on persiste `raw_payload.laps = []`. Aux visites suivantes `!laps` est faux (tableau vide non nul) → tout le bloc d'enrichissement Strava (condition `!splits || !laps`) est définitivement court-circuité, gelant splits + laps si l'activité est éditée plus tard côté Strava.
 - **Pourquoi** : footgun latent remonté en review du PR « partage public ». Pré-existant (porté verbatim depuis l'ancienne page), non introduit par ce PR, non-bloquant.
