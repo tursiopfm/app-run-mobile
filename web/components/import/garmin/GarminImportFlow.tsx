@@ -21,6 +21,7 @@ export function GarminImportFlow() {
   const router = useRouter()
   const [state, setState] = useState<State>('intro')
   const [progress, setProgress] = useState({ done: 0, total: 0 })
+  const [commitProgress, setCommitProgress] = useState({ done: 0, total: 0 })
   const [nouvelles, setNouvelles] = useState<GarminMapped[]>([])
   const [conflits, setConflits] = useState<ConflictItem[]>([])
   const [report, setReport] = useState<ImportReport | null>(null)
@@ -77,15 +78,42 @@ export function GarminImportFlow() {
 
   async function commit(nv: GarminMapped[], cf: ConflictItem[]) {
     setState('committing')
+    const total = nv.length + cf.length
+    setCommitProgress({ done: 0, total })
+
+    // Envois chunkés : chaque requête reste courte (sous le statement_timeout Postgres
+    // ET le timeout de fonction Vercel) et fait avancer la barre de progression.
+    const CHUNK = 200
+    const requests: { nouvelles: GarminMapped[]; conflits: ConflictItem[] }[] = []
+    for (let i = 0; i < nv.length; i += CHUNK) requests.push({ nouvelles: nv.slice(i, i + CHUNK), conflits: [] })
+    for (let i = 0; i < cf.length; i += CHUNK) requests.push({ nouvelles: [], conflits: cf.slice(i, i + CHUNK) })
+    if (requests.length === 0) requests.push({ nouvelles: [], conflits: [] })
+
+    const agg: ImportReport = {
+      totalParsed: 0, imported: 0, conflictsKeptStrava: 0, conflictsReplaced: 0,
+      errors: 0, warnings: [], periodStart: null, periodEnd: null,
+    }
+    let done = 0
     try {
-      const res = await fetch('/api/garmin-import/commit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nouvelles: nv, conflits: cf }),
-      })
-      const json = (await res.json()) as ImportReport & { error?: string }
-      if (!res.ok) throw new Error(json.error ?? 'Commit échoué')
-      setReport({ ...json, warnings })
+      for (const reqBody of requests) {
+        const res = await fetch('/api/garmin-import/commit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reqBody),
+        })
+        const json = (await res.json()) as ImportReport & { error?: string }
+        if (!res.ok) throw new Error(json.error ?? 'Commit échoué')
+        agg.totalParsed += json.totalParsed
+        agg.imported += json.imported
+        agg.conflictsKeptStrava += json.conflictsKeptStrava
+        agg.conflictsReplaced += json.conflictsReplaced
+        agg.errors += json.errors
+        if (json.periodStart && (!agg.periodStart || json.periodStart < agg.periodStart)) agg.periodStart = json.periodStart
+        if (json.periodEnd && (!agg.periodEnd || json.periodEnd > agg.periodEnd)) agg.periodEnd = json.periodEnd
+        done += reqBody.nouvelles.length + reqBody.conflits.length
+        setCommitProgress({ done, total })
+      }
+      setReport({ ...agg, warnings })
       setState('done')
       router.refresh()
     } catch (e) {
@@ -98,12 +126,7 @@ export function GarminImportFlow() {
     return (
       <div className="max-w-md mx-auto px-4 py-6 space-y-4">
         <h1 className="text-lg font-semibold text-trail-text">Importer l&apos;historique Garmin</h1>
-        <div className="rounded-[10px] bg-trail-surface px-3 py-[10px] flex flex-col items-center gap-3">
-          <Loader2 size={28} className="text-trail-muted animate-spin" />
-          <p className="text-body-sm text-trail-text text-center">
-            Analyse des activités : {progress.done} / {progress.total}
-          </p>
-        </div>
+        <ProgressBar done={progress.done} total={progress.total} label="Analyse des activités…" />
       </div>
     )
   }
@@ -112,10 +135,7 @@ export function GarminImportFlow() {
     return (
       <div className="max-w-md mx-auto px-4 py-6 space-y-4">
         <h1 className="text-lg font-semibold text-trail-text">Importer l&apos;historique Garmin</h1>
-        <div className="rounded-[10px] bg-trail-surface px-3 py-[10px] flex flex-col items-center gap-3">
-          <Loader2 size={28} className="text-trail-muted animate-spin" />
-          <p className="text-body-sm text-trail-text text-center">Import en cours…</p>
-        </div>
+        <ProgressBar done={commitProgress.done} total={commitProgress.total} label="Import en cours…" />
       </div>
     )
   }
@@ -261,6 +281,28 @@ export function GarminImportFlow() {
           e.target.value = ''
         }}
       />
+    </div>
+  )
+}
+
+function ProgressBar({ done, total, label }: { done: number; total: number; label: string }) {
+  const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0
+  return (
+    <div className="rounded-[10px] bg-trail-surface px-3 py-[10px] space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <Loader2 size={16} className="text-trail-muted animate-spin flex-shrink-0" />
+          <p className="text-body-sm text-trail-text truncate">{label}</p>
+        </div>
+        <p className="text-caption text-trail-muted tabular-nums flex-shrink-0">{pct}%</p>
+      </div>
+      <div className="h-2 w-full rounded-full bg-trail-border/40 overflow-hidden">
+        <div
+          className="h-full rounded-full bg-trail-text transition-all duration-300 ease-out"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="text-caption text-trail-muted tabular-nums">{done} / {total}</p>
     </div>
   )
 }
