@@ -229,12 +229,14 @@ export function ActivityDetailClient({
   laps,
   athleteProfile,
   hrStream,
+  readOnly = false,
 }: {
   activity:       ActivityDetail
   splits:         StravaSplit[] | null
   laps:           StravaLap[] | null
   athleteProfile: AthleteHrProfile
   hrStream?:      { heartrate: number[]; time: number[] } | null
+  readOnly?:      boolean
 }) {
   const router = useRouter()
   const A = useT().activities
@@ -339,7 +341,7 @@ export function ActivityDetailClient({
 
         {/* Back button */}
         <button
-          onClick={() => router.back()}
+          onClick={() => (readOnly ? router.push('/') : router.back())}
           style={{
             position: 'absolute', top: 16, left: 16, zIndex: 9999,
             width: 36, height: 36, borderRadius: '50%',
@@ -354,23 +356,26 @@ export function ActivityDetailClient({
           </svg>
         </button>
 
-        {/* Edit button */}
-        <button
-          onClick={() => setShowEdit(true)}
-          style={{
-            position: 'absolute', top: 16, right: 16, zIndex: 9999,
-            width: 36, height: 36, borderRadius: '50%',
-            background: 'rgba(232,101,26,0.28)', backdropFilter: 'blur(14px)',
-            border: '2px solid rgba(232,101,26,0.85)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer',
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="rgba(232,101,26,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="rgba(232,101,26,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+        {/* Edit button — propriétaire uniquement */}
+        {!readOnly && (
+          <button
+            data-testid="edit-activity-btn"
+            onClick={() => setShowEdit(true)}
+            style={{
+              position: 'absolute', top: 16, right: 16, zIndex: 9999,
+              width: 36, height: 36, borderRadius: '50%',
+              background: 'rgba(232,101,26,0.28)', backdropFilter: 'blur(14px)',
+              border: '2px solid rgba(232,101,26,0.85)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="rgba(232,101,26,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="rgba(232,101,26,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        )}
 
         {/* Map expand handle */}
         <div
@@ -561,8 +566,8 @@ export function ActivityDetailClient({
       </div>
       </div>
 
-      {/* Edit modal */}
-      {showEdit && (
+      {/* Edit modal — propriétaire uniquement */}
+      {!readOnly && showEdit && (
         <EditActivityModal
           activity={activityAsActivityRow}
           hrZones={hrZones}
