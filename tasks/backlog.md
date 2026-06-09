@@ -213,6 +213,12 @@ C:\Users\Franc\app-run-mobile\web> npm run dev
 - **À faire** : tester `laps === null` au lieu de `!laps` dans la condition d'enrichissement, ou ne pas persister un tableau `laps`/`splits` vide.
 - **Identifié** : 2026-06-09
 
+### Import Garmin GDPR — Phase 2 : parsing des `.fit` (streams réels)
+- **Quoi** : la Phase 1 (livrée sur `feat/garmin-gdpr-import`) importe depuis `summarizedActivities.json` (CES via HR/allure + facteur descente depuis `elevationLoss`). Phase 2 = parser les `.fit` des `UploadedFiles_*.zip` imbriqués via `@garmin/fitsdk` en Web Workers → streams réels (`time/altitude/heartrate/velocity/distance`, `grade` **dérivé**) → `decoupling_pct`, `grade_adjusted_pace_s`, `D-` stream, CES affiné, + option « Enrichir les activités conservées ».
+- **Pourquoi** : amener la qualité des streams Garmin au niveau de Strava et activer l'option d'enrichissement (déférée en Phase 1) ; débloquer un vrai remplacement enrichi des conflits.
+- **À faire** : voir l'esquisse détaillée en fin de `web/docs/superpowers/plans/2026-06-09-garmin-gdpr-import.md` (worker pool, unzip streaming < 50 Mo, matching FIT↔résumé, pack `fflate.gzipSync` vers `activity_streams source='garmin'`).
+- **Identifié** : 2026-06-09
+
 ---
 
 ## Modèle de fiche pour un nouvel item
