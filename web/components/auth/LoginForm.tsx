@@ -11,10 +11,10 @@ type Mode = 'login' | 'signup' | 'signupVerify' | 'forgot' | 'resetVerify'
 
 const RESEND_COOLDOWN = 45
 
-export function LoginForm() {
+export function LoginForm({ initialMode = 'login' }: { initialMode?: 'login' | 'signup' }) {
   const A = useT().auth
   const router = useRouter()
-  const [mode, setMode] = useState<Mode>('login')
+  const [mode, setMode] = useState<Mode>(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')

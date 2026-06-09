@@ -38,7 +38,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
               <span className="text-trail-text"> Cockpit</span>
             </Link>
             <Link
-              href="/"
+              href="/?mode=signup"
               className="text-sm font-semibold rounded-full px-3 py-1.5 bg-trail-primary text-white"
             >
               Créer un compte
@@ -56,7 +56,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
           <div className="max-w-lg mx-auto flex items-center justify-between gap-3">
             <span className="text-sm text-trail-muted">Créé sur Trail Cockpit</span>
             <Link
-              href="/"
+              href="/?mode=signup"
               aria-label="Découvrir Trail Cockpit et créer un compte"
               className="text-sm font-semibold rounded-full px-4 py-2 bg-trail-primary text-white"
             >
