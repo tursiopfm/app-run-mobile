@@ -61,7 +61,10 @@ async function insertActivitiesWithMetrics(
 ): Promise<number> {
   if (items.length === 0) return 0
   let saved = 0
-  const BATCH = 500
+  // Batch volontairement petit : un export GDPR contient de gros raw_payload JSONB ;
+  // 500/lot dépassait le statement_timeout Supabase. L'upsert est idempotent, donc
+  // un retry après timeout partiel reprend sans créer de doublon.
+  const BATCH = 100
   for (let i = 0; i < items.length; i += BATCH) {
     const slice = items.slice(i, i + BATCH)
     const built = slice.map(m => withProfile(userId, m, profile))
