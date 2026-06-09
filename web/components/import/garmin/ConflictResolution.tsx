@@ -2,6 +2,14 @@
 import { useState } from 'react'
 import type { ConflictItem, ConflictDecision } from '@/lib/garmin-import/types'
 
+function providerLabel(p: string): string {
+  const map: Record<string, string> = {
+    strava: 'Strava', garmin: 'Garmin', gpx: 'GPX', polar: 'Polar',
+    suunto: 'Suunto', coros: 'Coros', fit_file: 'Fichier',
+  }
+  return map[p] ?? p.charAt(0).toUpperCase() + p.slice(1)
+}
+
 export function ConflictResolution({
   conflits,
   onResolve,
@@ -16,13 +24,18 @@ export function ConflictResolution({
   const setOne = (i: number, d: ConflictDecision) =>
     setItems(prev => prev.map((c, idx) => (idx === i ? { ...c, decision: d } : c)))
 
+  // Source(s) réelle(s) des doublons : peut être Strava, Garmin (ré-import), GPX…
+  const sources = Array.from(new Set(conflits.map(c => providerLabel(c.existing.provider))))
+  const sourceClause = sources.length === 1 ? `via ${sources[0]}` : 'dans ton historique'
+  const keepLabel = sources.length === 1 ? `Garder mes données ${sources[0]}` : 'Garder mes données existantes'
+
   return (
     <div className="space-y-3">
       {/* Header */}
       <div className="rounded-[10px] bg-trail-surface px-3 py-[10px] space-y-[10px]">
         <p className="text-body-sm text-trail-text">
           <span className="font-semibold">{conflits.length} activité{conflits.length !== 1 ? 's' : ''}</span>{' '}
-          existent déjà via Strava. Quelle source veux-tu conserver ?
+          {conflits.length !== 1 ? 'existent' : 'existe'} déjà {sourceClause}. Quelle source veux-tu conserver ?
         </p>
 
         {/* Global actions */}
@@ -32,7 +45,7 @@ export function ConflictResolution({
             onClick={() => setAll('keep_strava')}
             className="flex items-center justify-center w-full px-3 py-[7px] rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption font-semibold hover:bg-trail-border/40 transition-colors"
           >
-            Garder mes données Strava
+            {keepLabel}
           </button>
           <button
             type="button"
@@ -81,10 +94,10 @@ export function ConflictResolution({
                     </p>
                   </div>
 
-                  {/* Strava column */}
+                  {/* Existing source column */}
                   <div className="space-y-[4px]">
                     <p className="text-micro font-semibold uppercase tracking-wider text-trail-muted">
-                      Strava
+                      {providerLabel(s.provider)}
                     </p>
                     <p className="text-caption text-trail-text">{s.startTime.slice(0, 10)}</p>
                     <p className="text-caption text-trail-text">
@@ -114,7 +127,7 @@ export function ConflictResolution({
                         : 'bg-trail-card text-trail-muted hover:bg-trail-border/40',
                     ].join(' ')}
                   >
-                    Strava
+                    {providerLabel(s.provider)}
                   </button>
                   <button
                     type="button"
