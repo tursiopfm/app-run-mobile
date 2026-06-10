@@ -19,6 +19,7 @@ import { buildActivityIndex, matchFit } from '@/lib/garmin-import/fit-match'
 import { createFitPool } from '@/lib/garmin-import/fit-pool'
 import { packStreamsClient } from '@/lib/garmin-import/stream-pack'
 import { streamsToPolyline, streamsToSplits } from '@/lib/garmin-import/fit-derive'
+import { createClient as createSupabaseBrowser } from '@/lib/database/supabase-client'
 import type { EnrichCandidate, StreamUpload, EnrichReport } from '@/lib/garmin-import/enrich-types'
 import { EnrichmentStep } from './EnrichmentStep'
 
@@ -153,6 +154,14 @@ export function GarminImportFlow() {
       const outer = new Uint8Array(await file.arrayBuffer())
       const pool = createFitPool()
 
+      // Écriture directe navigateur → Supabase (RLS : activity_streams "own streams",
+      // activities update own). Évite la limite de taille de corps des routes API
+      // ("Request Entity Too Large") : les streams gzippés peuvent être volumineux.
+      const sb = createSupabaseBrowser()
+      const { data: { user } } = await sb.auth.getUser()
+      const userId = user?.id
+      if (!userId) throw new Error('Session expirée — reconnecte-toi')
+
       let uploads: StreamUpload[] = []
       let pendingBytes = 0
       let matched = 0
@@ -161,24 +170,44 @@ export function GarminImportFlow() {
       let nextId = 0
       const inflight = new Set<Promise<void>>()
       const MAX_INFLIGHT = 4
-      // Borne la taille des requêtes POST (les longues sorties trail + le latlng font de gros
-      // streams) : sinon "Request Entity Too Large". On flush par taille de payload, pas par compte.
-      const MAX_BATCH_BYTES = 400_000
+      const MAX_BATCH_BYTES = 800_000
 
-      const flush = async (final: boolean) => {
+      const flush = async () => {
         const batch = uploads
         uploads = []
         pendingBytes = 0
-        if (batch.length === 0 && !final) return
-        const url = '/api/garmin-import/streams' + (final ? '?recalc=1' : '')
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ uploads: batch }),
-        })
-        if (!res.ok) {
-          const j = (await res.json().catch(() => ({}))) as { error?: string }
-          throw new Error(j.error ?? 'Écriture des streams échouée')
+        if (batch.length === 0) return
+        // Dédupe par activity_id (deux .fit peuvent matcher la même activité) → évite
+        // l'erreur Postgres "ON CONFLICT DO UPDATE ... a second time".
+        const byAct = new Map<string, StreamUpload>()
+        for (const u of batch) {
+          const prev = byAct.get(u.activityId)
+          if (!prev || u.pointCount > prev.pointCount) byAct.set(u.activityId, u)
+        }
+        const items = Array.from(byAct.values())
+
+        // 1) Streams (volumineux) → directement dans activity_streams.
+        const streamRows = items.map(u => ({
+          activity_id: u.activityId, user_id: userId, downsample_s: 5,
+          point_count: u.pointCount, streams_gz: u.streamsGz, source: 'garmin',
+        }))
+        const { error: sErr } = await sb.from('activity_streams').upsert(streamRows, { onConflict: 'activity_id' })
+        if (sErr) throw new Error(`Streams: ${sErr.message}`)
+
+        // 2) Carte (polyline) + splits → raw_payload (fetch + merge + update).
+        const withMap = items.filter(u => u.summaryPolyline || (u.splits && u.splits.length))
+        if (withMap.length) {
+          const ids = withMap.map(u => u.activityId)
+          const { data: rows } = await sb.from('activities').select('id, raw_payload').in('id', ids)
+          const rawById = new Map<string, Record<string, unknown>>(
+            (rows ?? []).map(r => [String((r as { id: string }).id), ((r as { raw_payload?: Record<string, unknown> }).raw_payload ?? {})]),
+          )
+          await Promise.all(withMap.map(async u => {
+            const raw = { ...(rawById.get(u.activityId) ?? {}) } as Record<string, unknown>
+            if (u.summaryPolyline) raw.map = { ...((raw.map as Record<string, unknown>) ?? {}), summary_polyline: u.summaryPolyline }
+            if (u.splits && u.splits.length) raw.splits_metric = u.splits
+            await sb.from('activities').update({ raw_payload: raw }).eq('id', u.activityId)
+          }))
         }
       }
 
@@ -216,12 +245,18 @@ export function GarminImportFlow() {
         const wrapped = p.finally(() => { inflight.delete(wrapped) })
         inflight.add(wrapped)
         if (inflight.size >= MAX_INFLIGHT) await Promise.race(inflight)
-        if (uploads.length >= 20 || pendingBytes >= MAX_BATCH_BYTES) await flush(false)
+        if (uploads.length >= 40 || pendingBytes >= MAX_BATCH_BYTES) await flush()
       })
       await Promise.all(inflight)
       pool.terminate()
       setEnrichProgress({ matched, total: cands.length, scanned })
-      await flush(true)
+      await flush()
+      // Recalcul CES unique (serveur, corps vide → pas de limite de taille).
+      await fetch('/api/garmin-import/streams?recalc=1', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uploads: [] }),
+      })
       setEnrichReport({ enriched: matched, matched, skipped: cands.length - matched, errors })
       setState('enriched')
     } catch (e) {
