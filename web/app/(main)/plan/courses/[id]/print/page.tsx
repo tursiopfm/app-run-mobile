@@ -59,6 +59,10 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
 
   const cols = visiblePrintCols(cfg)
   const widths = printColWidths(cols)
+  const ta = (k: PrintColKey): 'left' | 'right' | 'center' => {
+    const a = PRINT_COL_DEFS[k].align
+    return a === 'r' ? 'right' : a === 'c' ? 'center' : 'left'
+  }
 
   const cell = (k: PrintColKey, w: RaceWaypoint, i: number) => {
     const seg = deriveSegment(wps.map((x) => ({ km: x.km, dPlus: x.dPlus, dMoins: x.dMoins })), i)
@@ -95,7 +99,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
       <style>{`
         .pdfroot{
           --ink:#0E1513; --ink-soft:#55615E; --ink-faint:#8A938F;
-          --line:#C9D1CE; --line-strong:#2A332F; --zebra:#F2F5F4; --accent:#C44E22;
+          --line:#C9D1CE; --line-strong:#2A332F; --zebra:#E3EAE8; --accent:#C44E22;
           --d:'Space Grotesk',var(--font-display,system-ui),sans-serif;
           background:var(--trail-bg); min-height:100vh; display:flex; flex-direction:column; align-items:center;
           padding:28px 16px 60px; color:var(--trail-text); font-family:system-ui,sans-serif;
@@ -133,7 +137,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .rb.bv{background:var(--ink);color:#fff;}
         .pdfroot .obj{font-family:var(--d);font-size:9.5px;font-weight:700;}
         .pdfroot .bh{font-family:var(--d);font-size:9.5px;font-weight:700;color:var(--ink);white-space:nowrap;}
-        .pdfroot tr.is-base td{background:#E9EEEC;}
+        .pdfroot tr.is-base td{background:#D5E3DD;}
         .pdfroot tr.is-end .pt,.pdfroot tr.is-start .pt{color:var(--accent);}
         .pdfroot .legend{flex:none;display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:.5px;padding-top:1px;border-top:1px solid var(--line-strong);font-family:var(--d);font-size:5.2px;color:var(--ink-soft);font-weight:600;line-height:1.2;}
         .pdfroot .legend .k{display:inline-flex;align-items:center;gap:3px;}
@@ -141,18 +145,20 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
 
         @page{size:A4 portrait;margin:8mm;}
         @media print{
-          /* Corps limité à UNE page (sinon l'espace de l'app cachée crée une 2e page). */
-          html, body { margin:0 !important; padding:0 !important; height:100vh !important; overflow:hidden !important; }
+          /* UNE page : on annule les min-height de la coquille app (2× min-h-screen,
+             sidebar, bottom-nav) qui forceraient une 2e page même en visibility:hidden. */
+          html, body { margin:0 !important; padding:0 !important; background:#fff !important; }
+          * { min-height:0 !important; }
           body * { visibility:hidden !important; }
           .pdfroot, .pdfroot * { visibility:visible !important; }
-          /* La carte est déjà tournée 90° (règle de base, WYSIWYG) ; carte fixée+centrée sur l'unique page. */
-          .pdfroot{position:fixed;inset:0;width:100%;background:#fff;padding:0;min-height:0;display:flex;align-items:center;justify-content:center;}
-          .pdfroot .toolbar,.pdfroot .caption{display:none !important;}
+          /* Carte à l'HORIZONTALE (non tournée), calée en HAUT de la feuille portrait. */
+          .pdfroot{position:absolute !important;top:0;left:0;right:0;width:100% !important;background:#fff;padding:0 !important;display:block !important;}
+          .pdfroot .toolbar,.pdfroot .caption,.pdfroot .scis{display:none !important;}
           .pdfroot .cut{border:none;background:none;padding:0;margin:0;width:auto;}
-          .pdfroot .scis{display:none;}
-          .pdfroot .card{box-shadow:none;border:.5px solid var(--line);}
+          .pdfroot .cardwrap{position:static !important;width:auto !important;height:auto !important;}
+          .pdfroot .card{position:static !important;transform:none !important;top:auto;left:auto;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
           .pdfroot tbody tr:nth-child(even){background:var(--zebra) !important;}
-          .pdfroot tr.is-base td{background:#E9EEEC !important;}
+          .pdfroot tr.is-base td{background:#D5E3DD !important;}
           .pdfroot .rb.bv{background:#000 !important;color:#fff !important;}
           *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
         }
@@ -163,7 +169,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         <button className="btn ghost" onClick={() => setDialogOpen(true)}>Personnaliser les colonnes</button>
         <button className="btn" onClick={() => window.print()}>Imprimer / PDF</button>
       </div>
-      <p className="caption">Imprime sur A4 (la carte est tournée 90° — tourne la feuille pour lire), découpe, plastifie. Tient dans une poche de veste.</p>
+      <p className="caption">{"Aperçu tourné à l'écran (format carte de poche). À l'impression : carte à l'horizontale, en haut de la feuille A4. Découpe, plastifie — tient dans une poche de veste."}</p>
 
       <div className="cut">
         <span className="scis">✂ — — — — — — — — découper — — — — — — — —</span>
@@ -189,7 +195,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
             <thead>
               <tr>
                 {cols.map((k) => (
-                  <th key={k} style={{ textAlign: PRINT_COL_DEFS[k].align === 'r' ? 'right' : 'left' }}>
+                  <th key={k} style={{ textAlign: ta(k) }}>
                     {PRINT_COL_DEFS[k].th}
                   </th>
                 ))}
@@ -201,7 +207,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
                 return (
                   <tr key={w.id} className={rowCls}>
                     {cols.map((k) => (
-                      <td key={k} style={{ textAlign: PRINT_COL_DEFS[k].align === 'r' ? 'right' : 'left' }}>
+                      <td key={k} style={{ textAlign: ta(k) }}>
                         {cell(k, w, i)}
                       </td>
                     ))}

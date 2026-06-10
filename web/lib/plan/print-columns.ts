@@ -10,7 +10,7 @@ export interface PrintColDef {
   label: string      // libellé dans la fenêtre de personnalisation
   th: string         // en-tête dans la carte
   weight: number     // largeur relative (répartie auto)
-  align: 'l' | 'r'
+  align: 'l' | 'r' | 'c'
   fixed?: boolean    // non masquable (ex : Point)
 }
 
@@ -21,7 +21,7 @@ export const PRINT_COL_DEFS: Record<PrintColKey, PrintColDef> = {
   inter:  { key: 'inter',  label: 'Inter (tronçon)',   th: 'Inter',    weight: 1.0,  align: 'r' },
   dplus:  { key: 'dplus',  label: '▲ D+ (tronçon)',    th: '▲D+',      weight: 1.0,  align: 'r' },
   dmoins: { key: 'dmoins', label: '▼ D− (tronçon)',    th: '▼D−',      weight: 1.0,  align: 'r' },
-  rav:    { key: 'rav',    label: 'Ravito',            th: 'Ravito',   weight: 0.8,  align: 'l' },
+  rav:    { key: 'rav',    label: 'Ravito',            th: 'Ravito',   weight: 0.8,  align: 'c' },
   obj:    { key: 'obj',    label: 'Objectif',          th: 'Objectif', weight: 1.5,  align: 'r' },
   segt:   { key: 'segt',   label: 'Temps tronçon',     th: 'Tps',      weight: 1.3,  align: 'r' },
   bh:     { key: 'bh',     label: 'Barrière',          th: 'Barrière', weight: 1.5,  align: 'r' },
