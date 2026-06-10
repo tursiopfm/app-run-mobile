@@ -40,6 +40,9 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
   const isEdit = race !== null
   const [draft, setDraft] = useState<Race>(() => race ?? emptyDraft())
   const [saving, setSaving] = useState(false)
+  const fmtTarget = (min: number | undefined) =>
+    min != null ? `${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}` : ''
+  const [rawTarget, setRawTarget] = useState<string>(() => fmtTarget((race ?? emptyDraft()).targetDurationMin))
   const TYPE_OPTIONS: { value: RaceType; label: string }[] = [
     { value: 'trail',    label: L.raceTypes.trail   },
     { value: 'ultra',    label: L.raceTypes.ultra   },
@@ -51,7 +54,10 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
   // Re-sync le draft chaque fois que la modal s'ouvre avec une race différente
   // (création vs édition de la même course peut se chevaucher dans le parent).
   useEffect(() => {
-    if (open) setDraft(race ?? emptyDraft())
+    if (open) {
+      setDraft(race ?? emptyDraft())
+      setRawTarget(fmtTarget((race ?? emptyDraft()).targetDurationMin))
+    }
   }, [open, race])
 
   // Échap ferme la modal — cohérent avec les autres portals UX du repo.
@@ -204,12 +210,9 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
                 type="text"
                 inputMode="numeric"
                 placeholder="37:00"
-                value={
-                  draft.targetDurationMin != null
-                    ? `${Math.floor(draft.targetDurationMin / 60)}:${String(draft.targetDurationMin % 60).padStart(2, '0')}`
-                    : ''
-                }
-                onChange={(e) => {
+                value={rawTarget}
+                onChange={(e) => setRawTarget(e.target.value)}
+                onBlur={(e) => {
                   const m = /^(\d{1,3}):(\d{2})$/.exec(e.target.value.trim())
                   setDraft({
                     ...draft,
