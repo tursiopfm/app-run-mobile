@@ -1,8 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Upload, CheckCircle2, AlertTriangle, Loader2, Sparkles } from 'lucide-react'
+import { Upload, AlertTriangle, Loader2 } from 'lucide-react'
 import { extractSummaries } from '@/lib/garmin-import/unzip'
 import { garminSummaryToMapped } from '@/lib/garmin-import/mapper'
 import { classifyActivities } from '@/lib/garmin-import/dedup'
@@ -26,7 +24,6 @@ import { EnrichmentStep } from './EnrichmentStep'
 type State = 'intro' | 'parsing' | 'resolve' | 'committing' | 'done' | 'enriching' | 'enriched' | 'error'
 
 export function GarminImportFlow() {
-  const router = useRouter()
   const [state, setState] = useState<State>('intro')
   const [progress, setProgress] = useState({ done: 0, total: 0 })
   const [commitProgress, setCommitProgress] = useState({ done: 0, total: 0 })
@@ -37,7 +34,6 @@ export function GarminImportFlow() {
   const [errorMsg, setErrorMsg] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const enrichInputRef = useRef<HTMLInputElement>(null)
   const fileRef = useRef<File | null>(null)
   const [enrichProgress, setEnrichProgress] = useState({ matched: 0, total: 0, scanned: 0 })
   const [enrichReport, setEnrichReport] = useState<EnrichReport | null>(null)
@@ -157,8 +153,8 @@ export function GarminImportFlow() {
         setCommitProgress({ done, total })
       }
       setReport({ ...agg, warnings })
-      setState('done')
-      router.refresh()
+      // Un seul flux : on enchaîne automatiquement sur l'enrichissement (carte + splits).
+      await enrich()
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : 'Échec du commit')
       setState('error')
@@ -308,14 +304,6 @@ export function GarminImportFlow() {
     }
   }
 
-  // Enrichissement direct (sans Phase 1) : pour des activités DÉJÀ importées, on saute
-  // le commit des résumés et on va droit aux streams/carte/splits. enrich() interroge
-  // needs-streams sans période (report null) → toutes les activités sans carte.
-  async function enrichOnly(file: File) {
-    fileRef.current = file
-    await enrich()
-  }
-
   if (state === 'parsing') {
     return (
       <div className="max-w-md mx-auto px-4 py-6 space-y-4">
@@ -343,53 +331,6 @@ export function GarminImportFlow() {
           onResolve={resolved => commit(nouvelles, resolved)}
           onCancel={() => setState('intro')}
         />
-      </div>
-    )
-  }
-
-  if (state === 'done' && report) {
-    return (
-      <div className="max-w-md mx-auto px-4 py-6 space-y-4">
-        <h1 className="text-lg font-semibold text-trail-text">Importer l&apos;historique Garmin</h1>
-        <div className="rounded-[10px] bg-trail-surface px-3 py-[10px] space-y-2">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 size={18} className="text-trail-muted flex-shrink-0" />
-            <p className="text-body-sm font-semibold text-trail-text">Import terminé</p>
-          </div>
-          <p className="text-body-sm text-trail-text">
-            {report.imported} activité{report.imported !== 1 ? 's' : ''} importée{report.imported !== 1 ? 's' : ''}
-          </p>
-          <p className="text-body-sm text-trail-muted">
-            {report.conflictsReplaced} remplacée{report.conflictsReplaced !== 1 ? 's' : ''} par Garmin
-          </p>
-          <p className="text-body-sm text-trail-muted">
-            {report.conflictsKeptStrava} conservée{report.conflictsKeptStrava !== 1 ? 's' : ''} (Strava)
-          </p>
-          <p className="text-body-sm text-trail-muted">
-            {report.warnings.length} avertissement{report.warnings.length !== 1 ? 's' : ''}
-          </p>
-          {report.periodStart && report.periodEnd && (
-            <p className="text-caption text-trail-muted">
-              {report.periodStart.slice(0, 10)} → {report.periodEnd.slice(0, 10)}
-            </p>
-          )}
-        </div>
-        {fileRef.current && (
-          <button
-            type="button"
-            onClick={enrich}
-            className="flex items-center justify-center gap-[6px] w-full px-3 py-[7px] rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption font-semibold hover:bg-trail-border/40 transition-colors"
-          >
-            <Sparkles size={12} />
-            Enrichir avec les données détaillées (FC, découplage…)
-          </button>
-        )}
-        <Link
-          href="/dashboard"
-          className="flex items-center justify-center gap-[6px] w-full px-3 py-[7px] rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption font-semibold hover:bg-trail-border/40 transition-colors"
-        >
-          Voir mon Cockpit
-        </Link>
       </div>
     )
   }
@@ -507,26 +448,6 @@ export function GarminImportFlow() {
         }}
       />
 
-      {/* Raccourci : activités déjà importées → enrichir directement (carte + splits) */}
-      <input
-        ref={enrichInputRef}
-        type="file"
-        accept=".zip"
-        className="hidden"
-        onChange={e => {
-          const file = e.target.files?.[0]
-          if (file) enrichOnly(file)
-          e.target.value = ''
-        }}
-      />
-      <button
-        type="button"
-        onClick={() => enrichInputRef.current?.click()}
-        className="flex items-center justify-center gap-[6px] w-full px-3 py-[7px] rounded-[8px] bg-trail-card border border-trail-border text-trail-muted text-caption font-semibold hover:bg-trail-border/40 transition-colors"
-      >
-        <Sparkles size={12} />
-        Déjà importé — ajouter seulement carte + splits
-      </button>
     </div>
   )
 }
