@@ -129,7 +129,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
            (uniformes, contenu centré) et le bloc est centré verticalement dans la carte
            — sinon flex:1 étire la 1re ligne/l'en-tête en y déversant le surplus. */
         .pdfroot table{width:100%;border-collapse:collapse;margin:auto 0;table-layout:fixed;}
-        .pdfroot thead th{font-family:var(--d);font-size:5.5px;font-weight:700;letter-spacing:.1px;text-transform:uppercase;color:var(--ink-soft);padding:1px 4px 2px;border-bottom:1px solid var(--line-strong);line-height:1;white-space:nowrap;overflow:hidden;}
+        .pdfroot thead th{font-family:var(--d);font-size:9.5px;font-weight:400;letter-spacing:.1px;text-transform:uppercase;color:var(--ink-soft);padding:.1px 4px;border-bottom:1px solid var(--line-strong);line-height:10.5px;vertical-align:middle;white-space:nowrap;overflow:hidden;}
         .pdfroot tbody tr{border-bottom:.5px solid var(--line);}
         .pdfroot tbody tr:nth-child(even){background:var(--zebra);}
         .pdfroot tbody td{padding:.1px 4px;vertical-align:middle;line-height:10.5px;font-size:9.5px;white-space:nowrap;overflow:hidden;}
