@@ -109,6 +109,10 @@ type RaceRow = {
   // non encore appliquée (fallbacks en lecture, miroir en écriture).
   priority?: Race['priority']
   notes: string | null
+  // Migration 035 — optionnels pour tolérer DB non encore migrée (retry à l'écriture).
+  start_time?: string | null
+  target_duration_min?: number | null
+  pacing_fade?: number | null
 }
 
 function raceFromRow(r: RaceRow): Race {
@@ -125,6 +129,9 @@ function raceFromRow(r: RaceRow): Race {
     // une race main devient prio A, sinon C.
     priority: r.priority ?? (r.is_main ? 'A' : 'C'),
     notes: r.notes ?? undefined,
+    startTime: r.start_time ?? undefined,
+    targetDurationMin: r.target_duration_min ?? undefined,
+    pacingFade: r.pacing_fade ?? undefined,
   }
 }
 
@@ -144,6 +151,9 @@ function raceToRow(race: Race, athleteId: string): RaceRow {
     is_main: race.priority === 'A',
     priority: race.priority,
     notes: race.notes ?? null,
+    start_time: race.startTime ?? null,
+    target_duration_min: race.targetDurationMin ?? null,
+    pacing_fade: race.pacingFade ?? 0,
   }
 }
 
@@ -520,10 +530,16 @@ export async function saveRace(race: Race): Promise<void> {
     if (!error) {
       saved = true
     } else if (isMissingColumnError(error)) {
-      // Migration 022 pas encore appliquée → la colonne `priority` n'existe pas.
-      // Retry sans elle plutôt que de fallback LS (qui ferait disparaître la
+      // Colonne absente (migration 022 et/ou 035 non appliquée) : retry sans les
+      // colonnes optionnelles plutôt que fallback LS (qui ferait disparaître la
       // race côté serveur).
-      const { priority: _priority, ...legacyRow } = row
+      const {
+        priority: _priority,
+        start_time: _st,
+        target_duration_min: _td,
+        pacing_fade: _pf,
+        ...legacyRow
+      } = row
       const { error: retryErr } = await ctx.supabase
         .from('races')
         .upsert(legacyRow, { onConflict: 'id' })
