@@ -136,6 +136,12 @@
 - **Pourquoi** : voir d'un coup d'œil planifié vs réalisé dans le bloc Cockpit, pas seulement dans Plan. Brique commune avec la Vague 2 "intégrations Strava/Garmin" du roadmap Plan.
 - **Identifié** : 2026-05-16
 
+### Moteur d'estimation horaire avancé (tableau de course)
+- **Quoi** : remplacer le pacing v1 (effort-km + fade dans `web/lib/plan/pacing.ts`) par un modèle VAP réel grade-adjusted, calibré sur l'indice UTMB/Betrail/ITRA de l'athlète et un benchmark des résultats historiques des autres coureurs de la course. Même signature `estimatePassageTimes` → remplacement interne sans toucher table/PDF.
+- **Pourquoi** : amener la précision du pacing au-delà de l'estimation linéaire, en capturant la réalité des performances trail avec ajustement par technicité terrain.
+- **Dépend de** : sources externes (indices UTMB/Betrail/ITRA + base de résultats).
+- **Identifié** : 2026-06-10
+
 ## Cycles v2 — sub-projects à venir (suite de la Fondation A)
 
 > Sub-project A (Fondation : migration 022 + types + moteur de génération) livré le 2026-05-20.

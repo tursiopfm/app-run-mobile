@@ -1,5 +1,7 @@
 # Intégration du tableau de course + export PDF — Design
 
+> **Status: Implémenté** · 2026-06-10 · Code: web/lib/plan/{pacing,waypoint-view}.ts, web/components/plan/WaypointsTable.tsx, web/app/(main)/plan/courses/[id]/print/page.tsx
+
 > Statut : Validé (brainstorming) · 2026-06-10
 > Maquettes source : `Prompts/tableau-course-mockup-optionA.html` (écran), `Prompts/tableau-course-pdf-mockup.html` (carte/impression)
 
