@@ -113,7 +113,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .scis{font-size:10px;color:var(--trail-muted);margin-bottom:4px;display:block;}
         /* wrap = bounding box de la carte TOURNÉE (65×120) ; carte centrée en ABSOLU pour garder 120×65 (sinon le flex la rétrécit → carrée) */
         .pdfroot .cardwrap{width:65mm;height:120mm;position:relative;}
-        .pdfroot .card{width:120mm;height:65mm;background:#fff;color:var(--ink);border-radius:2.5mm;display:flex;flex-direction:column;overflow:hidden;padding:1.1mm 2mm;box-shadow:0 18px 40px -16px rgba(0,0,0,.6);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(90deg);}
+        .pdfroot .card{width:120mm;height:auto;background:#fff;color:var(--ink);border-radius:2.5mm;display:flex;flex-direction:column;overflow:hidden;padding:1.1mm 2mm;box-shadow:0 18px 40px -16px rgba(0,0,0,.6);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(90deg);}
         .pdfroot .hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.4px solid var(--line-strong);padding-bottom:1.5px;flex:none;}
         .pdfroot .race{font-family:var(--d);font-size:9px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;line-height:1.1;}
         .pdfroot .stats{font-family:var(--d);font-size:5.8px;color:var(--ink-soft);font-weight:600;white-space:nowrap;}
@@ -125,10 +125,10 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
            le sous-ensemble choisi. Point borné (~2.4×), data égales ; padding uniforme
            pour des écarts réguliers. Les cellules rognent (overflow) ; le Point passe
            en ellipsis si le nom est trop long.
-           margin:auto 0 (pas flex:1) : le tableau garde des lignes de hauteur NATURELLE
-           (uniformes, contenu centré) et le bloc est centré verticalement dans la carte
-           — sinon flex:1 étire la 1re ligne/l'en-tête en y déversant le surplus. */
-        .pdfroot table{width:100%;border-collapse:collapse;margin:auto 0;table-layout:fixed;}
+           Lignes de hauteur NATURELLE (pas de flex:1 qui étirait la 1re ligne/l'en-tête).
+           La carte (height:auto) s'ajuste au contenu → aucun vide au-dessus du titre ni
+           sous le tableau, quel que soit le nombre de points. */
+        .pdfroot table{width:100%;border-collapse:collapse;margin-top:1px;table-layout:fixed;}
         .pdfroot thead th{font-family:var(--d);font-size:9.5px;font-weight:400;letter-spacing:.1px;text-transform:uppercase;color:var(--ink-soft);padding:.1px 4px;border-bottom:1px solid var(--line-strong);line-height:10.5px;vertical-align:middle;white-space:nowrap;overflow:hidden;}
         .pdfroot tbody tr{border-bottom:.5px solid var(--line);}
         .pdfroot tbody tr:nth-child(even){background:var(--zebra);}
