@@ -129,7 +129,8 @@ function raceFromRow(r: RaceRow): Race {
     // une race main devient prio A, sinon C.
     priority: r.priority ?? (r.is_main ? 'A' : 'C'),
     notes: r.notes ?? undefined,
-    startTime: r.start_time ?? undefined,
+    // Postgres `time` renvoie 'HH:MM:SS' → normaliser en 'HH:MM'.
+    startTime: r.start_time ? r.start_time.slice(0, 5) : undefined,
     targetDurationMin: r.target_duration_min ?? undefined,
     pacingFade: r.pacing_fade ?? undefined,
   }

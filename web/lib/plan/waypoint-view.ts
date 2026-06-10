@@ -37,7 +37,8 @@ export function formatElapsedToClock(
   startTime: string,
   elapsedSec: number,
 ): ClockResult | null {
-  const m = /^(\d{1,2}):(\d{2})$/.exec(startTime.trim())
+  // tolère 'HH:MM' ET 'HH:MM:SS' (Postgres `time` renvoie les secondes)
+  const m = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(startTime.trim())
   if (!m) return null
   const startTod = parseInt(m[1], 10) * 3600 + parseInt(m[2], 10) * 60
   const total = startTod + Math.round(elapsedSec)
@@ -58,8 +59,8 @@ export function parseClockToElapsed(
   input: string,
   minElapsedSec: number,
 ): number | null {
-  const ms = /^(\d{1,2}):(\d{2})$/.exec(startTime.trim())
-  const mi = /^(\d{1,2}):(\d{2})$/.exec(input.trim())
+  const ms = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(startTime.trim())
+  const mi = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(input.trim())
   if (!ms || !mi) return null
   const startTod = parseInt(ms[1], 10) * 3600 + parseInt(ms[2], 10) * 60
   const inTod = parseInt(mi[1], 10) * 3600 + parseInt(mi[2], 10) * 60

@@ -31,6 +31,9 @@ describe('formatElapsedToClock', () => {
   it('départ invalide → null', () => {
     expect(formatElapsedToClock('', 1000)).toBeNull()
   })
+  it("tolère 'HH:MM:SS' (Postgres time)", () => {
+    expect(formatElapsedToClock('19:00:00', 7500)).toEqual({ label: '21:05', dayIndex: 1 })
+  })
 })
 
 describe('parseClockToElapsed', () => {
