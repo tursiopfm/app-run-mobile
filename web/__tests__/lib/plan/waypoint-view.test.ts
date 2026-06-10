@@ -73,6 +73,10 @@ describe('marginToBarrier / formatMargin', () => {
   it('pas de barrière → null', () => {
     expect(marginToBarrier('20:00', 7500, null, null)).toBeNull()
   })
+  it('barrière un peu AVANT l objectif → marge négative (jour le plus proche, pas +24h)', () => {
+    // départ 19:00, objectif 6h46 (24360s), barrière 27-01:00 = 6h écoulées → -46min
+    expect(marginToBarrier('19:00', 24360, '27-01:00', 'clock_time')).toEqual({ sec: -2760, level: 'bad' })
+  })
   it('formate la marge signée', () => {
     expect(formatMargin(1500)).toBe('+25min')
     expect(formatMargin(5400)).toBe('+1h30')

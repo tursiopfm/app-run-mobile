@@ -50,8 +50,9 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         { totalDurationSec: totalSec, fade: race.pacingFade ?? 0 },
       )
     : null
-  const startClock = race.startTime ? formatElapsedToClock(race.startTime, 0)?.label : null
-  const arrClock = race.startTime && totalSec != null ? formatElapsedToClock(race.startTime, totalSec)?.label : null
+  const noDay = (s: string | undefined) => (s ? s.replace(/^J\d+\s+/, '') : null)
+  const startClock = race.startTime ? noDay(formatElapsedToClock(race.startTime, 0)?.label) : null
+  const arrClock = race.startTime && totalSec != null ? noDay(formatElapsedToClock(race.startTime, totalSec)?.label) : null
   const goal = race.targetDurationMin != null
     ? `${Math.floor(race.targetDurationMin / 60)} h ${pad(race.targetDurationMin % 60)}`
     : null
@@ -61,12 +62,11 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
 
   const cell = (k: PrintColKey, w: RaceWaypoint, i: number) => {
     const seg = deriveSegment(wps.map((x) => ({ km: x.km, dPlus: x.dPlus, dMoins: x.dMoins })), i)
-    // Heure d'horloge si départ connu, sinon temps écoulé (jamais vide dès que
-    // le temps cible est renseigné).
-    const objLabel = elapsed
-      ? (race.startTime ? formatElapsedToClock(race.startTime, elapsed[i])?.label : formatElapsedShort(elapsed[i]))
-      : null
-    const bhLabel = formatBarrierClock(race.startTime, w.cutoffRaw, w.cutoffKind, elapsed?.[i] ?? 0)
+    // Objectif = chrono depuis le départ (temps écoulé), comme le tableau écran.
+    const objLabel = elapsed ? formatElapsedShort(elapsed[i]) : null
+    // Barrière = heure d'horloge SANS le préfixe jour (Jx retiré).
+    const bhRaw = formatBarrierClock(race.startTime, w.cutoffRaw, w.cutoffKind, elapsed?.[i] ?? 0)
+    const bhLabel = bhRaw ? bhRaw.replace(/^J\d+\s+/, '') : null
     const dash = <span className="dash">—</span>
     switch (k) {
       case 'tk':     return <span className="tk" />

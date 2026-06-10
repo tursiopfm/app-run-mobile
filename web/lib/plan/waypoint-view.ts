@@ -101,14 +101,22 @@ export function marginToBarrier(
   if (!cutoffRaw) return null
   const m = /(\d{1,2})[:h](\d{2})/.exec(cutoffRaw)
   if (!m) return null
-  let barrierElapsed: number | null
+  let barrierElapsed: number
   if (cutoffKind === 'elapsed') {
     barrierElapsed = parseInt(m[1], 10) * 3600 + parseInt(m[2], 10) * 60
   } else {
-    if (!startTime) return null
-    barrierElapsed = parseClockToElapsed(startTime, `${m[1]}:${m[2]}`, objElapsedSec)
+    const ms = /^(\d{1,2}):(\d{2})/.exec((startTime ?? '').trim())
+    if (!ms) return null
+    const startTod = parseInt(ms[1], 10) * 3600 + parseInt(ms[2], 10) * 60
+    const barrierTod = parseInt(m[1], 10) * 3600 + parseInt(m[2], 10) * 60
+    // Place la barrière sur le jour LE PLUS PROCHE de l'objectif (±12 h), pas
+    // « le 1er jour après » — sinon une barrière un peu avant l'objectif saute
+    // d'un jour entier (+24 h de marge absurde).
+    let e = barrierTod - startTod
+    while (e < objElapsedSec - 43200) e += 86400
+    while (e > objElapsedSec + 43200) e -= 86400
+    barrierElapsed = e
   }
-  if (barrierElapsed == null) return null
   const sec = barrierElapsed - objElapsedSec
   return { sec, level: sec >= 2700 ? 'ok' : sec >= 0 ? 'warn' : 'bad' }
 }
