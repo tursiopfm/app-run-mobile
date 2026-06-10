@@ -1,9 +1,12 @@
 'use client'
 
-// Tableau éditable inline des points de passage d'une course.
-// Pas d'undo en phase 1 — re-import si besoin de reset.
-import { useCallback } from 'react'
-import type { RaceWaypoint, CutoffKind, WaypointType } from '@/types/plan'
+// Tableau éditable des points de passage. Colonnes auto (Inter, ▲/▼ tronçon)
+// dérivées du cumulé via lib/plan/waypoint-view ; Objectif calculé via
+// lib/plan/pacing, override éditable. Pas d'undo (re-import pour reset).
+import { useCallback, useMemo } from 'react'
+import type { RaceWaypoint, WaypointSupply } from '@/types/plan'
+import { deriveSegment, formatElapsedToClock, parseClockToElapsed } from '@/lib/plan/waypoint-view'
+import { estimatePassageTimes } from '@/lib/plan/pacing'
 
 type Draft = Omit<RaceWaypoint, 'id' | 'raceId'>
 
@@ -11,49 +14,30 @@ type Props = {
   waypoints: Draft[]
   onChange: (next: Draft[]) => void
   readOnly?: boolean
+  // Pacing (optionnel) : si absent, la colonne Objectif affiche '—'.
+  startTime?: string
+  targetDurationMin?: number
+  pacingFade?: number
 }
 
-const TYPE_OPTIONS: { value: WaypointType; label: string }[] = [
-  { value: 'depart',   label: 'Départ' },
-  { value: 'ravito',   label: 'Ravito' },
-  { value: 'pointage', label: 'Pointage' },
-  { value: 'arrivee',  label: 'Arrivée' },
-  { value: 'autre',    label: 'Autre' },
+const SUPPLY_TOGGLES: { value: WaypointSupply; label: string }[] = [
+  { value: 'solid',    label: 'S' },
+  { value: 'liquid',   label: 'L' },
+  { value: 'base_vie', label: 'BV' },
 ]
-
-const KIND_OPTIONS: { value: CutoffKind; label: string }[] = [
-  { value: 'clock_time', label: 'Heure' },
-  { value: 'elapsed',    label: 'Temps' },
-  { value: 'unknown',    label: '?' },
-]
-
-function emptyRow(orderIndex: number): Draft {
-  return {
-    orderIndex,
-    name: '',
-    km: 0,
-    kmInter: null,
-    dPlus: null,
-    dMoins: null,
-    cutoffRaw: null,
-    cutoffKind: null,
-    type: orderIndex === 0 ? 'depart' : 'ravito',
-  }
-}
 
 function reindex(rows: Draft[]): Draft[] {
   const sorted = [...rows].sort((a, b) => a.km - b.km)
   return sorted.map((r, i) => ({
     ...r,
     orderIndex: i,
-    type:
-      i === 0 ? 'depart' :
-      i === sorted.length - 1 ? 'arrivee' :
-      r.type,
+    type: i === 0 ? 'depart' : i === sorted.length - 1 ? 'arrivee' : r.type,
   }))
 }
 
-export function WaypointsTable({ waypoints, onChange, readOnly }: Props) {
+export function WaypointsTable({
+  waypoints, onChange, readOnly, startTime, targetDurationMin, pacingFade,
+}: Props) {
   const update = useCallback(
     (i: number, patch: Partial<Draft>) => {
       const next = waypoints.map((w, idx) => (idx === i ? { ...w, ...patch } : w))
@@ -62,16 +46,29 @@ export function WaypointsTable({ waypoints, onChange, readOnly }: Props) {
     [waypoints, onChange],
   )
 
-  const remove = useCallback(
-    (i: number) => {
-      onChange(reindex(waypoints.filter((_, idx) => idx !== i)))
-    },
-    [waypoints, onChange],
-  )
+  // Heures de passage (s écoulées) calculées par le pacing si configuré.
+  const elapsed = useMemo(() => {
+    if (targetDurationMin == null) return null
+    return estimatePassageTimes(
+      waypoints.map((w) => ({ km: w.km, dPlus: w.dPlus, targetOverrideSec: w.targetOverrideSec })),
+      { totalDurationSec: targetDurationMin * 60, fade: pacingFade ?? 0 },
+    )
+  }, [waypoints, targetDurationMin, pacingFade])
 
-  const add = useCallback(() => {
-    onChange(reindex([...waypoints, emptyRow(waypoints.length)]))
-  }, [waypoints, onChange])
+  const toggleSupply = (i: number, s: WaypointSupply) => {
+    const cur = waypoints[i].supplies
+    const next = cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s]
+    update(i, { supplies: next })
+  }
+
+  const onObjectifBlur = (i: number, raw: string) => {
+    if (!startTime || elapsed == null) return
+    const v = raw.trim()
+    if (v === '') { update(i, { targetOverrideSec: null }); return }
+    const min = i > 0 && elapsed[i - 1] != null ? elapsed[i - 1] : 0
+    const sec = parseClockToElapsed(startTime, v, min)
+    if (sec != null) update(i, { targetOverrideSec: sec })
+  }
 
   return (
     <div className="space-y-2">
@@ -80,137 +77,104 @@ export function WaypointsTable({ waypoints, onChange, readOnly }: Props) {
           <thead>
             <tr className="text-trail-muted text-micro">
               <th className="text-left p-1">Point</th>
-              <th className="text-right p-1">Dist</th>
+              <th className="text-right p-1">Km</th>
+              <th className="text-right p-1">ΣD+</th>
               <th className="text-right p-1">Inter</th>
-              <th className="text-right p-1">D+</th>
-              <th className="text-right p-1">D−</th>
-              <th className="text-left p-1">BH</th>
-              <th className="text-left p-1">Type</th>
+              <th className="text-right p-1">▲D+</th>
+              <th className="text-right p-1">▼D−</th>
+              <th className="text-left p-1">Ravito</th>
+              <th className="text-right p-1">Objectif</th>
+              <th className="text-left p-1">Barrière</th>
               {!readOnly && <th />}
             </tr>
           </thead>
           <tbody>
-            {waypoints.map((w, i) => (
-              <tr key={`${w.orderIndex}-${i}`} className="border-t border-trail-border">
-                <td className="p-1">
-                  <input
-                    type="text"
-                    value={w.name}
-                    onChange={(e) => update(i, { name: e.target.value })}
-                    disabled={readOnly}
-                    className="w-full bg-transparent outline-none"
-                  />
-                </td>
-                <td className="p-1 w-[60px]">
-                  <input
-                    type="number" step="0.1"
-                    value={w.km}
-                    onChange={(e) => update(i, { km: parseFloat(e.target.value) || 0 })}
-                    disabled={readOnly}
-                    className="w-full bg-transparent outline-none text-right"
-                  />
-                </td>
-                <td className="p-1 w-[60px]">
-                  <input
-                    type="number" step="0.1"
-                    value={w.kmInter ?? ''}
-                    onChange={(e) =>
-                      update(i, { kmInter: e.target.value === '' ? null : parseFloat(e.target.value) })
-                    }
-                    disabled={readOnly}
-                    className="w-full bg-transparent outline-none text-right"
-                  />
-                </td>
-                <td className="p-1 w-[60px]">
-                  <input
-                    type="number"
-                    value={w.dPlus ?? ''}
-                    onChange={(e) =>
-                      update(i, { dPlus: e.target.value === '' ? null : parseInt(e.target.value, 10) })
-                    }
-                    disabled={readOnly}
-                    className="w-full bg-transparent outline-none text-right"
-                  />
-                </td>
-                <td className="p-1 w-[60px]">
-                  <input
-                    type="number"
-                    value={w.dMoins ?? ''}
-                    onChange={(e) =>
-                      update(i, { dMoins: e.target.value === '' ? null : parseInt(e.target.value, 10) })
-                    }
-                    disabled={readOnly}
-                    className="w-full bg-transparent outline-none text-right"
-                  />
-                </td>
-                <td className="p-1">
-                  <div className="flex gap-1">
-                    <input
-                      type="text"
-                      value={w.cutoffRaw ?? ''}
+            {waypoints.map((w, i) => {
+              const seg = deriveSegment(
+                waypoints.map((x) => ({ km: x.km, dPlus: x.dPlus, dMoins: x.dMoins })),
+                i,
+              )
+              const clock =
+                elapsed && startTime ? formatElapsedToClock(startTime, elapsed[i]) : null
+              const isOverride = w.targetOverrideSec != null
+              return (
+                <tr key={`${w.orderIndex}-${i}`} className="border-t border-trail-border">
+                  <td className="p-1">
+                    <input type="text" value={w.name} disabled={readOnly}
+                      onChange={(e) => update(i, { name: e.target.value })}
+                      className="w-full bg-transparent outline-none" />
+                  </td>
+                  <td className="p-1 w-[54px]">
+                    <input type="number" step="0.1" value={w.km} disabled={readOnly}
+                      onChange={(e) => update(i, { km: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-transparent outline-none text-right" />
+                  </td>
+                  <td className="p-1 w-[54px]">
+                    <input type="number" value={w.dPlus ?? ''} disabled={readOnly}
+                      onChange={(e) => update(i, { dPlus: e.target.value === '' ? null : parseInt(e.target.value, 10) })}
+                      className="w-full bg-transparent outline-none text-right" />
+                  </td>
+                  <td className="p-1 w-[48px] text-right text-trail-muted">
+                    {seg.interKm ?? '—'}
+                  </td>
+                  <td className="p-1 w-[48px] text-right" style={{ color: 'var(--trail-primary)' }}>
+                    {seg.dPlusSeg ?? '—'}
+                  </td>
+                  <td className="p-1 w-[48px] text-right text-trail-muted">
+                    {seg.dMoinsSeg ?? '—'}
+                  </td>
+                  <td className="p-1">
+                    <div className="flex gap-1">
+                      {SUPPLY_TOGGLES.map((s) => {
+                        const on = w.supplies.includes(s.value)
+                        return (
+                          <button key={s.value} type="button" disabled={readOnly}
+                            onClick={() => toggleSupply(i, s.value)}
+                            aria-pressed={on}
+                            className={`px-1 rounded text-micro font-bold border ${
+                              on ? 'bg-trail-primary text-white border-trail-primary'
+                                 : 'text-trail-muted border-trail-border'
+                            }`}>
+                            {s.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </td>
+                  <td className="p-1 w-[64px] text-right">
+                    {targetDurationMin == null ? (
+                      <span className="text-trail-muted">—</span>
+                    ) : (
+                      <input type="text" disabled={readOnly} placeholder="—"
+                        defaultValue={clock?.label ?? ''}
+                        key={`${clock?.label ?? ''}-${isOverride}`}
+                        onBlur={(e) => onObjectifBlur(i, e.target.value)}
+                        className={`w-full bg-transparent outline-none text-right ${
+                          isOverride ? 'font-bold text-trail-text' : 'text-trail-muted'
+                        }`} />
+                    )}
+                  </td>
+                  <td className="p-1">
+                    <input type="text" value={w.cutoffRaw ?? ''} disabled={readOnly} placeholder="—"
                       onChange={(e) => {
                         const v = e.target.value || null
-                        update(i, {
-                          cutoffRaw: v,
-                          cutoffKind: v === null ? null : w.cutoffKind ?? 'unknown',
-                        })
+                        update(i, { cutoffRaw: v, cutoffKind: v === null ? null : w.cutoffKind ?? 'clock_time' })
                       }}
-                      disabled={readOnly}
-                      className="w-[60px] bg-transparent outline-none"
-                      placeholder="—"
-                    />
-                    {w.cutoffRaw && (
-                      <select
-                        value={w.cutoffKind ?? 'unknown'}
-                        onChange={(e) => update(i, { cutoffKind: e.target.value as CutoffKind })}
-                        disabled={readOnly}
-                        className="bg-transparent outline-none text-micro"
-                      >
-                        {KIND_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
-                </td>
-                <td className="p-1">
-                  <select
-                    value={w.type}
-                    onChange={(e) => update(i, { type: e.target.value as WaypointType })}
-                    disabled={readOnly}
-                    className="bg-transparent outline-none"
-                  >
-                    {TYPE_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                </td>
-                {!readOnly && (
-                  <td className="p-1 w-[28px]">
-                    <button
-                      type="button"
-                      onClick={() => remove(i)}
-                      aria-label={`Supprimer ${w.name || 'ligne'}`}
-                      className="text-trail-danger text-body"
-                    >
-                      ×
-                    </button>
+                      className="w-[64px] bg-transparent outline-none" />
                   </td>
-                )}
-              </tr>
-            ))}
+                  {!readOnly && (
+                    <td className="p-1 w-[24px]">
+                      <button type="button" onClick={() => onChange(reindex(waypoints.filter((_, idx) => idx !== i)))}
+                        aria-label={`Supprimer ${w.name || 'ligne'}`}
+                        className="text-trail-danger text-body">×</button>
+                    </td>
+                  )}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
-      {!readOnly && (
-        <button
-          type="button"
-          onClick={add}
-          className="text-caption text-trail-primary underline"
-        >
-          + Ajouter une ligne
-        </button>
-      )}
     </div>
   )
 }
