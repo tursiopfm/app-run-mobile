@@ -238,7 +238,7 @@ export function WaypointsTable({
               {editRow === i && !readOnly && (
                 <>
                   <div className="rav-backdrop" onClick={() => setEditRow(null)} />
-                  <div className="rav-pop" role="menu">
+                  <div className="rav-pop">
                     {SUPPLY_CAT.map((c) => {
                       const on = w.supplies.includes(c.val)
                       return (

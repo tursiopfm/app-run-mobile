@@ -36,6 +36,11 @@
   3. Migration douce : au premier load, si profil DB vide mais localStorage rempli → push vers Supabase puis purge localStorage.
 - **Identifié** : 2026-05-13
 
+### Durcir le fetch des parsers d'import (utmb / livetrail)
+- **Quoi** : `lib/race-import/sources/utmb.ts` et `livetrail.ts` font `await res.text()` AVANT le check `> MAX_BYTES` (la limite ne borne donc pas vraiment la mémoire) et suivent les redirections sans re-vérifier l'hôte post-redirect. Factoriser un helper de fetch borné en streaming (cf. `lib/race-import/fetch-url.ts` qui le fait proprement : reader + `reader.cancel()`) + re-check de l'hôte après redirect, partagé par les deux parsers.
+- **Pourquoi** : durcir le SSRF / la conso mémoire. Non bloquant (surface étroite : `match()` limite à `*.utmb.world` / livetrail, route authentifiée) ; pattern pré-existant signalé en revue de `feat/ravito-utmb`.
+- **Identifié** : 2026-06-11 (revue feat/ravito-utmb).
+
 ### Détail activité — STATS
 - [ ] Retirer le bloc CES de l'onglet STATS
 
