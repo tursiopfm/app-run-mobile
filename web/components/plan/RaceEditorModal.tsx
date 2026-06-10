@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Race, RaceType } from '@/types/plan'
 import { deleteRace, saveRace } from '@/lib/plan/storage'
+import { parseElapsedShort } from '@/lib/plan/waypoint-view'
 import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
@@ -213,10 +214,11 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
                 value={rawTarget}
                 onChange={(e) => setRawTarget(e.target.value)}
                 onBlur={(e) => {
-                  const m = /^(\d{1,3}):(\d{2})$/.exec(e.target.value.trim())
+                  // Tolérant : accepte '37:00', '37h00', '37h', '37'.
+                  const sec = parseElapsedShort(e.target.value)
                   setDraft({
                     ...draft,
-                    targetDurationMin: m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : undefined,
+                    targetDurationMin: sec != null ? Math.round(sec / 60) : undefined,
                   })
                 }}
                 className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"

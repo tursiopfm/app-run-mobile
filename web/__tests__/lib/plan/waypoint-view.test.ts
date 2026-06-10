@@ -1,6 +1,6 @@
 import {
   deriveSegment, formatElapsedToClock, parseClockToElapsed,
-  formatElapsedShort, parseElapsedShort, marginToBarrier, formatMargin,
+  formatElapsedShort, parseElapsedShort, marginToBarrier, formatMargin, formatBarrierClock,
 } from '@/lib/plan/waypoint-view'
 
 describe('deriveSegment', () => {
@@ -74,5 +74,20 @@ describe('marginToBarrier / formatMargin', () => {
     expect(formatMargin(1500)).toBe('+25min')
     expect(formatMargin(5400)).toBe('+1h30')
     expect(formatMargin(-600)).toBe('-10min')
+  })
+})
+
+describe('formatBarrierClock', () => {
+  it('nettoie une barrière brute en heure d horloge (même jour)', () => {
+    expect(formatBarrierClock('20:00', '26-22:30', 'clock_time', 7500)).toBe('22:30')
+  })
+  it('jour suivant via préfixe Jx', () => {
+    expect(formatBarrierClock('20:00', '27-01:00', 'clock_time', 14000)).toBe('J2 01:00')
+  })
+  it('sans heure de départ → chaîne brute', () => {
+    expect(formatBarrierClock(undefined, '26-22:30', 'clock_time', 0)).toBe('26-22:30')
+  })
+  it('pas de barrière → null', () => {
+    expect(formatBarrierClock('20:00', null, null, 0)).toBeNull()
   })
 })

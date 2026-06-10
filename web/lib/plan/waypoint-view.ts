@@ -120,3 +120,22 @@ export function formatMargin(sec: number): string {
   const mm = a % 60
   return h === 0 ? `${sign}${mm}min` : `${sign}${h}h${mm > 0 ? String(mm).padStart(2, '0') : ''}`
 }
+
+// Barrière (cutoffRaw brut, ex '26-22:30') → heure d'horloge propre 'Jx HH:MM'
+// via le départ + l'écoulé objectif au point (pour lever l'ambiguïté du jour).
+// Retombe sur la chaîne brute si départ absent ou format illisible.
+export function formatBarrierClock(
+  startTime: string | undefined,
+  cutoffRaw: string | null,
+  cutoffKind: 'clock_time' | 'elapsed' | 'unknown' | null,
+  minElapsedSec: number,
+): string | null {
+  if (!cutoffRaw) return null
+  const m = /(\d{1,2})[:h](\d{2})/.exec(cutoffRaw)
+  if (!m || !startTime) return cutoffRaw
+  const barrierElapsed = cutoffKind === 'elapsed'
+    ? parseInt(m[1], 10) * 3600 + parseInt(m[2], 10) * 60
+    : parseClockToElapsed(startTime, `${m[1]}:${m[2]}`, minElapsedSec)
+  if (barrierElapsed == null) return cutoffRaw
+  return formatElapsedToClock(startTime, barrierElapsed)?.label ?? cutoffRaw
+}
