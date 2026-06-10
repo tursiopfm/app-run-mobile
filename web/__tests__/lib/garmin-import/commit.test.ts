@@ -12,7 +12,8 @@ function fakeSupabase() {
           return { select: () => ({ data: asRows(rows), error: null }) , data: null, error: null }
         },
         update(rows: unknown) {
-          return { eq: () => { calls.push({ table, op: 'update', rows }); return { error: null } } }
+          const record = () => { calls.push({ table, op: 'update', rows }); return { error: null } }
+          return { eq: record, in: record }
         },
       }
     },

@@ -7,6 +7,9 @@ import { commitGarminImport } from '@/lib/garmin-import/commit'
 import type { GarminMapped, ConflictItem, ExistingActivity } from '@/lib/garmin-import/types'
 import type { UserProfileForCes } from '@/lib/analytics/types'
 
+// Import volumineux : étend le timeout de fonction (Vercel le borne au max du plan).
+export const maxDuration = 60
+
 type Body = {
   nouvelles: GarminMapped[]
   conflits: ConflictItem[]   // avec décisions de l'utilisateur

@@ -105,7 +105,7 @@ export function GarminImportFlow() {
 
     // Chunk par TAILLE de payload : les résumés Garmin sont gros, et la limite de corps
     // de requête Vercel renvoie 413 "Payload Too Large" si on envoie trop d'un coup.
-    const MAX_REQ_BYTES = 350_000
+    const MAX_REQ_BYTES = 200_000
     const requests: { nouvelles: GarminMapped[]; conflits: ConflictItem[] }[] = []
     let curN: GarminMapped[] = []
     let curC: ConflictItem[] = []

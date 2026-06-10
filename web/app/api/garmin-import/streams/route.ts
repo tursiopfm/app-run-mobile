@@ -6,6 +6,9 @@ import { writeStreamRows, mergeMapAndSplits } from '@/lib/garmin-import/enrich-c
 import { recalculateUserEffortScores } from '@/lib/sync/recalculate-scores'
 import type { StreamUpload } from '@/lib/garmin-import/enrich-types'
 
+// Le recalcul CES peut être long sur un gros historique.
+export const maxDuration = 60
+
 export async function POST(req: NextRequest) {
   const user = await getServerUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

@@ -62,9 +62,9 @@ async function insertActivitiesWithMetrics(
   if (items.length === 0) return 0
   let saved = 0
   // Batch volontairement petit : un export GDPR contient de gros raw_payload JSONB ;
-  // 500/lot dépassait le statement_timeout Supabase. L'upsert est idempotent, donc
-  // un retry après timeout partiel reprend sans créer de doublon.
-  const BATCH = 100
+  // au-delà, l'upsert dépasse le statement_timeout Supabase → la fonction Vercel hange
+  // ~8 s → crash. L'upsert est idempotent, donc un retry reprend sans créer de doublon.
+  const BATCH = 50
   for (let i = 0; i < items.length; i += BATCH) {
     const slice = items.slice(i, i + BATCH)
     const built = slice.map(m => withProfile(userId, m, profile))
@@ -104,8 +104,15 @@ export async function commitGarminImport(
   const keptStrava = classification.conflits.length - replacements.length
 
   // Soft-delete des lignes remplacées AVANT insert (garantit une seule ligne active).
-  for (const r of replacements) {
-    await supabase.from('activities').update({ deleted_at: new Date().toISOString() }).eq('id', r.existing.id)
+  // En UN SEUL statement (`.in`) au lieu d'une boucle par activité → évite le timeout
+  // de fonction quand il y a beaucoup de remplacements.
+  if (replacements.length) {
+    const ids = replacements.map(r => r.existing.id)
+    const { error } = await supabase
+      .from('activities')
+      .update({ deleted_at: new Date().toISOString() })
+      .in('id', ids)
+    if (error) throw new Error(`Garmin soft-delete: ${error.message}`)
   }
 
   const toInsert = [...classification.nouvelles, ...replacements.map(r => r.garmin)]
