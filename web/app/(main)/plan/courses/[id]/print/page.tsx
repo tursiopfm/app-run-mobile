@@ -95,16 +95,16 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           --ink:#0E1513; --ink-soft:#55615E; --ink-faint:#8A938F;
           --line:#C9D1CE; --line-strong:#2A332F; --zebra:#F2F5F4; --accent:#C44E22;
           --d:'Space Grotesk',var(--font-display,system-ui),sans-serif;
-          background:#3A4441; min-height:100vh; display:flex; flex-direction:column; align-items:center;
-          padding:28px 16px 60px; color:var(--ink); font-family:system-ui,sans-serif;
+          background:var(--trail-bg); min-height:100vh; display:flex; flex-direction:column; align-items:center;
+          padding:28px 16px 60px; color:var(--trail-text); font-family:system-ui,sans-serif;
         }
-        .pdfroot .toolbar{display:flex;gap:8px;align-items:center;color:#D7DEDB;font-size:13px;margin-bottom:8px;width:120mm;max-width:100%;flex-wrap:wrap;}
+        .pdfroot .toolbar{display:flex;gap:8px;align-items:center;color:var(--trail-text);font-size:13px;margin-bottom:8px;width:120mm;max-width:100%;flex-wrap:wrap;}
         .pdfroot .toolbar .ttl{font-family:var(--d);font-weight:600;font-size:14px;margin-right:auto;}
-        .pdfroot .btn{font-family:var(--d);font-weight:600;font-size:13px;padding:8px 14px;border-radius:10px;border:0;background:var(--accent);color:#fff;cursor:pointer;}
-        .pdfroot .btn.ghost{background:#28302D;border:1px solid #5A6562;color:#E5EAE8;}
-        .pdfroot .caption{width:120mm;max-width:100%;color:#AEB7B4;font-size:11px;margin-bottom:16px;line-height:1.4;}
-        .pdfroot .cut{padding:6mm;border:1px dashed #7B8A86;border-radius:6px;background:#222927;}
-        .pdfroot .scis{font-size:10px;color:#7B8A86;margin-bottom:4px;display:block;}
+        .pdfroot .btn{font-family:var(--d);font-weight:600;font-size:13px;padding:8px 14px;border-radius:10px;border:0;background:var(--trail-primary);color:#fff;cursor:pointer;}
+        .pdfroot .btn.ghost{background:var(--trail-surface);border:1px solid var(--trail-border);color:var(--trail-text);}
+        .pdfroot .caption{width:120mm;max-width:100%;color:var(--trail-muted);font-size:11px;margin-bottom:16px;line-height:1.4;}
+        .pdfroot .cut{padding:6mm;border:1px dashed var(--trail-border);border-radius:6px;background:var(--trail-surface);}
+        .pdfroot .scis{font-size:10px;color:var(--trail-muted);margin-bottom:4px;display:block;}
         .pdfroot .card{width:120mm;height:65mm;background:#fff;color:var(--ink);border-radius:2.5mm;display:flex;flex-direction:column;overflow:hidden;padding:1.1mm 2mm;box-shadow:0 18px 40px -16px rgba(0,0,0,.6);}
         .pdfroot .hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.4px solid var(--line-strong);padding-bottom:1.5px;flex:none;}
         .pdfroot .race{font-family:var(--d);font-size:9px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;line-height:1.1;}
@@ -136,15 +136,16 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .legend .k{display:inline-flex;align-items:center;gap:3px;}
         .pdfroot .legend .rb{transform:scale(.78);}
 
-        @page{size:A4 landscape;margin:12mm;}
+        @page{size:A4 portrait;margin:8mm;}
         @media print{
           body * { visibility:hidden !important; }
           .pdfroot, .pdfroot * { visibility:visible !important; }
-          .pdfroot{position:absolute;top:0;left:0;width:100%;background:#fff;padding:0;min-height:auto;display:block;}
+          /* Carte tournée 90° CW et agrandie pour remplir l'A4 portrait (lisibilité). */
+          .pdfroot{position:absolute;top:0;left:0;width:100%;height:281mm;background:#fff;padding:0;min-height:auto;display:flex;align-items:center;justify-content:center;}
           .pdfroot .toolbar,.pdfroot .caption{display:none !important;}
-          .pdfroot .cut{border:none;background:none;padding:0;margin:8mm auto 0;width:120mm;}
+          .pdfroot .cut{border:none;background:none;padding:0;margin:0;width:auto;}
           .pdfroot .scis{display:none;}
-          .pdfroot .card{box-shadow:none;border:.5px solid var(--line);}
+          .pdfroot .card{box-shadow:none;border:.5px solid var(--line);transform:rotate(90deg) scale(2.3);}
           .pdfroot tbody tr:nth-child(even){background:var(--zebra) !important;}
           .pdfroot tr.is-base td{background:#E9EEEC !important;}
           .pdfroot .rb.bv{background:#000 !important;color:#fff !important;}
@@ -153,11 +154,11 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
       `}</style>
 
       <div className="toolbar">
-        <span className="ttl">Carte de course · format iPhone</span>
+        <span className="ttl">Carte de course</span>
         <button className="btn ghost" onClick={() => setDialogOpen(true)}>Personnaliser les colonnes</button>
         <button className="btn" onClick={() => window.print()}>Imprimer / PDF</button>
       </div>
-      <p className="caption">Imprime sur A4 paysage (échelle 100 %), découpe le long des pointillés, plastifie. Tient dans une poche de veste.</p>
+      <p className="caption">Imprime sur A4 (la carte est agrandie et tournée pour la lisibilité), découpe, plastifie. Tient dans une poche de veste.</p>
 
       <div className="cut">
         <span className="scis">✂ — — — — — — — — découper — — — — — — — —</span>

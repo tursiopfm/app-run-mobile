@@ -99,8 +99,10 @@ export function WaypointsTable({
     <div className="wtbl">
       <style>{`
         .wtbl{
-          --card:#162420;--border:#1E3530;--border2:#274840;--text:#E2ECE9;--muted:#8BA8A3;--faint:#5E7A75;
-          --orange:#FF6B35;--blue:#38BDF8;--green:#4ADE80;--yellow:#FBBF24;--red:#F87171;
+          /* couleurs liées au thème de l'app (lisible en clair ET sombre) */
+          --text:var(--trail-text);--muted:var(--trail-muted);--faint:var(--trail-muted);
+          --border:var(--trail-border);--border2:var(--trail-border);
+          --orange:var(--trail-primary);--blue:#2E90D0;--green:#16A34A;--yellow:#B45309;--red:#DC2626;
           --d:'Space Grotesk',var(--font-display,system-ui),sans-serif;color:var(--text);
         }
         .wtbl .legend-mini{font-size:9.5px;color:var(--faint);padding:0 3px 8px;line-height:1.4;}
