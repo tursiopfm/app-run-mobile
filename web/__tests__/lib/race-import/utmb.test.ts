@@ -73,3 +73,68 @@ describe('extractPointsJson', () => {
     expect(() => extractPointsJson('<html>rien</html>')).toThrow(UtmbError)
   })
 })
+
+function mockFetchOnce(html: string) {
+  global.fetch = jest.fn().mockResolvedValueOnce({ ok: true, text: async () => html } as any)
+}
+
+describe('utmbParser.parse()', () => {
+  afterEach(() => jest.restoreAllMocks())
+
+  it('filtre aux points utiles : 6 → 5 (le landmark sans service/barrière est retiré)', async () => {
+    mockFetchOnce(FIXTURE_HTML)
+    const out = await utmbParser.parse('https://saint-jacques.utmb.world/fr/races/100M')
+    expect(out.waypoints).toHaveLength(5)
+    expect(out.waypoints.find((w) => w.name === 'Sommet de la Durande')).toBeUndefined()
+  })
+
+  it('force depart/arrivee aux extrémités', async () => {
+    mockFetchOnce(FIXTURE_HTML)
+    const out = await utmbParser.parse('https://saint-jacques.utmb.world/fr/races/100M')
+    expect(out.waypoints[0].name).toBe('Saugues')
+    expect(out.waypoints[0].type).toBe('depart')
+    expect(out.waypoints[4].name).toBe('Le Puy en Velay')
+    expect(out.waypoints[4].type).toBe('arrivee')
+  })
+
+  it('mappe km / D+ / D- / barrière + les 5 ravitos (St Jean Lachalm)', async () => {
+    mockFetchOnce(FIXTURE_HTML)
+    const out = await utmbParser.parse('https://saint-jacques.utmb.world/fr/races/100M')
+    const w = out.waypoints.find((x) => x.name === 'Saint Jean Lachalm')!
+    expect(w.km).toBe(72.4)
+    expect(w.dPlus).toBe(3242)
+    expect(w.dMoins).toBe(2900)
+    expect(w.cutoffRaw).toBe('sam. 11:20')
+    expect(w.cutoffKind).toBe('clock_time')
+    expect(w.supplies).toEqual(['liquid', 'solid', 'hot', 'base_vie', 'assistance'])
+    expect(w.type).toBe('ravito')
+  })
+
+  it('point barrière sans ravito (Pont de la Roche) : gardé, supplies vide, type pointage', async () => {
+    mockFetchOnce(FIXTURE_HTML)
+    const out = await utmbParser.parse('https://saint-jacques.utmb.world/fr/races/100M')
+    const w = out.waypoints.find((x) => x.name.startsWith('Pont de la Roche'))!
+    expect(w.supplies).toEqual([])
+    expect(w.type).toBe('pointage')
+    expect(w.cutoffRaw).toBe('sam. 23:20')
+  })
+
+  it('départ sans barrière → cutoffRaw/cutoffKind null', async () => {
+    mockFetchOnce(FIXTURE_HTML)
+    const out = await utmbParser.parse('https://saint-jacques.utmb.world/fr/races/100M')
+    expect(out.waypoints[0].cutoffRaw).toBeNull()
+    expect(out.waypoints[0].cutoffKind).toBeNull()
+  })
+
+  it('lève (→ fallback LLM côté route) si HTTP non-ok', async () => {
+    global.fetch = jest.fn().mockResolvedValueOnce({ ok: false, status: 404 } as any)
+    await expect(
+      utmbParser.parse('https://saint-jacques.utmb.world/fr/races/100M'),
+    ).rejects.toThrow(UtmbError)
+  })
+})
+
+it('enregistre le parser dans le registre', () => {
+  const { findParserForUrl } = require('@/lib/race-import/sources')
+  expect(findParserForUrl('https://saint-jacques.utmb.world/fr/races/100M')?.id).toBe('utmb')
+})

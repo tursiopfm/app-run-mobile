@@ -77,6 +77,53 @@ export function extractPointsJson(html: string): UtmbPoint[] {
   return arr as UtmbPoint[]
 }
 
+// Point UTMB → waypoint (sans id/raceId). type pointage si aucun ravito.
+export function mapUtmbPoint(p: UtmbPoint, idx: number) {
+  const supplies = mapUtmbSupplies(p)
+  const cutoffRaw = p.cutoff && p.cutoff.length > 0 ? p.cutoff : null
+  const type: WaypointType = supplies.length > 0 ? 'ravito' : 'pointage'
+  return {
+    orderIndex: idx,
+    name: p.name.trim(),
+    km: p.distance / 1000,
+    kmInter: null,
+    dPlus: p.gainElevation,
+    dMoins: p.lossElevation,
+    cutoffRaw,
+    cutoffKind: cutoffRaw === null ? null : ('clock_time' as const),
+    type,
+    supplies,
+    targetOverrideSec: null,
+  }
+}
+
+// Garde un point s'il est utile : extrémités, ou ravito / assistance / barrière.
+export function isUsefulPoint(p: UtmbPoint, idx: number, total: number): boolean {
+  if (idx === 0 || idx === total - 1) return true
+  if (p.supplies && p.supplies !== 'none') return true
+  if (p.isAssistance) return true
+  if (p.cutoff && p.cutoff.length > 0) return true
+  return false
+}
+
+async function fetchHtml(url: string): Promise<string> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+  try {
+    const res = await fetch(url, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: { 'User-Agent': 'TrailCockpitBot/1.0' },
+    })
+    if (!res.ok) throw new UtmbError(`HTTP ${res.status} sur ${url}`)
+    const text = await res.text()
+    if (text.length > MAX_BYTES) throw new UtmbError('Page > 4 Mo')
+    return text
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 export const utmbParser: RaceParser = {
   id: 'utmb',
   match(url: string): boolean {
@@ -87,14 +134,16 @@ export const utmbParser: RaceParser = {
       return false
     }
   },
-  async parse(): Promise<ExtractedRaceData> {
-    throw new UtmbError('not implemented') // complété en Task 4
+  async parse(url: string): Promise<ExtractedRaceData> {
+    const html = await fetchHtml(url)
+    const points = extractPointsJson(html)
+    const total = points.length
+    const waypoints = points
+      .filter((p, i) => isUsefulPoint(p, i, total))
+      .map((p, i) => mapUtmbPoint(p, i))
+    // validate : trie par km, force depart/arrivee, réindexe order_index.
+    return validateExtractedRaceData({ raceName: null, editionYear: null, waypoints })
   },
 }
 
-// (registerParser ajouté en Task 4, une fois parse() réel.)
-
-// Les symboles ci-dessous sont utilisés dans les Tasks 3-4 ; on les exporte
-// pour éviter les erreurs TS « unused import » sans les supprimer.
-export { validateExtractedRaceData, registerParser, FETCH_TIMEOUT_MS, MAX_BYTES }
-export type { WaypointType }
+registerParser(utmbParser)
