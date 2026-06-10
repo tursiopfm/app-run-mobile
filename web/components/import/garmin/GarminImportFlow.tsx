@@ -74,9 +74,13 @@ export function GarminImportFlow() {
       const params = new URLSearchParams()
       if (dates[0]) params.set('from', dates[0])
       if (dates[dates.length - 1]) params.set('to', dates[dates.length - 1])
-      const existing = (await (
-        await fetch(`/api/garmin-import/existing?${params}`)
-      ).json()) as ExistingActivity[]
+      const exRes = await fetch(`/api/garmin-import/existing?${params}`)
+      if (!exRes.ok) {
+        throw new Error(exRes.status === 401
+          ? 'Session expirée — reconnecte-toi sur le site puis relance l’import'
+          : `Chargement des activités existantes échoué (${exRes.status})`)
+      }
+      const existing = (await exRes.json()) as ExistingActivity[]
       const cls = classifyActivities(mapped, existing)
       setNouvelles(cls.nouvelles)
       setConflits(cls.conflits)
@@ -93,12 +97,31 @@ export function GarminImportFlow() {
     const total = nv.length + cf.length
     setCommitProgress({ done: 0, total })
 
-    // Envois chunkés : chaque requête reste courte (sous le statement_timeout Postgres
-    // ET le timeout de fonction Vercel) et fait avancer la barre de progression.
-    const CHUNK = 200
+    // Chunk par TAILLE de payload : les résumés Garmin sont gros, et la limite de corps
+    // de requête Vercel (plus stricte qu'en dev local) renvoie 413 "Payload Too Large"
+    // si on envoie 200 résumés d'un coup. On borne chaque requête à ~350 Ko.
+    const MAX_REQ_BYTES = 350_000
     const requests: { nouvelles: GarminMapped[]; conflits: ConflictItem[] }[] = []
-    for (let i = 0; i < nv.length; i += CHUNK) requests.push({ nouvelles: nv.slice(i, i + CHUNK), conflits: [] })
-    for (let i = 0; i < cf.length; i += CHUNK) requests.push({ nouvelles: [], conflits: cf.slice(i, i + CHUNK) })
+    let curN: GarminMapped[] = []
+    let curC: ConflictItem[] = []
+    let curBytes = 0
+    const pushReq = () => {
+      if (curN.length || curC.length) {
+        requests.push({ nouvelles: curN, conflits: curC })
+        curN = []; curC = []; curBytes = 0
+      }
+    }
+    for (const m of nv) {
+      const b = JSON.stringify(m).length
+      if (curBytes + b > MAX_REQ_BYTES) pushReq()
+      curN.push(m); curBytes += b
+    }
+    for (const c of cf) {
+      const b = JSON.stringify(c).length
+      if (curBytes + b > MAX_REQ_BYTES) pushReq()
+      curC.push(c); curBytes += b
+    }
+    pushReq()
     if (requests.length === 0) requests.push({ nouvelles: [], conflits: [] })
 
     const agg: ImportReport = {
@@ -113,8 +136,13 @@ export function GarminImportFlow() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(reqBody),
         })
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '')
+          throw new Error(res.status === 413
+            ? 'Lot trop volumineux (413) — réessaie, la taille des lots a été réduite'
+            : (txt.slice(0, 140) || `Commit échoué (${res.status})`))
+        }
         const json = (await res.json()) as ImportReport & { error?: string }
-        if (!res.ok) throw new Error(json.error ?? 'Commit échoué')
         agg.totalParsed += json.totalParsed
         agg.imported += json.imported
         agg.conflictsKeptStrava += json.conflictsKeptStrava
@@ -144,7 +172,13 @@ export function GarminImportFlow() {
       const params = new URLSearchParams()
       if (report?.periodStart) params.set('from', report.periodStart)
       if (report?.periodEnd) params.set('to', report.periodEnd)
-      const cands = (await (await fetch(`/api/garmin-import/needs-streams?${params}`)).json()) as EnrichCandidate[]
+      const nsRes = await fetch(`/api/garmin-import/needs-streams?${params}`)
+      if (!nsRes.ok) {
+        throw new Error(nsRes.status === 401
+          ? 'Session expirée — reconnecte-toi sur le site puis relance l’enrichissement'
+          : `Chargement des activités à enrichir échoué (${nsRes.status})`)
+      }
+      const cands = (await nsRes.json()) as EnrichCandidate[]
       if (!cands.length) {
         setEnrichReport({ enriched: 0, matched: 0, skipped: 0, errors: 0 })
         setState('enriched')
