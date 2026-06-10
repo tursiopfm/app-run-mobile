@@ -628,6 +628,10 @@ export type Dict = {
     raceEditFieldDate: string
     raceEditFieldDistance: string; raceEditFieldDPlus: string
     raceEditFieldType: string
+    raceEditFieldStartTime: string
+    raceEditFieldTargetTime: string
+    raceEditFieldFade: string
+    raceEditAdvanced: string
     raceEditFieldLocation: string; raceEditPhLocation: string
     raceEditFieldNotes: string; raceEditPhNotes: string
     raceEditMainCheckbox: string
@@ -2496,6 +2500,10 @@ export const fr: Dict = {
     raceEditFieldDistance:    'Distance (km)',
     raceEditFieldDPlus:       'D+ (m)',
     raceEditFieldType:        'Type',
+    raceEditFieldStartTime:   'Heure de départ',
+    raceEditFieldTargetTime:  'Temps cible (hh:mm)',
+    raceEditFieldFade:        'Fade 2e moitié',
+    raceEditAdvanced:         'Réglages avancés',
     raceEditFieldLocation:    'Lieu',
     raceEditPhLocation:       'Ex : Larzac, France',
     raceEditFieldNotes:       'Notes',
