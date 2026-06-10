@@ -5,6 +5,7 @@ import { fetchRaceHtml } from '@/lib/race-import/fetch-url'
 import { parsePdfText } from '@/lib/race-import/parse-pdf'
 import { findParserForUrl } from '@/lib/race-import/sources'
 import '@/lib/race-import/sources/livetrail'  // side-effect: registerParser
+import '@/lib/race-import/sources/utmb'        // side-effect: registerParser
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
