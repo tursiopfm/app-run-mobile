@@ -1,4 +1,7 @@
-import { deriveSegment, formatElapsedToClock, parseClockToElapsed } from '@/lib/plan/waypoint-view'
+import {
+  deriveSegment, formatElapsedToClock, parseClockToElapsed,
+  formatElapsedShort, parseElapsedShort, marginToBarrier, formatMargin,
+} from '@/lib/plan/waypoint-view'
 
 describe('deriveSegment', () => {
   const wps = [
@@ -39,5 +42,37 @@ describe('parseClockToElapsed', () => {
   })
   it('saisie invalide → null', () => {
     expect(parseClockToElapsed('20:00', 'xx', 0)).toBeNull()
+  })
+})
+
+describe('formatElapsedShort / parseElapsedShort', () => {
+  it('formate en XhYY', () => {
+    expect(formatElapsedShort(7500)).toBe('2h05')
+    expect(formatElapsedShort(133200)).toBe('37h00')
+  })
+  it('parse XhYY / X:YY / Xh', () => {
+    expect(parseElapsedShort('2h05')).toBe(7500)
+    expect(parseElapsedShort('2:05')).toBe(7500)
+    expect(parseElapsedShort('37h')).toBe(133200)
+    expect(parseElapsedShort('xx')).toBeNull()
+  })
+})
+
+describe('marginToBarrier / formatMargin', () => {
+  it('barrière horloge → battement avant barrière', () => {
+    // départ 20:00, objectif écoulé 2h05 (passage 22:05), barrière 22:30 → +25min
+    expect(marginToBarrier('20:00', 7500, '26-22:30', 'clock_time')).toEqual({ sec: 1500, level: 'warn' })
+  })
+  it('barrière elapsed', () => {
+    // barrière = 3h écoulées, objectif 2h05 → +55min
+    expect(marginToBarrier('20:00', 7500, '03:00', 'elapsed')).toEqual({ sec: 3300, level: 'ok' })
+  })
+  it('pas de barrière → null', () => {
+    expect(marginToBarrier('20:00', 7500, null, null)).toBeNull()
+  })
+  it('formate la marge signée', () => {
+    expect(formatMargin(1500)).toBe('+25min')
+    expect(formatMargin(5400)).toBe('+1h30')
+    expect(formatMargin(-600)).toBe('-10min')
   })
 })

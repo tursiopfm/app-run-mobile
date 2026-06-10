@@ -68,3 +68,55 @@ export function parseClockToElapsed(
   while (elapsed < minElapsedSec - 1) elapsed += 86400
   return elapsed < 0 ? elapsed + 86400 : elapsed
 }
+
+// Temps écoulé (s) → 'XhYY' (ex : 7500 → '2h05', 133200 → '37h00').
+export function formatElapsedShort(sec: number): string {
+  const m = Math.max(0, Math.round(sec / 60))
+  return `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}`
+}
+
+// Saisie 'XhYY' / 'X:YY' / 'Xh' → secondes écoulées. null si invalide.
+export function parseElapsedShort(input: string): number | null {
+  const t = input.trim()
+  const m = /^(\d{1,3})\s*[h:]\s*(\d{1,2})$/.exec(t)
+  if (m) return parseInt(m[1], 10) * 3600 + parseInt(m[2], 10) * 60
+  const m2 = /^(\d{1,3})\s*h?$/.exec(t)
+  if (m2) return parseInt(m2[1], 10) * 3600
+  return null
+}
+
+export interface Margin { sec: number; level: 'ok' | 'warn' | 'bad' }
+
+// Battement entre l'heure de passage visée (objElapsedSec) et la barrière.
+// cutoffKind='elapsed' → barrière = temps écoulé ; sinon = heure d'horloge
+// (convertie via le départ). Retourne null si barrière absente/illisible ou
+// si une barrière horloge est demandée sans heure de départ.
+export function marginToBarrier(
+  startTime: string | undefined,
+  objElapsedSec: number,
+  cutoffRaw: string | null,
+  cutoffKind: 'clock_time' | 'elapsed' | 'unknown' | null,
+): Margin | null {
+  if (!cutoffRaw) return null
+  const m = /(\d{1,2})[:h](\d{2})/.exec(cutoffRaw)
+  if (!m) return null
+  let barrierElapsed: number | null
+  if (cutoffKind === 'elapsed') {
+    barrierElapsed = parseInt(m[1], 10) * 3600 + parseInt(m[2], 10) * 60
+  } else {
+    if (!startTime) return null
+    barrierElapsed = parseClockToElapsed(startTime, `${m[1]}:${m[2]}`, objElapsedSec)
+  }
+  if (barrierElapsed == null) return null
+  const sec = barrierElapsed - objElapsedSec
+  return { sec, level: sec >= 2700 ? 'ok' : sec >= 0 ? 'warn' : 'bad' }
+}
+
+// Marge (s) → '+25min' / '+1h30' / '-10min'.
+export function formatMargin(sec: number): string {
+  const sign = sec < 0 ? '-' : '+'
+  const a = Math.abs(Math.round(sec / 60))
+  const h = Math.floor(a / 60)
+  const mm = a % 60
+  return h === 0 ? `${sign}${mm}min` : `${sign}${h}h${mm > 0 ? String(mm).padStart(2, '0') : ''}`
+}
