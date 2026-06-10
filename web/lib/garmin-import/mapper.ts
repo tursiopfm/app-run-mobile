@@ -10,6 +10,26 @@ function sportKey(t: GarminSummaryActivity['activityType']): string {
   return typeof t === 'string' ? t : (t.typeKey ?? 'other')
 }
 
+/**
+ * Garmin activityType (clé native, ex 'trail_running') → type canonique de l'app
+ * (style Strava, ex 'TrailRun'). Indispensable : les blocs Cockpit/Charge par sport
+ * filtrent via SPORT_TYPE_MAP (['Run','TrailRun'], ['Ride','VirtualRide'], ['Swim']) ;
+ * sans normalisation, les activités Garmin (sport_type minuscule) sont exclues de ces
+ * vues. Substring-based pour absorber les variantes Garmin inconnues.
+ */
+export function garminSportToCanonical(typeKey: string): string {
+  const k = typeKey.toLowerCase()
+  if (k.includes('trail')) return 'TrailRun'
+  if (k.includes('run')) return 'Run'
+  if (k.includes('hik')) return 'Hike'
+  if (k.includes('walk')) return 'Walk'
+  if (k.includes('virtual') && (k.includes('rid') || k.includes('cycl') || k.includes('bik'))) return 'VirtualRide'
+  if (k.includes('indoor') && (k.includes('cycl') || k.includes('bik'))) return 'VirtualRide'
+  if (k.includes('cycl') || k.includes('bik')) return 'Ride'
+  if (k.includes('swim')) return 'Swim'
+  return typeKey
+}
+
 /** Sanity-check vitesse : avgSpeed (présumé m/s) doit être ≈ distance/durée à ±30 %. */
 function speedWarning(a: GarminSummaryActivity, distanceM: number, movingSec: number, id: string): MapWarning | null {
   if (a.avgSpeed == null || distanceM <= 0 || movingSec <= 0) return null
@@ -41,7 +61,7 @@ export function garminSummaryToMapped(userId: string, a: GarminSummaryActivity):
     userId,
     provider: 'garmin',
     providerActivityId: id,
-    sportType: sportKey(a.activityType),
+    sportType: garminSportToCanonical(sportKey(a.activityType)),
     name: a.activityName ?? 'Activité Garmin',
     startTime,
     durationSec,

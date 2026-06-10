@@ -1,5 +1,5 @@
 // web/__tests__/lib/garmin-import/mapper.test.ts
-import { garminSummaryToMapped } from '@/lib/garmin-import/mapper'
+import { garminSummaryToMapped, garminSportToCanonical } from '@/lib/garmin-import/mapper'
 import type { GarminSummaryActivity } from '@/lib/garmin-import/types'
 
 const base: GarminSummaryActivity = {
@@ -22,7 +22,7 @@ test('convertit les unités Garmin (cm→m, ms→s, epoch→ISO) et mappe le spo
   const { normalized, elevationLossM } = garminSummaryToMapped('user-1', base).result!
   expect(normalized.provider).toBe('garmin')
   expect(normalized.providerActivityId).toBe('123456789')
-  expect(normalized.sportType).toBe('trail_running')
+  expect(normalized.sportType).toBe('TrailRun')
   expect(normalized.distanceM).toBe(10500)
   expect(normalized.durationSec).toBe(3600)
   expect(normalized.movingTimeSec).toBe(3500)
@@ -34,9 +34,25 @@ test('convertit les unités Garmin (cm→m, ms→s, epoch→ISO) et mappe le spo
   expect(normalized.startTime).toBe(new Date(1_600_007_200_000).toISOString())
 })
 
-test('activityType objet { typeKey } supporté', () => {
+test('activityType objet { typeKey } supporté + canonicalisé', () => {
   const { normalized } = garminSummaryToMapped('u', { ...base, activityType: { typeKey: 'running' } }).result!
-  expect(normalized.sportType).toBe('running')
+  expect(normalized.sportType).toBe('Run')
+})
+
+test('garminSportToCanonical : clés Garmin → types canoniques de l’app', () => {
+  expect(garminSportToCanonical('running')).toBe('Run')
+  expect(garminSportToCanonical('treadmill_running')).toBe('Run')
+  expect(garminSportToCanonical('trail_running')).toBe('TrailRun')
+  expect(garminSportToCanonical('cycling')).toBe('Ride')
+  expect(garminSportToCanonical('mountain_biking')).toBe('Ride')
+  expect(garminSportToCanonical('indoor_cycling')).toBe('VirtualRide')
+  expect(garminSportToCanonical('virtual_ride')).toBe('VirtualRide')
+  expect(garminSportToCanonical('lap_swimming')).toBe('Swim')
+  expect(garminSportToCanonical('open_water_swimming')).toBe('Swim')
+  expect(garminSportToCanonical('hiking')).toBe('Hike')
+  expect(garminSportToCanonical('walking')).toBe('Walk')
+  // type inconnu → passthrough (apparaît au moins dans "Tout")
+  expect(garminSportToCanonical('strength_training')).toBe('strength_training')
 })
 
 test('sans activityId → erreur, pas de crash', () => {

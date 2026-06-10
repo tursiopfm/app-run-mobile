@@ -7,6 +7,7 @@ export type StreamSet = {
   velocity?:  number[]   // m/s (velocity_smooth)
   distance?:  number[]   // m cumulés — persisté dans le payload brut, pas (encore) consommé par les métriques
   grade?:     number[]   // % (grade_smooth)
+  latlng?:    [number, number][]  // [lat, lng] degrés — présent sur les streams FIT Garmin (carte) ; absent côté Strava
 }
 
 // D- : somme des deltas négatifs d'altitude, avec hystérésis anti-jitter GPS.
