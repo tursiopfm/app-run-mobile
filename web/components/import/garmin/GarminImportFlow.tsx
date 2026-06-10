@@ -94,12 +94,17 @@ export function GarminImportFlow() {
 
   async function commit(nv: GarminMapped[], cf: ConflictItem[]) {
     setState('committing')
+    // « Garder Strava » ne produit AUCUNE écriture → on ne les envoie pas au serveur
+    // (en ré-import, ce sont des milliers de conflits → 413/500 inutiles). On ne POSTe
+    // que ce qui s'écrit : les nouvelles + les « remplacer par Garmin ».
+    const replacements = cf.filter(c => c.decision === 'replace_garmin')
+    const keptStrava = cf.length - replacements.length
     const total = nv.length + cf.length
-    setCommitProgress({ done: 0, total })
+    let done = keptStrava
+    setCommitProgress({ done, total })
 
     // Chunk par TAILLE de payload : les résumés Garmin sont gros, et la limite de corps
-    // de requête Vercel (plus stricte qu'en dev local) renvoie 413 "Payload Too Large"
-    // si on envoie 200 résumés d'un coup. On borne chaque requête à ~350 Ko.
+    // de requête Vercel renvoie 413 "Payload Too Large" si on envoie trop d'un coup.
     const MAX_REQ_BYTES = 350_000
     const requests: { nouvelles: GarminMapped[]; conflits: ConflictItem[] }[] = []
     let curN: GarminMapped[] = []
@@ -116,19 +121,17 @@ export function GarminImportFlow() {
       if (curBytes + b > MAX_REQ_BYTES) pushReq()
       curN.push(m); curBytes += b
     }
-    for (const c of cf) {
+    for (const c of replacements) {
       const b = JSON.stringify(c).length
       if (curBytes + b > MAX_REQ_BYTES) pushReq()
       curC.push(c); curBytes += b
     }
     pushReq()
-    if (requests.length === 0) requests.push({ nouvelles: [], conflits: [] })
 
     const agg: ImportReport = {
-      totalParsed: 0, imported: 0, conflictsKeptStrava: 0, conflictsReplaced: 0,
+      totalParsed: 0, imported: 0, conflictsKeptStrava: keptStrava, conflictsReplaced: 0,
       errors: 0, warnings: [], periodStart: null, periodEnd: null,
     }
-    let done = 0
     try {
       for (const reqBody of requests) {
         const res = await fetch('/api/garmin-import/commit', {
@@ -145,7 +148,6 @@ export function GarminImportFlow() {
         const json = (await res.json()) as ImportReport & { error?: string }
         agg.totalParsed += json.totalParsed
         agg.imported += json.imported
-        agg.conflictsKeptStrava += json.conflictsKeptStrava
         agg.conflictsReplaced += json.conflictsReplaced
         agg.errors += json.errors
         if (json.periodStart && (!agg.periodStart || json.periodStart < agg.periodStart)) agg.periodStart = json.periodStart
@@ -285,12 +287,16 @@ export function GarminImportFlow() {
       pool.terminate()
       setEnrichProgress({ matched, total: cands.length, scanned })
       await flush()
-      // Recalcul CES unique (serveur, corps vide → pas de limite de taille).
-      await fetch('/api/garmin-import/streams?recalc=1', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uploads: [] }),
-      })
+      // Recalcul CES unique (best-effort) : sur un gros historique il peut timeouter/OOM
+      // côté serveur — maps/splits/streams sont déjà écrits, on ne fait pas échouer
+      // l'enrichissement pour ça. Le CES reste sur sa valeur Phase 1 si le recalc rate.
+      try {
+        await fetch('/api/garmin-import/streams?recalc=1', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uploads: [] }),
+        })
+      } catch { /* recalc best-effort */ }
       setEnrichReport({ enriched: matched, matched, skipped: cands.length - matched, errors })
       setState('enriched')
     } catch (e) {
