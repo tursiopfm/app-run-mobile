@@ -84,8 +84,12 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
     if (!canSave) return
     setSaving(true)
     try {
+      // Parse le champ « Temps cible » AU MOMENT du save (pas via onBlur, qui
+      // peut ne pas avoir commité son setState avant le clic Enregistrer).
+      const tSec = parseElapsedShort(rawTarget)
       const toSave: Race = {
         ...draft,
+        targetDurationMin: tSec != null ? Math.round(tSec / 60) : undefined,
         id: draft.id || (typeof crypto !== 'undefined' && 'randomUUID' in crypto
           ? crypto.randomUUID()
           : `race-${Date.now()}`),
