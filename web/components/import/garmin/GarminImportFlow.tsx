@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Upload, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react'
+import { Upload, CheckCircle2, AlertTriangle, Loader2, Sparkles } from 'lucide-react'
 import { extractSummaries } from '@/lib/garmin-import/unzip'
 import { garminSummaryToMapped } from '@/lib/garmin-import/mapper'
 import { classifyActivities } from '@/lib/garmin-import/dedup'
@@ -14,8 +14,14 @@ import type {
   MapWarning,
 } from '@/lib/garmin-import/types'
 import { ConflictResolution } from './ConflictResolution'
+import { forEachFit } from '@/lib/garmin-import/nested-unzip'
+import { buildActivityIndex, matchFit } from '@/lib/garmin-import/fit-match'
+import { createFitPool } from '@/lib/garmin-import/fit-pool'
+import { packStreamsClient } from '@/lib/garmin-import/stream-pack'
+import type { EnrichCandidate, StreamUpload, EnrichReport } from '@/lib/garmin-import/enrich-types'
+import { EnrichmentStep } from './EnrichmentStep'
 
-type State = 'intro' | 'parsing' | 'resolve' | 'committing' | 'done' | 'error'
+type State = 'intro' | 'parsing' | 'resolve' | 'committing' | 'done' | 'enriching' | 'enriched' | 'error'
 
 export function GarminImportFlow() {
   const router = useRouter()
@@ -29,9 +35,12 @@ export function GarminImportFlow() {
   const [errorMsg, setErrorMsg] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const fileRef = useRef<File | null>(null)
+  const [enrichProgress, setEnrichProgress] = useState({ matched: 0, total: 0, scanned: 0 })
+  const [enrichReport, setEnrichReport] = useState<EnrichReport | null>(null)
 
   useEffect(() => {
-    const busy = state === 'parsing' || state === 'committing'
+    const busy = state === 'parsing' || state === 'committing' || state === 'enriching'
     if (!busy) return
     const h = (e: BeforeUnloadEvent) => {
       e.preventDefault()
@@ -42,6 +51,7 @@ export function GarminImportFlow() {
   }, [state])
 
   async function onFile(file: File) {
+    fileRef.current = file
     setState('parsing')
     setErrorMsg('')
     try {
@@ -122,6 +132,82 @@ export function GarminImportFlow() {
     }
   }
 
+  async function enrich() {
+    const file = fileRef.current
+    if (!file) return
+    setState('enriching')
+    setErrorMsg('')
+    setEnrichProgress({ matched: 0, total: 0, scanned: 0 })
+    try {
+      const params = new URLSearchParams()
+      if (report?.periodStart) params.set('from', report.periodStart)
+      if (report?.periodEnd) params.set('to', report.periodEnd)
+      const cands = (await (await fetch(`/api/garmin-import/needs-streams?${params}`)).json()) as EnrichCandidate[]
+      if (!cands.length) {
+        setEnrichReport({ enriched: 0, matched: 0, skipped: 0, errors: 0 })
+        setState('enriched')
+        return
+      }
+      const index = buildActivityIndex(cands)
+      const outer = new Uint8Array(await file.arrayBuffer())
+      const pool = createFitPool()
+
+      let uploads: StreamUpload[] = []
+      let matched = 0
+      let scanned = 0
+      let errors = 0
+      let nextId = 0
+      const inflight = new Set<Promise<void>>()
+      const MAX_INFLIGHT = 4
+
+      const flush = async (final: boolean) => {
+        const batch = uploads
+        uploads = []
+        if (batch.length === 0 && !final) return
+        const url = '/api/garmin-import/streams' + (final ? '?recalc=1' : '')
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uploads: batch }),
+        })
+        if (!res.ok) {
+          const j = (await res.json().catch(() => ({}))) as { error?: string }
+          throw new Error(j.error ?? 'Écriture des streams échouée')
+        }
+      }
+
+      await forEachFit(outer, async (_name, bytes) => {
+        const ab = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
+        const id = String(nextId++)
+        const p: Promise<void> = pool.decode(id, ab).then(res => {
+          scanned++
+          if (res.error) {
+            errors++
+          } else if (res.streams) {
+            const m = matchFit({ activityId: null, startTimeMs: res.startTimeMs ?? null }, index)
+            if (m) {
+              uploads.push({ activityId: m.id, streamsGz: packStreamsClient(res.streams), pointCount: res.pointCount ?? 0 })
+              matched++
+            }
+          }
+          setEnrichProgress({ matched, total: cands.length, scanned })
+        })
+        const wrapped = p.finally(() => { inflight.delete(wrapped) })
+        inflight.add(wrapped)
+        if (inflight.size >= MAX_INFLIGHT) await Promise.race(inflight)
+        if (uploads.length >= 50) await flush(false)
+      })
+      await Promise.all(inflight)
+      pool.terminate()
+      await flush(true)
+      setEnrichReport({ enriched: matched, matched, skipped: cands.length - matched, errors })
+      setState('enriched')
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : "Échec de l'enrichissement")
+      setState('error')
+    }
+  }
+
   if (state === 'parsing') {
     return (
       <div className="max-w-md mx-auto px-4 py-6 space-y-4">
@@ -180,12 +266,43 @@ export function GarminImportFlow() {
             </p>
           )}
         </div>
+        {fileRef.current && (
+          <button
+            type="button"
+            onClick={enrich}
+            className="flex items-center justify-center gap-[6px] w-full px-3 py-[7px] rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption font-semibold hover:bg-trail-border/40 transition-colors"
+          >
+            <Sparkles size={12} />
+            Enrichir avec les données détaillées (FC, découplage…)
+          </button>
+        )}
         <Link
           href="/dashboard"
           className="flex items-center justify-center gap-[6px] w-full px-3 py-[7px] rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption font-semibold hover:bg-trail-border/40 transition-colors"
         >
           Voir mon Cockpit
         </Link>
+      </div>
+    )
+  }
+
+  if (state === 'enriching') {
+    return (
+      <div className="max-w-md mx-auto px-4 py-6 space-y-4">
+        <h1 className="text-lg font-semibold text-trail-text">Importer l&apos;historique Garmin</h1>
+        <ProgressBar done={enrichProgress.matched} total={enrichProgress.total} label="Enrichissement détaillé…" />
+        <p className="text-caption text-trail-muted text-center tabular-nums">
+          {enrichProgress.scanned} fichier{enrichProgress.scanned !== 1 ? 's' : ''} analysé{enrichProgress.scanned !== 1 ? 's' : ''}
+        </p>
+      </div>
+    )
+  }
+
+  if (state === 'enriched' && enrichReport) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-6 space-y-4">
+        <h1 className="text-lg font-semibold text-trail-text">Importer l&apos;historique Garmin</h1>
+        <EnrichmentStep report={enrichReport} />
       </div>
     )
   }
