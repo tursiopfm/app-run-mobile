@@ -105,9 +105,9 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .caption{width:120mm;max-width:100%;color:var(--trail-muted);font-size:11px;margin-bottom:16px;line-height:1.4;}
         .pdfroot .cut{padding:6mm;border:1px dashed var(--trail-border);border-radius:6px;background:var(--trail-surface);}
         .pdfroot .scis{font-size:10px;color:var(--trail-muted);margin-bottom:4px;display:block;}
-        /* wrap = bounding box de la carte TOURNÉE (dimensions inversées) ; centre la carte pivotée */
-        .pdfroot .cardwrap{width:65mm;height:120mm;display:flex;align-items:center;justify-content:center;}
-        .pdfroot .card{width:120mm;height:65mm;background:#fff;color:var(--ink);border-radius:2.5mm;display:flex;flex-direction:column;overflow:hidden;padding:1.1mm 2mm;box-shadow:0 18px 40px -16px rgba(0,0,0,.6);transform:rotate(90deg);}
+        /* wrap = bounding box de la carte TOURNÉE (65×120) ; carte centrée en ABSOLU pour garder 120×65 (sinon le flex la rétrécit → carrée) */
+        .pdfroot .cardwrap{width:65mm;height:120mm;position:relative;}
+        .pdfroot .card{width:120mm;height:65mm;background:#fff;color:var(--ink);border-radius:2.5mm;display:flex;flex-direction:column;overflow:hidden;padding:1.1mm 2mm;box-shadow:0 18px 40px -16px rgba(0,0,0,.6);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(90deg);}
         .pdfroot .hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.4px solid var(--line-strong);padding-bottom:1.5px;flex:none;}
         .pdfroot .race{font-family:var(--d);font-size:9px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;line-height:1.1;}
         .pdfroot .stats{font-family:var(--d);font-size:5.8px;color:var(--ink-soft);font-weight:600;white-space:nowrap;}
