@@ -107,7 +107,7 @@ export function WaypointsTable({
         }
         .wtbl .legend-mini{font-size:9.5px;color:var(--faint);padding:0 3px 8px;line-height:1.4;}
         .wtbl .legend-mini b{color:var(--blue);font-weight:600;}
-        .wtbl .gA{display:grid;grid-template-columns:minmax(0,1fr) 52px 48px 54px 64px 62px;column-gap:6px;align-items:center;}
+        .wtbl .gA{display:grid;grid-template-columns:minmax(0,1fr) 50px 46px 46px 58px 58px;column-gap:9px;align-items:center;}
         .wtbl .gA.head{padding:2px 3px 7px;border-bottom:1px solid var(--border2);}
         .wtbl .gA.head span{font-family:var(--d);font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--faint);}
         .wtbl .gA.head .r{text-align:right;} .wtbl .gA.head .c{text-align:center;}
@@ -115,15 +115,14 @@ export function WaypointsTable({
         .wtbl .c-point{display:flex;align-items:center;gap:6px;min-width:0;}
         .wtbl .dot{width:7px;height:7px;border-radius:50%;flex:none;}
         .wtbl .ic{width:13px;height:13px;display:inline-block;flex:none;}
-        .wtbl .nm{font-family:var(--d);font-weight:600;font-size:12px;background:transparent;border:0;outline:none;color:var(--text);width:100%;min-width:0;padding:0;}
+        .wtbl .nm{font-family:var(--d);font-weight:600;font-size:12px;color:var(--text);min-width:0;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
         .wtbl .num{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;min-width:0;}
         .wtbl .big{font-family:var(--d);font-weight:700;font-size:12.5px;background:transparent;border:0;outline:none;color:var(--text);text-align:right;width:100%;padding:0;}
         .wtbl .big.muted{color:var(--muted);}
         .wtbl .sub{font-size:9px;font-weight:600;}
         .wtbl .sub.inter{color:var(--blue);} .wtbl .sub.dp{color:var(--faint);}
-        .wtbl .c-bh{display:flex;min-width:0;}
-        .wtbl .hr{font-family:var(--d);font-size:11px;font-weight:500;background:transparent;border:0;outline:none;color:var(--text);width:100%;padding:0;}
-        .wtbl .hr::placeholder{color:var(--faint);}
+        .wtbl .c-bh{display:flex;justify-content:flex-end;min-width:0;}
+        .wtbl .hr{font-family:var(--d);font-size:11px;font-weight:500;color:var(--text);text-align:right;white-space:nowrap;}
         .wtbl .rav-set{display:flex;gap:3px;justify-content:center;}
         .wtbl .rv{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:6px;cursor:pointer;color:var(--faint);border:1px solid transparent;opacity:.35;background:transparent;padding:0;}
         .wtbl .rv .ic{width:12px;height:12px;}
@@ -144,7 +143,7 @@ export function WaypointsTable({
 
       <div className="gA head">
         <span>Point</span><span className="r">Dist</span><span className="r">D+</span>
-        <span>BH</span><span className="c">Ravito</span><span className="c">Obj</span>
+        <span className="r">BH</span><span className="c">Ravito</span><span className="c">Obj</span>
       </div>
 
       {waypoints.map((w, i) => {
@@ -168,8 +167,7 @@ export function WaypointsTable({
             <div className="c-point">
               <span className="dot" style={{ background: lead.dot }} />
               {lead.icon && <span className="ic" style={{ color: lead.color! }}><Icon name={lead.icon} /></span>}
-              <input className="nm" type="text" value={w.name} disabled={readOnly}
-                onChange={(e) => update(i, { name: e.target.value })} />
+              <span className="nm">{w.name}</span>
             </div>
 
             {/* Dist : km cumulé + inter */}
