@@ -1,0 +1,80 @@
+// Config des colonnes de l'export PDF (carte de course) : choix + ordre,
+// personnalisables par l'utilisateur (cf. PrintColumnsDialog) et mémorisés en
+// localStorage. Le rendu de la cellule vit dans la page print (switch sur key).
+
+export type PrintColKey =
+  | 'tk' | 'point' | 'km' | 'cum' | 'inter' | 'dplus' | 'dmoins' | 'rav' | 'obj' | 'bh'
+
+export interface PrintColDef {
+  key: PrintColKey
+  label: string      // libellé dans la fenêtre de personnalisation
+  th: string         // en-tête dans la carte
+  weight: number     // largeur relative (répartie auto)
+  align: 'l' | 'r'
+  fixed?: boolean    // non masquable (ex : Point)
+}
+
+export const PRINT_COL_DEFS: Record<PrintColKey, PrintColDef> = {
+  tk:     { key: 'tk',     label: 'Case à cocher',     th: '',         weight: 0.5,  align: 'l' },
+  point:  { key: 'point',  label: 'Point',             th: 'Point',    weight: 3.0,  align: 'l', fixed: true },
+  km:     { key: 'km',     label: 'Km (cumulé)',       th: 'Km',       weight: 1.0,  align: 'r' },
+  cum:    { key: 'cum',    label: 'Σ D+ (cumulé)',     th: 'ΣD+',      weight: 0.95, align: 'r' },
+  inter:  { key: 'inter',  label: 'Inter (tronçon)',   th: 'Inter',    weight: 1.0,  align: 'r' },
+  dplus:  { key: 'dplus',  label: '▲ D+ (tronçon)',    th: '▲D+',      weight: 1.0,  align: 'r' },
+  dmoins: { key: 'dmoins', label: '▼ D− (tronçon)',    th: '▼D−',      weight: 1.0,  align: 'r' },
+  rav:    { key: 'rav',    label: 'Ravito',            th: 'Ravito',   weight: 1.2,  align: 'l' },
+  obj:    { key: 'obj',    label: 'Objectif',          th: 'Objectif', weight: 1.6,  align: 'r' },
+  bh:     { key: 'bh',     label: 'Barrière',          th: 'Barrière', weight: 1.5,  align: 'r' },
+}
+
+export const DEFAULT_PRINT_ORDER: PrintColKey[] =
+  ['tk', 'point', 'km', 'cum', 'inter', 'dplus', 'dmoins', 'rav', 'obj', 'bh']
+
+export interface PrintColConfig {
+  order: PrintColKey[]   // les 10 clés, réordonnées
+  hidden: PrintColKey[]  // sous-ensemble masqué
+}
+
+export const DEFAULT_PRINT_CONFIG: PrintColConfig = { order: DEFAULT_PRINT_ORDER, hidden: [] }
+
+const LS_KEY = 'tc:plan:print-cols:v1'
+
+// Normalise : garantit que `order` contient exactement les 10 clés connues une
+// seule fois (tolère un LS corrompu / une version de colonnes qui évolue).
+function sanitize(cfg: Partial<PrintColConfig>): PrintColConfig {
+  const known = new Set(DEFAULT_PRINT_ORDER)
+  const order = (cfg.order ?? []).filter((k): k is PrintColKey => known.has(k as PrintColKey))
+  for (const k of DEFAULT_PRINT_ORDER) if (!order.includes(k)) order.push(k)
+  const hidden = (cfg.hidden ?? [])
+    .filter((k): k is PrintColKey => known.has(k as PrintColKey) && !PRINT_COL_DEFS[k].fixed)
+  return { order, hidden }
+}
+
+export function loadPrintColConfig(): PrintColConfig {
+  if (typeof window === 'undefined') return DEFAULT_PRINT_CONFIG
+  try {
+    const raw = window.localStorage.getItem(LS_KEY)
+    if (!raw) return DEFAULT_PRINT_CONFIG
+    return sanitize(JSON.parse(raw) as Partial<PrintColConfig>)
+  } catch {
+    return DEFAULT_PRINT_CONFIG
+  }
+}
+
+export function savePrintColConfig(cfg: PrintColConfig): void {
+  if (typeof window === 'undefined') return
+  try { window.localStorage.setItem(LS_KEY, JSON.stringify(cfg)) } catch { /* quota / privé */ }
+}
+
+// Colonnes visibles, dans l'ordre choisi.
+export function visiblePrintCols(cfg: PrintColConfig): PrintColKey[] {
+  return cfg.order.filter((k) => !cfg.hidden.includes(k))
+}
+
+// Largeurs % réparties au prorata des poids des colonnes visibles.
+export function printColWidths(keys: PrintColKey[]): Record<PrintColKey, number> {
+  const sum = keys.reduce((s, k) => s + PRINT_COL_DEFS[k].weight, 0) || 1
+  const out = {} as Record<PrintColKey, number>
+  for (const k of keys) out[k] = (PRINT_COL_DEFS[k].weight / sum) * 100
+  return out
+}
