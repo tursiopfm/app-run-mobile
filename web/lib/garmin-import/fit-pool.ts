@@ -5,6 +5,7 @@ export type FitResult = {
   streams?: StreamSet
   startTimeMs?: number | null
   pointCount?: number
+  isActivity?: boolean
   error?: string
 }
 

@@ -182,9 +182,12 @@ export function GarminImportFlow() {
         const id = String(nextId++)
         const p: Promise<void> = pool.decode(id, ab).then(res => {
           scanned++
+          // Ne matcher QUE les vrais fichiers d'activité : les fichiers de monitoring
+          // (très nombreux, sans GPS) provoqueraient de faux matches qui écraseraient
+          // streams + carte des activités.
           if (res.error) {
             errors++
-          } else if (res.streams) {
+          } else if (res.isActivity && res.streams) {
             const m = matchFit({ activityId: null, startTimeMs: res.startTimeMs ?? null }, index)
             if (m) {
               const splits = streamsToSplits(res.streams)
@@ -198,7 +201,9 @@ export function GarminImportFlow() {
               matched++
             }
           }
-          setEnrichProgress({ matched, total: cands.length, scanned })
+          // Throttle : un export peut contenir des dizaines de milliers de fichiers ;
+          // mettre à jour l'état React à chaque fichier fige l'UI.
+          if (scanned % 250 === 0) setEnrichProgress({ matched, total: cands.length, scanned })
         })
         const wrapped = p.finally(() => { inflight.delete(wrapped) })
         inflight.add(wrapped)
@@ -207,6 +212,7 @@ export function GarminImportFlow() {
       })
       await Promise.all(inflight)
       pool.terminate()
+      setEnrichProgress({ matched, total: cands.length, scanned })
       await flush(true)
       setEnrichReport({ enriched: matched, matched, skipped: cands.length - matched, errors })
       setState('enriched')

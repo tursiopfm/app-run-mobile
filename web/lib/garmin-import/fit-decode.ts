@@ -6,11 +6,18 @@ import type { FitDecoded } from './enrich-types'
 export function decodeFitToStreams(bytes: Uint8Array): FitDecoded {
   const decoder = new Decoder(Stream.fromByteArray(bytes))
   const { messages } = decoder.read({ convertDateTimesToDates: true, convertTypesToStrings: true })
+  const fileId = (messages.fileIdMesgs ?? [])[0] as { timeCreated?: Date; type?: string } | undefined
+  const isActivity = fileId?.type === 'activity'
+  // Ne pas construire les streams pour les fichiers non-activité (monitoring quotidien,
+  // très nombreux) : on les écarte du matching, inutile de payer recordsToStreamSet.
+  if (!isActivity) {
+    const startTimeMs = fileId?.timeCreated instanceof Date ? fileId.timeCreated.getTime() : null
+    return { streams: {}, startTimeMs, activityId: null, isActivity: false }
+  }
   const records = (messages.recordMesgs ?? []) as FitRecord[]
-  const fileId = (messages.fileIdMesgs ?? [])[0] as { timeCreated?: Date } | undefined
   const startTimeMs =
     records[0]?.timestamp instanceof Date ? records[0].timestamp.getTime()
     : (fileId?.timeCreated instanceof Date ? fileId.timeCreated.getTime() : null)
   const streams = downsample5s(recordsToStreamSet(records))
-  return { streams, startTimeMs, activityId: null }
+  return { streams, startTimeMs, activityId: null, isActivity: true }
 }
