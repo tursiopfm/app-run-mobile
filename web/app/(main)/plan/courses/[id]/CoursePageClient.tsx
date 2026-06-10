@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Race } from '@/types/plan'
 import { getRaces, deleteRace, peekRaces } from '@/lib/plan/storage'
@@ -33,6 +33,22 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   const [deleting, setDeleting] = useState(false)
   const [waypoints, setWaypoints] = useState<RaceWaypoint[]>([])
   const [importOpen, setImportOpen] = useState(false)
+
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const handleWaypointsChange = useCallback(
+    (next: Array<Omit<RaceWaypoint, 'id' | 'raceId'>>) => {
+      setWaypoints(next.map((w, i) => ({ ...w, id: waypoints[i]?.id ?? `tmp-${i}`, raceId })))
+      if (saveTimer.current) clearTimeout(saveTimer.current)
+      saveTimer.current = setTimeout(() => {
+        void fetch(`/api/races/${raceId}/waypoints`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ waypoints: next }),
+        })
+      }, 600)
+    },
+    [raceId, waypoints],
+  )
 
   const reload = useCallback(async () => {
     const list = await getRaces()
@@ -127,27 +143,29 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
 
       <Section title="Tableau de course">
         {waypoints.length === 0 ? (
-          <button
-            type="button"
-            onClick={() => setImportOpen(true)}
-            className="text-caption text-trail-primary underline"
-          >
+          <button type="button" onClick={() => setImportOpen(true)}
+            className="text-caption text-trail-primary underline">
             Importer le tableau (URL / PDF / Image / Texte)
           </button>
         ) : (
           <>
             <WaypointsTable
               waypoints={waypoints.map(({ id: _id, raceId: _rid, ...rest }) => rest)}
-              onChange={() => { /* phase 1 : édition uniquement via re-import */ }}
-              readOnly
+              onChange={handleWaypointsChange}
+              startTime={race.startTime}
+              targetDurationMin={race.targetDurationMin}
+              pacingFade={race.pacingFade}
             />
-            <button
-              type="button"
-              onClick={() => setImportOpen(true)}
-              className="mt-2 text-caption text-trail-primary underline"
-            >
-              Ré-importer
-            </button>
+            <div className="mt-2 flex items-center gap-4">
+              <a href={`/plan/courses/${raceId}/print`} target="_blank" rel="noopener noreferrer"
+                className="text-caption text-trail-primary underline">
+                Exporter en PDF
+              </a>
+              <button type="button" onClick={() => setImportOpen(true)}
+                className="text-caption text-trail-muted underline">
+                Ré-importer
+              </button>
+            </div>
           </>
         )}
       </Section>
