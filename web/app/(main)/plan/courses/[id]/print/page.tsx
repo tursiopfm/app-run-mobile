@@ -35,12 +35,8 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
     })()
   }, [params.id])
 
-  useEffect(() => {
-    if (ready && wps.length > 0) {
-      const t = setTimeout(() => window.print(), 500)
-      return () => clearTimeout(t)
-    }
-  }, [ready, wps.length])
+  // Pas d'impression auto : l'utilisateur personnalise les colonnes puis clique
+  // « Imprimer / PDF » quand il est prêt.
 
   const updateCfg = (next: PrintColConfig) => { setCfg(next); savePrintColConfig(next) }
 

@@ -149,6 +149,25 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
           </button>
         ) : (
           <>
+            <div className="mb-3 flex items-center justify-between gap-3 rounded-[10px] bg-trail-surface border border-trail-border px-3 py-2">
+              <div className="text-caption min-w-0">
+                {race.startTime && race.targetDurationMin != null ? (
+                  <span className="text-trail-text">
+                    ⏱ Objectif <b>{Math.floor(race.targetDurationMin / 60)}h{String(race.targetDurationMin % 60).padStart(2, '0')}</b>
+                    <span className="text-trail-muted"> · Départ {race.startTime}</span>
+                  </span>
+                ) : (
+                  <span className="text-trail-muted">Objectif non défini — renseigne départ + temps cible pour calculer les heures de passage.</span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditorOpen(true)}
+                className="text-caption text-trail-primary font-semibold whitespace-nowrap underline"
+              >
+                {race.startTime && race.targetDurationMin != null ? 'Modifier' : "Définir l'objectif"}
+              </button>
+            </div>
             <WaypointsTable
               waypoints={waypoints.map(({ id: _id, raceId: _rid, ...rest }) => rest)}
               onChange={handleWaypointsChange}
