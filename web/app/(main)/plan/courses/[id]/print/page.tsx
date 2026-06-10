@@ -83,9 +83,11 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
       case 'dmoins': return <span className="sv dm">{seg.dMoinsSeg != null ? <><span className="ar">▼</span>{seg.dMoinsSeg}</> : dash}</span>
       case 'rav':    return (
         <span className="rav">
-          {w.supplies.includes('solid') && <span className="rb">S</span>}
           {w.supplies.includes('liquid') && <span className="rb">L</span>}
+          {w.supplies.includes('solid') && <span className="rb">S</span>}
+          {w.supplies.includes('hot') && <span className="rb">C</span>}
           {w.supplies.includes('base_vie') && <span className="rb bv">BV</span>}
+          {w.supplies.includes('assistance') && <span className="rb">A</span>}
         </span>
       )
       case 'obj':    return <span className="obj">{objLabel ?? dash}</span>
@@ -230,9 +232,11 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           <div className="legend">
             <span className="k">Inter · ▲D+ · ▼D− = tronçon (depuis pt préc.)</span>
             <span className="k">ΣD+ = cumulé</span>
-            <span className="k"><span className="rb">S</span>solide</span>
             <span className="k"><span className="rb">L</span>liquide</span>
+            <span className="k"><span className="rb">S</span>solide</span>
+            <span className="k"><span className="rb">C</span>chaud</span>
             <span className="k"><span className="rb bv">BV</span>base vie</span>
+            <span className="k"><span className="rb">A</span>assistance</span>
             <span className="k" style={{ marginLeft: 'auto', color: 'var(--ink-faint)' }}>Obj = heure visée · Barrière = limite</span>
           </div>
         </div>

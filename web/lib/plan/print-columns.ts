@@ -15,7 +15,7 @@ export interface PrintColDef {
 }
 
 // Poids harmonisés : Point ~2.4× une colonne data, toutes les colonnes data
-// égales (1.0) — sauf Ravito (1.5) qui doit loger jusqu'à 3 badges (S L BV).
+// égales (1.0) — sauf Ravito (1.9) qui doit loger jusqu'à 5 badges (L S C BV A).
 // Répartis sur les colonnes VISIBLES → même équilibre quel que soit le choix.
 export const PRINT_COL_DEFS: Record<PrintColKey, PrintColDef> = {
   point:  { key: 'point',  label: 'Point',             th: 'Point',    weight: 2.4,  align: 'l', fixed: true },
@@ -24,7 +24,7 @@ export const PRINT_COL_DEFS: Record<PrintColKey, PrintColDef> = {
   inter:  { key: 'inter',  label: 'Inter (tronçon)',   th: 'Inter',    weight: 1.0,  align: 'r' },
   dplus:  { key: 'dplus',  label: '▲ D+ (tronçon)',    th: '▲D+',      weight: 1.0,  align: 'r' },
   dmoins: { key: 'dmoins', label: '▼ D− (tronçon)',    th: '▼D−',      weight: 1.0,  align: 'r' },
-  rav:    { key: 'rav',    label: 'Ravito',            th: 'Ravito',   weight: 1.5,  align: 'c' },
+  rav:    { key: 'rav',    label: 'Ravito',            th: 'Ravito',   weight: 1.9,  align: 'c' },
   obj:    { key: 'obj',    label: 'Objectif',          th: 'Objectif', weight: 1.0,  align: 'r' },
   segt:   { key: 'segt',   label: 'Temps tronçon',     th: 'Tps',      weight: 1.0,  align: 'r' },
   bh:     { key: 'bh',     label: 'Barrière',          th: 'Barrière', weight: 1.0,  align: 'r' },
