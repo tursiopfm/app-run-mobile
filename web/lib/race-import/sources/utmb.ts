@@ -37,6 +37,46 @@ export function mapUtmbSupplies(p: UtmbPoint): WaypointSupply[] {
   return out
 }
 
+// Isole le tableau JSON "points":[…] du HTML. Scanner d'appariement de crochets
+// CONSCIENT DES CHAÎNES : ignore [ ] { } à l'intérieur des strings JSON (sinon un
+// nom de point contenant un crochet couperait l'extraction).
+export function extractPointsJson(html: string): UtmbPoint[] {
+  const marker = '"points":['
+  const at = html.indexOf(marker)
+  if (at === -1) throw new UtmbError('Bloc "points" introuvable dans la page')
+  const start = at + marker.length - 1 // index du '['
+  let depth = 0
+  let inStr = false
+  let esc = false
+  let end = -1
+  for (let i = start; i < html.length; i++) {
+    const c = html[i]
+    if (inStr) {
+      if (esc) esc = false
+      else if (c === '\\') esc = true
+      else if (c === '"') inStr = false
+      continue
+    }
+    if (c === '"') inStr = true
+    else if (c === '[') depth++
+    else if (c === ']') {
+      depth--
+      if (depth === 0) { end = i + 1; break }
+    }
+  }
+  if (end === -1) throw new UtmbError('Tableau "points" non terminé')
+  let arr: unknown
+  try {
+    arr = JSON.parse(html.slice(start, end))
+  } catch {
+    throw new UtmbError('Tableau "points" non parsable')
+  }
+  if (!Array.isArray(arr) || arr.length === 0) {
+    throw new UtmbError('Aucun point de passage')
+  }
+  return arr as UtmbPoint[]
+}
+
 export const utmbParser: RaceParser = {
   id: 'utmb',
   match(url: string): boolean {
