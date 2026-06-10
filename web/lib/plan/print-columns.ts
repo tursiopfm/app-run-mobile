@@ -3,7 +3,7 @@
 // localStorage. Le rendu de la cellule vit dans la page print (switch sur key).
 
 export type PrintColKey =
-  | 'point' | 'km' | 'cum' | 'inter' | 'dplus' | 'dmoins' | 'rav' | 'obj' | 'bh'
+  | 'point' | 'km' | 'cum' | 'inter' | 'dplus' | 'dmoins' | 'rav' | 'obj' | 'segt' | 'bh'
 
 export interface PrintColDef {
   key: PrintColKey
@@ -21,13 +21,14 @@ export const PRINT_COL_DEFS: Record<PrintColKey, PrintColDef> = {
   inter:  { key: 'inter',  label: 'Inter (tronçon)',   th: 'Inter',    weight: 1.0,  align: 'r' },
   dplus:  { key: 'dplus',  label: '▲ D+ (tronçon)',    th: '▲D+',      weight: 1.0,  align: 'r' },
   dmoins: { key: 'dmoins', label: '▼ D− (tronçon)',    th: '▼D−',      weight: 1.0,  align: 'r' },
-  rav:    { key: 'rav',    label: 'Ravito',            th: 'Ravito',   weight: 1.2,  align: 'l' },
-  obj:    { key: 'obj',    label: 'Objectif',          th: 'Objectif', weight: 1.6,  align: 'r' },
+  rav:    { key: 'rav',    label: 'Ravito',            th: 'Ravito',   weight: 0.8,  align: 'l' },
+  obj:    { key: 'obj',    label: 'Objectif',          th: 'Objectif', weight: 1.5,  align: 'r' },
+  segt:   { key: 'segt',   label: 'Temps tronçon',     th: 'Tps',      weight: 1.3,  align: 'r' },
   bh:     { key: 'bh',     label: 'Barrière',          th: 'Barrière', weight: 1.5,  align: 'r' },
 }
 
 export const DEFAULT_PRINT_ORDER: PrintColKey[] =
-  ['point', 'km', 'cum', 'inter', 'dplus', 'dmoins', 'rav', 'obj', 'bh']
+  ['point', 'km', 'cum', 'inter', 'dplus', 'dmoins', 'rav', 'obj', 'segt', 'bh']
 
 export interface PrintColConfig {
   order: PrintColKey[]   // les 10 clés, réordonnées

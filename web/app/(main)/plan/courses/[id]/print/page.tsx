@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import type { Race, RaceWaypoint } from '@/types/plan'
 import { getRaces } from '@/lib/plan/storage'
 import { estimatePassageTimes } from '@/lib/plan/pacing'
-import { deriveSegment, formatElapsedToClock, formatElapsedShort, formatBarrierClock } from '@/lib/plan/waypoint-view'
+import { deriveSegment, formatElapsedToClock, formatElapsedShort, formatBarrierClock, formatMargin } from '@/lib/plan/waypoint-view'
 import {
   loadPrintColConfig, savePrintColConfig, visiblePrintCols, printColWidths,
   PRINT_COL_DEFS, DEFAULT_PRINT_CONFIG, type PrintColConfig, type PrintColKey,
@@ -67,6 +67,8 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
     // Barrière = heure d'horloge SANS le préfixe jour (Jx retiré).
     const bhRaw = formatBarrierClock(race.startTime, w.cutoffRaw, w.cutoffKind, elapsed?.[i] ?? 0)
     const bhLabel = bhRaw ? bhRaw.replace(/^J\d+\s+/, '') : null
+    // Temps du tronçon arrivant à ce point (obj[i] − obj[i−1]).
+    const segt = elapsed && i > 0 ? formatMargin(elapsed[i] - elapsed[i - 1]).replace('+', '') : null
     const dash = <span className="dash">—</span>
     switch (k) {
       case 'point':  return <span className="pt">{w.name}</span>
@@ -83,6 +85,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         </span>
       )
       case 'obj':    return <span className="obj">{objLabel ?? dash}</span>
+      case 'segt':   return <span className="obj">{segt ?? dash}</span>
       case 'bh':     return <span className="bh">{bhLabel ?? dash}</span>
     }
   }
@@ -120,7 +123,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot tbody td{padding:.1px 1.5px;vertical-align:middle;line-height:10.5px;font-size:9.5px;}
         .pdfroot .pt{font-family:var(--d);font-size:8.7px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
         .pdfroot .km{font-family:var(--d);font-size:9.5px;font-weight:700;}
-        .pdfroot .cum{font-family:var(--d);font-size:9.5px;font-weight:600;color:var(--ink-soft);}
+        .pdfroot .cum{font-family:var(--d);font-size:9.5px;font-weight:700;color:var(--ink);}
         .pdfroot .sv{font-family:var(--d);font-size:9.5px;font-weight:700;white-space:nowrap;}
         .pdfroot .sv.dp .ar{color:var(--accent);font-size:6.5px;}
         .pdfroot .sv.dm{color:var(--ink-soft);} .pdfroot .sv.dm .ar{font-size:6.5px;}
@@ -129,7 +132,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .rb{font-family:var(--d);font-weight:700;font-size:7px;min-width:10px;height:9px;padding:0 1.5px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--ink);border-radius:2.5px;color:var(--ink);line-height:1;}
         .pdfroot .rb.bv{background:var(--ink);color:#fff;}
         .pdfroot .obj{font-family:var(--d);font-size:9.5px;font-weight:700;}
-        .pdfroot .bh{font-family:var(--d);font-size:9.5px;font-weight:500;color:var(--ink-soft);white-space:nowrap;}
+        .pdfroot .bh{font-family:var(--d);font-size:9.5px;font-weight:700;color:var(--ink);white-space:nowrap;}
         .pdfroot tr.is-base td{background:#E9EEEC;}
         .pdfroot tr.is-end .pt,.pdfroot tr.is-start .pt{color:var(--accent);}
         .pdfroot .legend{flex:none;display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:.5px;padding-top:1px;border-top:1px solid var(--line-strong);font-family:var(--d);font-size:5.2px;color:var(--ink-soft);font-weight:600;line-height:1.2;}
@@ -138,10 +141,12 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
 
         @page{size:A4 portrait;margin:8mm;}
         @media print{
+          /* Corps limité à UNE page (sinon l'espace de l'app cachée crée une 2e page). */
+          html, body { margin:0 !important; padding:0 !important; height:100vh !important; overflow:hidden !important; }
           body * { visibility:hidden !important; }
           .pdfroot, .pdfroot * { visibility:visible !important; }
-          /* La carte est déjà tournée 90° (règle de base, WYSIWYG) ; on la centre sur l'A4. */
-          .pdfroot{position:absolute;top:0;left:0;width:100%;height:281mm;background:#fff;padding:0;min-height:auto;display:flex;align-items:center;justify-content:center;}
+          /* La carte est déjà tournée 90° (règle de base, WYSIWYG) ; carte fixée+centrée sur l'unique page. */
+          .pdfroot{position:fixed;inset:0;width:100%;background:#fff;padding:0;min-height:0;display:flex;align-items:center;justify-content:center;}
           .pdfroot .toolbar,.pdfroot .caption{display:none !important;}
           .pdfroot .cut{border:none;background:none;padding:0;margin:0;width:auto;}
           .pdfroot .scis{display:none;}
