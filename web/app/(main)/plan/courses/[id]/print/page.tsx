@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import type { Race, RaceWaypoint } from '@/types/plan'
 import { getRaces } from '@/lib/plan/storage'
 import { estimatePassageTimes } from '@/lib/plan/pacing'
-import { deriveSegment, formatElapsedToClock, formatBarrierClock } from '@/lib/plan/waypoint-view'
+import { deriveSegment, formatElapsedToClock, formatElapsedShort, formatBarrierClock } from '@/lib/plan/waypoint-view'
 import {
   loadPrintColConfig, savePrintColConfig, visiblePrintCols, printColWidths,
   PRINT_COL_DEFS, DEFAULT_PRINT_CONFIG, type PrintColConfig, type PrintColKey,
@@ -61,7 +61,11 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
 
   const cell = (k: PrintColKey, w: RaceWaypoint, i: number) => {
     const seg = deriveSegment(wps.map((x) => ({ km: x.km, dPlus: x.dPlus, dMoins: x.dMoins })), i)
-    const objLabel = elapsed && race.startTime ? formatElapsedToClock(race.startTime, elapsed[i])?.label : null
+    // Heure d'horloge si départ connu, sinon temps écoulé (jamais vide dès que
+    // le temps cible est renseigné).
+    const objLabel = elapsed
+      ? (race.startTime ? formatElapsedToClock(race.startTime, elapsed[i])?.label : formatElapsedShort(elapsed[i]))
+      : null
     const bhLabel = formatBarrierClock(race.startTime, w.cutoffRaw, w.cutoffKind, elapsed?.[i] ?? 0)
     const dash = <span className="dash">—</span>
     switch (k) {
