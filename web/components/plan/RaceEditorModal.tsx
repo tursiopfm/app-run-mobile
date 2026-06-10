@@ -8,7 +8,6 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Race, RaceType } from '@/types/plan'
 import { deleteRace, saveRace } from '@/lib/plan/storage'
-import { parseElapsedShort } from '@/lib/plan/waypoint-view'
 import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
@@ -41,9 +40,10 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
   const isEdit = race !== null
   const [draft, setDraft] = useState<Race>(() => race ?? emptyDraft())
   const [saving, setSaving] = useState(false)
-  const fmtTarget = (min: number | undefined) =>
-    min != null ? `${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}` : ''
-  const [rawTarget, setRawTarget] = useState<string>(() => fmtTarget((race ?? emptyDraft()).targetDurationMin))
+  // Temps cible en DEUX champs (heures / minutes) → clavier numérique sans « : ».
+  const initTarget = (race ?? emptyDraft()).targetDurationMin
+  const [rawHours, setRawHours] = useState<string>(initTarget != null ? String(Math.floor(initTarget / 60)) : '')
+  const [rawMins, setRawMins] = useState<string>(initTarget != null ? String(initTarget % 60) : '')
   const TYPE_OPTIONS: { value: RaceType; label: string }[] = [
     { value: 'trail',    label: L.raceTypes.trail   },
     { value: 'ultra',    label: L.raceTypes.ultra   },
@@ -56,8 +56,10 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
   // (création vs édition de la même course peut se chevaucher dans le parent).
   useEffect(() => {
     if (open) {
-      setDraft(race ?? emptyDraft())
-      setRawTarget(fmtTarget((race ?? emptyDraft()).targetDurationMin))
+      const r = race ?? emptyDraft()
+      setDraft(r)
+      setRawHours(r.targetDurationMin != null ? String(Math.floor(r.targetDurationMin / 60)) : '')
+      setRawMins(r.targetDurationMin != null ? String(r.targetDurationMin % 60) : '')
     }
   }, [open, race])
 
@@ -84,12 +86,13 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
     if (!canSave) return
     setSaving(true)
     try {
-      // Parse le champ « Temps cible » AU MOMENT du save (pas via onBlur, qui
-      // peut ne pas avoir commité son setState avant le clic Enregistrer).
-      const tSec = parseElapsedShort(rawTarget)
+      // Temps cible depuis les 2 champs heures/minutes.
+      const h = parseInt(rawHours, 10)
+      const mn = parseInt(rawMins, 10)
+      const tMin = Number.isFinite(h) || Number.isFinite(mn) ? (h || 0) * 60 + (mn || 0) : 0
       const toSave: Race = {
         ...draft,
-        targetDurationMin: tSec != null ? Math.round(tSec / 60) : undefined,
+        targetDurationMin: tMin > 0 ? tMin : undefined,
         id: draft.id || (typeof crypto !== 'undefined' && 'randomUUID' in crypto
           ? crypto.randomUUID()
           : `race-${Date.now()}`),
@@ -211,22 +214,24 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
               />
             </Field>
             <Field label={L.raceEditFieldTargetTime}>
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="37:00"
-                value={rawTarget}
-                onChange={(e) => setRawTarget(e.target.value)}
-                onBlur={(e) => {
-                  // Tolérant : accepte '37:00', '37h00', '37h', '37'.
-                  const sec = parseElapsedShort(e.target.value)
-                  setDraft({
-                    ...draft,
-                    targetDurationMin: sec != null ? Math.round(sec / 60) : undefined,
-                  })
-                }}
-                className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
-              />
+              <div className="flex items-center gap-1">
+                <input
+                  type="number" inputMode="numeric" min={0} placeholder="42"
+                  value={rawHours}
+                  onChange={(e) => setRawHours(e.target.value)}
+                  onFocus={(e) => e.currentTarget.select()}
+                  className="w-full px-2 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body text-center focus:outline-none focus:border-trail-primary"
+                />
+                <span className="text-caption text-trail-muted">h</span>
+                <input
+                  type="number" inputMode="numeric" min={0} max={59} placeholder="00"
+                  value={rawMins}
+                  onChange={(e) => setRawMins(e.target.value)}
+                  onFocus={(e) => e.currentTarget.select()}
+                  className="w-full px-2 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body text-center focus:outline-none focus:border-trail-primary"
+                />
+                <span className="text-caption text-trail-muted">min</span>
+              </div>
             </Field>
           </div>
 

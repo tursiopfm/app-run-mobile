@@ -186,13 +186,13 @@ export function WaypointsTable({
               {seg.dPlusSeg != null && <span className="sub dp">+{seg.dPlusSeg}</span>}
             </div>
 
-            {/* Barrière */}
+            {/* Barrière — départ en haut, préfixe jour (26-) retiré */}
             <div className="c-bh">
-              <input className="hr" type="text" placeholder="—" value={w.cutoffRaw ?? ''} disabled={readOnly}
-                onChange={(e) => {
-                  const v = e.target.value || null
-                  update(i, { cutoffRaw: v, cutoffKind: v === null ? null : w.cutoffKind ?? 'clock_time' })
-                }} />
+              {i === 0 ? (
+                <span className="hr">{startTime ? startTime.slice(0, 5) : '—'}</span>
+              ) : (
+                <span className="hr">{w.cutoffRaw ? w.cutoffRaw.replace(/^\d+-/, '') : '—'}</span>
+              )}
             </div>
 
             {/* Ravito */}
