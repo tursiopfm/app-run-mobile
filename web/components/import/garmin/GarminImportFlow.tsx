@@ -154,16 +154,21 @@ export function GarminImportFlow() {
       const pool = createFitPool()
 
       let uploads: StreamUpload[] = []
+      let pendingBytes = 0
       let matched = 0
       let scanned = 0
       let errors = 0
       let nextId = 0
       const inflight = new Set<Promise<void>>()
       const MAX_INFLIGHT = 4
+      // Borne la taille des requêtes POST (les longues sorties trail + le latlng font de gros
+      // streams) : sinon "Request Entity Too Large". On flush par taille de payload, pas par compte.
+      const MAX_BATCH_BYTES = 400_000
 
       const flush = async (final: boolean) => {
         const batch = uploads
         uploads = []
+        pendingBytes = 0
         if (batch.length === 0 && !final) return
         const url = '/api/garmin-import/streams' + (final ? '?recalc=1' : '')
         const res = await fetch(url, {
@@ -191,13 +196,16 @@ export function GarminImportFlow() {
             const m = matchFit({ activityId: null, startTimeMs: res.startTimeMs ?? null }, index)
             if (m) {
               const splits = streamsToSplits(res.streams)
+              const streamsGz = packStreamsClient(res.streams)
+              const summaryPolyline = streamsToPolyline(res.streams) ?? undefined
               uploads.push({
                 activityId: m.id,
-                streamsGz: packStreamsClient(res.streams),
+                streamsGz,
                 pointCount: res.pointCount ?? 0,
-                summaryPolyline: streamsToPolyline(res.streams) ?? undefined,
+                summaryPolyline,
                 splits: splits.length ? splits : undefined,
               })
+              pendingBytes += streamsGz.length + (summaryPolyline?.length ?? 0)
               matched++
             }
           }
@@ -208,7 +216,7 @@ export function GarminImportFlow() {
         const wrapped = p.finally(() => { inflight.delete(wrapped) })
         inflight.add(wrapped)
         if (inflight.size >= MAX_INFLIGHT) await Promise.race(inflight)
-        if (uploads.length >= 50) await flush(false)
+        if (uploads.length >= 20 || pendingBytes >= MAX_BATCH_BYTES) await flush(false)
       })
       await Promise.all(inflight)
       pool.terminate()
