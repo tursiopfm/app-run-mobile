@@ -30,3 +30,19 @@ test('writeStreamRows : liste vide → 0, aucun appel', async () => {
   expect(n).toBe(0)
   expect(calls).toHaveLength(0)
 })
+
+test('writeStreamRows : dédupe par activity_id en gardant le plus riche (évite ON CONFLICT double)', async () => {
+  const { api, calls } = fakeSupabase()
+  const uploads: StreamUpload[] = [
+    { activityId: 'a1', streamsGz: 'LOW', pointCount: 10 },
+    { activityId: 'a1', streamsGz: 'HIGH', pointCount: 99 },
+    { activityId: 'a2', streamsGz: 'X', pointCount: 5 },
+  ]
+  const n = await writeStreamRows(api as never, 'u', uploads)
+  expect(n).toBe(2)
+  const rows = calls[0].rows as Array<Record<string, unknown>>
+  expect(rows).toHaveLength(2)
+  const a1 = rows.find(r => r.activity_id === 'a1')!
+  expect(a1.streams_gz).toBe('HIGH')
+  expect(a1.point_count).toBe(99)
+})
