@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   const to = req.nextUrl.searchParams.get('to')
   let q = supabase
     .from('activities')
-    .select('id, provider, provider_activity_id, start_time, activity_streams(activity_id), map:raw_payload->map')
+    .select('id, provider, provider_activity_id, start_time, activity_streams(activity_id), map:raw_payload->map, begin:raw_payload->summary->>beginTimestamp')
     .eq('user_id', user.id).is('deleted_at', null)
     .order('start_time', { ascending: true }).limit(20000)
   if (from) q = q.gte('start_time', from)
@@ -30,8 +30,17 @@ export async function GET(req: NextRequest) {
       return noStream || garminNoMap
     })
     .map((r) => {
-      const row = r as { id: string; provider: string; provider_activity_id: string; start_time: string }
-      return { id: String(row.id), provider: String(row.provider), providerActivityId: String(row.provider_activity_id), startTime: String(row.start_time) }
+      const row = r as { id: string; provider: string; provider_activity_id: string; start_time: string; begin?: string | null }
+      // startMs = instant UTC RÉEL : beginTimestamp Garmin (GMT ms) si dispo, sinon parse de
+      // start_time (heure locale étiquetée UTC — fallback non-Garmin). Le FIT étant en GMT,
+      // matcher sur beginTimestamp évite le décalage de fuseau qui faisait tout rater.
+      const beginMs = row.begin != null ? Number(row.begin) : NaN
+      const startMs = Number.isFinite(beginMs) ? beginMs : Date.parse(row.start_time)
+      return {
+        id: String(row.id), provider: String(row.provider),
+        providerActivityId: String(row.provider_activity_id),
+        startTime: String(row.start_time), startMs,
+      }
     })
   return NextResponse.json(out)
 }

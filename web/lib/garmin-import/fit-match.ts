@@ -12,7 +12,7 @@ export function buildActivityIndex(cands: EnrichCandidate[]): ActivityIndex {
   const byTime: { ms: number; c: EnrichCandidate }[] = []
   for (const c of cands) {
     if (c.provider === 'garmin') byActivityId.set(c.providerActivityId, c)
-    byTime.push({ ms: new Date(c.startTime).getTime(), c })
+    byTime.push({ ms: c.startMs, c })  // UTC réel — matche le timestamp GMT des FIT
   }
   byTime.sort((a, b) => a.ms - b.ms)
   return { byActivityId, byTime }
