@@ -9,10 +9,10 @@ export function ImportEntrySection() {
       className="flex items-center gap-3 rounded-[11px] bg-trail-surface border border-trail-border px-3 py-3 hover:bg-trail-border/20 transition-colors"
     >
       <div
-        className="w-9 h-9 rounded-[11px] flex items-center justify-center flex-shrink-0 border"
+        className="w-10 h-10 rounded-[12px] flex items-center justify-center flex-shrink-0 border"
         style={{ background: 'rgba(255,121,0,0.12)', borderColor: 'rgba(255,121,0,0.30)' }}
       >
-        <Download size={17} className="text-trail-primary" />
+        <Download size={18} className="text-trail-primary" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-micro font-bold uppercase tracking-wider text-trail-muted font-display">Importer des activités</p>

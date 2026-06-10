@@ -32,8 +32,8 @@ export function AccountSection() {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-3 px-3 py-[10px] rounded-[10px] bg-trail-surface">
-        <div className="w-8 h-8 rounded-[10px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
-          <Mail size={14} className="text-trail-muted" />
+        <div className="w-10 h-10 rounded-[12px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
+          <Mail size={18} className="text-trail-muted" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-micro font-semibold uppercase tracking-wider text-trail-muted">{L.emailLabel}</p>

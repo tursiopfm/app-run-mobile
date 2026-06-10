@@ -84,9 +84,9 @@ export function StravaSection({ isConnected, athleteName, planAutoPushTitle, not
         </p>
       )}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-[10px] bg-[#FC4C02]/15 border border-[#FC4C02]/30 flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-[12px] bg-[#FC4C02]/15 border border-[#FC4C02]/30 flex items-center justify-center flex-shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/strava/strava-mark.svg" alt="" width={14} height={14} className="block" />
+          <img src="/strava/strava-mark.svg" alt="" width={18} height={18} className="block" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-micro font-semibold uppercase tracking-wider text-trail-muted">Strava</p>

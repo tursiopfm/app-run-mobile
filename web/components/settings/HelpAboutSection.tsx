@@ -21,8 +21,8 @@ export function HelpAboutSection() {
             href="/support"
             className="flex items-center gap-3 px-3 py-[10px] hover:bg-trail-border/30 transition-colors"
           >
-            <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
-              <LifeBuoy size={13} className="text-trail-primary" />
+            <div className="w-10 h-10 rounded-[12px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
+              <LifeBuoy size={18} className="text-trail-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-body-sm text-trail-text">{L.helpAndSupport}</p>
@@ -43,16 +43,16 @@ export function HelpAboutSection() {
             href={`mailto:${CONTACT_EMAIL}?subject=Trail%20Cockpit%20%E2%80%94%20Contact`}
             className="flex items-center gap-3 px-3 py-[10px] hover:bg-trail-border/30 transition-colors"
           >
-            <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
-              <Mail size={13} className="text-trail-muted" />
+            <div className="w-10 h-10 rounded-[12px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
+              <Mail size={18} className="text-trail-muted" />
             </div>
             <p className="flex-1 text-body-sm text-trail-text">{L.contactLabel}</p>
             <span className="text-[10px] text-trail-muted/70 flex-shrink-0">›</span>
           </a>
 
           <div className="flex items-center gap-3 px-3 py-[10px]">
-            <div className="w-7 h-7 rounded-[8px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
-              <Tag size={13} className="text-trail-muted" />
+            <div className="w-10 h-10 rounded-[12px] bg-trail-card border border-trail-border flex items-center justify-center flex-shrink-0">
+              <Tag size={18} className="text-trail-muted" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-micro font-semibold uppercase tracking-wider text-trail-muted">{L.versionLabel}</p>
