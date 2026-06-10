@@ -79,6 +79,10 @@ export interface Race {
   isMain: boolean            // course objectif principale (miroir legacy de priority='A')
   priority: RacePriority     // priorité A (objectif), B (secondaire), C (entraînement)
   notes?: string
+  // Pacing (objectif de temps) — alimentent lib/plan/pacing.ts
+  startTime?: string         // 'HH:MM' heure locale de départ
+  targetDurationMin?: number // temps cible total en minutes (ex : 37 h = 2220)
+  pacingFade?: number        // coef fade 2e moitié (0 = neutre)
 }
 
 // === Plan d'entraînement (macrocycle) ===
@@ -198,6 +202,8 @@ export type WaypointType =
   | 'arrivee'
   | 'autre'
 
+export type WaypointSupply = 'solid' | 'liquid' | 'base_vie'
+
 export interface RaceWaypoint {
   id: string
   raceId: string
@@ -205,11 +211,13 @@ export interface RaceWaypoint {
   name: string
   km: number
   kmInter: number | null
-  dPlus: number | null
-  dMoins: number | null
+  dPlus: number | null    // CUMULÉ depuis le départ
+  dMoins: number | null   // CUMULÉ depuis le départ
   cutoffRaw: string | null
   cutoffKind: CutoffKind | null
   type: WaypointType
+  supplies: WaypointSupply[]        // contenu ravito (athlète) ; [] si aucun
+  targetOverrideSec: number | null  // override manuel de l'heure (s écoulées)
 }
 
 // Sortie brute du LLM (sans id ni raceId).
