@@ -202,7 +202,8 @@ export type WaypointType =
   | 'arrivee'
   | 'autre'
 
-export type WaypointSupply = 'solid' | 'liquid' | 'base_vie'
+// Ordre canonique d'affichage : liquid, solid, hot, base_vie, assistance.
+export type WaypointSupply = 'liquid' | 'solid' | 'hot' | 'base_vie' | 'assistance'
 
 export interface RaceWaypoint {
   id: string
