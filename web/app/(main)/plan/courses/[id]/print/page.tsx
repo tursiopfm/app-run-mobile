@@ -69,7 +69,6 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
     const bhLabel = bhRaw ? bhRaw.replace(/^J\d+\s+/, '') : null
     const dash = <span className="dash">—</span>
     switch (k) {
-      case 'tk':     return <span className="tk" />
       case 'point':  return <span className="pt">{w.name}</span>
       case 'km':     return <span className="km">{fmt(w.km)}</span>
       case 'cum':    return <span className="cum">{w.dPlus ?? 0}</span>
@@ -118,20 +117,19 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot thead th{font-family:var(--d);font-size:5.5px;font-weight:700;letter-spacing:.1px;text-transform:uppercase;color:var(--ink-soft);padding:1px 1.5px 2px;border-bottom:1px solid var(--line-strong);line-height:1;}
         .pdfroot tbody tr{border-bottom:.5px solid var(--line);}
         .pdfroot tbody tr:nth-child(even){background:var(--zebra);}
-        .pdfroot tbody td{padding:.2px 1.5px;vertical-align:middle;line-height:10px;font-size:9px;}
-        .pdfroot .tk{width:8px;height:8px;border:1px solid var(--ink-faint);border-radius:2px;display:block;}
+        .pdfroot tbody td{padding:.1px 1.5px;vertical-align:middle;line-height:10.5px;font-size:9.5px;}
         .pdfroot .pt{font-family:var(--d);font-size:8.7px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
-        .pdfroot .km{font-family:var(--d);font-size:8.7px;font-weight:700;}
-        .pdfroot .cum{font-family:var(--d);font-size:7px;font-weight:600;color:var(--ink-soft);}
-        .pdfroot .sv{font-family:var(--d);font-size:8px;font-weight:700;white-space:nowrap;}
-        .pdfroot .sv.dp .ar{color:var(--accent);font-size:5.5px;}
-        .pdfroot .sv.dm{color:var(--ink-soft);} .pdfroot .sv.dm .ar{font-size:5.5px;}
+        .pdfroot .km{font-family:var(--d);font-size:9.5px;font-weight:700;}
+        .pdfroot .cum{font-family:var(--d);font-size:9.5px;font-weight:600;color:var(--ink-soft);}
+        .pdfroot .sv{font-family:var(--d);font-size:9.5px;font-weight:700;white-space:nowrap;}
+        .pdfroot .sv.dp .ar{color:var(--accent);font-size:6.5px;}
+        .pdfroot .sv.dm{color:var(--ink-soft);} .pdfroot .sv.dm .ar{font-size:6.5px;}
         .pdfroot .dash{color:var(--ink-faint);font-weight:500;}
         .pdfroot .rav{display:inline-flex;gap:1.5px;}
-        .pdfroot .rb{font-family:var(--d);font-weight:700;font-size:5.5px;min-width:8px;height:8px;padding:0 1px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--ink);border-radius:2.5px;color:var(--ink);line-height:1;}
+        .pdfroot .rb{font-family:var(--d);font-weight:700;font-size:7px;min-width:10px;height:9px;padding:0 1.5px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--ink);border-radius:2.5px;color:var(--ink);line-height:1;}
         .pdfroot .rb.bv{background:var(--ink);color:#fff;}
         .pdfroot .obj{font-family:var(--d);font-size:9.5px;font-weight:700;}
-        .pdfroot .bh{font-family:var(--d);font-size:7px;font-weight:500;color:var(--ink-soft);white-space:nowrap;}
+        .pdfroot .bh{font-family:var(--d);font-size:9.5px;font-weight:500;color:var(--ink-soft);white-space:nowrap;}
         .pdfroot tr.is-base td{background:#E9EEEC;}
         .pdfroot tr.is-end .pt,.pdfroot tr.is-start .pt{color:var(--accent);}
         .pdfroot .legend{flex:none;display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:.5px;padding-top:1px;border-top:1px solid var(--line-strong);font-family:var(--d);font-size:5.2px;color:var(--ink-soft);font-weight:600;line-height:1.2;}

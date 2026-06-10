@@ -8,7 +8,7 @@
 import { useCallback, useMemo } from 'react'
 import type { RaceWaypoint, WaypointSupply } from '@/types/plan'
 import {
-  deriveSegment, formatElapsedShort, parseElapsedShort, marginToBarrier, formatMargin,
+  deriveSegment, formatElapsedShort, parseElapsedShort, formatMargin,
 } from '@/lib/plan/waypoint-view'
 import { estimatePassageTimes } from '@/lib/plan/pacing'
 
@@ -107,7 +107,7 @@ export function WaypointsTable({
         }
         .wtbl .legend-mini{font-size:9.5px;color:var(--faint);padding:0 3px 8px;line-height:1.4;}
         .wtbl .legend-mini b{color:var(--blue);font-weight:600;}
-        .wtbl .gA{display:grid;grid-template-columns:minmax(0,1fr) 50px 46px 46px 58px 58px;column-gap:9px;align-items:center;}
+        .wtbl .gA{display:grid;grid-template-columns:minmax(0,1fr) 44px 40px 42px 54px 54px;column-gap:6px;align-items:center;}
         .wtbl .gA.head{padding:2px 3px 7px;border-bottom:1px solid var(--border2);}
         .wtbl .gA.head span{font-family:var(--d);font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--faint);}
         .wtbl .gA.head .r{text-align:right;} .wtbl .gA.head .c{text-align:center;}
@@ -115,7 +115,7 @@ export function WaypointsTable({
         .wtbl .c-point{display:flex;align-items:center;gap:6px;min-width:0;}
         .wtbl .dot{width:7px;height:7px;border-radius:50%;flex:none;}
         .wtbl .ic{width:13px;height:13px;display:inline-block;flex:none;}
-        .wtbl .nm{font-family:var(--d);font-weight:600;font-size:12px;color:var(--text);min-width:0;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+        .wtbl .nm{font-family:var(--d);font-weight:600;font-size:11px;color:var(--text);min-width:0;line-height:1.15;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;}
         .wtbl .num{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;min-width:0;}
         .wtbl .big{font-family:var(--d);font-weight:700;font-size:12.5px;background:transparent;border:0;outline:none;color:var(--text);text-align:right;width:100%;padding:0;}
         .wtbl .big.muted{color:var(--muted);}
@@ -133,8 +133,7 @@ export function WaypointsTable({
         .wtbl .c-obj{display:flex;flex-direction:column;align-items:stretch;gap:2px;}
         .wtbl .obj-in{font-family:var(--d);font-weight:600;font-size:12px;width:100%;background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.3);color:var(--orange);border-radius:7px;text-align:center;outline:none;padding:4px 2px;}
         .wtbl .obj-in:focus{border-color:var(--orange);background:rgba(255,107,53,.14);}
-        .wtbl .marge{font-family:var(--d);font-size:9px;font-weight:600;line-height:1;text-align:center;}
-        .wtbl .marge.ok{color:var(--green);} .wtbl .marge.warn{color:var(--yellow);} .wtbl .marge.bad{color:var(--red);}
+        .wtbl .segt{font-family:var(--d);font-size:9px;font-weight:600;line-height:1;text-align:center;color:var(--muted);}
       `}</style>
 
       <div className="legend-mini">
@@ -159,7 +158,8 @@ export function WaypointsTable({
         const elapsedSec = elapsed ? elapsed[i] : null
         const objStr = elapsedSec != null ? formatElapsedShort(elapsedSec) : ''
         const isOverride = w.targetOverrideSec != null
-        const margin = elapsedSec != null ? marginToBarrier(startTime, elapsedSec, w.cutoffRaw, w.cutoffKind) : null
+        // Temps du tronçon arrivant à ce point (= obj[i] − obj[i−1]).
+        const segSec = elapsed && i > 0 ? elapsed[i] - elapsed[i - 1] : null
 
         return (
           <div className="gA row" key={`${w.orderIndex}-${i}`}>
@@ -213,7 +213,7 @@ export function WaypointsTable({
                   <input className="obj-in" type="text" inputMode="numeric" placeholder="—" disabled={readOnly}
                     defaultValue={objStr} key={`${objStr}-${isOverride}`}
                     onBlur={(e) => onObjBlur(i, e.target.value)} />
-                  {margin && <span className={`marge ${margin.level}`}>{formatMargin(margin.sec)}</span>}
+                  {segSec != null && <span className="segt">{formatMargin(segSec).replace('+', '')}</span>}
                 </>
               )}
             </div>

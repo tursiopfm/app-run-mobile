@@ -3,7 +3,7 @@
 // localStorage. Le rendu de la cellule vit dans la page print (switch sur key).
 
 export type PrintColKey =
-  | 'tk' | 'point' | 'km' | 'cum' | 'inter' | 'dplus' | 'dmoins' | 'rav' | 'obj' | 'bh'
+  | 'point' | 'km' | 'cum' | 'inter' | 'dplus' | 'dmoins' | 'rav' | 'obj' | 'bh'
 
 export interface PrintColDef {
   key: PrintColKey
@@ -15,7 +15,6 @@ export interface PrintColDef {
 }
 
 export const PRINT_COL_DEFS: Record<PrintColKey, PrintColDef> = {
-  tk:     { key: 'tk',     label: 'Case à cocher',     th: '',         weight: 0.5,  align: 'l' },
   point:  { key: 'point',  label: 'Point',             th: 'Point',    weight: 3.0,  align: 'l', fixed: true },
   km:     { key: 'km',     label: 'Km (cumulé)',       th: 'Km',       weight: 1.0,  align: 'r' },
   cum:    { key: 'cum',    label: 'Σ D+ (cumulé)',     th: 'ΣD+',      weight: 0.95, align: 'r' },
@@ -28,7 +27,7 @@ export const PRINT_COL_DEFS: Record<PrintColKey, PrintColDef> = {
 }
 
 export const DEFAULT_PRINT_ORDER: PrintColKey[] =
-  ['tk', 'point', 'km', 'cum', 'inter', 'dplus', 'dmoins', 'rav', 'obj', 'bh']
+  ['point', 'km', 'cum', 'inter', 'dplus', 'dmoins', 'rav', 'obj', 'bh']
 
 export interface PrintColConfig {
   order: PrintColKey[]   // les 10 clés, réordonnées
