@@ -18,6 +18,7 @@ import { forEachFit } from '@/lib/garmin-import/nested-unzip'
 import { buildActivityIndex, matchFit } from '@/lib/garmin-import/fit-match'
 import { createFitPool } from '@/lib/garmin-import/fit-pool'
 import { packStreamsClient } from '@/lib/garmin-import/stream-pack'
+import { streamsToPolyline, streamsToSplits } from '@/lib/garmin-import/fit-derive'
 import type { EnrichCandidate, StreamUpload, EnrichReport } from '@/lib/garmin-import/enrich-types'
 import { EnrichmentStep } from './EnrichmentStep'
 
@@ -186,7 +187,14 @@ export function GarminImportFlow() {
           } else if (res.streams) {
             const m = matchFit({ activityId: null, startTimeMs: res.startTimeMs ?? null }, index)
             if (m) {
-              uploads.push({ activityId: m.id, streamsGz: packStreamsClient(res.streams), pointCount: res.pointCount ?? 0 })
+              const splits = streamsToSplits(res.streams)
+              uploads.push({
+                activityId: m.id,
+                streamsGz: packStreamsClient(res.streams),
+                pointCount: res.pointCount ?? 0,
+                summaryPolyline: streamsToPolyline(res.streams) ?? undefined,
+                splits: splits.length ? splits : undefined,
+              })
               matched++
             }
           }

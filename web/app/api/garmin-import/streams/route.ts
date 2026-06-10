@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerUser } from '@/lib/database/get-user'
 import { createServiceClient } from '@/lib/database/supabase-server'
-import { writeStreamRows } from '@/lib/garmin-import/enrich-commit'
+import { writeStreamRows, mergeMapAndSplits } from '@/lib/garmin-import/enrich-commit'
 import { recalculateUserEffortScores } from '@/lib/sync/recalculate-scores'
 import type { StreamUpload } from '@/lib/garmin-import/enrich-types'
 
@@ -13,7 +13,10 @@ export async function POST(req: NextRequest) {
   try { body = (await req.json()) as { uploads?: StreamUpload[] } } catch { return NextResponse.json({ error: 'JSON invalide' }, { status: 400 }) }
   const service = createServiceClient()
   try {
-    const written = await writeStreamRows(service, user.id, body.uploads ?? [])
+    const uploads = body.uploads ?? []
+    const written = await writeStreamRows(service, user.id, uploads)
+    // Carte (polyline) + splits/km dérivés du FIT → raw_payload (pour la page détail).
+    await mergeMapAndSplits(service, user.id, uploads)
     if (req.nextUrl.searchParams.get('recalc') === '1') await recalculateUserEffortScores(user.id)
     return NextResponse.json({ written })
   } catch (e) {
