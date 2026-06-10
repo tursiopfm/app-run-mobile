@@ -124,8 +124,11 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
            = colonnes harmonisées remplissant la carte, MÊME équilibre quel que soit
            le sous-ensemble choisi. Point borné (~2.4×), data égales ; padding uniforme
            pour des écarts réguliers. Les cellules rognent (overflow) ; le Point passe
-           en ellipsis si le nom est trop long. */
-        .pdfroot table{width:100%;border-collapse:collapse;flex:1;margin-top:1px;table-layout:fixed;}
+           en ellipsis si le nom est trop long.
+           margin:auto 0 (pas flex:1) : le tableau garde des lignes de hauteur NATURELLE
+           (uniformes, contenu centré) et le bloc est centré verticalement dans la carte
+           — sinon flex:1 étire la 1re ligne/l'en-tête en y déversant le surplus. */
+        .pdfroot table{width:100%;border-collapse:collapse;margin:auto 0;table-layout:fixed;}
         .pdfroot thead th{font-family:var(--d);font-size:5.5px;font-weight:700;letter-spacing:.1px;text-transform:uppercase;color:var(--ink-soft);padding:1px 4px 2px;border-bottom:1px solid var(--line-strong);line-height:1;white-space:nowrap;overflow:hidden;}
         .pdfroot tbody tr{border-bottom:.5px solid var(--line);}
         .pdfroot tbody tr:nth-child(even){background:var(--zebra);}
