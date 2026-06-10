@@ -286,6 +286,8 @@ export function GarminImportFlow() {
       })
       await Promise.all(inflight)
       pool.terminate()
+      // eslint-disable-next-line no-console
+      console.log('[garmin-enrich] candidats:', cands.length, '| fichiers scannés:', scanned, '| matchés:', matched, '| erreurs:', errors)
       setEnrichProgress({ matched, total: cands.length, scanned })
       await flush()
       // Recalcul CES unique (best-effort) : sur un gros historique il peut timeouter/OOM
