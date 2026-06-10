@@ -5,7 +5,7 @@
 // ravito en icônes, dist+inter et cumul+segment empilés, objectif = temps écoulé
 // éditable + marge colorée avant barrière. Colonnes auto via lib/plan/waypoint-view,
 // heures via lib/plan/pacing. Pas d'undo (re-import pour reset).
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { RaceWaypoint, WaypointSupply } from '@/types/plan'
 import {
   deriveSegment, formatElapsedShort, parseElapsedShort, formatMargin,
@@ -25,8 +25,6 @@ type Props = {
 }
 
 const ICONS = {
-  sol:  'M4 3v7a2 2 0 0 0 2 2v9M8 3v7a2 2 0 0 1-2 2M17 3c-1.6 0-3 2-3 5.5S15.4 14 17 14v7',
-  liq:  'M12 3s6.5 7.2 6.5 11.5a6.5 6.5 0 0 1-13 0C5.5 10.2 12 3 12 3z',
   base: 'M3 20 12 4l9 16M12 5v15M3 20h18',
   flag: 'M5 21V4m0 0h11l-2 4 2 4H5',
   go:   'M7 4 19 12 7 20z',
@@ -42,11 +40,17 @@ function Icon({ name }: { name: keyof typeof ICONS }) {
   )
 }
 
-const SUPPLIES: { val: WaypointSupply; cls: 'sol' | 'liq' | 'base'; icon: keyof typeof ICONS }[] = [
-  { val: 'solid',    cls: 'sol',  icon: 'sol' },
-  { val: 'liquid',   cls: 'liq',  icon: 'liq' },
-  { val: 'base_vie', cls: 'base', icon: 'base' },
+const SUPPLY_CAT: { val: WaypointSupply; letter: string; label: string; cls: string }[] = [
+  { val: 'liquid',     letter: 'L',  label: 'Liquide',    cls: 'liq'  },
+  { val: 'solid',      letter: 'S',  label: 'Solide',     cls: 'sol'  },
+  { val: 'hot',        letter: 'C',  label: 'Chaud',      cls: 'hot'  },
+  { val: 'base_vie',   letter: 'BV', label: 'Base vie',   cls: 'base' },
+  { val: 'assistance', letter: 'A',  label: 'Assistance', cls: 'ass'  },
 ]
+
+// Catégories actives d'un waypoint, dans l'ordre canonique.
+export const activeSupplies = (supplies: WaypointSupply[]) =>
+  SUPPLY_CAT.filter((c) => supplies.includes(c.val))
 
 const fmtKm = (n: number) => String(n).replace('.', ',')
 
@@ -77,6 +81,8 @@ export function WaypointsTable({
     },
     [waypoints, onChange],
   )
+
+  const [editRow, setEditRow] = useState<number | null>(null)
 
   const elapsed = useMemo(() => {
     if (targetDurationMin == null) return null
@@ -134,13 +140,18 @@ export function WaypointsTable({
         .wtbl .sub.inter{color:var(--blue);} .wtbl .sub.dp{color:var(--faint);}
         .wtbl .c-bh{display:flex;justify-content:flex-end;min-width:0;}
         .wtbl .hr{font-family:var(--d);font-size:11px;font-weight:500;color:var(--text);text-align:right;white-space:nowrap;}
-        .wtbl .rav-set{display:flex;gap:3px;justify-content:center;}
-        .wtbl .rv{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:6px;cursor:pointer;color:var(--faint);border:1px solid transparent;opacity:.35;background:transparent;padding:0;}
-        .wtbl .rv .ic{width:12px;height:12px;}
-        .wtbl .rv.on{opacity:1;}
-        .wtbl .rv.on.sol{color:var(--yellow);background:rgba(251,191,36,.13);}
-        .wtbl .rv.on.liq{color:var(--blue);background:rgba(56,189,248,.13);}
-        .wtbl .rv.on.base{color:var(--green);background:rgba(74,222,128,.13);}
+        .wtbl .c-rav{position:relative;display:flex;justify-content:center;}
+        .wtbl .rav-cell{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;align-items:center;background:none;border:0;padding:2px;min-height:22px;cursor:pointer;}
+        .wtbl .rav-cell:disabled{cursor:default;}
+        .wtbl .rav-empty{color:var(--faint);font-size:12px;font-weight:600;}
+        .wtbl .chip{font-family:var(--d);font-weight:700;font-size:8.5px;min-width:13px;height:13px;padding:0 2px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;color:#fff;line-height:1;}
+        .wtbl .chip.liq{background:var(--blue);} .wtbl .chip.sol{background:var(--yellow);}
+        .wtbl .chip.hot{background:var(--red);} .wtbl .chip.base{background:var(--green);}
+        .wtbl .chip.ass{background:#7C5CFC;}
+        .wtbl .rav-backdrop{position:fixed;inset:0;z-index:40;}
+        .wtbl .rav-pop{position:absolute;top:100%;right:0;z-index:41;margin-top:2px;background:var(--trail-surface);border:1px solid var(--trail-border);border-radius:10px;padding:4px;display:flex;flex-direction:column;gap:2px;min-width:128px;box-shadow:0 8px 24px rgba(0,0,0,.3);}
+        .wtbl .rav-opt{display:flex;align-items:center;gap:7px;background:none;border:0;color:var(--text);font-family:var(--d);font-size:11px;font-weight:600;padding:5px 6px;border-radius:7px;cursor:pointer;text-align:left;opacity:.45;}
+        .wtbl .rav-opt.on{opacity:1;background:rgba(127,127,127,.12);}
         .wtbl .c-obj{display:flex;flex-direction:column;align-items:stretch;gap:2px;}
         .wtbl .obj-in{font-family:var(--d);font-weight:600;font-size:12px;width:100%;background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.3);color:var(--orange);border-radius:7px;text-align:center;outline:none;padding:4px 2px;}
         .wtbl .obj-in:focus{border-color:var(--orange);background:rgba(255,107,53,.14);}
@@ -148,7 +159,8 @@ export function WaypointsTable({
       `}</style>
 
       <div className="legend-mini">
-        <b>+x,x</b> sous la distance = inter calculé · <b>BH</b> = barrière · marge sous l&apos;objectif
+        <b>+x,x</b> sous la distance = inter calculé · <b>BH</b> = barrière · ravitos :
+        L liquide · S solide · C chaud · BV base vie · A assistance
       </div>
 
       <div className="gA head">
@@ -212,17 +224,33 @@ export function WaypointsTable({
               )}
             </div>
 
-            {/* Ravito */}
-            <div className="rav-set">
-              {SUPPLIES.map((s) => {
-                const on = w.supplies.includes(s.val)
-                return (
-                  <button key={s.cls} type="button" disabled={readOnly} aria-pressed={on}
-                    className={`rv ${s.cls}${on ? ' on' : ''}`} onClick={() => toggleSupply(i, s.val)}>
-                    <span className="ic"><Icon name={s.icon} /></span>
-                  </button>
-                )
-              })}
+            {/* Ravito : pastilles auto-remplies + édition au tap */}
+            <div className="c-rav">
+              <button type="button" className="rav-cell" disabled={readOnly}
+                aria-label="Modifier les ravitos"
+                onClick={() => setEditRow(editRow === i ? null : i)}>
+                {activeSupplies(w.supplies).length === 0
+                  ? <span className="rav-empty">{readOnly ? '–' : '+'}</span>
+                  : activeSupplies(w.supplies).map((c) => (
+                      <span key={c.val} className={`chip ${c.cls}`}>{c.letter}</span>
+                    ))}
+              </button>
+              {editRow === i && !readOnly && (
+                <>
+                  <div className="rav-backdrop" onClick={() => setEditRow(null)} />
+                  <div className="rav-pop" role="menu">
+                    {SUPPLY_CAT.map((c) => {
+                      const on = w.supplies.includes(c.val)
+                      return (
+                        <button key={c.val} type="button" className={`rav-opt${on ? ' on' : ''}`}
+                          onClick={() => toggleSupply(i, c.val)}>
+                          <span className={`chip ${c.cls}`}>{c.letter}</span>{c.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Objectif : temps écoulé éditable + marge */}
