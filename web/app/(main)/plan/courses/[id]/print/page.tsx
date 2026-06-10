@@ -145,7 +145,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           .pdfroot .toolbar,.pdfroot .caption{display:none !important;}
           .pdfroot .cut{border:none;background:none;padding:0;margin:0;width:auto;}
           .pdfroot .scis{display:none;}
-          .pdfroot .card{box-shadow:none;border:.5px solid var(--line);transform:rotate(90deg) scale(2.3);}
+          .pdfroot .card{box-shadow:none;border:.5px solid var(--line);transform:rotate(90deg);}
           .pdfroot tbody tr:nth-child(even){background:var(--zebra) !important;}
           .pdfroot tr.is-base td{background:#E9EEEC !important;}
           .pdfroot .rb.bv{background:#000 !important;color:#fff !important;}
@@ -158,7 +158,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         <button className="btn ghost" onClick={() => setDialogOpen(true)}>Personnaliser les colonnes</button>
         <button className="btn" onClick={() => window.print()}>Imprimer / PDF</button>
       </div>
-      <p className="caption">Imprime sur A4 (la carte est agrandie et tournée pour la lisibilité), découpe, plastifie. Tient dans une poche de veste.</p>
+      <p className="caption">Imprime sur A4 (la carte est tournée 90° — tourne la feuille pour lire), découpe, plastifie. Tient dans une poche de veste.</p>
 
       <div className="cut">
         <span className="scis">✂ — — — — — — — — découper — — — — — — — —</span>
