@@ -148,6 +148,8 @@ function mapXmlToExtracted(
       cutoffRaw,
       cutoffKind: cutoffRaw === null ? null : ('clock_time' as const),
       type,
+      supplies: [],
+      targetOverrideSec: null,
     }
   })
 

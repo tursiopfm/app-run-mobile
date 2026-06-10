@@ -2,6 +2,7 @@ import {
   validateExtractedRaceData,
   rawToExtractedRaceData,
   RACE_EXTRACTION_JSON_SCHEMA,
+  rowToRaceWaypoint,
 } from '@/lib/race-import/schema'
 
 describe('rawToExtractedRaceData (snake → camel)', () => {
@@ -36,6 +37,8 @@ describe('rawToExtractedRaceData (snake → camel)', () => {
       cutoffRaw: '09:00',
       cutoffKind: 'clock_time',
       type: 'depart',
+      supplies: [],
+      targetOverrideSec: null,
     })
   })
 
@@ -147,5 +150,28 @@ describe('RACE_EXTRACTION_JSON_SCHEMA', () => {
   it("a un type 'object' à la racine avec strict: true", () => {
     expect(RACE_EXTRACTION_JSON_SCHEMA.schema.type).toBe('object')
     expect(RACE_EXTRACTION_JSON_SCHEMA.strict).toBe(true)
+  })
+})
+
+describe('rowToRaceWaypoint (nouveaux champs)', () => {
+  it('mappe supplies et target_override_sec', () => {
+    const wp = rowToRaceWaypoint({
+      id: 'w1', race_id: 'r1', order_index: 1, name: 'Ravito A',
+      km: 10, km_inter: null, d_plus: 300, d_moins: 100,
+      cutoff_raw: null, cutoff_kind: null, type: 'ravito',
+      supplies: ['solid', 'liquid'], target_override_sec: 8000,
+    })
+    expect(wp.supplies).toEqual(['solid', 'liquid'])
+    expect(wp.targetOverrideSec).toBe(8000)
+  })
+
+  it('défauts : supplies absent → [], override absent → null', () => {
+    const wp = rowToRaceWaypoint({
+      id: 'w2', race_id: 'r1', order_index: 0, name: 'Départ',
+      km: 0, km_inter: null, d_plus: 0, d_moins: 0,
+      cutoff_raw: null, cutoff_kind: null, type: 'depart',
+    } as any)
+    expect(wp.supplies).toEqual([])
+    expect(wp.targetOverrideSec).toBeNull()
   })
 })

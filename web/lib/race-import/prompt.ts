@@ -8,6 +8,7 @@ Règles :
 - Respecte exactement le schéma fourni (Structured Outputs).
 - Donnée absente → null. N'invente JAMAIS de valeur.
 - Nombres sans unité : "1 433 m" → 1433 ; "13,7 km" → 13.7.
+- d_plus / d_moins = dénivelé positif / négatif CUMULÉ depuis le départ au point (pas le dénivelé du tronçon).
 - cutoff_raw = la barrière EXACTEMENT comme affichée, sans conversion.
 - cutoff_kind :
   - "clock_time" si heure réelle du jour (09:00, Sam 18h30),

@@ -3,6 +3,7 @@ import type {
   ExtractedRaceData,
   CutoffKind,
   WaypointType,
+  WaypointSupply,
   RaceWaypoint,
 } from '@/types/plan'
 
@@ -83,6 +84,8 @@ export function rawToExtractedRaceData(raw: RawExtraction): ExtractedRaceData {
       // Si pas de cutoff brut, le kind n'a pas de sens — on nullifie.
       cutoffKind: w.cutoff_raw === null ? null : (w.cutoff_kind as CutoffKind),
       type: w.type,
+      supplies: [],
+      targetOverrideSec: null,
     })),
   }
 }
@@ -150,6 +153,8 @@ type DbRow = {
   cutoff_raw: string | null
   cutoff_kind: CutoffKind | null
   type: WaypointType
+  supplies?: WaypointSupply[] | null
+  target_override_sec?: number | null
 }
 
 export function rowToRaceWaypoint(row: DbRow): RaceWaypoint {
@@ -165,5 +170,7 @@ export function rowToRaceWaypoint(row: DbRow): RaceWaypoint {
     cutoffRaw: row.cutoff_raw,
     cutoffKind: row.cutoff_kind,
     type: row.type,
+    supplies: row.supplies ?? [],
+    targetOverrideSec: row.target_override_sec ?? null,
   }
 }
