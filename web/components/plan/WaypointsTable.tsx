@@ -115,7 +115,7 @@ export function WaypointsTable({
         }
         .wtbl .legend-mini{font-size:9.5px;color:var(--faint);padding:0 3px 8px;line-height:1.4;}
         .wtbl .legend-mini b{color:var(--blue);font-weight:600;}
-        .wtbl .gA{display:grid;grid-template-columns:minmax(0,1fr) 44px 40px 42px 54px 54px;column-gap:6px;align-items:center;}
+        .wtbl .gA{display:grid;grid-template-columns:minmax(0,1fr) 44px 40px 40px 42px 54px 54px;column-gap:6px;align-items:center;}
         .wtbl .gA.head{padding:2px 3px 7px;border-bottom:1px solid var(--border2);}
         .wtbl .gA.head span{font-family:var(--d);font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--faint);}
         .wtbl .gA.head .r{text-align:right;} .wtbl .gA.head .c{text-align:center;}
@@ -150,6 +150,7 @@ export function WaypointsTable({
 
       <div className="gA head">
         <span>Point</span><span className="r">Dist</span><span className="r">D+</span>
+        <span className="r">D-</span>
         <span className="r">BH</span><span className="c">Ravito</span><span className="c">Obj</span>
       </div>
 
@@ -190,6 +191,13 @@ export function WaypointsTable({
               <input className="big muted" type="text" inputMode="numeric" value={w.dPlus ?? ''} disabled={readOnly}
                 onChange={(e) => update(i, { dPlus: e.target.value === '' ? null : parseInt(e.target.value, 10) })} />
               {seg.dPlusSeg != null && <span className="sub dp">+{seg.dPlusSeg}</span>}
+            </div>
+
+            {/* D- : cumul + segment (miroir du D+) */}
+            <div className="num">
+              <input className="big muted" type="text" inputMode="numeric" value={w.dMoins ?? ''} disabled={readOnly}
+                onChange={(e) => update(i, { dMoins: e.target.value === '' ? null : parseInt(e.target.value, 10) })} />
+              {seg.dMoinsSeg != null && <span className="sub dp">+{seg.dMoinsSeg}</span>}
             </div>
 
             {/* Barrière — départ en haut ; sinon heure nettoyée (préfixe jour retiré) */}
