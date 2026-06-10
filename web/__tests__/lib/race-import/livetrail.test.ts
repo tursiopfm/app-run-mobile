@@ -138,6 +138,19 @@ describe('livetrailParser.parse()', () => {
     expect(wp.cutoffKind).toBe('clock_time')
   })
 
+  it("dérive le D- cumulé depuis le D+ et l'altitude (XML sans colonne D-)", async () => {
+    mockFetchOnce(FIXTURE_XML)
+    const out = await livetrailParser.parse(
+      'https://ultramarin-breizhchrono.v3.livetrail.net/fr/2026/races/GdRaid',
+    )
+    // Départ (Port de Vannes, a=3) = altitude de référence → D- = 0.
+    expect(out.waypoints[0].dMoins).toBe(0)
+    // Séné Barrarac'h : d=93, a=2, a0=3 → 93 − (2−3) = 94.
+    expect(out.waypoints[1].dMoins).toBe(94)
+    // Arrivée (a=3 = a0) → D- = D+ = 1431.
+    expect(out.waypoints[13].dMoins).toBe(1431)
+  })
+
   it('force depart sur le premier waypoint et arrivee sur le dernier', async () => {
     mockFetchOnce(FIXTURE_XML)
     const out = await livetrailParser.parse(

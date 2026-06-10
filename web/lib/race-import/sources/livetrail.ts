@@ -84,6 +84,7 @@ type RawPt = {
   '@_n'?: string
   '@_km'?: string | number
   '@_d'?: string | number
+  '@_a'?: string | number
   '@_b'?: string
 }
 
@@ -127,6 +128,14 @@ function mapXmlToExtracted(
   }
   const pts: RawPt[] = Array.isArray(ptsRaw) ? ptsRaw : [ptsRaw]
 
+  const num = (v: string | number | undefined): number | null =>
+    v !== undefined && v !== '' ? Number(v) : null
+
+  // Le XML parcours.php n'expose pas de D- : on le dérive de l'altitude.
+  // D-cumulé = D+cumulé − (altitude − altitude_départ), toujours ≥ 0
+  // (le D+ total majore toujours le gain net d'altitude).
+  const departAltitude = num(pts[0]?.['@_a'])
+
   const waypoints = pts.map((p, idx) => {
     const rawCutoff = p['@_b']
     const cutoffRaw = rawCutoff && rawCutoff.length > 0 ? rawCutoff : null
@@ -136,6 +145,11 @@ function mapXmlToExtracted(
       dPlusRaw !== undefined && dPlusRaw !== ''
         ? parseInt(String(dPlusRaw), 10)
         : null
+    const altitude = num(p['@_a'])
+    const dMoins =
+      dPlus !== null && altitude !== null && departAltitude !== null
+        ? Math.max(0, Math.round(dPlus - (altitude - departAltitude)))
+        : null
     // type sera réécrit par validateExtractedRaceData pour depart/arrivee.
     const type: WaypointType = idx === 0 ? 'depart' : 'ravito'
     return {
@@ -144,7 +158,7 @@ function mapXmlToExtracted(
       km,
       kmInter: null,
       dPlus,
-      dMoins: null,
+      dMoins,
       cutoffRaw,
       cutoffKind: cutoffRaw === null ? null : ('clock_time' as const),
       type,
