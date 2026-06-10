@@ -29,6 +29,9 @@ function emptyDraft(): Race {
     isMain: true,
     priority: 'A',
     notes: undefined,
+    startTime: undefined,
+    targetDurationMin: undefined,
+    pacingFade: 0,
   }
 }
 
@@ -186,6 +189,57 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
               ))}
             </select>
           </Field>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={L.raceEditFieldStartTime}>
+              <input
+                type="time"
+                value={draft.startTime ?? ''}
+                onChange={(e) => setDraft({ ...draft, startTime: e.target.value || undefined })}
+                className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
+              />
+            </Field>
+            <Field label={L.raceEditFieldTargetTime}>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="37:00"
+                value={
+                  draft.targetDurationMin != null
+                    ? `${Math.floor(draft.targetDurationMin / 60)}:${String(draft.targetDurationMin % 60).padStart(2, '0')}`
+                    : ''
+                }
+                onChange={(e) => {
+                  const m = /^(\d{1,3}):(\d{2})$/.exec(e.target.value.trim())
+                  setDraft({
+                    ...draft,
+                    targetDurationMin: m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : undefined,
+                  })
+                }}
+                className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
+              />
+            </Field>
+          </div>
+
+          <details className="rounded-[10px] bg-trail-surface border border-trail-border px-3 py-2">
+            <summary className="text-caption font-semibold text-trail-muted cursor-pointer">
+              {L.raceEditAdvanced}
+            </summary>
+            <div className="mt-2">
+              <Field label={L.raceEditFieldFade}>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.1"
+                  min={0}
+                  max={2}
+                  value={draft.pacingFade ?? 0}
+                  onChange={(e) => setDraft({ ...draft, pacingFade: Number(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
+                />
+              </Field>
+            </div>
+          </details>
 
           <Field label={L.raceEditFieldLocation}>
             <input
