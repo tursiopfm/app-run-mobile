@@ -37,6 +37,11 @@ export function GarminImportFlow() {
   const fileRef = useRef<File | null>(null)
   const [enrichProgress, setEnrichProgress] = useState({ matched: 0, total: 0, scanned: 0 })
   const [enrichReport, setEnrichReport] = useState<EnrichReport | null>(null)
+  // Import GPX (fichier unique) — section secondaire de l'écran d'accueil.
+  const [gpxSport, setGpxSport] = useState('Run')
+  const [gpxBusy, setGpxBusy] = useState(false)
+  const [gpxMsg, setGpxMsg] = useState<string | null>(null)
+  const gpxInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const busy = state === 'parsing' || state === 'committing' || state === 'enriching'
@@ -86,6 +91,24 @@ export function GarminImportFlow() {
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : 'Échec du parsing')
       setState('error')
+    }
+  }
+
+  async function handleGpxFile(file: File) {
+    setGpxBusy(true)
+    setGpxMsg(null)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('sport', gpxSport)
+      fd.append('fileName', file.name)
+      const res = await fetch('/api/activities/import-file', { method: 'POST', body: fd })
+      const json = (await res.json()) as { saved?: number; error?: string }
+      setGpxMsg(res.ok ? 'Activité importée ✓' : (json.error ?? 'Import échoué'))
+    } catch {
+      setGpxMsg('Erreur réseau')
+    } finally {
+      setGpxBusy(false)
     }
   }
 
@@ -377,77 +400,109 @@ export function GarminImportFlow() {
     )
   }
 
-  // intro (default)
+  // intro (default) — Variante 1 : carte unifiée (historique Garmin + fichier .gpx)
   return (
     <div className="max-w-md mx-auto px-4 py-6 space-y-4">
-      <h1 className="text-lg font-semibold text-trail-text">Importer l&apos;historique Garmin</h1>
+      <h1 className="text-lg font-semibold font-display text-trail-text">Importer mes activités</h1>
 
-      <div className="rounded-[10px] bg-trail-surface px-3 py-[10px] space-y-3">
-        <p className="text-body-sm text-trail-text">
-          Garmin fournit un export complet de tes données (RGPD). Demande-le, puis dépose le ZIP ici
-          — tout est traité sur ton téléphone, rien n&apos;est envoyé à nos serveurs sauf tes
-          activités normalisées.
-        </p>
-        <p className="text-body-sm text-trail-muted">
+      <div className="rounded-[16px] border border-trail-border bg-trail-card overflow-hidden">
+        {/* ── Historique complet (Garmin RGPD) — zone de dépôt du ZIP ── */}
+        <div
+          onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={e => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) onFile(f) }}
+          className={['px-4 py-4 border-b border-dashed border-trail-border transition', isDragging ? 'ring-2 ring-inset ring-trail-primary/40' : ''].join(' ')}
+          style={{ background: 'linear-gradient(180deg, rgba(56,189,248,0.05), transparent 55%)' }}
+        >
+          <span className="inline-flex items-center gap-[5px] font-display font-bold tracking-[2px] text-[12px] text-trail-accent">
+            <svg width="11" height="10" viewBox="0 0 11 10" fill="currentColor" aria-hidden="true"><path d="M5.5 0 11 10H0z" /></svg>
+            GARMIN
+          </span>
+          <h2 className="font-display font-semibold text-[17px] leading-tight text-trail-text mt-[6px]">
+            Tout ton historique, d&apos;un coup
+          </h2>
+          <p className="text-body-sm text-trail-muted mt-[6px] leading-relaxed">
+            Récupère des années de courses et de sorties depuis l&apos;export RGPD officiel de Garmin —
+            ton Cockpit repart de l&apos;intégralité de ton passé, sans rien re-saisir.
+          </p>
           <a
             href="https://www.garmin.com/fr-FR/account/datamanagement/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-trail-text underline"
+            className="inline-flex items-center gap-1 text-caption font-semibold text-trail-accent mt-3 hover:underline"
           >
-            Demander mon export Garmin
+            Demander mon export Garmin (RGPD) →
           </a>
-        </p>
-        <p className="text-caption text-trail-muted">Délai Garmin : 24–48 h.</p>
+          <p className="text-micro text-trail-muted mt-1">Prêt en 24–48 h · tout reste sur ton téléphone.</p>
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="flex items-center justify-center gap-2 w-full mt-4 px-3 py-[10px] rounded-[11px] font-display font-semibold text-[13.5px]"
+            style={{ background: 'linear-gradient(180deg,#FF8A1E,#FF7900)', color: '#1A0E03', boxShadow: '0 6px 18px -8px rgba(255,121,0,0.6)' }}
+          >
+            <Upload size={15} />
+            Importer mon historique Garmin
+          </button>
+        </div>
+
+        {/* ── Séparateur ── */}
+        <div className="px-4 py-3">
+          <div className="flex items-center gap-3 text-[11px] tracking-wide text-trail-muted">
+            <span className="h-px flex-1 bg-trail-border" />ou une seule activité<span className="h-px flex-1 bg-trail-border" />
+          </div>
+        </div>
+
+        {/* ── Fichier unique (.gpx) ── */}
+        <div className="px-4 pb-4 space-y-3">
+          <div>
+            <h3 className="font-display font-semibold text-[15px] text-trail-text">Importer un fichier .gpx</h3>
+            <p className="text-body-sm text-trail-muted mt-1">Une sortie exportée depuis Garmin, Komoot, Strava…</p>
+          </div>
+          <div className="flex items-center gap-[10px]">
+            <label htmlFor="gpx-sport" className="text-micro text-trail-muted flex-shrink-0">Sport</label>
+            <select
+              id="gpx-sport"
+              value={gpxSport}
+              onChange={e => setGpxSport(e.target.value)}
+              className="flex-1 bg-trail-surface border border-trail-border rounded-[9px] px-2 py-[7px] text-body-sm text-trail-text"
+            >
+              <option value="Run">Course</option>
+              <option value="TrailRun">Trail</option>
+              <option value="Ride">Vélo</option>
+              <option value="Swim">Natation</option>
+              <option value="Walk">Marche</option>
+              <option value="Hike">Randonnée</option>
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={() => gpxInputRef.current?.click()}
+            disabled={gpxBusy}
+            aria-busy={gpxBusy}
+            className="flex items-center justify-center gap-[6px] w-full px-3 py-[8px] rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-caption font-semibold hover:bg-trail-border/40 transition-colors disabled:opacity-50"
+          >
+            <Upload size={13} />
+            {gpxBusy ? 'Import…' : 'Choisir un fichier .gpx'}
+          </button>
+          {gpxMsg && <p className="text-micro text-trail-muted text-center">{gpxMsg}</p>}
+        </div>
       </div>
 
-      {/* Drop zone */}
-      <div
-        onDragOver={e => {
-          e.preventDefault()
-          setIsDragging(true)
-        }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={e => {
-          e.preventDefault()
-          setIsDragging(false)
-          const file = e.dataTransfer.files[0]
-          if (file) onFile(file)
-        }}
-        className={[
-          'rounded-[10px] border-2 border-dashed px-3 py-8 flex flex-col items-center gap-3 transition-colors',
-          isDragging
-            ? 'border-trail-text bg-trail-card/60'
-            : 'border-trail-border bg-trail-surface',
-        ].join(' ')}
-      >
-        <Upload size={24} className="text-trail-muted" />
-        <p className="text-body-sm text-trail-text text-center">
-          Glisse ton fichier ZIP ici
-        </p>
-        <p className="text-caption text-trail-muted">ou</p>
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          className="flex items-center justify-center gap-[6px] px-3 py-[7px] rounded-[8px] bg-trail-card border border-trail-border text-trail-text text-caption font-semibold hover:bg-trail-border/40 transition-colors"
-        >
-          <Upload size={12} />
-          Choisir un fichier .zip
-        </button>
-      </div>
-
+      {/* inputs cachés */}
       <input
         ref={inputRef}
         type="file"
         accept=".zip"
         className="hidden"
-        onChange={e => {
-          const file = e.target.files?.[0]
-          if (file) onFile(file)
-          e.target.value = ''
-        }}
+        onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = '' }}
       />
-
+      <input
+        ref={gpxInputRef}
+        type="file"
+        accept=".gpx"
+        className="hidden"
+        onChange={e => { const f = e.target.files?.[0]; if (f) handleGpxFile(f); e.target.value = '' }}
+      />
     </div>
   )
 }

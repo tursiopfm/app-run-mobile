@@ -1,7 +1,6 @@
 import { Plug2, Palette, Sparkles, LifeBuoy, User, Route, Compass } from 'lucide-react'
 import { StravaSection } from '@/components/settings/StravaSection'
-import { ManualImportSection } from '@/components/settings/ManualImportSection'
-import { GarminImportSection } from '@/components/settings/GarminImportSection'
+import { ImportEntrySection } from '@/components/settings/ImportEntrySection'
 import { AppModeToggle } from '@/components/settings/AppModeToggle'
 import { getServerAppMode } from '@/lib/preferences/server'
 import { CommuteRoutesTeaser } from '@/components/settings/CommuteRoutesTeaser'
@@ -169,8 +168,7 @@ export default async function SettingsPage({
             planAutoPushTitle={planAutoPushTitle}
             notice={stravaNotice}
           />
-          <ManualImportSection />
-          <GarminImportSection />
+          <ImportEntrySection />
         </SectionCard>
       </section>
 
