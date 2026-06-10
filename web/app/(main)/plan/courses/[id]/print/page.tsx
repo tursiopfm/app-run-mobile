@@ -8,7 +8,7 @@ import { getRaces } from '@/lib/plan/storage'
 import { estimatePassageTimes } from '@/lib/plan/pacing'
 import { deriveSegment, formatElapsedToClock, formatElapsedShort, formatBarrierClock, formatMargin } from '@/lib/plan/waypoint-view'
 import {
-  loadPrintColConfig, savePrintColConfig, visiblePrintCols, printColWidths,
+  loadPrintColConfig, savePrintColConfig, visiblePrintCols,
   PRINT_COL_DEFS, DEFAULT_PRINT_CONFIG, type PrintColConfig, type PrintColKey,
 } from '@/lib/plan/print-columns'
 import { PrintColumnsDialog } from '@/components/plan/PrintColumnsDialog'
@@ -58,7 +58,6 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
     : null
 
   const cols = visiblePrintCols(cfg)
-  const widths = printColWidths(cols)
   const ta = (k: PrintColKey): 'left' | 'right' | 'center' => {
     const a = PRINT_COL_DEFS[k].align
     return a === 'r' ? 'right' : a === 'c' ? 'center' : 'left'
@@ -120,11 +119,15 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .stats b{color:var(--ink);}
         .pdfroot .goal{font-family:var(--d);font-size:8.5px;color:var(--accent);font-weight:700;white-space:nowrap;}
         .pdfroot .goal .lbl{color:var(--ink-faint);font-size:6px;font-weight:600;}
-        .pdfroot table{width:100%;border-collapse:collapse;flex:1;margin-top:1px;table-layout:fixed;}
-        .pdfroot thead th{font-family:var(--d);font-size:5.5px;font-weight:700;letter-spacing:.1px;text-transform:uppercase;color:var(--ink-soft);padding:1px 1.5px 2px;border-bottom:1px solid var(--line-strong);line-height:1;}
+        /* auto-layout + padding horizontal uniforme = MÊME espacement entre toutes
+           les colonnes (quelles que soient celles sélectionnées). Les colonnes data
+           se dimensionnent à leur contenu ; le Point absorbe le reste (ellipsis). */
+        .pdfroot table{width:100%;border-collapse:collapse;flex:1;margin-top:1px;table-layout:auto;}
+        .pdfroot thead th{font-family:var(--d);font-size:5.5px;font-weight:700;letter-spacing:.1px;text-transform:uppercase;color:var(--ink-soft);padding:1px 4px 2px;border-bottom:1px solid var(--line-strong);line-height:1;white-space:nowrap;}
         .pdfroot tbody tr{border-bottom:.5px solid var(--line);}
         .pdfroot tbody tr:nth-child(even){background:var(--zebra);}
-        .pdfroot tbody td{padding:.1px 1.5px;vertical-align:middle;line-height:10.5px;font-size:9.5px;}
+        .pdfroot tbody td{padding:.1px 4px;vertical-align:middle;line-height:10.5px;font-size:9.5px;white-space:nowrap;}
+        .pdfroot td.c-point{max-width:0;width:100%;overflow:hidden;text-overflow:ellipsis;}
         .pdfroot .pt{font-family:var(--d);font-size:8.7px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
         .pdfroot .km{font-family:var(--d);font-size:9.5px;font-weight:700;}
         .pdfroot .cum{font-family:var(--d);font-size:9.5px;font-weight:700;color:var(--ink);}
@@ -189,9 +192,6 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           </div>
 
           <table>
-            <colgroup>
-              {cols.map((k) => <col key={k} style={{ width: `${widths[k]}%` }} />)}
-            </colgroup>
             <thead>
               <tr>
                 {cols.map((k) => (
@@ -207,7 +207,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
                 return (
                   <tr key={w.id} className={rowCls}>
                     {cols.map((k) => (
-                      <td key={k} style={{ textAlign: ta(k) }}>
+                      <td key={k} className={k === 'point' ? 'c-point' : undefined} style={{ textAlign: ta(k) }}>
                         {cell(k, w, i)}
                       </td>
                     ))}

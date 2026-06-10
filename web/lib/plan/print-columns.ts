@@ -70,11 +70,3 @@ export function savePrintColConfig(cfg: PrintColConfig): void {
 export function visiblePrintCols(cfg: PrintColConfig): PrintColKey[] {
   return cfg.order.filter((k) => !cfg.hidden.includes(k))
 }
-
-// Largeurs % réparties au prorata des poids des colonnes visibles.
-export function printColWidths(keys: PrintColKey[]): Record<PrintColKey, number> {
-  const sum = keys.reduce((s, k) => s + PRINT_COL_DEFS[k].weight, 0) || 1
-  const out = {} as Record<PrintColKey, number>
-  for (const k of keys) out[k] = (PRINT_COL_DEFS[k].weight / sum) * 100
-  return out
-}

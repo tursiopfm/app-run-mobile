@@ -50,6 +50,14 @@ const SUPPLIES: { val: WaypointSupply; cls: 'sol' | 'liq' | 'base'; icon: keyof 
 
 const fmtKm = (n: number) => String(n).replace('.', ',')
 
+// Barrière nettoyée : '21:47' depuis 'ven. 21:47' / '26-22:30' / 'J2 22:30'
+// (on retire tout préfixe — jour ou date — devant l'heure).
+const barrierClock = (raw: string | null | undefined): string => {
+  if (!raw) return '—'
+  const m = /(\d{1,2})[:h](\d{2})/.exec(raw)
+  return m ? `${m[1].padStart(2, '0')}:${m[2]}` : raw
+}
+
 function reindex(rows: Draft[]): Draft[] {
   const sorted = [...rows].sort((a, b) => a.km - b.km)
   return sorted.map((r, i) => ({
@@ -184,12 +192,12 @@ export function WaypointsTable({
               {seg.dPlusSeg != null && <span className="sub dp">+{seg.dPlusSeg}</span>}
             </div>
 
-            {/* Barrière — départ en haut, préfixe jour (26-) retiré */}
+            {/* Barrière — départ en haut ; sinon heure nettoyée (préfixe jour retiré) */}
             <div className="c-bh">
               {i === 0 ? (
                 <span className="hr">{startTime ? startTime.slice(0, 5) : '—'}</span>
               ) : (
-                <span className="hr">{w.cutoffRaw ? w.cutoffRaw.replace(/^\d+-/, '') : '—'}</span>
+                <span className="hr">{barrierClock(w.cutoffRaw)}</span>
               )}
             </div>
 
