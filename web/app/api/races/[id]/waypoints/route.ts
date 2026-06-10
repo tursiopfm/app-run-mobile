@@ -61,6 +61,8 @@ export async function PUT(
     cutoff_raw: w.cutoffRaw,
     cutoff_kind: w.cutoffRaw === null ? null : w.cutoffKind,
     type: w.type,
+    supplies: w.supplies ?? [],
+    target_override_sec: w.targetOverrideSec ?? null,
   }))
 
   // Stratégie remplacement : delete + insert dans une seule requête transactionnelle.
