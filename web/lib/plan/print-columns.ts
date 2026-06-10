@@ -9,22 +9,25 @@ export interface PrintColDef {
   key: PrintColKey
   label: string      // libellé dans la fenêtre de personnalisation
   th: string         // en-tête dans la carte
-  weight: number     // largeur relative (répartie auto)
+  weight: number     // largeur relative (colgroup, table-layout fixed)
   align: 'l' | 'r' | 'c'
   fixed?: boolean    // non masquable (ex : Point)
 }
 
+// Poids harmonisés : Point ~2.4× une colonne data, toutes les colonnes data
+// égales (1.0) — sauf Ravito (1.5) qui doit loger jusqu'à 3 badges (S L BV).
+// Répartis sur les colonnes VISIBLES → même équilibre quel que soit le choix.
 export const PRINT_COL_DEFS: Record<PrintColKey, PrintColDef> = {
-  point:  { key: 'point',  label: 'Point',             th: 'Point',    weight: 3.0,  align: 'l', fixed: true },
+  point:  { key: 'point',  label: 'Point',             th: 'Point',    weight: 2.4,  align: 'l', fixed: true },
   km:     { key: 'km',     label: 'Km (cumulé)',       th: 'Km',       weight: 1.0,  align: 'r' },
-  cum:    { key: 'cum',    label: 'Σ D+ (cumulé)',     th: 'ΣD+',      weight: 0.95, align: 'r' },
+  cum:    { key: 'cum',    label: 'Σ D+ (cumulé)',     th: 'ΣD+',      weight: 1.0,  align: 'r' },
   inter:  { key: 'inter',  label: 'Inter (tronçon)',   th: 'Inter',    weight: 1.0,  align: 'r' },
   dplus:  { key: 'dplus',  label: '▲ D+ (tronçon)',    th: '▲D+',      weight: 1.0,  align: 'r' },
   dmoins: { key: 'dmoins', label: '▼ D− (tronçon)',    th: '▼D−',      weight: 1.0,  align: 'r' },
-  rav:    { key: 'rav',    label: 'Ravito',            th: 'Ravito',   weight: 0.8,  align: 'c' },
-  obj:    { key: 'obj',    label: 'Objectif',          th: 'Objectif', weight: 1.5,  align: 'r' },
-  segt:   { key: 'segt',   label: 'Temps tronçon',     th: 'Tps',      weight: 1.3,  align: 'r' },
-  bh:     { key: 'bh',     label: 'Barrière',          th: 'Barrière', weight: 1.5,  align: 'r' },
+  rav:    { key: 'rav',    label: 'Ravito',            th: 'Ravito',   weight: 1.5,  align: 'c' },
+  obj:    { key: 'obj',    label: 'Objectif',          th: 'Objectif', weight: 1.0,  align: 'r' },
+  segt:   { key: 'segt',   label: 'Temps tronçon',     th: 'Tps',      weight: 1.0,  align: 'r' },
+  bh:     { key: 'bh',     label: 'Barrière',          th: 'Barrière', weight: 1.0,  align: 'r' },
 }
 
 export const DEFAULT_PRINT_ORDER: PrintColKey[] =
