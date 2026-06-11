@@ -97,6 +97,15 @@ export function mapUtmbPoint(p: UtmbPoint, idx: number) {
   }
 }
 
+// Date d'édition depuis le JSON embarqué (startDateIso prioritaire, sinon startDate).
+// Renvoie la partie date ISO (YYYY-MM-DD) ou null.
+export function extractUtmbEditionDate(html: string): string | null {
+  const m =
+    html.match(/"startDateIso"\s*:\s*"(\d{4}-\d{2}-\d{2})/) ??
+    html.match(/"startDate"\s*:\s*"(\d{4}-\d{2}-\d{2})/)
+  return m ? m[1] : null
+}
+
 // Garde un point s'il est utile : extrémités, ou ravito / assistance / barrière.
 export function isUsefulPoint(p: UtmbPoint, idx: number, total: number): boolean {
   if (idx === 0 || idx === total - 1) return true
@@ -142,7 +151,9 @@ export const utmbParser: RaceParser = {
       .filter((p, i) => isUsefulPoint(p, i, total))
       .map((p, i) => mapUtmbPoint(p, i))
     // validate : trie par km, force depart/arrivee, réindexe order_index.
-    return validateExtractedRaceData({ raceName: null, editionYear: null, editionDate: null, dateExplicit: false, startDayOfMonth: null, startTimeRaw: null, waypoints })
+    const editionDate = extractUtmbEditionDate(html)
+    const editionYear = editionDate ? Number(editionDate.slice(0, 4)) : null
+    return validateExtractedRaceData({ raceName: null, editionYear, editionDate, dateExplicit: editionDate != null, startDayOfMonth: null, startTimeRaw: null, waypoints })
   },
 }
 
