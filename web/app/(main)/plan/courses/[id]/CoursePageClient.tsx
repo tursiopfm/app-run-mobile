@@ -33,6 +33,19 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   const [deleting, setDeleting] = useState(false)
   const [waypoints, setWaypoints] = useState<RaceWaypoint[]>([])
   const [importOpen, setImportOpen] = useState(false)
+  const [autoSearch, setAutoSearch] = useState(false)
+
+  // Arrivée depuis « Oui, chercher » à la création (RaceEditorModal) :
+  // ?import=auto → on ouvre la feuille sur l'onglet Auto et on lance la recherche.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('import') === 'auto') {
+      setImportOpen(true)
+      setAutoSearch(true)
+      router.replace(`/plan/courses/${raceId}`)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const handleWaypointsChange = useCallback(
@@ -217,8 +230,9 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
       <RaceImportSheet
         raceId={race.id}
         race={{ name: race.name, date: race.date, distance: race.distance, elevation: race.elevation }}
+        autoSearch={autoSearch}
         open={importOpen}
-        onClose={() => setImportOpen(false)}
+        onClose={() => { setImportOpen(false); setAutoSearch(false) }}
         onSaved={(wps) => { setWaypoints(wps); setImportOpen(false) }}
       />
       <RaceEditorModal
