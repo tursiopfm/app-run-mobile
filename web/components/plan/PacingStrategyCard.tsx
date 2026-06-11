@@ -56,12 +56,13 @@ function buildCurvePaths(
   const pMin = Math.min(...seg), pMax = Math.max(...seg)
   const span = Math.max(1, pMax - pMin)
   const yPace = (p: number) => 12 + ((p - pMin) / span) * (H * 0.6)
+  // Step-line : marche horizontale par tronçon (allure constante) + saut vertical
+  // au point de passage. Plus fidèle qu'une diagonale (chaque tronçon a une allure).
   let paceLine = ''
   for (let i = 1; i < n; i++) {
     const x0 = x(waypoints[i - 1].km), x1 = x(waypoints[i].km)
     const yv = yPace(paces[i])
-    if (i === 1) paceLine += `M ${x0.toFixed(1)} ${yv.toFixed(1)} `
-    paceLine += `L ${x1.toFixed(1)} ${yv.toFixed(1)} `
+    paceLine += `${i === 1 ? 'M' : 'L'} ${x0.toFixed(1)} ${yv.toFixed(1)} L ${x1.toFixed(1)} ${yv.toFixed(1)} `
   }
   return { elevArea, paceLine }
 }
