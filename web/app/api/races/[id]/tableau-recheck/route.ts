@@ -41,7 +41,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       const { error: insErr } = await supabase.from('race_waypoints').insert(rows)
       if (insErr) return NextResponse.json({ error: insErr.message }, { status: 500 })
     }
-    await supabase.from('race_tableau_meta').update({
+    const { error: metaErr } = await supabase.from('race_tableau_meta').update({
       edition_year: pending.newMeta.editionYear,
       edition_date: pending.newMeta.editionDate,
       date_explicit: pending.newMeta.dateExplicit,
@@ -52,13 +52,15 @@ export async function POST(request: Request, { params }: { params: { id: string 
       pending_diff_at: null,
       updated_at: nowISO,
     }).eq('race_id', params.id)
+    if (metaErr) return NextResponse.json({ error: metaErr.message }, { status: 500 })
   } else {
-    await supabase.from('race_tableau_meta').update({
+    const { error: metaErr } = await supabase.from('race_tableau_meta').update({
       source_hash: pending.newMeta.sourceHash,
       pending_diff: null,
       pending_diff_at: null,
       updated_at: nowISO,
     }).eq('race_id', params.id)
+    if (metaErr) return NextResponse.json({ error: metaErr.message }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })
