@@ -7,6 +7,7 @@ import {
   livetrailParser,
   extractSlugAndRaceId,
   LivetrailError,
+  listLivetrailRaces,
 } from '@/lib/race-import/sources/livetrail'
 
 const FIXTURE_XML = `<?xml version="1.0" encoding="UTF-8"?>
@@ -212,5 +213,25 @@ describe('livetrailParser.parse()', () => {
         'https://ultramarin-breizhchrono.v3.livetrail.net/fr/2026/races/Inexistant',
       ),
     ).rejects.toThrow(LivetrailError)
+  })
+})
+
+describe('listLivetrailRaces()', () => {
+  afterEach(() => jest.restoreAllMocks())
+
+  it('renvoie TOUTES les courses de l\'événement avec leurs noms', async () => {
+    mockFetchOnce(FIXTURE_XML)
+    const races = await listLivetrailRaces('https://ultramarin-breizhchrono.v3.livetrail.net/fr/2026')
+    const names = races.map((r) => r.raceName)
+    expect(names).toContain('Grand Raid')
+    expect(names).toContain('Raid')
+  })
+
+  it('mappe les waypoints de chaque course (Grand Raid = 14 points)', async () => {
+    mockFetchOnce(FIXTURE_XML)
+    const races = await listLivetrailRaces('https://ultramarin-breizhchrono.v3.livetrail.net/fr/2026')
+    const gd = races.find((r) => r.raceName === 'Grand Raid')!
+    expect(gd.data.waypoints).toHaveLength(14)
+    expect(gd.data.waypoints[gd.data.waypoints.length - 1].km).toBe(177.17)
   })
 })

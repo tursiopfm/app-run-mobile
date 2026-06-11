@@ -80,6 +80,17 @@ async function fetchParcoursXml(slug: string, raceId: string): Promise<string> {
   }
 }
 
+// Fetch toutes les courses d'un événement (slug) — parcours.php renvoie tous les
+// blocs quel que soit le param. Vérifié : sans param = avec param = tous les blocs.
+async function fetchParcoursXmlBySlug(slug: string): Promise<string> {
+  const runUrl = `https://${slug}.livetrail.run/parcours.php`
+  try {
+    return await fetchXml(runUrl)
+  } catch {
+    return await fetchXml(`https://${slug}.livetrail.net/parcours.php`)
+  }
+}
+
 type RawPt = {
   '@_n'?: string
   '@_km'?: string | number
@@ -93,47 +104,37 @@ type RawPoints = {
   pt?: RawPt | RawPt[]
 }
 
+type RawCourse = { '@_id'?: string; '@_n'?: string }
+
 type RawDoc = {
   d?: {
+    courses?: { c?: RawCourse | RawCourse[] }
     points?: RawPoints | RawPoints[]
   }
 }
 
-function mapXmlToExtracted(
-  xml: string,
-  raceId: string,
-): ExtractedRaceData {
+function parseXml(xml: string): RawDoc {
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: '@_',
     parseAttributeValue: false,
     trimValues: true,
   })
-  const doc = parser.parse(xml) as RawDoc
+  return parser.parse(xml) as RawDoc
+}
 
-  const pointsBlocks = doc?.d?.points
-  if (!pointsBlocks) {
-    throw new LivetrailError('XML sans bloc <points>')
-  }
-  const blocks = Array.isArray(pointsBlocks) ? pointsBlocks : [pointsBlocks]
-  const block = blocks.find((b) => b['@_course'] === raceId)
-  if (!block) {
-    throw new LivetrailError(`Bloc <points course="${raceId}"> introuvable`)
-  }
-
-  // Garde-fou : fast-xml-parser collapse en objet si un seul <pt>.
+// Un bloc <points course="X"> → ExtractedRaceData (waypoints + validate).
+function mapPointsBlock(block: RawPoints): ExtractedRaceData {
   const ptsRaw = block.pt
   if (!ptsRaw) {
-    throw new LivetrailError(`Aucun point de passage pour la course ${raceId}`)
+    throw new LivetrailError('Aucun point de passage dans le bloc <points>')
   }
   const pts: RawPt[] = Array.isArray(ptsRaw) ? ptsRaw : [ptsRaw]
 
   const num = (v: string | number | undefined): number | null =>
     v !== undefined && v !== '' ? Number(v) : null
 
-  // Le XML parcours.php n'expose pas de D- : on le dérive de l'altitude.
-  // D-cumulé = D+cumulé − (altitude − altitude_départ), toujours ≥ 0
-  // (le D+ total majore toujours le gain net d'altitude).
+  // D- dérivé de l'altitude (le XML n'expose pas de D-).
   const departAltitude = num(pts[0]?.['@_a'])
 
   const waypoints = pts.map((p, idx) => {
@@ -150,7 +151,6 @@ function mapXmlToExtracted(
       dPlus !== null && altitude !== null && departAltitude !== null
         ? Math.max(0, Math.round(dPlus - (altitude - departAltitude)))
         : null
-    // type sera réécrit par validateExtractedRaceData pour depart/arrivee.
     const type: WaypointType = idx === 0 ? 'depart' : 'ravito'
     return {
       orderIndex: idx,
@@ -167,12 +167,64 @@ function mapXmlToExtracted(
     }
   })
 
-  // validate : réindexe order_index, force depart/arrivee, trie par km, vérifie strict croissant.
-  return validateExtractedRaceData({
-    raceName: null,
-    editionYear: null,
-    waypoints,
-  })
+  return validateExtractedRaceData({ raceName: null, editionYear: null, waypoints })
+}
+
+function mapXmlToExtracted(xml: string, raceId: string): ExtractedRaceData {
+  const doc = parseXml(xml)
+  const pointsBlocks = doc?.d?.points
+  if (!pointsBlocks) {
+    throw new LivetrailError('XML sans bloc <points>')
+  }
+  const blocks = Array.isArray(pointsBlocks) ? pointsBlocks : [pointsBlocks]
+  const block = blocks.find((b) => b['@_course'] === raceId)
+  if (!block) {
+    throw new LivetrailError(`Bloc <points course="${raceId}"> introuvable`)
+  }
+  return mapPointsBlock(block)
+}
+
+// Depuis n'importe quelle URL LiveTrail (même page événement) : renvoie TOUTES les
+// courses de l'événement avec leur nom (depuis <courses><c n>). Le classement par
+// distance/D+ (côté find-race) choisit la bonne.
+export async function listLivetrailRaces(
+  url: string,
+): Promise<Array<{ raceName: string | null; data: ExtractedRaceData }>> {
+  let slug: string
+  try {
+    slug = new URL(url).hostname.split('.')[0]
+  } catch {
+    throw new LivetrailError(`URL invalide : ${url}`)
+  }
+  if (!slug) throw new LivetrailError(`Slug introuvable : ${url}`)
+
+  const xml = await fetchParcoursXmlBySlug(slug)
+  const doc = parseXml(xml)
+
+  const coursesRaw = doc?.d?.courses?.c
+  const courses: RawCourse[] = coursesRaw
+    ? (Array.isArray(coursesRaw) ? coursesRaw : [coursesRaw])
+    : []
+  const nameById = new Map<string, string>()
+  for (const c of courses) {
+    if (c['@_id']) nameById.set(c['@_id'], (c['@_n'] ?? '').trim())
+  }
+
+  const pointsBlocks = doc?.d?.points
+  if (!pointsBlocks) throw new LivetrailError('XML sans bloc <points>')
+  const blocks = Array.isArray(pointsBlocks) ? pointsBlocks : [pointsBlocks]
+
+  const out: Array<{ raceName: string | null; data: ExtractedRaceData }> = []
+  for (const block of blocks) {
+    try {
+      const data = mapPointsBlock(block)
+      const id = block['@_course']
+      out.push({ raceName: (id ? nameById.get(id) : undefined) ?? null, data })
+    } catch {
+      // bloc invalide (course sans points exploitables) → on l'ignore
+    }
+  }
+  return out
 }
 
 export const livetrailParser: RaceParser = {
