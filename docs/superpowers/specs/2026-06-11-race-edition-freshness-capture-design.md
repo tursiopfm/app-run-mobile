@@ -1,6 +1,6 @@
 # Versioning des éditions & fraîcheur des tableaux — Lot 1 : Capture de l'édition
 
-> **Status: Spec** · 2026-06-11
+> **Status: Implémenté** · 2026-06-11 · Code: `web/lib/race-import/freshness.ts`, `hash.ts`, `sources/livetrail.ts`, `sources/utmb.ts`, `schema.ts`, `prompt.ts` · `web/app/api/races/[id]/waypoints/route.ts` · `web/components/plan/{RaceImportSheet,FreshnessBadge}.tsx` · migration `039_race_tableau_meta.sql` · branche `feat/race-edition-freshness`
 >
 > Lot 1 d'un brief en 2 lots (cf. décision de périmètre). **Lot 1 = capture de
 > l'édition** (ce document). **Lot 2 = re-checks automatiques & diff** (spec séparé,
