@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Race } from '@/types/plan'
+import type { Race, RaceTableauMeta, RaceWaypoint } from '@/types/plan'
 import { getRaces, deleteRace, peekRaces } from '@/lib/plan/storage'
 import { RaceEditorModal } from '@/components/plan/RaceEditorModal'
 import { EditButton } from '@/components/plan/EditButton'
 import { WaypointsTable } from '@/components/plan/WaypointsTable'
 import { RaceImportSheet } from '@/components/plan/RaceImportSheet'
-import type { RaceWaypoint } from '@/types/plan'
+import { FreshnessBadge } from '@/components/plan/FreshnessBadge'
 import { colors } from '@/lib/design/colors'
 
 function formatLongDate(iso: string): string {
@@ -32,6 +32,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   const [editorOpen, setEditorOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [waypoints, setWaypoints] = useState<RaceWaypoint[]>([])
+  const [meta, setMeta] = useState<RaceTableauMeta | null>(null)
   const [importOpen, setImportOpen] = useState(false)
   const [autoSearch, setAutoSearch] = useState(false)
 
@@ -71,6 +72,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
     if (wpsRes.ok) {
       const body = await wpsRes.json()
       setWaypoints(body.waypoints ?? [])
+      setMeta(body.meta ?? null)
     }
   }, [raceId])
 
@@ -162,6 +164,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
           </button>
         ) : (
           <>
+            <FreshnessBadge meta={meta} />
             <div className="mb-3 flex items-center justify-between gap-3 rounded-[10px] bg-trail-surface border border-trail-border px-3 py-2">
               <div className="text-caption min-w-0">
                 {race.startTime && race.targetDurationMin != null ? (
