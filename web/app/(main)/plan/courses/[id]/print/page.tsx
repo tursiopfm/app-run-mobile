@@ -83,11 +83,11 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
       case 'dmoins': return <span className="sv dm">{seg.dMoinsSeg != null ? <><span className="ar">▼</span>{seg.dMoinsSeg}</> : dash}</span>
       case 'rav':    return (
         <span className="rav">
-          {w.supplies.includes('liquid') && <span className="rb">L</span>}
-          {w.supplies.includes('solid') && <span className="rb">S</span>}
-          {w.supplies.includes('hot') && <span className="rb">C</span>}
-          {w.supplies.includes('base_vie') && <span className="rb bv">BV</span>}
-          {w.supplies.includes('assistance') && <span className="rb">A</span>}
+          {w.supplies.includes('liquid') && <span className="rb liq">L</span>}
+          {w.supplies.includes('solid') && <span className="rb sol">S</span>}
+          {w.supplies.includes('hot') && <span className="rb hot">C</span>}
+          {w.supplies.includes('base_vie') && <span className="rb base">BV</span>}
+          {w.supplies.includes('assistance') && <span className="rb ass">A</span>}
         </span>
       )
       case 'obj':    return <span className="obj">{objLabel ?? dash}</span>
@@ -143,8 +143,10 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .sv.dm{color:var(--ink-soft);} .pdfroot .sv.dm .ar{font-size:6.5px;}
         .pdfroot .dash{color:var(--ink-faint);font-weight:500;}
         .pdfroot .rav{display:inline-flex;gap:1.5px;}
-        .pdfroot .rb{font-family:var(--d);font-weight:700;font-size:7px;min-width:10px;height:9px;padding:0 1.5px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--ink);border-radius:2.5px;color:var(--ink);line-height:1;}
-        .pdfroot .rb.bv{background:var(--ink);color:#fff;}
+        .pdfroot .rb{font-family:var(--d);font-weight:700;font-size:7px;min-width:10px;height:9px;padding:0 1.5px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:2.5px;color:#fff;line-height:1;}
+        .pdfroot .rb.liq{background:#2E90D0;} .pdfroot .rb.sol{background:#B45309;}
+        .pdfroot .rb.hot{background:#DC2626;} .pdfroot .rb.base{background:#16A34A;}
+        .pdfroot .rb.ass{background:#7C5CFC;}
         .pdfroot .obj{font-family:var(--d);font-size:9.5px;font-weight:700;}
         .pdfroot .bh{font-family:var(--d);font-size:9.5px;font-weight:700;color:var(--ink);white-space:nowrap;}
         .pdfroot tr.is-base td{background:#D5E3DD;}
@@ -169,7 +171,6 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           .pdfroot .card{position:static !important;transform:none !important;top:auto;left:auto;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
           .pdfroot tbody tr:nth-child(even){background:var(--zebra) !important;}
           .pdfroot tr.is-base td{background:#D5E3DD !important;}
-          .pdfroot .rb.bv{background:#000 !important;color:#fff !important;}
           *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
         }
       `}</style>
@@ -232,11 +233,11 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           <div className="legend">
             <span className="k">Inter · ▲D+ · ▼D− = tronçon (depuis pt préc.)</span>
             <span className="k">ΣD+ = cumulé</span>
-            <span className="k"><span className="rb">L</span>liquide</span>
-            <span className="k"><span className="rb">S</span>solide</span>
-            <span className="k"><span className="rb">C</span>chaud</span>
-            <span className="k"><span className="rb bv">BV</span>base vie</span>
-            <span className="k"><span className="rb">A</span>assistance</span>
+            <span className="k"><span className="rb liq">L</span>liquide</span>
+            <span className="k"><span className="rb sol">S</span>solide</span>
+            <span className="k"><span className="rb hot">C</span>chaud</span>
+            <span className="k"><span className="rb base">BV</span>base vie</span>
+            <span className="k"><span className="rb ass">A</span>assistance</span>
             <span className="k" style={{ marginLeft: 'auto', color: 'var(--ink-faint)' }}>Obj = heure visée · Barrière = limite</span>
           </div>
         </div>

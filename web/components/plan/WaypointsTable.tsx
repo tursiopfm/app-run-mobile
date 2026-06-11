@@ -119,8 +119,10 @@ export function WaypointsTable({
           --orange:var(--trail-primary);--blue:#2E90D0;--green:#16A34A;--yellow:#B45309;--red:#DC2626;
           --d:'Space Grotesk',var(--font-display,system-ui),sans-serif;color:var(--text);
         }
-        .wtbl .legend-mini{font-size:9.5px;color:var(--faint);padding:0 3px 8px;line-height:1.4;}
+        .wtbl .legend-mini{font-size:9.5px;color:var(--faint);padding:0 3px 8px;line-height:1.5;}
         .wtbl .legend-mini b{color:var(--blue);font-weight:600;}
+        .wtbl .legend-mini .bhk{color:var(--faint);font-weight:600;}
+        .wtbl .legend-mini .lg{display:inline-flex;align-items:center;gap:3px;margin-right:7px;white-space:nowrap;}
         /* Colonnes numériques resserrées (un D+ tient dans 32px) + gap réduit pour
            laisser une largeur LISIBLE à POINT sur téléphone (~360px) — sinon le nom
            se casse caractère par caractère. */
@@ -159,8 +161,8 @@ export function WaypointsTable({
       `}</style>
 
       <div className="legend-mini">
-        <b>+x,x</b> sous la distance = inter calculé · <b>BH</b> = barrière · ravitos :
-        L liquide · S solide · C chaud · BV base vie · A assistance
+        <b>+x</b> sous Dist · D+ · D− = l&apos;intermédiaire (depuis le point précédent) · <span className="bhk">BH</span> = barrière
+        <br />ravitos : <span className="lg"><span className="chip liq">L</span>liquide</span><span className="lg"><span className="chip sol">S</span>solide</span><span className="lg"><span className="chip hot">C</span>chaud</span><span className="lg"><span className="chip base">BV</span>base vie</span><span className="lg"><span className="chip ass">A</span>assistance</span>
       </div>
 
       <div className="gA head">
