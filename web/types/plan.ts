@@ -227,3 +227,19 @@ export interface ExtractedRaceData {
   editionYear: number | null
   waypoints: Array<Omit<RaceWaypoint, 'id' | 'raceId'>>
 }
+
+export type FreshnessStatus =
+  | 'confirmed'
+  | 'provisional_previous_edition'
+  | 'unknown'
+
+export interface RaceTableauMeta {
+  raceId: string
+  editionYear: number | null
+  editionDate: string | null        // ISO YYYY-MM-DD
+  dateExplicit: boolean
+  freshnessStatus: FreshnessStatus
+  sourceUrl: string | null
+  sourceCheckedAt: string           // ISO timestamp
+  sourceHash: string | null
+}
