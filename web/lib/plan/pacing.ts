@@ -11,7 +11,7 @@ export interface PacingWaypoint {
 
 export interface PacingOptions {
   totalDurationSec: number // temps cible total (arrivée)
-  fade: number             // >= 0 ; 0 = répartition pure effort
+  fade: number             // [-1.2..1.2] ; 0 = pure effort ; >0 = positif split ; <0 = négatif split
 }
 
 // Retourne les secondes écoulées depuis le départ pour chaque point (aligné par
