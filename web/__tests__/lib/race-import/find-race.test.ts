@@ -64,6 +64,45 @@ describe('harvestRaceUrls', () => {
   })
 })
 
+const LIVETRAIL_XML = `<d>
+  <courses><c id="GdRaid" n="Grand Raid"/><c id="Raid" n="Raid" sel="1"/></courses>
+  <points course="GdRaid">
+    <pt n="Départ" km="0" d="0" a="10" b="" />
+    <pt n="Arrivée" km="177" d="1430" a="10" b="28-13:00" />
+  </points>
+  <points course="Raid">
+    <pt n="Départ" km="0" d="0" a="5" b="" />
+    <pt n="Arrivée" km="100" d="780" a="3" b="26-09:15" />
+  </points>
+</d>`
+
+function mockFetchLivetrail() {
+  global.fetch = jest.fn().mockImplementation((url: string) => {
+    const h = new URL(url).hostname
+    if (h.endsWith('.livetrail.run') || h.endsWith('.livetrail.net')) {
+      return Promise.resolve({ ok: true, text: async () => LIVETRAIL_XML } as any)
+    }
+    return Promise.resolve({ ok: false, status: 404 } as any)
+  })
+}
+
+describe('resolveCandidates — LiveTrail événement', () => {
+  afterEach(() => jest.restoreAllMocks())
+
+  it('depuis une page événement, liste toutes les courses et choisit par distance/D+', async () => {
+    mockFetchLivetrail()
+    const target = { name: 'Ultra Marin', date: '2026-06-26', distance: 177, elevation: 1430 }
+    const out = await resolveCandidates(target, [
+      'https://ultramarin-breizhchrono.v3.livetrail.net/fr/2026',
+    ])
+    expect(out.length).toBeGreaterThanOrEqual(2)
+    expect(out[0].raceName).toBe('Grand Raid')
+    expect(out[0].totalKm).toBe(177)
+    expect(out[0].confident).toBe(true)
+    expect(out.find((c) => c.raceName === 'Raid')!.confident).toBe(false)
+  })
+})
+
 describe('rankRaceCandidates', () => {
   const target: RaceTarget = { name: 'Ultra Saint-Jacques', date: '2026-06-12', distance: 139, elevation: 6000 }
   const base = { url: '', parserId: 'utmb', nbPoints: 10, waypoints: [] as any }

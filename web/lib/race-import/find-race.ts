@@ -4,6 +4,7 @@
 import 'server-only'
 import OpenAI from 'openai'
 import { findParserForUrl } from './sources'
+import { listLivetrailRaces } from './sources/livetrail'
 import type { ExtractedRaceData } from '@/types/plan'
 
 export interface RaceTarget {
@@ -99,22 +100,51 @@ async function parseCandidate(url: string): Promise<ParsedCandidate | null> {
   }
 }
 
-// URLs → candidats parsés (filtrés/parsés/dédupliqués) → classés.
-export async function resolveCandidates(target: RaceTarget, rawUrls: string[]): Promise<RaceCandidate[]> {
-  const urls = harvestRaceUrls(rawUrls)
-    .filter((u) => findParserForUrl(u) != null)
-    .slice(0, MAX_PARSE)
-  const parsed = (await Promise.all(urls.map(parseCandidate)))
-    .filter((c): c is ParsedCandidate => c != null)
-  // dédup d'une même course atteinte par 2 URLs (ex. fr/en)
+function dedupCandidates(list: ParsedCandidate[]): ParsedCandidate[] {
   const seen = new Set<string>()
-  const uniq = parsed.filter((c) => {
+  return list.filter((c) => {
     const k = `${c.parserId}|${c.totalKm}|${c.totalDplus}`
     if (seen.has(k)) return false
     seen.add(k)
     return true
   })
-  return rankRaceCandidates(target, uniq)
+}
+
+// URLs → candidats parsés (filtrés/parsés/dédupliqués) → classés.
+export async function resolveCandidates(target: RaceTarget, rawUrls: string[]): Promise<RaceCandidate[]> {
+  const urls = harvestRaceUrls(rawUrls)
+  const utmbUrls = urls.filter((u) => findParserForUrl(u)?.id === 'utmb').slice(0, MAX_PARSE)
+  const livetrailUrls = urls.filter((u) => findParserForUrl(u)?.id === 'livetrail')
+
+  const parsed: ParsedCandidate[] = []
+
+  // UTMB : 1 candidat par URL.
+  const utmbParsed = (await Promise.all(utmbUrls.map(parseCandidate)))
+    .filter((c): c is ParsedCandidate => c != null)
+  parsed.push(...utmbParsed)
+
+  // LiveTrail : toutes les courses de l'événement (dédup par slug → 1 fetch/événement).
+  const slugsSeen = new Set<string>()
+  for (const u of livetrailUrls) {
+    let slug: string
+    try { slug = new URL(u).hostname.split('.')[0] } catch { continue }
+    if (slugsSeen.has(slug)) continue
+    slugsSeen.add(slug)
+    try {
+      const races = await listLivetrailRaces(u)
+      for (const r of races) {
+        const wps = r.data.waypoints
+        if (wps.length === 0) continue
+        const last = wps[wps.length - 1]
+        parsed.push({
+          url: u, parserId: 'livetrail', raceName: r.raceName,
+          totalKm: last.km, totalDplus: last.dPlus, nbPoints: wps.length, waypoints: wps,
+        })
+      }
+    } catch { /* événement livetrail injoignable → ignoré */ }
+  }
+
+  return rankRaceCandidates(target, dedupCandidates(parsed))
 }
 
 // Orchestrateur complet : recherche → résolution.
