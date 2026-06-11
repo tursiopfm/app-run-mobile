@@ -13,7 +13,7 @@ describe('parser registry', () => {
     const parser = {
       id: 'test-parser',
       match: (url: string) => url.includes('example.com'),
-      parse: async () => ({ raceName: null, editionYear: null, waypoints: [] }),
+      parse: async () => ({ raceName: null, editionYear: null, editionDate: null, dateExplicit: false, startDayOfMonth: null, startTimeRaw: null, waypoints: [] }),
     }
     registerParser(parser)
     expect(findParserForUrl('https://example.com/x')).toBe(parser)

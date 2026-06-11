@@ -156,6 +156,7 @@ describe('resolveCandidates — fallback générique', () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 404 } as any)
     mockExtract.mockResolvedValue({
       raceName: 'Ultra Marin', editionYear: null,
+      editionDate: null, dateExplicit: false, startDayOfMonth: null, startTimeRaw: null,
       waypoints: [
         { orderIndex: 0, name: 'Départ', km: 0, kmInter: null, dPlus: 0, dMoins: 0, cutoffRaw: null, cutoffKind: null, type: 'depart', supplies: [], targetOverrideSec: null },
         { orderIndex: 1, name: 'Arrivée', km: 177, kmInter: null, dPlus: 1430, dMoins: 1430, cutoffRaw: null, cutoffKind: null, type: 'arrivee', supplies: [], targetOverrideSec: null },
@@ -172,7 +173,7 @@ describe('resolveCandidates — fallback générique', () => {
 
   it('NE déclenche PAS le LLM si un candidat parsable confident existe', async () => {
     mockFetchUtmb()
-    mockExtract.mockResolvedValue({ raceName: null, editionYear: null, waypoints: [] })
+    mockExtract.mockResolvedValue({ raceName: null, editionYear: null, editionDate: null, dateExplicit: false, startDayOfMonth: null, startTimeRaw: null, waypoints: [] })
     const target = { name: 'X', date: '2026-06-12', distance: 138, elevation: 5300 }
     const out = await resolveCandidates(target, [
       'https://saint-jacques.utmb.world/fr/races/100M',

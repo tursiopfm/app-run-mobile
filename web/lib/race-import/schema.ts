@@ -73,6 +73,10 @@ export function rawToExtractedRaceData(raw: RawExtraction): ExtractedRaceData {
   return {
     raceName: raw.race_name,
     editionYear: raw.edition_year,
+    editionDate: null,
+    dateExplicit: false,
+    startDayOfMonth: null,
+    startTimeRaw: null,
     waypoints: raw.waypoints.map((w) => ({
       orderIndex: w.order_index,
       name: w.name,
@@ -136,6 +140,10 @@ export function validateExtractedRaceData(
   return {
     raceName: data.raceName,
     editionYear: data.editionYear,
+    editionDate: data.editionDate,
+    dateExplicit: data.dateExplicit,
+    startDayOfMonth: data.startDayOfMonth,
+    startTimeRaw: data.startTimeRaw,
     waypoints: reindexed,
   }
 }

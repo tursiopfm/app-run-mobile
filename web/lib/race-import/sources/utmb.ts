@@ -142,7 +142,7 @@ export const utmbParser: RaceParser = {
       .filter((p, i) => isUsefulPoint(p, i, total))
       .map((p, i) => mapUtmbPoint(p, i))
     // validate : trie par km, force depart/arrivee, réindexe order_index.
-    return validateExtractedRaceData({ raceName: null, editionYear: null, waypoints })
+    return validateExtractedRaceData({ raceName: null, editionYear: null, editionDate: null, dateExplicit: false, startDayOfMonth: null, startTimeRaw: null, waypoints })
   },
 }
 

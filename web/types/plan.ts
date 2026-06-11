@@ -225,6 +225,10 @@ export interface RaceWaypoint {
 export interface ExtractedRaceData {
   raceName: string | null
   editionYear: number | null
+  editionDate: string | null        // ISO YYYY-MM-DD si une date complète détectée
+  dateExplicit: boolean             // true si année/date lue explicitement dans la source
+  startDayOfMonth: number | null    // signal LiveTrail (jour-du-mois du départ), null ailleurs
+  startTimeRaw: string | null       // signal LiveTrail (heure de départ 'HH:MM'), null ailleurs
   waypoints: Array<Omit<RaceWaypoint, 'id' | 'raceId'>>
 }
 

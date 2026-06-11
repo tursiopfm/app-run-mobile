@@ -167,7 +167,7 @@ function mapPointsBlock(block: RawPoints): ExtractedRaceData {
     }
   })
 
-  return validateExtractedRaceData({ raceName: null, editionYear: null, waypoints })
+  return validateExtractedRaceData({ raceName: null, editionYear: null, editionDate: null, dateExplicit: false, startDayOfMonth: null, startTimeRaw: null, waypoints })
 }
 
 function mapXmlToExtracted(xml: string, raceId: string): ExtractedRaceData {

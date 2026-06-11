@@ -90,6 +90,10 @@ describe('validateExtractedRaceData', () => {
       validateExtractedRaceData({
         raceName: null,
         editionYear: null,
+        editionDate: null,
+        dateExplicit: false,
+        startDayOfMonth: null,
+        startTimeRaw: null,
         waypoints: [],
       }),
     ).not.toThrow()
@@ -100,6 +104,10 @@ describe('validateExtractedRaceData', () => {
       validateExtractedRaceData({
         raceName: null,
         editionYear: null,
+        editionDate: null,
+        dateExplicit: false,
+        startDayOfMonth: null,
+        startTimeRaw: null,
         waypoints: [
           makeWaypoint({ orderIndex: 0, km: 0, type: 'depart' }),
           makeWaypoint({ orderIndex: 1, name: 'B', km: 0, type: 'arrivee' }),
@@ -113,6 +121,10 @@ describe('validateExtractedRaceData', () => {
       validateExtractedRaceData({
         raceName: null,
         editionYear: null,
+        editionDate: null,
+        dateExplicit: false,
+        startDayOfMonth: null,
+        startTimeRaw: null,
         waypoints: [makeWaypoint({ dPlus: -10 })],
       }),
     ).toThrow(/d_plus|dPlus/i)
@@ -122,6 +134,10 @@ describe('validateExtractedRaceData', () => {
     const data = {
       raceName: null,
       editionYear: null,
+      editionDate: null,
+      dateExplicit: false,
+      startDayOfMonth: null,
+      startTimeRaw: null,
       waypoints: [
         makeWaypoint({ orderIndex: 0, km: 0, type: 'ravito' }),
         makeWaypoint({ orderIndex: 1, name: 'B', km: 10, type: 'ravito' }),
@@ -136,6 +152,10 @@ describe('validateExtractedRaceData', () => {
     const data = {
       raceName: null,
       editionYear: null,
+      editionDate: null,
+      dateExplicit: false,
+      startDayOfMonth: null,
+      startTimeRaw: null,
       waypoints: [
         makeWaypoint({ orderIndex: 5, km: 0, type: 'depart' }),
         makeWaypoint({ orderIndex: 9, name: 'B', km: 10, type: 'arrivee' }),
