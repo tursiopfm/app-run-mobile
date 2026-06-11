@@ -65,8 +65,7 @@ Grain = **une course-édition**. Migration `web/supabase/migrations/038_livetrai
 | `platform` | `text not null default 'livetrail'` | extension future (OpenSplitTime…) |
 | `event_slug` | `text not null` | sous-domaine, ex. `ultramarin-breizhchrono` |
 | `event_name` | `text` (nullable) | nom événement (depuis snapshot ; null en accumulation seule) |
-| `course_id` | `text not null` | raceId LiveTrail, ex. `GdRaid` |
-| `course_name` | `text` (nullable) | depuis `<courses><c n>`, ex. `Grand Raid` |
+| `course_name` | `text` (nullable) | nom course, ex. `Grand Raid` (le `course_id` du XML n'est pas exposé par `listLivetrailRaces`, owned Fraîcheur → on clé sur le nom) |
 | `edition_year` | `int` (nullable) | depuis date snapshot / année URL v3 ; null si inconnu |
 | `edition_date` | `date` (nullable) | si connue |
 | `total_km` | `numeric(6,2)` (nullable) | dernier waypoint |
@@ -76,9 +75,10 @@ Grain = **une course-édition**. Migration `web/supabase/migrations/038_livetrai
 | `first_seen_at` | `timestamptz not null default now()` | |
 | `last_seen_at` | `timestamptz not null default now()` | rafraîchi à chaque vue (cron/accumulation) |
 
-**Unicité (upsert)** : index unique sur l'expression
-`(platform, event_slug, course_id, coalesce(edition_year, -1))` — `coalesce` car
-`edition_year` est nullable et `NULL` est distinct en unicité Postgres.
+**Unicité (upsert)** : index unique
+`(platform, event_slug, course_name, edition_year) NULLS NOT DISTINCT` (Postgres 15+ —
+traite les `NULL` comme égaux, donc une course sans année/nom ne se duplique pas, et la cible
+d'`onConflict` reste une liste de colonnes réelles exploitable par l'upsert PostgREST).
 
 **Recherche** : `create extension if not exists pg_trgm;` puis index GIN
 `(search_text gin_trgm_ops)` pour des `ILIKE '%token%'` rapides. À petite échelle un scan
@@ -96,20 +96,18 @@ Nouveau fichier `web/lib/race-import/catalog.ts` (logique d'upsert + recherche).
 
 ### 4.1 Accumulation passive (gratuit, aucun crawl en plus)
 
-Helper `upsertCatalogEntries(slug, races)` appelé dans
-[find-race.ts](../../../web/lib/race-import/find-race.ts) juste **après** chaque
-`listLivetrailRaces(u)` réussi (branche LiveTrail de `resolveCandidates`). On a déjà slug +
-courses + totaux. Écrit via `createServiceClient`. Tolérant aux échecs (un upsert qui rate ne
-casse pas la résolution).
+Helper `accumulateCatalog(candidates: RaceCandidate[])` appelé dans
+[find-race.ts](../../../web/lib/race-import/find-race.ts) après la résolution **OpenAI** (tier 2),
+pour capturer les événements LiveTrail nouvellement découverts. Il filtre les candidats
+`parserId === 'livetrail'` (qui portent `url`, `raceName`, `totalKm`, `totalDplus`), bâtit les
+lignes (`event_slug` = host du `url`, `course_name` = `raceName`) et upsert via
+`createServiceClient`. **`resolveCandidates` reste pur** (aucune DB) → tests existants intacts.
+Tolérant aux échecs (un upsert qui rate ne casse pas la résolution).
 
-`races` provient de `listLivetrailRaces` (forme `Array<{ raceName, data }>`). L'info
-d'édition vit sur **`race.data`** (`ExtractedRaceData.editionYear` — déjà présent — et
-`editionDate`, ajouté par Fraîcheur). Pour LiveTrail le XML n'a **ni mois ni année** : la
-session Fraîcheur dérive l'année de l'**URL source** (`/fr/{YYYY}/`) via le helper pur
-`extractYearFromLivetrailUrl(url)`. `upsertCatalogEntries` lit donc en **null-safe** :
-`edition_year = race.data.editionYear ?? extractYearFromLivetrailUrl(sourceUrl) ?? null` et
-`edition_date = race.data.editionDate ?? null` → fonctionne **avant et après** que Fraîcheur
-ait livré ces helpers/champs.
+`edition_year` est dérivé de l'**URL source** (`/fr/{YYYY}/`) par un helper pur
+`yearFromLivetrailUrl(url)` (local au catalogue tant que Fraîcheur n'a pas exporté son
+`extractYearFromLivetrailUrl` — même regex ; consolidation en suite). `null` si l'URL ne porte
+pas d'année → la clé `NULLS NOT DISTINCT` regroupe alors sur « édition courante ».
 
 ### 4.2 Snapshot glissant (seeding)
 
@@ -180,7 +178,7 @@ Deux sessions travaillent en parallèle sur ce module (même working tree). Spec
 | Migration champs édition/fraîcheur (course persistée) | **Fraîcheur** | migration **037** |
 | Migration `livetrail_catalog` | **Catalogue (ce doc)** | migration **038** |
 | `web/lib/race-import/sources/livetrail.ts` (détection édition) | **Fraîcheur** | ajoute `extractYearFromLivetrailUrl(url)` + `parseLivetrailStart(hp)` + champs `editionDate`/`startDayOfMonth`/`startTimeRaw` sur `ExtractedRaceData` |
-| `web/lib/race-import/catalog.ts` + cron + `searchCatalogUrls` | **Catalogue** | dérive `edition_year` via `extractYearFromLivetrailUrl(sourceUrl)` ; lit `race.data.editionYear/editionDate` en **null-safe** |
+| `web/lib/race-import/catalog.ts` + cron + `searchCatalogUrls` | **Catalogue** | dérive `edition_year` via un helper local `yearFromLivetrailUrl(url)` (consolidable avec `extractYearFromLivetrailUrl` de Fraîcheur ensuite) |
 | Types schéma (`ExtractedRaceData`, champs fraîcheur) | **Fraîcheur** | Catalogue **n'édite pas** ces types ; `RaceCandidate.url` sert de `source_url` au chemin d'écriture Fraîcheur |
 | Badge fraîcheur sur la carte candidat | **Fraîcheur** | si un `edition_year` au niveau candidat devient nécessaire → suite coordonnée (hors scope ici) |
 | Crons `app/api/cron/*` | partagé | noms distincts : `livetrail-catalog` (moi) vs re-check (Fraîcheur) — pas de conflit fichier |
