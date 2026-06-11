@@ -86,94 +86,104 @@ export function ObjectifCourseBlock({ onChange }: Props) {
     return { mainRace: main, otherRaces: others }
   }, [races])
 
+  // Modal rendu à une position STABLE (même index) dans les 3 branches de retour.
+  // Sinon le passage état vide → état normal (1re course créée) le démonte/remonte,
+  // perdant l'écran « Course créée » (createdId) alors que modalOpen reste true →
+  // réaffiche le formulaire vide par-dessus. Il portale dans document.body : sa
+  // place dans l'arbre n'affecte pas la mise en page, seulement la réconciliation.
+  const modal = (
+    <RaceEditorModal
+      race={editing}
+      open={modalOpen}
+      onClose={() => setModalOpen(false)}
+      onSaved={handleSaved}
+    />
+  )
+
   if (!loaded) {
     return (
-      <BlockCard
-        title={L.objectifTitle}
-        helpTitle={L.objectifHelpTitle}
-        helpBody={L.objectifHelp}
-      >
-        <RaceCardSkeleton />
-      </BlockCard>
+      <>
+        <BlockCard
+          title={L.objectifTitle}
+          helpTitle={L.objectifHelpTitle}
+          helpBody={L.objectifHelp}
+        >
+          <RaceCardSkeleton />
+        </BlockCard>
+        {modal}
+      </>
     )
   }
 
   // Aucune course à venir (liste vide OU uniquement des courses passées) → état vide.
   if (!mainRace && otherRaces.length === 0) {
     return (
-      <BlockCard
-        title={L.objectifTitle}
-        helpTitle={L.objectifHelpTitle}
-        helpBody={L.objectifHelp}
-      >
-        <div className="flex flex-col items-center justify-center text-center py-6 px-4">
-          <span className="text-[40px] leading-none mb-2" aria-hidden>🎯</span>
-          <h3 className="text-[20px] text-trail-text mb-1 font-display">
-            {L.objectifEmpty}
-          </h3>
-          <p className="text-body-sm text-trail-muted mb-4 max-w-xs">
-            {L.objectifEmptyHint}
-          </p>
-          <button
-            type="button"
-            onClick={openCreate}
-            className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-body font-semibold"
-            aria-label={L.objectifFirstAria}
-            disabled={!loaded}
-          >
-            {L.objectifFirstCTA}
-          </button>
-        </div>
-        <RaceEditorModal
-          race={editing}
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          onSaved={handleSaved}
-        />
-      </BlockCard>
+      <>
+        <BlockCard
+          title={L.objectifTitle}
+          helpTitle={L.objectifHelpTitle}
+          helpBody={L.objectifHelp}
+        >
+          <div className="flex flex-col items-center justify-center text-center py-6 px-4">
+            <span className="text-[40px] leading-none mb-2" aria-hidden>🎯</span>
+            <h3 className="text-[20px] text-trail-text mb-1 font-display">
+              {L.objectifEmpty}
+            </h3>
+            <p className="text-body-sm text-trail-muted mb-4 max-w-xs">
+              {L.objectifEmptyHint}
+            </p>
+            <button
+              type="button"
+              onClick={openCreate}
+              className="px-4 py-2 rounded-[10px] bg-trail-primary text-white text-body font-semibold"
+              aria-label={L.objectifFirstAria}
+              disabled={!loaded}
+            >
+              {L.objectifFirstCTA}
+            </button>
+          </div>
+        </BlockCard>
+        {modal}
+      </>
     )
   }
 
   return (
-    <BlockCard
-      title={L.objectifTitle}
-      helpTitle={L.objectifHelpTitle}
-      helpBody={L.objectifHelp}
-      rightSlot={
-        <button
-          type="button"
-          onClick={openCreate}
-          className="inline-flex items-center justify-center w-7 h-7 rounded-[6px] text-[color:var(--trail-primary)] hover:bg-[color:var(--trail-surface)]"
-          aria-label={L.objectifAddRaceAria}
-        >
-          <SquarePen size={16} aria-hidden />
-        </button>
-      }
-    >
-      {mainRace && (
-        <MainRaceCard race={mainRace} L={L} onSelect={() => openCourseDetail(mainRace)} />
-      )}
+    <>
+      <BlockCard
+        title={L.objectifTitle}
+        helpTitle={L.objectifHelpTitle}
+        helpBody={L.objectifHelp}
+        rightSlot={
+          <button
+            type="button"
+            onClick={openCreate}
+            className="inline-flex items-center justify-center w-7 h-7 rounded-[6px] text-[color:var(--trail-primary)] hover:bg-[color:var(--trail-surface)]"
+            aria-label={L.objectifAddRaceAria}
+          >
+            <SquarePen size={16} aria-hidden />
+          </button>
+        }
+      >
+        {mainRace && (
+          <MainRaceCard race={mainRace} L={L} onSelect={() => openCourseDetail(mainRace)} />
+        )}
 
-      {otherRaces.length > 0 && (
-        <div className={`flex flex-col gap-2 ${mainRace ? 'mt-3' : ''}`}>
-          {otherRaces.map(r => (
-            <CompactRaceCard
-              key={r.id}
-              race={r}
-              L={L}
-              onSelect={() => openCourseDetail(r)}
-            />
-          ))}
-        </div>
-      )}
-
-      <RaceEditorModal
-        race={editing}
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSaved={handleSaved}
-      />
-    </BlockCard>
+        {otherRaces.length > 0 && (
+          <div className={`flex flex-col gap-2 ${mainRace ? 'mt-3' : ''}`}>
+            {otherRaces.map(r => (
+              <CompactRaceCard
+                key={r.id}
+                race={r}
+                L={L}
+                onSelect={() => openCourseDetail(r)}
+              />
+            ))}
+          </div>
+        )}
+      </BlockCard>
+      {modal}
+    </>
   )
 }
 
