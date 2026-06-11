@@ -1,16 +1,18 @@
 'use client'
 
-// Bottom-sheet d'import du tableau de course : 4 onglets (URL / PDF / Image / Texte).
+// Bottom-sheet d'import du tableau de course : 5 onglets (Auto / URL / PDF / Image / Texte).
 // Pattern portal aligné sur RaceEditorModal / SessionAddSheet.
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { ExtractedRaceData, RaceWaypoint } from '@/types/plan'
+import type { RaceCandidate } from '@/lib/race-import/find-race'
 import { WaypointsTable } from './WaypointsTable'
 
-type Tab = 'url' | 'pdf' | 'image' | 'text'
+type Tab = 'auto' | 'url' | 'pdf' | 'image' | 'text'
 
 type Props = {
   raceId: string
+  race: { name: string; date: string; distance: number; elevation: number }
   open: boolean
   onClose: () => void
   onSaved: (waypoints: RaceWaypoint[]) => void
@@ -18,8 +20,8 @@ type Props = {
 
 type Status = 'idle' | 'extracting' | 'preview' | 'saving' | 'error'
 
-export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
-  const [tab, setTab] = useState<Tab>('url')
+export function RaceImportSheet({ raceId, race, open, onClose, onSaved }: Props) {
+  const [tab, setTab] = useState<Tab>('auto')
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState<string | null>(null)
   const [url, setUrl] = useState('')
@@ -27,11 +29,16 @@ export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
   const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [draft, setDraft] = useState<ExtractedRaceData['waypoints']>([])
+  const [candidates, setCandidates] = useState<RaceCandidate[]>([])
+  const [finding, setFinding] = useState(false)
+  const [showAll, setShowAll] = useState(false)
+  const [findError, setFindError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return
-    setTab('url'); setStatus('idle'); setError(null)
+    setTab('auto'); setStatus('idle'); setError(null)
     setUrl(''); setText(''); setPdfFile(null); setImageFile(null); setDraft([])
+    setCandidates([]); setFinding(false); setShowAll(false); setFindError(null)
   }, [open])
 
   useEffect(() => {
@@ -42,6 +49,34 @@ export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
   }, [open, onClose])
 
   if (!open) return null
+
+  async function findRace() {
+    setFinding(true); setFindError(null); setShowAll(false)
+    try {
+      const res = await fetch('/api/race-import/find', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: race.name, date: race.date, distance: race.distance, elevation: race.elevation,
+        }),
+      })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error || 'Erreur recherche')
+      if (!body.candidates || body.candidates.length === 0) {
+        throw new Error('Course introuvable automatiquement — utilise URL / PDF / Image.')
+      }
+      setCandidates(body.candidates as RaceCandidate[])
+    } catch (err) {
+      setFindError((err as Error).message)
+    } finally {
+      setFinding(false)
+    }
+  }
+
+  function importCandidate(c: RaceCandidate) {
+    setDraft(c.waypoints)
+    setStatus('preview')
+  }
 
   async function extract() {
     setStatus('extracting'); setError(null)
@@ -107,7 +142,7 @@ export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
         {status !== 'preview' && (
           <>
             <div className="flex gap-2 text-caption">
-              {(['url', 'pdf', 'image', 'text'] as const).map((t) => (
+              {(['auto', 'url', 'pdf', 'image', 'text'] as const).map((t) => (
                 <button
                   key={t}
                   type="button"
@@ -123,6 +158,49 @@ export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
               ))}
             </div>
 
+            {tab === 'auto' && (
+              <div className="space-y-3">
+                <div className="text-caption text-trail-muted">
+                  Recherche d&apos;après ta fiche : <b className="text-trail-text">{race.name}</b>
+                  {' · '}{race.distance} km · {race.elevation} D+ · {race.date.slice(0, 4)}
+                </div>
+                {candidates.length === 0 ? (
+                  <button type="button" onClick={findRace} disabled={finding}
+                    className="w-full py-2 rounded bg-trail-primary text-white text-body-sm font-semibold disabled:opacity-50">
+                    {finding ? 'Recherche…' : 'Trouver ma course'}
+                  </button>
+                ) : (
+                  <div className="space-y-2">
+                    {(showAll ? candidates : candidates.slice(0, 1)).map((c) => (
+                      <div key={c.url} className="rounded-[10px] border border-trail-border p-3 space-y-2">
+                        <div className="font-display font-semibold text-body-sm">{c.raceName ?? race.name}</div>
+                        <div className="text-caption text-trail-muted">
+                          {c.totalKm.toFixed(1)} km · {c.totalDplus ?? '—'} D+ · {c.nbPoints} pts{' '}
+                          <span style={{ color: c.confident ? '#16A34A' : '#B45309', fontWeight: 600 }}>
+                            {c.confident ? '✓ correspond à tes chiffres' : 'à vérifier'}
+                          </span>
+                        </div>
+                        <button type="button" onClick={() => importCandidate(c)}
+                          className="w-full py-1.5 rounded bg-trail-primary text-white text-caption font-semibold">
+                          Importer
+                        </button>
+                      </div>
+                    ))}
+                    {!showAll && candidates.length > 1 && (
+                      <button type="button" onClick={() => setShowAll(true)}
+                        className="text-caption text-trail-primary underline">
+                        Voir les autres résultats ({candidates.length - 1})
+                      </button>
+                    )}
+                    <button type="button" onClick={() => { setCandidates([]); setShowAll(false) }}
+                      className="block text-caption text-trail-muted underline">
+                      Relancer une recherche
+                    </button>
+                  </div>
+                )}
+                {findError && <div className="text-caption text-trail-danger">{findError}</div>}
+              </div>
+            )}
             {tab === 'url' && (
               <input
                 type="url"
@@ -154,14 +232,16 @@ export function RaceImportSheet({ raceId, open, onClose, onSaved }: Props) {
               />
             )}
 
-            <button
-              type="button"
-              onClick={extract}
-              disabled={status === 'extracting'}
-              className="w-full py-2 rounded bg-trail-primary text-white text-body-sm font-semibold disabled:opacity-50"
-            >
-              {status === 'extracting' ? 'Extraction…' : 'Extraire'}
-            </button>
+            {tab !== 'auto' && (
+              <button
+                type="button"
+                onClick={extract}
+                disabled={status === 'extracting'}
+                className="w-full py-2 rounded bg-trail-primary text-white text-body-sm font-semibold disabled:opacity-50"
+              >
+                {status === 'extracting' ? 'Extraction…' : 'Extraire'}
+              </button>
+            )}
           </>
         )}
 

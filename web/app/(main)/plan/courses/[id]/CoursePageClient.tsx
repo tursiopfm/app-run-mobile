@@ -216,6 +216,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
 
       <RaceImportSheet
         raceId={race.id}
+        race={{ name: race.name, date: race.date, distance: race.distance, elevation: race.elevation }}
         open={importOpen}
         onClose={() => setImportOpen(false)}
         onSaved={(wps) => { setWaypoints(wps); setImportOpen(false) }}
