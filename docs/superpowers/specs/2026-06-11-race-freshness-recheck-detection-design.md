@@ -1,6 +1,6 @@
 # Re-checks automatiques & diff — Lot 2a : Détection (backend)
 
-> **Status: Spec** · 2026-06-11
+> **Status: Implémenté** · 2026-06-11 · Code: `web/lib/race-import/{waypoint-diff,recheck-logic,recheck}.ts` · `web/app/api/cron/race-freshness/route.ts` · migration `040_race_tableau_pending_diff.sql` · `.github/workflows/race-freshness-recheck.yml` · branche `feat/race-freshness-recheck`
 >
 > Lot 2 du brief « versioning des éditions & fraîcheur ». **Lot 2a = détection** (ce
 > document) : cron qui re-fetch, détecte un changement / une nouvelle édition, et
