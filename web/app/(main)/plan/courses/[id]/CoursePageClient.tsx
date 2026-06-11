@@ -9,6 +9,7 @@ import { EditButton } from '@/components/plan/EditButton'
 import { WaypointsTable } from '@/components/plan/WaypointsTable'
 import { RaceImportSheet } from '@/components/plan/RaceImportSheet'
 import { FreshnessBadge } from '@/components/plan/FreshnessBadge'
+import { TableauDiffModal } from '@/components/plan/TableauDiffModal'
 import { colors } from '@/lib/design/colors'
 
 function formatLongDate(iso: string): string {
@@ -35,6 +36,8 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   const [meta, setMeta] = useState<RaceTableauMeta | null>(null)
   const [importOpen, setImportOpen] = useState(false)
   const [autoSearch, setAutoSearch] = useState(false)
+  const [diffOpen, setDiffOpen] = useState(false)
+  const [diffBusy, setDiffBusy] = useState(false)
 
   // Arrivée depuis « Oui, chercher » à la création (RaceEditorModal) :
   // ?import=auto → on ouvre la feuille sur l'onglet Auto et on lance la recherche.
@@ -77,6 +80,19 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   }, [raceId])
 
   useEffect(() => { void reload() }, [reload])
+
+  async function resolveDiff(action: 'apply' | 'dismiss') {
+    setDiffBusy(true)
+    try {
+      await fetch(`/api/races/${raceId}/tableau-recheck`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }),
+      })
+      setDiffOpen(false)
+      await reload()
+    } finally {
+      setDiffBusy(false)
+    }
+  }
 
   async function handleDelete() {
     if (!race || deleting) return
@@ -164,6 +180,16 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
           </button>
         ) : (
           <>
+            {meta?.pendingDiff && (
+              <button type="button" onClick={() => setDiffOpen(true)}
+                className="w-full text-left mb-2 rounded-[10px] border px-3 py-2 text-body-sm"
+                style={{ borderColor: '#EAB308', background: '#EAB30815', color: '#EAB308' }}>
+                {meta.pendingDiff.kind === 'new_edition'
+                  ? `✨ Nouvelle édition ${meta.pendingDiff.newMeta.editionYear ?? ''} disponible`
+                  : `⚠️ Le tableau a changé — ${meta.pendingDiff.summary.added} ajout(s) · ${meta.pendingDiff.summary.removed} retrait(s) · ${meta.pendingDiff.summary.modified} modif(s)`}
+                <span className="block text-caption text-trail-muted">Touche pour vérifier et valider.</span>
+              </button>
+            )}
             <FreshnessBadge meta={meta} />
             <div className="mb-3 flex items-center justify-between gap-3 rounded-[10px] bg-trail-surface border border-trail-border px-3 py-2">
               <div className="text-caption min-w-0">
@@ -244,6 +270,16 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
         onClose={() => setEditorOpen(false)}
         onSaved={() => { setEditorOpen(false); void reload() }}
       />
+      {meta?.pendingDiff && diffOpen && (
+        <TableauDiffModal
+          currentWaypoints={waypoints.map(({ id: _i, raceId: _r, ...rest }) => rest)}
+          pendingDiff={meta.pendingDiff}
+          busy={diffBusy}
+          onApply={() => resolveDiff('apply')}
+          onDismiss={() => resolveDiff('dismiss')}
+          onClose={() => setDiffOpen(false)}
+        />
+      )}
     </div>
   )
 }
