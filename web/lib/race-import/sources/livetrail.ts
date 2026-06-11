@@ -91,12 +91,34 @@ async function fetchParcoursXmlBySlug(slug: string): Promise<string> {
   }
 }
 
+// "DD-HH:MM" (format hp/hd LiveTrail) → jour-du-mois + heure de départ.
+export function parseLivetrailStart(
+  hp: string | undefined,
+): { day: number; time: string } | null {
+  if (!hp) return null
+  const m = /^(\d{1,2})-(\d{2}:\d{2})$/.exec(hp.trim())
+  if (!m) return null
+  const day = Number(m[1])
+  if (day < 1 || day > 31) return null
+  return { day, time: m[2] }
+}
+
+// Année d'édition depuis le path d'une URL LiveTrail v3 (/fr/2026/...). null sinon.
+// cf. catalog.ts yearFromLivetrailUrl — dupliqué ici pour éviter un cycle d'import livetrail↔catalog.
+export function extractYearFromLivetrailUrl(url: string): number | null {
+  let path: string
+  try { path = new URL(url).pathname } catch { return null }
+  const m = path.match(/\/((?:19|20)\d{2})(?:\/|$)/)
+  return m ? Number(m[1]) : null
+}
+
 type RawPt = {
   '@_n'?: string
   '@_km'?: string | number
   '@_d'?: string | number
   '@_a'?: string | number
   '@_b'?: string
+  '@_hp'?: string
 }
 
 type RawPoints = {
@@ -167,7 +189,8 @@ function mapPointsBlock(block: RawPoints): ExtractedRaceData {
     }
   })
 
-  return validateExtractedRaceData({ raceName: null, editionYear: null, editionDate: null, dateExplicit: false, startDayOfMonth: null, startTimeRaw: null, waypoints })
+  const start = parseLivetrailStart(pts[0]?.['@_hp'])
+  return validateExtractedRaceData({ raceName: null, editionYear: null, editionDate: null, dateExplicit: false, startDayOfMonth: start?.day ?? null, startTimeRaw: start?.time ?? null, waypoints })
 }
 
 function mapXmlToExtracted(xml: string, raceId: string): ExtractedRaceData {
@@ -214,12 +237,13 @@ export async function listLivetrailRaces(
   if (!pointsBlocks) throw new LivetrailError('XML sans bloc <points>')
   const blocks = Array.isArray(pointsBlocks) ? pointsBlocks : [pointsBlocks]
 
+  const year = extractYearFromLivetrailUrl(url)
   const out: Array<{ raceName: string | null; data: ExtractedRaceData }> = []
   for (const block of blocks) {
     try {
       const data = mapPointsBlock(block)
       const id = block['@_course']
-      out.push({ raceName: (id ? nameById.get(id) : undefined) ?? null, data })
+      out.push({ raceName: (id ? nameById.get(id) : undefined) ?? null, data: { ...data, editionYear: year, dateExplicit: year != null } })
     } catch {
       // bloc invalide (course sans points exploitables) → on l'ignore
     }
@@ -242,7 +266,9 @@ export const livetrailParser: RaceParser = {
   async parse(url: string): Promise<ExtractedRaceData> {
     const { slug, raceId } = extractSlugAndRaceId(url)
     const xml = await fetchParcoursXml(slug, raceId)
-    return mapXmlToExtracted(xml, raceId)
+    const data = mapXmlToExtracted(xml, raceId)
+    const year = extractYearFromLivetrailUrl(url)
+    return { ...data, editionYear: year, dateExplicit: year != null }
   },
 }
 
