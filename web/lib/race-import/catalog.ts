@@ -30,7 +30,9 @@ function slugFromUrl(url: string): string | null {
 
 // Liens d'événement LiveTrail dans un HTML. Exclut utmb.world (déjà couvert par utmbParser).
 export function harvestEventUrls(html: string): string[] {
-  const re = /https?:\/\/[a-z0-9-]+\.(?:v3\.)?livetrail\.(?:net|run)[^\s"'<>)]*/gi
+  // Exclut \ du tail : dans /fr/events les href sont échappés (href=\"…\") → sans ça
+  // l'URL capturée traîne un backslash final.
+  const re = /https?:\/\/[a-z0-9-]+\.(?:v3\.)?livetrail\.(?:net|run)[^\s"'<>)\\]*/gi
   const out: string[] = []
   const seen = new Set<string>()
   for (const m of Array.from(html.matchAll(re))) {
@@ -175,7 +177,18 @@ export async function runCatalogSnapshot(): Promise<{ events: number; upserted: 
   })
   if (!res.ok) throw new Error(`HTTP ${res.status} sur /fr/events`)
   const html = await res.text()
-  const eventUrls = harvestEventUrls(html).slice(0, SNAPSHOT_MAX_EVENTS)
+
+  // Dédup par slug : /fr/events liste parfois plusieurs URLs pour un même événement
+  // (host nu + URL avec path) → 1 seul fetch parcours.php par événement.
+  const seenSlugs = new Set<string>()
+  const eventUrls: string[] = []
+  for (const u of harvestEventUrls(html)) {
+    if (eventUrls.length >= SNAPSHOT_MAX_EVENTS) break
+    const slug = slugFromUrl(u)
+    if (!slug || seenSlugs.has(slug)) continue
+    seenSlugs.add(slug)
+    eventUrls.push(u)
+  }
 
   let upserted = 0
   for (let i = 0; i < eventUrls.length; i++) {

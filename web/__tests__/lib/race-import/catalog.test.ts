@@ -52,6 +52,11 @@ describe('harvestEventUrls', () => {
     expect(out.some((u) => u.includes('utmb.world'))).toBe(false)
     expect(out.filter((u) => u.includes('ultramarin')).length).toBe(1)
   })
+
+  it('ignore le backslash d\'un href échappé (href=\\"…\\")', () => {
+    const out = harvestEventUrls('<a href=\\"https://um.v3.livetrail.net/fr/2026\\">x</a>')
+    expect(out).toEqual(['https://um.v3.livetrail.net/fr/2026'])
+  })
 })
 
 describe('candidatesToRows', () => {
@@ -140,7 +145,7 @@ describe('searchCatalogUrls', () => {
 })
 
 describe('runCatalogSnapshot', () => {
-  afterEach(() => jest.restoreAllMocks())
+  afterEach(() => { jest.restoreAllMocks(); jest.clearAllMocks() })
 
   it('fetch /fr/events, énumère les événements et upsert', async () => {
     global.fetch = jest.fn().mockResolvedValue({
@@ -161,5 +166,24 @@ describe('runCatalogSnapshot', () => {
     expect(upsert).toHaveBeenCalled()
     expect(upsert.mock.calls[0][0][0].event_slug).toBe('um')
     expect(upsert.mock.calls[0][0][0].total_km).toBe(177)
+  })
+
+  it('déduplique par slug (même événement, URLs différentes → 1 seul fetch)', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      text: async () =>
+        '<a href="https://um.v3.livetrail.net/fr/2026">a</a><a href="https://um.v3.livetrail.net/">b</a>',
+    } as any)
+    mockList.mockResolvedValue([
+      { raceName: 'Grand Raid', data: { raceName: null, editionYear: null, waypoints: [
+        { orderIndex: 0, name: 'D', km: 0, kmInter: null, dPlus: 0, dMoins: 0, cutoffRaw: null, cutoffKind: null, type: 'depart', supplies: [], targetOverrideSec: null },
+        { orderIndex: 1, name: 'A', km: 177, kmInter: null, dPlus: 1430, dMoins: 0, cutoffRaw: null, cutoffKind: null, type: 'arrivee', supplies: [], targetOverrideSec: null },
+      ] } },
+    ])
+    mockCreate.mockReturnValue({ from: jest.fn().mockReturnValue({ upsert: jest.fn().mockResolvedValue({ error: null }) }) })
+
+    const out = await runCatalogSnapshot()
+    expect(out.events).toBe(1)
+    expect(mockList).toHaveBeenCalledTimes(1)
   })
 })
