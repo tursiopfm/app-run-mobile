@@ -250,14 +250,7 @@ export async function resolveCandidates(target: RaceTarget, rawUrls: string[]): 
 // Orchestrateur complet : recherche → résolution.
 export async function findRaceCandidates(target: RaceTarget): Promise<RaceCandidate[]> {
   const rawUrls = await searchRaceUrls(target)
-  const candidates = await resolveCandidates(target, rawUrls)
-  // [find-diag] instrumentation temporaire (retirée après diagnostic Ultra Marin).
-  console.log('[find-diag]', JSON.stringify({
-    name: target.name, km: target.distance, dplus: target.elevation,
-    rawUrls,
-    candidates: candidates.map((c) => ({ p: c.parserId, n: c.raceName, km: c.totalKm, d: c.totalDplus, conf: c.confident })),
-  }))
-  return candidates
+  return resolveCandidates(target, rawUrls)
 }
 
 // Classe les candidats : écart distance + écart D+ (plus bas = mieux).
