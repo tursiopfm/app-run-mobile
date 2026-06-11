@@ -144,6 +144,9 @@ export async function searchCatalogUrls(target: RaceTarget): Promise<string[]> {
 
 const SNAPSHOT_MAX_EVENTS = 30
 const SNAPSHOT_UA = 'TrailCockpitBot/1.0 (+https://trailcockpit.run)'
+const SNAPSHOT_DELAY_MS = 300 // throttle poli entre événements (host externe sans robots.txt)
+
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
 // Événement (raceName + waypoints) → candidats LiveTrail réutilisables par accumulateCatalog.
 function racesToCandidates(
@@ -175,10 +178,11 @@ export async function runCatalogSnapshot(): Promise<{ events: number; upserted: 
   const eventUrls = harvestEventUrls(html).slice(0, SNAPSHOT_MAX_EVENTS)
 
   let upserted = 0
-  for (const url of eventUrls) {
+  for (let i = 0; i < eventUrls.length; i++) {
+    if (i > 0) await sleep(SNAPSHOT_DELAY_MS) // throttle entre événements
     try {
-      const races = await listLivetrailRaces(url)
-      const candidates = racesToCandidates(url, races)
+      const races = await listLivetrailRaces(eventUrls[i])
+      const candidates = racesToCandidates(eventUrls[i], races)
       await accumulateCatalog(candidates)
       upserted += candidates.length
     } catch {

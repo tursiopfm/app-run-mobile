@@ -118,10 +118,14 @@ Route `web/app/api/cron/livetrail-catalog/route.ts` (`GET`, auth `CRON_SECRET`,
 1. `fetch('https://web.livetrail.net/fr/events')`.
 2. Extraire les liens `{slug}.v3.livetrail.net` / `{slug}.livetrail.net` / `.run` du HTML ;
    **exclure** `*.utmb.world` (déjà couvert par `utmbParser`).
-3. Pour chaque slug **non vu récemment** (`last_seen_at` > 7 j ou absent), appeler
-   `listLivetrailRaces` puis `upsertCatalogEntries`.
-4. Garde-fous : traitement **séquentiel** + petit délai, **cap N événements/run**,
-   `User-Agent: TrailCockpitBot/1.0 (+contact)`, skip des slugs frais.
+3. Pour chaque slug, appeler `listLivetrailRaces` puis `accumulateCatalog`.
+4. Garde-fous : traitement **séquentiel** + **délai inter-événements** (300 ms),
+   **cap 30 événements/run**, `User-Agent: TrailCockpitBot/1.0 (+contact)`.
+
+> **v1** : le *skip des slugs récemment vus* (`last_seen_at` < 7 j) est **différé** — la
+> fenêtre `/fr/events` ne contient que ~20-30 événements à venir et le cron est hebdo, donc
+> re-fetcher la fenêtre rafraîchit juste les totaux à coût borné. À ajouter si le crawl
+> s'élargit (requête des slugs frais avant la boucle).
 
 Déclenchement **externe ~hebdomadaire** (GitHub Action vers l'URL + `CRON_SECRET`, comme les
 crons existants) ; entrée `vercel.json > crons` possible en alternative (attention aux limites
