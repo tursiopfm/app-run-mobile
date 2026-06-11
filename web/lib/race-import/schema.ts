@@ -5,6 +5,7 @@ import type {
   WaypointType,
   WaypointSupply,
   RaceWaypoint,
+  RaceTableauMeta,
 } from '@/types/plan'
 
 // ── JSON Schema pour response_format: { type: 'json_schema', json_schema: ... } ──
@@ -167,6 +168,19 @@ type DbRow = {
   type: WaypointType
   supplies?: WaypointSupply[] | null
   target_override_sec?: number | null
+}
+
+export function rowToTableauMeta(row: any): RaceTableauMeta {
+  return {
+    raceId: row.race_id,
+    editionYear: row.edition_year,
+    editionDate: row.edition_date,
+    dateExplicit: row.date_explicit,
+    freshnessStatus: row.freshness_status,
+    sourceUrl: row.source_url,
+    sourceCheckedAt: row.source_checked_at,
+    sourceHash: row.source_hash,
+  }
 }
 
 export function rowToRaceWaypoint(row: DbRow): RaceWaypoint {

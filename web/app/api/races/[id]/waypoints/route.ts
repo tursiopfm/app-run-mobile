@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/database/supabase-server'
-import { rowToRaceWaypoint } from '@/lib/race-import/schema'
+import { rowToRaceWaypoint, rowToTableauMeta } from '@/lib/race-import/schema'
+import { computeFreshness, type DetectedEdition } from '@/lib/race-import/freshness'
+import { hashWaypoints } from '@/lib/race-import/hash'
 import type { RaceWaypoint } from '@/types/plan'
 
 export const runtime = 'nodejs'
@@ -22,8 +24,14 @@ export async function GET(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  const { data: metaRow } = await supabase
+    .from('race_tableau_meta')
+    .select('*')
+    .eq('race_id', params.id)
+    .maybeSingle()
+
   const waypoints: RaceWaypoint[] = (data ?? []).map(rowToRaceWaypoint as any)
-  return NextResponse.json({ waypoints })
+  return NextResponse.json({ waypoints, meta: metaRow ? rowToTableauMeta(metaRow) : null })
 }
 
 // PUT /api/races/[id]/waypoints → remplace TOUS les waypoints.
@@ -39,7 +47,7 @@ export async function PUT(
   // Vérifier que la course appartient au user (sécurité même si RLS le ferait).
   const { data: race, error: raceErr } = await supabase
     .from('races')
-    .select('id')
+    .select('id, date')
     .eq('id', params.id)
     .eq('athlete_id', user.id)
     .single()
@@ -49,6 +57,13 @@ export async function PUT(
 
   const body = await request.json() as {
     waypoints: Array<Omit<RaceWaypoint, 'id' | 'raceId'>>
+    meta?: {
+      editionYear: number | null
+      editionDate: string | null
+      dateExplicit: boolean
+      startDayOfMonth: number | null
+      sourceUrl: string | null
+    }
   }
   const rows = (body.waypoints ?? []).map((w) => ({
     race_id: params.id,
@@ -83,6 +98,27 @@ export async function PUT(
     .order('order_index', { ascending: true })
 
   if (insErr) return NextResponse.json({ error: insErr.message }, { status: 500 })
+
+  if (body.meta) {
+    const detected: DetectedEdition = {
+      editionYear: body.meta.editionYear,
+      editionDate: body.meta.editionDate,
+      dateExplicit: body.meta.dateExplicit,
+      startDayOfMonth: body.meta.startDayOfMonth,
+    }
+    const fresh = computeFreshness(detected, race.date as string)
+    await supabase.from('race_tableau_meta').upsert({
+      race_id: params.id,
+      edition_year: fresh.editionYear,
+      edition_date: fresh.editionDate,
+      date_explicit: body.meta.dateExplicit,
+      freshness_status: fresh.freshnessStatus,
+      source_url: body.meta.sourceUrl,
+      source_hash: hashWaypoints(body.waypoints ?? []),
+      source_checked_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'race_id' })
+  }
 
   const waypoints: RaceWaypoint[] = (inserted ?? []).map(rowToRaceWaypoint as any)
   return NextResponse.json({ waypoints })
