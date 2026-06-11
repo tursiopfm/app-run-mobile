@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Flag, SquarePen, Trophy } from 'lucide-react'
 import type { Race, RaceType } from '@/types/plan'
-import { getRaces, peekRaces } from '@/lib/plan/storage'
+import { getRaces, getRacesWithPendingDiff, peekRaces } from '@/lib/plan/storage'
 import { colors } from '@/lib/design/colors'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { RaceEditorModal } from './RaceEditorModal'
@@ -49,6 +49,7 @@ export function ObjectifCourseBlock({ onChange }: Props) {
   const [modalOpen, setModalOpen] = useState(false)
   // race en édition (null = création).
   const [editing, setEditing] = useState<Race | null>(null)
+  const [pendingDiffIds, setPendingDiffIds] = useState<Set<string>>(new Set())
 
   const reload = useCallback(async () => {
     const list = await getRaces()
@@ -57,6 +58,10 @@ export function ObjectifCourseBlock({ onChange }: Props) {
   }, [])
 
   useEffect(() => { void reload() }, [reload])
+
+  useEffect(() => {
+    getRacesWithPendingDiff().then(setPendingDiffIds).catch(() => {/* silencieux */})
+  }, [])
 
   function handleSaved() {
     void reload()
@@ -166,7 +171,12 @@ export function ObjectifCourseBlock({ onChange }: Props) {
         }
       >
         {mainRace && (
-          <MainRaceCard race={mainRace} L={L} onSelect={() => openCourseDetail(mainRace)} />
+          <MainRaceCard
+            race={mainRace}
+            L={L}
+            onSelect={() => openCourseDetail(mainRace)}
+            hasPendingDiff={pendingDiffIds.has(mainRace.id)}
+          />
         )}
 
         {otherRaces.length > 0 && (
@@ -177,6 +187,7 @@ export function ObjectifCourseBlock({ onChange }: Props) {
                 race={r}
                 L={L}
                 onSelect={() => openCourseDetail(r)}
+                hasPendingDiff={pendingDiffIds.has(r.id)}
               />
             ))}
           </div>
@@ -187,7 +198,7 @@ export function ObjectifCourseBlock({ onChange }: Props) {
   )
 }
 
-function MainRaceCard({ race, L, onSelect }: { race: Race; L: Dict['plan']; onSelect: () => void }) {
+function MainRaceCard({ race, L, onSelect, hasPendingDiff }: { race: Race; L: Dict['plan']; onSelect: () => void; hasPendingDiff?: boolean }) {
   const daysLeft = computeDaysLeft(race.date)
   const isPast = daysLeft < 0
   const typeLabel = L.raceTypes[race.type as RaceType] ?? race.type
@@ -205,6 +216,9 @@ function MainRaceCard({ race, L, onSelect }: { race: Race; L: Dict['plan']; onSe
           title={race.name}
         >
           {race.name}
+          {hasPendingDiff && (
+            <span title="Le tableau a changé — vérifie" className="ml-1 text-[#EAB308] text-base align-middle">⚠️</span>
+          )}
         </h3>
         {isPast ? (
           <span className="text-caption text-trail-muted whitespace-nowrap flex-shrink-0 mt-1">{L.racePast}</span>
@@ -240,7 +254,7 @@ function MainRaceCard({ race, L, onSelect }: { race: Race; L: Dict['plan']; onSe
   )
 }
 
-function CompactRaceCard({ race, L, onSelect }: { race: Race; L: Dict['plan']; onSelect: () => void }) {
+function CompactRaceCard({ race, L, onSelect, hasPendingDiff }: { race: Race; L: Dict['plan']; onSelect: () => void; hasPendingDiff?: boolean }) {
   const daysLeft = computeDaysLeft(race.date)
   const isPast = daysLeft < 0
   return (
@@ -258,6 +272,9 @@ function CompactRaceCard({ race, L, onSelect }: { race: Race; L: Dict['plan']; o
         >
           {race.name}
         </span>
+        {hasPendingDiff && (
+          <span title="Le tableau a changé — vérifie" className="text-[#EAB308] text-sm flex-shrink-0">⚠️</span>
+        )}
         {!isPast && (
           <span
             className="text-body leading-none text-trail-text flex-shrink-0"

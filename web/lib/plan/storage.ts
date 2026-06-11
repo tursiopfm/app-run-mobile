@@ -1054,3 +1054,19 @@ export function hideSystemTemplate(id: string): void {
 export function unhideAllSystemTemplates(): void {
   writeLS<string[]>(KEY_HIDDEN_SYSTEM_TEMPLATES, [])
 }
+
+// ─── API publique : pending_diff ────────────────────────────────────────────
+
+// Retourne les race_id dont le tableau a un pending_diff (mise à jour détectée
+// mais non encore confirmée par l'athlète). Utilisé par ObjectifCourseBlock
+// pour afficher une pastille d'alerte discrète sur la carte.
+export async function getRacesWithPendingDiff(): Promise<Set<string>> {
+  const ctx = await getAuthedClient()
+  if (!ctx) return new Set()
+  const { data, error } = await ctx.supabase
+    .from('race_tableau_meta')
+    .select('race_id')
+    .not('pending_diff', 'is', null)
+  if (error || !data) return new Set()
+  return new Set((data as { race_id: string }[]).map((r) => r.race_id))
+}
