@@ -511,6 +511,14 @@ export type Dict = {
     mDPlus: string
 
     objectifTitle: string; objectifHelpTitle: string; objectifHelp: string
+    pacingTitle: string
+    pacingScaleStart: string; pacingScaleMid: string; pacingScaleEnd: string
+    pacingPhraseEven: string
+    pacingPhraseNeg: (intensity: string) => string
+    pacingPhrasePos: (intensity: string) => string
+    pacingIntLight: string; pacingIntModerate: string; pacingIntStrong: string
+    pacingMethodSummary: string; pacingMethodFormula: string; pacingMethodBody: string
+    pacingCurveLegendPace: string; pacingCurveLegendElev: string
     objectifEmpty: string; objectifEmptyHint: string; objectifFirstCTA: string; objectifFirstAria: string
     objectifAddRaceAria: string
     racePast: string; raceDayToday: string; raceDayTomorrow: string; raceDayRemaining: string
@@ -630,8 +638,6 @@ export type Dict = {
     raceEditFieldType: string
     raceEditFieldStartTime: string
     raceEditFieldTargetTime: string
-    raceEditFieldFade: string
-    raceEditAdvanced: string
     raceEditFieldLocation: string; raceEditPhLocation: string
     raceEditFieldNotes: string; raceEditPhNotes: string
     raceEditMainCheckbox: string
@@ -2302,6 +2308,21 @@ export const fr: Dict = {
     objectifTitle:       'Objectif course',
     objectifHelpTitle:   'Ton objectif',
     objectifHelp:        "Définis la course principale qui structure ta prépa. Tu peux ajouter d'autres courses secondaires en saison.",
+    pacingTitle:          "Stratégie d'allure",
+    pacingScaleStart:     'Finir fort',
+    pacingScaleMid:       'Régulier',
+    pacingScaleEnd:       'Partir vite',
+    pacingPhraseEven:     'Effort régulier — réparti selon le dénivelé, sans accélérer ni ralentir volontairement.',
+    pacingPhraseNeg:      (i: string) => `Négatif split — départ prudent pour finir plus vite (intensité ${i}).`,
+    pacingPhrasePos:      (i: string) => `Positif split — tu prends de l'avance et tu ralentis sur la fin (intensité ${i}).`,
+    pacingIntLight:       'légère',
+    pacingIntModerate:    'modérée',
+    pacingIntStrong:      'marquée',
+    pacingMethodSummary:  "Comment c'est calculé ?",
+    pacingMethodFormula:  'effort = distance + D+ ÷ 100',
+    pacingMethodBody:     "Chaque tronçon reçoit une part du temps total proportionnelle à son effort (100 m de montée ≈ 1 km à plat). Le curseur incline cette répartition ; les heures que tu fixes à la main dans le tableau restent des points d'ancrage.",
+    pacingCurveLegendPace:'Allure visée',
+    pacingCurveLegendElev:'Dénivelé',
     objectifEmpty:       'Définis ton objectif',
     objectifEmptyHint:   'Ton objectif structure toute ta prépa.',
     objectifFirstCTA:    '+ Définir mon premier objectif',
@@ -2502,8 +2523,6 @@ export const fr: Dict = {
     raceEditFieldType:        'Type',
     raceEditFieldStartTime:   'Heure de départ',
     raceEditFieldTargetTime:  'Temps cible (hh:mm)',
-    raceEditFieldFade:        'Fade 2e moitié',
-    raceEditAdvanced:         'Réglages avancés',
     raceEditFieldLocation:    'Lieu',
     raceEditPhLocation:       'Ex : Larzac, France',
     raceEditFieldNotes:       'Notes',
