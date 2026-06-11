@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Race, RaceTableauMeta, RaceWaypoint } from '@/types/plan'
-import { getRaces, deleteRace, peekRaces } from '@/lib/plan/storage'
+import { getRaces, deleteRace, peekRaces, saveRace } from '@/lib/plan/storage'
 import { RaceEditorModal } from '@/components/plan/RaceEditorModal'
 import { EditButton } from '@/components/plan/EditButton'
 import { WaypointsTable } from '@/components/plan/WaypointsTable'
@@ -93,6 +93,14 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
       setDiffBusy(false)
     }
   }
+
+  // Heure de départ éditée depuis la cellule BH du départ : maj optimiste + save Race.
+  const handleStartTimeChange = useCallback(async (hhmm: string | null) => {
+    if (!race) return
+    const next = { ...race, startTime: hhmm ?? undefined }
+    setRace(next)
+    await saveRace(next)
+  }, [race])
 
   async function handleDelete() {
     if (!race || deleting) return
@@ -216,6 +224,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
               startTime={race.startTime}
               targetDurationMin={race.targetDurationMin}
               pacingFade={race.pacingFade}
+              onStartTimeChange={handleStartTimeChange}
             />
             <div className="mt-2 flex items-center gap-4">
               <a href={`/plan/courses/${raceId}/print`} target="_blank" rel="noopener noreferrer"
@@ -269,6 +278,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
         open={editorOpen}
         onClose={() => setEditorOpen(false)}
         onSaved={() => { setEditorOpen(false); void reload() }}
+        onDeleted={() => router.push('/plan')}
       />
       {meta?.pendingDiff && diffOpen && (
         <TableauDiffModal

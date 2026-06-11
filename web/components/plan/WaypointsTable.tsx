@@ -22,6 +22,24 @@ type Props = {
   startTime?: string
   targetDurationMin?: number
   pacingFade?: number
+  // Si fourni, la cellule BH de la ligne départ devient éditable et propage
+  // l'heure de départ ('HH:MM' ou null) au parent (qui sauvegarde la Race).
+  onStartTimeChange?: (hhmm: string | null) => void
+}
+
+// Parse une saisie de barrière/heure 'HH:MM' (ou 'HhMM').
+//   '' → { empty:true }        (efface la barrière)
+//   valide → { value:'HH:MM' } (normalisé, heures paddées, bornes 0-23/0-59)
+//   invalide → { ok:false }    (on ignore la saisie)
+function parseClockInput(raw: string): { ok: boolean; empty: boolean; value: string | null } {
+  const t = raw.trim()
+  if (t === '') return { ok: true, empty: true, value: null }
+  const m = /^(\d{1,2})[:h](\d{2})$/.exec(t)
+  if (!m) return { ok: false, empty: false, value: null }
+  const h = parseInt(m[1], 10)
+  const mm = parseInt(m[2], 10)
+  if (h > 23 || mm > 59) return { ok: false, empty: false, value: null }
+  return { ok: true, empty: false, value: `${String(h).padStart(2, '0')}:${m[2]}` }
 }
 
 const ICONS = {
@@ -72,7 +90,7 @@ function reindex(rows: Draft[]): Draft[] {
 }
 
 export function WaypointsTable({
-  waypoints, onChange, readOnly, startTime, targetDurationMin, pacingFade,
+  waypoints, onChange, readOnly, startTime, targetDurationMin, pacingFade, onStartTimeChange,
 }: Props) {
   const update = useCallback(
     (i: number, patch: Partial<Draft>) => {
@@ -109,6 +127,22 @@ export function WaypointsTable({
     if (sec != null) update(i, { targetOverrideSec: sec })
   }
 
+  // Barrière horaire éditée (lignes ≠ départ) : heure d'horloge → clock_time.
+  const onBarrierBlur = (i: number, raw: string) => {
+    const r = parseClockInput(raw)
+    if (!r.ok) return
+    if (r.empty) update(i, { cutoffRaw: null, cutoffKind: null })
+    else update(i, { cutoffRaw: r.value, cutoffKind: 'clock_time' })
+  }
+
+  // Heure de départ éditée (ligne départ) : propagée au parent.
+  const onStartBlur = (raw: string) => {
+    if (!onStartTimeChange) return
+    const r = parseClockInput(raw)
+    if (!r.ok) return
+    onStartTimeChange(r.empty ? null : r.value)
+  }
+
   return (
     <div className="wtbl">
       <style>{`
@@ -142,6 +176,9 @@ export function WaypointsTable({
         .wtbl .sub.inter{color:var(--blue);} .wtbl .sub.dp{color:var(--faint);}
         .wtbl .c-bh{display:flex;justify-content:flex-end;min-width:0;}
         .wtbl .hr{font-family:var(--d);font-size:11px;font-weight:500;color:var(--text);text-align:right;white-space:nowrap;}
+        .wtbl .bh-in{font-family:var(--d);font-size:11px;font-weight:500;color:var(--text);text-align:right;white-space:nowrap;background:transparent;border:0;outline:none;width:100%;padding:0;}
+        .wtbl .bh-in:focus{color:var(--orange);}
+        .wtbl .bh-in::placeholder{color:var(--faint);}
         .wtbl .c-rav{position:relative;display:flex;justify-content:center;}
         .wtbl .rav-cell{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;align-items:center;background:none;border:0;padding:2px;min-height:22px;cursor:pointer;}
         .wtbl .rav-cell:disabled{cursor:default;}
@@ -217,12 +254,27 @@ export function WaypointsTable({
               {seg.dMoinsSeg != null && <span className="sub dp">+{seg.dMoinsSeg}</span>}
             </div>
 
-            {/* Barrière — départ en haut ; sinon heure nettoyée (préfixe jour retiré) */}
+            {/* Barrière — départ = heure de départ (éditable si onStartTimeChange) ;
+                sinon heure nettoyée éditable (préfixe jour retiré). */}
             <div className="c-bh">
               {i === 0 ? (
-                <span className="hr">{startTime ? startTime.slice(0, 5) : '—'}</span>
-              ) : (
+                onStartTimeChange && !readOnly ? (
+                  <input className="bh-in" type="text" inputMode="numeric" placeholder="—"
+                    aria-label="Heure de départ"
+                    defaultValue={startTime ? startTime.slice(0, 5) : ''}
+                    key={startTime ?? ''}
+                    onBlur={(e) => onStartBlur(e.target.value)} />
+                ) : (
+                  <span className="hr">{startTime ? startTime.slice(0, 5) : '—'}</span>
+                )
+              ) : readOnly ? (
                 <span className="hr">{barrierClock(w.cutoffRaw)}</span>
+              ) : (
+                <input className="bh-in" type="text" inputMode="numeric" placeholder="—"
+                  aria-label="Barrière horaire"
+                  defaultValue={w.cutoffRaw ? barrierClock(w.cutoffRaw) : ''}
+                  key={w.cutoffRaw ?? ''}
+                  onBlur={(e) => onBarrierBlur(i, e.target.value)} />
               )}
             </div>
 

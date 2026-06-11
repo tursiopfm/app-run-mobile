@@ -16,6 +16,10 @@ type Props = {
   open: boolean
   onClose: () => void
   onSaved: () => void
+  // Appelé après une suppression. Si absent, on retombe sur onSaved.
+  // La page détail course l'utilise pour rediriger vers /plan plutôt que de
+  // recharger une course qui n'existe plus (→ « Course introuvable »).
+  onDeleted?: () => void
 }
 
 function emptyDraft(): Race {
@@ -36,7 +40,7 @@ function emptyDraft(): Race {
   }
 }
 
-export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
+export function RaceEditorModal({ race, open, onClose, onSaved, onDeleted }: Props) {
   const L = useT().plan
   const isEdit = race !== null
   const [draft, setDraft] = useState<Race>(() => race ?? emptyDraft())
@@ -125,7 +129,8 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
     setSaving(true)
     try {
       await deleteRace(race.id)
-      onSaved()
+      if (onDeleted) onDeleted()
+      else onSaved()
       onClose()
     } finally {
       setSaving(false)
