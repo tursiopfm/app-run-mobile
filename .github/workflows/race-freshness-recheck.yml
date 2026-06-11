@@ -1,8 +1,9 @@
 name: Race Freshness Re-check
 
 # Déclenche /api/cron/race-freshness une fois par jour (04:17 UTC).
-# Re-vérifie la fraîcheur des courses importées (statut, date, waypoints) et
-# met à jour le catalogue si des changements sont détectés sur LiveTrail.
+# Re-fetch les tableaux des courses planifiées et enregistre un pending_diff sur
+# race_tableau_meta si le parcours/les barrières ont changé ou si une nouvelle
+# édition est sortie (jamais d'écrasement : validation utilisateur au Lot 2b).
 # Aussi déclenchable manuellement depuis l'onglet Actions du repo.
 
 on:
