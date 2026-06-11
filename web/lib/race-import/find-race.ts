@@ -150,6 +150,7 @@ export async function resolveCandidates(target: RaceTarget, rawUrls: string[]): 
   // LiveTrail : toutes les courses de l'événement (dédup par slug → 1 fetch/événement).
   const slugsSeen = new Set<string>()
   for (const u of livetrailUrls) {
+    if (slugsSeen.size >= MAX_PARSE) break   // borne le nb d'événements distincts (fetchs séquentiels)
     let slug: string
     try { slug = new URL(u).hostname.split('.')[0] } catch { continue }
     if (slugsSeen.has(slug)) continue
