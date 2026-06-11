@@ -80,4 +80,9 @@ describe('segmentPaces', () => {
     expect(out[1]).toBe(0)
     expect(Number.isFinite(out[2])).toBe(true)
   })
+
+  it('cas dégénérés alignés sur estimatePassageTimes (n=0 → [], n=1 → [0])', () => {
+    expect(segmentPaces([], { totalDurationSec: 3600, fade: 0 })).toEqual([])
+    expect(segmentPaces(flat([0]), { totalDurationSec: 3600, fade: 0 })).toEqual([0])
+  })
 })
