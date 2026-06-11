@@ -1,4 +1,4 @@
-import { estimatePassageTimes, type PacingWaypoint } from '@/lib/plan/pacing'
+import { estimatePassageTimes, segmentPaces, type PacingWaypoint } from '@/lib/plan/pacing'
 
 const flat = (kms: number[]): PacingWaypoint[] =>
   kms.map((km) => ({ km, dPlus: 0, targetOverrideSec: null }))
@@ -43,5 +43,41 @@ describe('estimatePassageTimes', () => {
   it('cas dégénérés', () => {
     expect(estimatePassageTimes([], { totalDurationSec: 1000, fade: 0 })).toEqual([])
     expect(estimatePassageTimes(flat([0]), { totalDurationSec: 1000, fade: 0 })).toEqual([0])
+  })
+})
+
+describe('segmentPaces', () => {
+  it('renvoie un tableau aligné aux waypoints, pace[0] = 0', () => {
+    const out = segmentPaces(flat([0, 10, 20]), { totalDurationSec: 7200, fade: 0 })
+    expect(out).toHaveLength(3)
+    expect(out[0]).toBe(0)
+  })
+
+  it('tronçon plus pentu = allure (s/km) plus lente', () => {
+    const wps: PacingWaypoint[] = [
+      { km: 0, dPlus: 0, targetOverrideSec: null },
+      { km: 10, dPlus: 1000, targetOverrideSec: null }, // pentu
+      { km: 20, dPlus: 1000, targetOverrideSec: null }, // plat
+    ]
+    const out = segmentPaces(wps, { totalDurationSec: 7200, fade: 0 })
+    expect(out[1]).toBeGreaterThan(out[2])
+  })
+
+  it('fade > 0 ralentit les allures de la 2e moitié (et accélère la 1re)', () => {
+    const even = segmentPaces(flat([0, 10, 20]), { totalDurationSec: 7200, fade: 0 })
+    const faded = segmentPaces(flat([0, 10, 20]), { totalDurationSec: 7200, fade: 1 })
+    expect(faded[2]).toBeGreaterThan(even[2])
+    expect(faded[1]).toBeLessThan(even[1])
+  })
+
+  it('deux points au même km → 0 (pas de division par zéro)', () => {
+    const wps: PacingWaypoint[] = [
+      { km: 0, dPlus: 0, targetOverrideSec: null },
+      { km: 0, dPlus: 0, targetOverrideSec: null },
+      { km: 10, dPlus: 0, targetOverrideSec: null },
+    ]
+    const out = segmentPaces(wps, { totalDurationSec: 3600, fade: 0 })
+    expect(out[1]).toBe(0)
+    expect(Number.isFinite(out[2])).toBe(true)
   })
 })

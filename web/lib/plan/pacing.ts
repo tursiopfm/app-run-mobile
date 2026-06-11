@@ -76,3 +76,19 @@ export function estimatePassageTimes(
 
   return elapsed.map((s) => Math.round(s))
 }
+
+// Allure (s/km) de chaque tronçon i (1..n-1), dérivée des temps de passage.
+// Index 0 = 0 (le point de départ n'a pas de tronçon entrant). Deux points au
+// même km → 0 (garde-fou anti division par zéro). Sert à tracer la courbe live.
+export function segmentPaces(
+  waypoints: PacingWaypoint[],
+  opts: PacingOptions,
+): number[] {
+  const elapsed = estimatePassageTimes(waypoints, opts)
+  const paces: number[] = new Array(waypoints.length).fill(0)
+  for (let i = 1; i < waypoints.length; i++) {
+    const dKm = waypoints[i].km - waypoints[i - 1].km
+    paces[i] = dKm > 0 ? (elapsed[i] - elapsed[i - 1]) / dKm : 0
+  }
+  return paces
+}
