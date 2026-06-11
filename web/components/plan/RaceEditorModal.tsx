@@ -287,26 +287,6 @@ export function RaceEditorModal({ race, open, onClose, onSaved, onDeleted }: Pro
             </Field>
           </div>
 
-          <details className="rounded-[10px] bg-trail-surface border border-trail-border px-3 py-2">
-            <summary className="text-caption font-semibold text-trail-muted cursor-pointer">
-              {L.raceEditAdvanced}
-            </summary>
-            <div className="mt-2">
-              <Field label={L.raceEditFieldFade}>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.1"
-                  min={0}
-                  max={2}
-                  value={draft.pacingFade ?? 0}
-                  onChange={(e) => setDraft({ ...draft, pacingFade: Number(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
-                />
-              </Field>
-            </div>
-          </details>
-
           <Field label={L.raceEditFieldLocation}>
             <input
               type="text"
