@@ -16,4 +16,6 @@ Règles :
   - "unknown" si ambigu. En cas de doute → "unknown".
 - N'extrais PAS les colonnes de projection / ETA / scénarios horaires.
 - order_index croissant selon km. Premier point (km 0) → "depart", dernier → "arrivee".
-- Aucun tableau exploitable → { "race_name": null, "edition_year": null, "waypoints": [] }.`
+- edition_year / edition_date : extrais toute mention d'année ou de date de l'édition (titre du roadbook, barrières datées « sam. 28 juin 23h30 », « édition 2026 »). edition_date au format ISO (YYYY-MM-DD) si une date complète est lisible, sinon null. edition_year = l'année si trouvée, sinon null.
+- date_explicit = true uniquement si une année ou une date a été RÉELLEMENT trouvée dans le contenu (false si tu n'as rien trouvé).
+- Aucun tableau exploitable → { "race_name": null, "edition_year": null, "edition_date": null, "date_explicit": false, "waypoints": [] }.`

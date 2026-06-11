@@ -17,6 +17,8 @@ export const RACE_EXTRACTION_JSON_SCHEMA = {
     properties: {
       race_name: { type: ['string', 'null'] },
       edition_year: { type: ['number', 'null'] },
+      edition_date: { type: ['string', 'null'] },
+      date_explicit: { type: 'boolean' },
       waypoints: {
         type: 'array',
         items: {
@@ -46,7 +48,7 @@ export const RACE_EXTRACTION_JSON_SCHEMA = {
         },
       },
     },
-    required: ['race_name', 'edition_year', 'waypoints'],
+    required: ['race_name', 'edition_year', 'edition_date', 'date_explicit', 'waypoints'],
   },
 } as const
 
@@ -65,6 +67,8 @@ type RawWaypoint = {
 type RawExtraction = {
   race_name: string | null
   edition_year: number | null
+  edition_date: string | null
+  date_explicit: boolean
   waypoints: RawWaypoint[]
 }
 
@@ -73,8 +77,8 @@ export function rawToExtractedRaceData(raw: RawExtraction): ExtractedRaceData {
   return {
     raceName: raw.race_name,
     editionYear: raw.edition_year,
-    editionDate: null,
-    dateExplicit: false,
+    editionDate: raw.edition_date,
+    dateExplicit: raw.date_explicit,
     startDayOfMonth: null,
     startTimeRaw: null,
     waypoints: raw.waypoints.map((w) => ({

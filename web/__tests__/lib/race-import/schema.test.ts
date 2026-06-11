@@ -24,7 +24,7 @@ describe('rawToExtractedRaceData (snake → camel)', () => {
         },
       ],
     }
-    const out = rawToExtractedRaceData(raw)
+    const out = rawToExtractedRaceData(raw as any)
     expect(out.raceName).toBe('CCC')
     expect(out.editionYear).toBe(2024)
     expect(out.waypoints[0]).toEqual({
@@ -40,6 +40,16 @@ describe('rawToExtractedRaceData (snake → camel)', () => {
       supplies: [],
       targetOverrideSec: null,
     })
+  })
+
+  it('mappe edition_date / date_explicit', () => {
+    const out = rawToExtractedRaceData({
+      race_name: 'X', edition_year: 2026, edition_date: '2026-06-28', date_explicit: true,
+      waypoints: [],
+    } as any)
+    expect(out.editionDate).toBe('2026-06-28')
+    expect(out.dateExplicit).toBe(true)
+    expect(out.editionYear).toBe(2026)
   })
 
   it('nullifie cutoffKind quand cutoffRaw est null', () => {
@@ -60,7 +70,7 @@ describe('rawToExtractedRaceData (snake → camel)', () => {
         },
       ],
     }
-    const out = rawToExtractedRaceData(raw)
+    const out = rawToExtractedRaceData(raw as any)
     expect(out.waypoints[0].cutoffRaw).toBeNull()
     expect(out.waypoints[0].cutoffKind).toBeNull()
   })
