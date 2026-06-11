@@ -1,0 +1,30 @@
+name: LiveTrail Catalog Snapshot
+
+# Déclenche /api/cron/livetrail-catalog une fois par semaine (lundi 04:00 UTC).
+# Lit web.livetrail.net/fr/events, énumère les événements à venir et upsert le
+# catalogue (throttle interne + cap 30). Hebdo suffit : la fenêtre /fr/events est
+# petite et l'accumulation passive (recherches Auto) comble le reste.
+# Aussi déclenchable manuellement depuis l'onglet Actions du repo.
+
+on:
+  schedule:
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Vercel cron endpoint
+        run: |
+          response=$(curl -sS -w "\n%{http_code}" -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://trailcockpit.run/api/cron/livetrail-catalog)
+          body=$(echo "$response" | sed '$d')
+          status=$(echo "$response" | tail -n1)
+          echo "HTTP $status"
+          echo "Response: $body"
+          if [ "$status" != "200" ]; then
+            echo "::error::Cron endpoint returned non-200 status"
+            exit 1
+          fi
