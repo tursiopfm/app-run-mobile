@@ -3,6 +3,7 @@ import {
   rawToExtractedRaceData,
   RACE_EXTRACTION_JSON_SCHEMA,
   rowToRaceWaypoint,
+  rowToTableauMeta,
 } from '@/lib/race-import/schema'
 
 describe('rawToExtractedRaceData (snake → camel)', () => {
@@ -180,6 +181,18 @@ describe('RACE_EXTRACTION_JSON_SCHEMA', () => {
   it("a un type 'object' à la racine avec strict: true", () => {
     expect(RACE_EXTRACTION_JSON_SCHEMA.schema.type).toBe('object')
     expect(RACE_EXTRACTION_JSON_SCHEMA.strict).toBe(true)
+  })
+})
+
+describe('rowToTableauMeta (pending_diff)', () => {
+  it('rowToTableauMeta mappe pending_diff / pending_diff_at', () => {
+    const pd = { kind: 'changed', detectedAt: '2026-06-01T00:00:00Z', newWaypoints: [], newMeta: { editionYear: 2026, editionDate: null, dateExplicit: false, freshnessStatus: 'confirmed', sourceHash: 'H' }, summary: { added: 0, removed: 0, modified: 1, modifiedDetails: [] } }
+    const m = rowToTableauMeta({ race_id: 'r1', edition_year: 2026, edition_date: null, date_explicit: false, freshness_status: 'confirmed', source_url: null, source_checked_at: 'T', source_hash: 'H', pending_diff: pd, pending_diff_at: '2026-06-01T00:00:00Z' })
+    expect(m.pendingDiff).toEqual(pd)
+    expect(m.pendingDiffAt).toBe('2026-06-01T00:00:00Z')
+    const m2 = rowToTableauMeta({ race_id: 'r1', edition_year: null, edition_date: null, date_explicit: false, freshness_status: 'unknown', source_url: null, source_checked_at: 'T', source_hash: null })
+    expect(m2.pendingDiff).toBeNull()
+    expect(m2.pendingDiffAt).toBeNull()
   })
 })
 

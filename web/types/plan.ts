@@ -246,6 +246,8 @@ export interface RaceTableauMeta {
   sourceUrl: string | null
   sourceCheckedAt: string           // ISO timestamp
   sourceHash: string | null
+  pendingDiff: PendingDiff | null
+  pendingDiffAt: string | null
 }
 
 // === Diff de re-check d'un tableau (Lot 2) ===

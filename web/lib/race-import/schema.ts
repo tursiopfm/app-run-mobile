@@ -180,6 +180,8 @@ export function rowToTableauMeta(row: any): RaceTableauMeta {
     sourceUrl: row.source_url,
     sourceCheckedAt: row.source_checked_at,
     sourceHash: row.source_hash,
+    pendingDiff: row.pending_diff ?? null,
+    pendingDiffAt: row.pending_diff_at ?? null,
   }
 }
 
