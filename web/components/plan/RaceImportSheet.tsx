@@ -13,6 +13,7 @@ type Tab = 'auto' | 'url' | 'pdf' | 'image' | 'text'
 type Props = {
   raceId: string
   race: { name: string; date: string; distance: number; elevation: number }
+  autoSearch?: boolean
   open: boolean
   onClose: () => void
   onSaved: (waypoints: RaceWaypoint[]) => void
@@ -20,7 +21,7 @@ type Props = {
 
 type Status = 'idle' | 'extracting' | 'preview' | 'saving' | 'error'
 
-export function RaceImportSheet({ raceId, race, open, onClose, onSaved }: Props) {
+export function RaceImportSheet({ raceId, race, autoSearch, open, onClose, onSaved }: Props) {
   const [tab, setTab] = useState<Tab>('auto')
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -47,6 +48,15 @@ export function RaceImportSheet({ raceId, race, open, onClose, onSaved }: Props)
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
+
+  // Ouverture en mode « auto » (depuis la création de course) : on lance la
+  // recherche directement. L'effet de reset (défini plus haut, sur `open`) a déjà
+  // remis l'onglet sur 'auto' et vidé les candidats. findRace est une fonction
+  // déclarée (hoistée) → appelable ici bien que définie plus bas.
+  useEffect(() => {
+    if (open && autoSearch) void findRace()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, autoSearch])
 
   if (!open) return null
 
