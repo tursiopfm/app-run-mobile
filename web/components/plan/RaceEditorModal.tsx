@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useRouter } from 'next/navigation'
 import type { Race, RaceType } from '@/types/plan'
 import { deleteRace, saveRace } from '@/lib/plan/storage'
 import { useT } from '@/lib/i18n/I18nProvider'
@@ -40,6 +41,8 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
   const isEdit = race !== null
   const [draft, setDraft] = useState<Race>(() => race ?? emptyDraft())
   const [saving, setSaving] = useState(false)
+  const router = useRouter()
+  const [createdId, setCreatedId] = useState<string | null>(null)
   // Temps cible en DEUX champs (heures / minutes) → clavier numérique sans « : ».
   const initTarget = (race ?? emptyDraft()).targetDurationMin
   const [rawHours, setRawHours] = useState<string>(initTarget != null ? String(Math.floor(initTarget / 60)) : '')
@@ -56,6 +59,7 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
   // (création vs édition de la même course peut se chevaucher dans le parent).
   useEffect(() => {
     if (open) {
+      setCreatedId(null)
       const r = race ?? emptyDraft()
       setDraft(r)
       setRawHours(r.targetDurationMin != null ? String(Math.floor(r.targetDurationMin / 60)) : '')
@@ -106,7 +110,11 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
       }
       await saveRace(toSave)
       onSaved()
-      onClose()
+      if (isEdit) {
+        onClose()
+      } else {
+        setCreatedId(toSave.id)   // création → on propose de chercher le tableau
+      }
     } finally {
       setSaving(false)
     }
@@ -122,6 +130,45 @@ export function RaceEditorModal({ race, open, onClose, onSaved }: Props) {
     } finally {
       setSaving(false)
     }
+  }
+
+  if (createdId) {
+    return createPortal(
+      <div
+        className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60"
+        onClick={onClose}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div
+          className="bg-trail-card border border-trail-border rounded-t-[20px] md:rounded-[16px] w-full max-w-lg p-6 pb-8 text-center"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="text-[40px] leading-none mb-2" aria-hidden>✓</div>
+          <h2 className="font-display text-[16px] font-semibold text-trail-text mb-1">Course créée</h2>
+          <p className="text-body-sm text-trail-muted mb-5">
+            Chercher le tableau de course automatiquement (ravitos, barrières, objectif) ?
+          </p>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => { router.push(`/plan/courses/${createdId}?import=auto`); onClose() }}
+              className="w-full py-2 rounded-[10px] bg-trail-primary text-white text-body-sm font-semibold"
+            >
+              Oui, chercher
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full py-2 rounded-[10px] border border-trail-border text-trail-text text-body-sm"
+            >
+              Plus tard
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body,
+    )
   }
 
   return createPortal(
