@@ -81,10 +81,11 @@ export async function searchRaceUrls(target: RaceTarget): Promise<string[]> {
   const year = target.date.slice(0, 4)
   const client = new OpenAI({ apiKey })
   const prompt =
-    `Trouve la ou les page(s) officielle(s) LiveTrail (livetrail.net / livetrail.run) ` +
-    `ou UTMB (utmb.world) du parcours de la course de trail « ${target.name} » ` +
+    `Trouve les pages web de la course de trail « ${target.name} » ` +
     `(édition ${year}, environ ${target.distance} km et ${target.elevation} m de D+). ` +
-    `Donne les URLs directes de la page "parcours / race" de cette course.`
+    `Donne en priorité : (1) sa page de chronométrage LiveTrail ` +
+    `(livetrail.net / livetrail.run) ou UTMB (utmb.world), ET (2) son site officiel ` +
+    `ou sa page de résultats. Liste toutes les URLs directes pertinentes.`
   const res = await client.chat.completions.create({
     model: 'gpt-4o-search-preview',
     web_search_options: {},
