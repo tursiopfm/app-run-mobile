@@ -4,7 +4,7 @@ const mockCreate = createServiceClient as jest.Mock
 
 import {
   normalizeSearchText, yearFromLivetrailUrl, harvestEventUrls,
-  candidatesToRows, rankEventUrls,
+  candidatesToRows, rankEventUrls, accumulateCatalog, searchCatalogUrls,
 } from '@/lib/race-import/catalog'
 import type { RaceCandidate, RaceTarget } from '@/lib/race-import/find-race'
 
@@ -74,5 +74,60 @@ describe('rankEventUrls', () => {
     ])
     expect(out[0]).toBe('https://good.v3.livetrail.net/fr/2026')
     expect(out).toHaveLength(2)
+  })
+})
+
+describe('accumulateCatalog', () => {
+  afterEach(() => jest.clearAllMocks())
+
+  it('upsert les lignes livetrail avec onConflict', async () => {
+    const upsert = jest.fn().mockResolvedValue({ error: null })
+    mockCreate.mockReturnValue({ from: jest.fn().mockReturnValue({ upsert }) })
+    await accumulateCatalog([cand({ url: 'https://um.v3.livetrail.net/fr/2026', raceName: 'Grand Raid' })])
+    expect(upsert).toHaveBeenCalledTimes(1)
+    const [rows, opts] = upsert.mock.calls[0]
+    expect(rows[0].event_slug).toBe('um')
+    expect(opts.onConflict).toBe('platform,event_slug,course_name,edition_year')
+  })
+
+  it('aucun candidat livetrail → pas de client DB', async () => {
+    await accumulateCatalog([cand({ parserId: 'utmb', url: 'https://x.utmb.world/fr/races/a' })])
+    expect(mockCreate).not.toHaveBeenCalled()
+  })
+})
+
+describe('searchCatalogUrls', () => {
+  afterEach(() => jest.clearAllMocks())
+
+  function mockSelect(data: unknown) {
+    const limit = jest.fn().mockResolvedValue({ data, error: null })
+    const or = jest.fn().mockReturnValue({ limit })
+    const eq = jest.fn().mockReturnValue({ or })
+    const select = jest.fn().mockReturnValue({ eq })
+    mockCreate.mockReturnValue({ from: jest.fn().mockReturnValue({ select }) })
+    return { select, eq, or }
+  }
+
+  it('tokenise le nom, classe et renvoie les URLs distinctes', async () => {
+    const { or } = mockSelect([
+      { source_url: 'https://good.v3.livetrail.net/fr/2026', total_km: 177, total_dplus: 1430 },
+      { source_url: 'https://far.v3.livetrail.net/fr/2026', total_km: 50, total_dplus: 500 },
+    ])
+    const out = await searchCatalogUrls(target)
+    expect(or).toHaveBeenCalledWith('search_text.ilike.%ultra%,search_text.ilike.%marin%')
+    expect(out[0]).toBe('https://good.v3.livetrail.net/fr/2026')
+  })
+
+  it('nom sans token ≥3 → [] sans requête', async () => {
+    const out = await searchCatalogUrls({ ...target, name: 'a b' })
+    expect(out).toEqual([])
+    expect(mockCreate).not.toHaveBeenCalled()
+  })
+
+  it('erreur DB → []', async () => {
+    const limit = jest.fn().mockResolvedValue({ data: null, error: { message: 'boom' } })
+    mockCreate.mockReturnValue({ from: jest.fn().mockReturnValue({
+      select: () => ({ eq: () => ({ or: () => ({ limit }) }) }) }) })
+    expect(await searchCatalogUrls(target)).toEqual([])
   })
 })

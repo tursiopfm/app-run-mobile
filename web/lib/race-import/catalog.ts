@@ -3,6 +3,7 @@
 // (Les imports createServiceClient / listLivetrailRaces sont ajoutés en Task 3 / Task 6,
 //  quand les fonctions qui les utilisent sont écrites — évite les imports inutilisés.)
 import 'server-only'
+import { createServiceClient } from '@/lib/database/supabase-server'
 import type { RaceCandidate, RaceTarget } from './find-race'
 
 // ── Helpers purs ──
@@ -104,4 +105,39 @@ export function rankEventUrls(target: RaceTarget, rows: CatalogMatch[]): string[
     out.push(s.url)
   }
   return out
+}
+
+// ── Couche DB (service role) ──
+
+const SEARCH_TOP_K = 5
+
+// Accumulation passive : upsert des candidats LiveTrail résolus. Best-effort.
+export async function accumulateCatalog(candidates: RaceCandidate[]): Promise<void> {
+  const rows = candidatesToRows(candidates)
+  if (rows.length === 0) return
+  const supabase = createServiceClient()
+  const { error } = await supabase
+    .from('livetrail_catalog')
+    .upsert(rows, { onConflict: 'platform,event_slug,course_name,edition_year' })
+  if (error) console.warn('[catalog] upsert error:', error.message)
+}
+
+// Recherche catalogue : tokens du nom → ILIKE → URLs d'événement classées (sans OpenAI).
+export async function searchCatalogUrls(target: RaceTarget): Promise<string[]> {
+  // Tokens alphanumériques (évite toute injection dans le filtre PostgREST .or()).
+  const tokens = normalizeSearchText(target.name)
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t.length >= 3)
+  if (tokens.length === 0) return []
+
+  const supabase = createServiceClient()
+  const orFilter = tokens.map((t) => `search_text.ilike.%${t}%`).join(',')
+  const { data, error } = await supabase
+    .from('livetrail_catalog')
+    .select('source_url, total_km, total_dplus')
+    .eq('platform', 'livetrail')
+    .or(orFilter)
+    .limit(100)
+  if (error || !data) return []
+  return rankEventUrls(target, data as CatalogMatch[]).slice(0, SEARCH_TOP_K)
 }
