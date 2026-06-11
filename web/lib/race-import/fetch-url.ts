@@ -1,10 +1,10 @@
 // Fetch HTML sécurisé pour l'extraction de roadbook.
 // - Whitelist http(s) uniquement (refus de file:, data:, etc.)
 // - Timeout 10s
-// - Limite taille 1 Mo
+// - Limite taille 3 Mo (les sites de course officiels font souvent > 1 Mo)
 import 'server-only'
 
-const MAX_BYTES = 1_000_000
+const MAX_BYTES = 3_000_000
 const TIMEOUT_MS = 10_000
 
 export class FetchUrlError extends Error {}

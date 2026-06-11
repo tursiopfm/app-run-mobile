@@ -134,12 +134,10 @@ function dedupCandidates(list: ParsedCandidate[]): ParsedCandidate[] {
   })
 }
 
-// URLs → candidats parsés (filtrés/parsés/dédupliqués) → classés.
-export async function resolveCandidates(target: RaceTarget, rawUrls: string[]): Promise<RaceCandidate[]> {
-  const urls = harvestRaceUrls(rawUrls)
+// Résout une liste d'URLs en candidats via les parsers UTMB / LiveTrail.
+async function resolveParsableUrls(urls: string[]): Promise<ParsedCandidate[]> {
   const utmbUrls = urls.filter((u) => findParserForUrl(u)?.id === 'utmb').slice(0, MAX_PARSE)
   const livetrailUrls = urls.filter((u) => findParserForUrl(u)?.id === 'livetrail')
-
   const parsed: ParsedCandidate[] = []
 
   // UTMB : 1 candidat par URL.
@@ -150,7 +148,7 @@ export async function resolveCandidates(target: RaceTarget, rawUrls: string[]): 
   // LiveTrail : toutes les courses de l'événement (dédup par slug → 1 fetch/événement).
   const slugsSeen = new Set<string>()
   for (const u of livetrailUrls) {
-    if (slugsSeen.size >= MAX_PARSE) break   // borne le nb d'événements distincts (fetchs séquentiels)
+    if (slugsSeen.size >= MAX_PARSE) break
     let slug: string
     try { slug = new URL(u).hostname.split('.')[0] } catch { continue }
     if (slugsSeen.has(slug)) continue
@@ -168,17 +166,82 @@ export async function resolveCandidates(target: RaceTarget, rawUrls: string[]): 
       }
     } catch { /* événement livetrail injoignable → ignoré */ }
   }
+  return parsed
+}
 
-  let ranked = rankRaceCandidates(target, dedupCandidates(parsed))
+const MAX_DISCOVER_PAGES = 2  // pages « autres » (site officiel) qu'on explore
+const MAX_SUBLINKS = 4        // sous-liens live/résultats suivis par page
 
-  // Fallback générique : seulement si aucune candidate confidente via UTMB/LiveTrail.
-  if (ranked.length === 0 || !ranked[0].confident) {
-    const otherUrls = urls.filter((u) => findParserForUrl(u) == null).slice(0, MAX_GENERIC)
-    if (otherUrls.length > 0) {
-      const generic = await extractGenericCandidates(otherUrls)
-      if (generic.length > 0) {
-        ranked = rankRaceCandidates(target, dedupCandidates([...parsed, ...generic]))
+// URLs livetrail/utmb présentes dans un HTML.
+function harvestTimingUrls(html: string): string[] {
+  const re = /https?:\/\/[a-z0-9.-]+\.(?:livetrail\.(?:net|run)|utmb\.world)[^\s"'<>)]*/gi
+  return Array.from(new Set(Array.from(html.matchAll(re)).map((m) => m[0])))
+}
+
+// Liens internes (même domaine) ressemblant à une page live / résultats / parcours.
+function findRaceSubLinks(html: string, baseUrl: string): string[] {
+  let origin: string
+  try { origin = new URL(baseUrl).origin } catch { return [] }
+  const kw = /ledirect|sultat|suivi|direct|parcours|tracking|chrono|result|\blive\b/i
+  const out = new Set<string>()
+  for (const m of Array.from(html.matchAll(/href="([^"]+)"/gi))) {
+    if (!kw.test(m[1])) continue
+    try {
+      const abs = new URL(m[1], baseUrl)
+      if (abs.origin === origin) out.add(abs.toString())
+    } catch { /* href invalide */ }
+  }
+  return Array.from(out)
+}
+
+// Depuis des pages « autres » (site officiel), découvre les URLs de chronométrage
+// (livetrail/utmb) : d'abord dans la page, sinon en suivant 1 saut les liens
+// live/résultats du même domaine. Déterministe (aucun LLM).
+async function discoverTimingUrls(otherUrls: string[]): Promise<string[]> {
+  const found = new Set<string>()
+  for (const url of otherUrls.slice(0, MAX_DISCOVER_PAGES)) {
+    try {
+      const html = await fetchRaceHtml(url)
+      const direct = harvestTimingUrls(html)
+      if (direct.length > 0) {
+        direct.forEach((u) => found.add(u))
+        continue
       }
+      for (const sub of findRaceSubLinks(html, url).slice(0, MAX_SUBLINKS)) {
+        try {
+          const h2 = await fetchRaceHtml(sub)
+          harvestTimingUrls(h2).forEach((u) => found.add(u))
+        } catch { /* sous-page injoignable */ }
+      }
+    } catch { /* page injoignable */ }
+  }
+  return Array.from(found)
+}
+
+// URLs → candidats classés. Cascade : UTMB/LiveTrail directs → (si rien de fiable)
+// liens de chronométrage découverts sur le site officiel → (en dernier) LLM.
+export async function resolveCandidates(target: RaceTarget, rawUrls: string[]): Promise<RaceCandidate[]> {
+  const urls = harvestRaceUrls(rawUrls)
+  const parsed = await resolveParsableUrls(urls)
+  let ranked = rankRaceCandidates(target, dedupCandidates(parsed))
+  if (ranked.length > 0 && ranked[0].confident) return ranked
+
+  const otherUrls = urls.filter((u) => findParserForUrl(u) == null)
+
+  // 1) Suivre les liens du site officiel vers le chronométrage (livetrail/utmb).
+  const timingUrls = await discoverTimingUrls(otherUrls)
+  if (timingUrls.length > 0) {
+    parsed.push(...(await resolveParsableUrls(timingUrls)))
+    ranked = rankRaceCandidates(target, dedupCandidates(parsed))
+    if (ranked.length > 0 && ranked[0].confident) return ranked
+  }
+
+  // 2) Dernier recours : extraction LLM générique de la page « autre ».
+  if (otherUrls.length > 0) {
+    const generic = await extractGenericCandidates(otherUrls.slice(0, MAX_GENERIC))
+    if (generic.length > 0) {
+      parsed.push(...generic)
+      ranked = rankRaceCandidates(target, dedupCandidates(parsed))
     }
   }
   return ranked

@@ -11,6 +11,8 @@ import {
 } from '@/lib/race-import/find-race'
 import { extractWaypoints } from '@/lib/race-import/extract'
 const mockExtract = extractWaypoints as jest.Mock
+import { fetchRaceHtml } from '@/lib/race-import/fetch-url'
+const mockFetchHtml = fetchRaceHtml as jest.Mock
 import '@/lib/race-import/sources/utmb'        // enregistre le parser utmb
 import '@/lib/race-import/sources/livetrail'   // enregistre le parser livetrail
 
@@ -164,6 +166,35 @@ describe('resolveCandidates — fallback générique', () => {
       'https://saint-jacques.utmb.world/fr/races/100M',
       'https://www.exemple.com/autre',
     ])
+    expect(out[0].confident).toBe(true)
+    expect(mockExtract).not.toHaveBeenCalled()
+  })
+})
+
+describe('resolveCandidates — découverte via le site officiel', () => {
+  beforeEach(() => { mockExtract.mockReset() })
+  afterEach(() => {
+    jest.restoreAllMocks()
+    mockExtract.mockReset()
+    mockFetchHtml.mockReset()
+    mockFetchHtml.mockImplementation(async () => '<html>roadbook</html>')
+  })
+
+  it('suit les liens du site officiel vers livetrail puis résout la bonne course', async () => {
+    mockFetchLivetrail()  // global.fetch → XML livetrail pour les hôtes livetrail
+    mockFetchHtml.mockImplementation(async (url: string) => {
+      if (url.endsWith('/ledirect')) {
+        return '<a href="https://ultramarin-breizhchrono.v3.livetrail.net/fr/2026">suivi</a>'
+      }
+      if (url.includes('ultra-marin.fr')) {
+        return '<nav><a href="https://www.ultra-marin.fr/ledirect">Le direct</a></nav>'
+      }
+      return '<html></html>'
+    })
+    const target = { name: 'Ultra Marin', date: '2026-06-26', distance: 177, elevation: 1430 }
+    const out = await resolveCandidates(target, ['https://www.ultra-marin.fr/'])
+    expect(out[0].raceName).toBe('Grand Raid')
+    expect(out[0].totalKm).toBe(177)
     expect(out[0].confident).toBe(true)
     expect(mockExtract).not.toHaveBeenCalled()
   })
