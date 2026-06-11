@@ -26,6 +26,10 @@ export interface ParsedCandidate {
   totalDplus: number | null
   nbPoints: number
   waypoints: ExtractedRaceData['waypoints']
+  editionYear?: number | null
+  editionDate?: string | null
+  dateExplicit?: boolean
+  startDayOfMonth?: number | null
 }
 
 // Candidat APRÈS scoring (renvoyé à l'UI).
@@ -65,6 +69,10 @@ async function extractGenericCandidates(urls: string[]): Promise<ParsedCandidate
       return {
         url, parserId: 'generic', raceName: data.raceName,
         totalKm: last.km, totalDplus: last.dPlus, nbPoints: wps.length, waypoints: wps,
+        editionYear: data.editionYear,
+        editionDate: data.editionDate,
+        dateExplicit: data.dateExplicit,
+        startDayOfMonth: data.startDayOfMonth,
       }
     } catch {
       return null
@@ -90,6 +98,10 @@ async function parseCandidate(url: string): Promise<ParsedCandidate | null> {
       totalDplus: last.dPlus,
       nbPoints: wps.length,
       waypoints: wps,
+      editionYear: data.editionYear,
+      editionDate: data.editionDate,
+      dateExplicit: data.dateExplicit,
+      startDayOfMonth: data.startDayOfMonth,
     }
   } catch {
     return null
@@ -134,6 +146,10 @@ async function resolveParsableUrls(urls: string[]): Promise<ParsedCandidate[]> {
         parsed.push({
           url: u, parserId: 'livetrail', raceName: r.raceName,
           totalKm: last.km, totalDplus: last.dPlus, nbPoints: wps.length, waypoints: wps,
+          editionYear: r.data.editionYear,
+          editionDate: r.data.editionDate,
+          dateExplicit: r.data.dateExplicit,
+          startDayOfMonth: r.data.startDayOfMonth,
         })
       }
     } catch { /* événement livetrail injoignable → ignoré */ }

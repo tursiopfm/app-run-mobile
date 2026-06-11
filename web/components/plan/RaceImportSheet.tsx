@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom'
 import type { ExtractedRaceData, RaceWaypoint } from '@/types/plan'
 import type { RaceCandidate } from '@/lib/race-import/find-race'
 import { WaypointsTable } from './WaypointsTable'
+import { computeFreshness } from '@/lib/race-import/freshness'
 
 type Tab = 'auto' | 'url' | 'pdf' | 'image' | 'text'
 
@@ -34,12 +35,20 @@ export function RaceImportSheet({ raceId, race, autoSearch, open, onClose, onSav
   const [finding, setFinding] = useState(false)
   const [showAll, setShowAll] = useState(false)
   const [findError, setFindError] = useState<string | null>(null)
+  const [detected, setDetected] = useState<{
+    editionYear: number | null
+    editionDate: string | null
+    dateExplicit: boolean
+    startDayOfMonth: number | null
+    sourceUrl: string | null
+  } | null>(null)
 
   useEffect(() => {
     if (!open) return
     setTab('auto'); setStatus('idle'); setError(null)
     setUrl(''); setText(''); setPdfFile(null); setImageFile(null); setDraft([])
     setCandidates([]); setFinding(false); setShowAll(false); setFindError(null)
+    setDetected(null)
   }, [open])
 
   useEffect(() => {
@@ -85,6 +94,13 @@ export function RaceImportSheet({ raceId, race, autoSearch, open, onClose, onSav
 
   function importCandidate(c: RaceCandidate) {
     setDraft(c.waypoints)
+    setDetected({
+      editionYear: c.editionYear ?? null,
+      editionDate: c.editionDate ?? null,
+      dateExplicit: c.dateExplicit ?? false,
+      startDayOfMonth: c.startDayOfMonth ?? null,
+      sourceUrl: c.url,
+    })
     setStatus('preview')
   }
 
@@ -108,7 +124,15 @@ export function RaceImportSheet({ raceId, race, autoSearch, open, onClose, onSav
       }
       const body = await res.json()
       if (!res.ok) throw new Error(body.error || 'Erreur extraction')
-      setDraft(body.data.waypoints)
+      const d = body.data as ExtractedRaceData
+      setDraft(d.waypoints)
+      setDetected({
+        editionYear: d.editionYear,
+        editionDate: d.editionDate,
+        dateExplicit: d.dateExplicit,
+        startDayOfMonth: d.startDayOfMonth,
+        sourceUrl: tab === 'url' ? url : null,
+      })
       setStatus('preview')
     } catch (err) {
       setError((err as Error).message)
@@ -122,7 +146,16 @@ export function RaceImportSheet({ raceId, race, autoSearch, open, onClose, onSav
       const res = await fetch(`/api/races/${raceId}/waypoints`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ waypoints: draft }),
+        body: JSON.stringify({
+          waypoints: draft,
+          meta: detected ? {
+            editionYear: detected.editionYear,
+            editionDate: detected.editionDate,
+            dateExplicit: detected.dateExplicit,
+            startDayOfMonth: detected.startDayOfMonth,
+            sourceUrl: detected.sourceUrl,
+          } : undefined,
+        }),
       })
       const body = await res.json()
       if (!res.ok) throw new Error(body.error || 'Erreur sauvegarde')
@@ -260,6 +293,32 @@ export function RaceImportSheet({ raceId, race, autoSearch, open, onClose, onSav
             <p className="text-caption text-trail-muted">
               Vérifie les chiffres, corrige ce qui doit l&apos;être, puis sauvegarde.
             </p>
+            {detected && draft.length > 0 && (() => {
+              const fresh = computeFreshness(
+                { editionYear: detected.editionYear, editionDate: detected.editionDate,
+                  dateExplicit: detected.dateExplicit, startDayOfMonth: detected.startDayOfMonth },
+                race.date,
+              )
+              const badge = fresh.freshnessStatus === 'confirmed'
+                ? { icon: '✅', text: `Confirmé édition ${fresh.editionYear ?? '?'}` }
+                : fresh.freshnessStatus === 'provisional_previous_edition'
+                ? { icon: '⚠️', text: `Provisoire — édition ${fresh.editionYear ?? '?'}` }
+                : { icon: '❔', text: 'Édition non identifiée — vérifiez' }
+              return (
+                <div className="flex items-center gap-2 mb-2 text-body-sm">
+                  <span>{badge.icon} {badge.text}</span>
+                  <label className="ml-auto flex items-center gap-1 text-caption text-trail-muted">
+                    Année
+                    <input
+                      type="number" inputMode="numeric"
+                      value={detected.editionYear ?? ''}
+                      onChange={(e) => setDetected({ ...detected, editionYear: Number(e.target.value) || null, editionDate: null })}
+                      className="w-16 px-2 py-1 rounded-[8px] bg-trail-surface border border-trail-border text-trail-text text-center"
+                    />
+                  </label>
+                </div>
+              )
+            })()}
             <WaypointsTable
               waypoints={draft}
               onChange={(next) => setDraft(next)}
