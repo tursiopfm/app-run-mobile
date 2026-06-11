@@ -4,10 +4,17 @@ jest.mock('@/lib/race-import/fetch-url', () => ({
 jest.mock('@/lib/race-import/extract', () => ({
   extractWaypoints: jest.fn(),
 }))
+jest.mock('@/lib/race-import/catalog', () => ({
+  searchCatalogUrls: jest.fn(),
+  accumulateCatalog: jest.fn(async () => {}),
+}))
+jest.mock('@/lib/race-import/search-openai', () => ({
+  searchRaceUrls: jest.fn(),
+}))
 
 import {
   harvestRaceUrls, rankRaceCandidates,
-  resolveCandidates, type RaceTarget,
+  resolveCandidates, findRaceCandidates, type RaceTarget,
 } from '@/lib/race-import/find-race'
 import { extractWaypoints } from '@/lib/race-import/extract'
 const mockExtract = extractWaypoints as jest.Mock
@@ -15,6 +22,11 @@ import { fetchRaceHtml } from '@/lib/race-import/fetch-url'
 const mockFetchHtml = fetchRaceHtml as jest.Mock
 import '@/lib/race-import/sources/utmb'        // enregistre le parser utmb
 import '@/lib/race-import/sources/livetrail'   // enregistre le parser livetrail
+import { searchCatalogUrls, accumulateCatalog } from '@/lib/race-import/catalog'
+import { searchRaceUrls } from '@/lib/race-import/search-openai'
+const mockSearchCatalog = searchCatalogUrls as jest.Mock
+const mockAccumulate = accumulateCatalog as jest.Mock
+const mockSearchOpenai = searchRaceUrls as jest.Mock
 
 // HTML UTMB minimal (JSON "points" embarqué) — dernier point Le Puy 138.4 km / 5267 D+.
 const UTMB_HTML = `<html><body><script type="application/json">
@@ -197,5 +209,41 @@ describe('resolveCandidates — découverte via le site officiel', () => {
     expect(out[0].totalKm).toBe(177)
     expect(out[0].confident).toBe(true)
     expect(mockExtract).not.toHaveBeenCalled()
+  })
+})
+
+describe('findRaceCandidates — catalogue d\'abord', () => {
+  beforeEach(() => { mockSearchCatalog.mockReset(); mockAccumulate.mockReset(); mockSearchOpenai.mockReset() })
+  afterEach(() => jest.restoreAllMocks())
+
+  it('hit catalogue confident → renvoie sans appeler OpenAI', async () => {
+    mockFetchLivetrail()
+    mockSearchCatalog.mockResolvedValue(['https://ultramarin-breizhchrono.v3.livetrail.net/fr/2026'])
+    const target = { name: 'Ultra Marin', date: '2026-06-26', distance: 177, elevation: 1430 }
+    const out = await findRaceCandidates(target)
+    expect(out[0].raceName).toBe('Grand Raid')
+    expect(out[0].confident).toBe(true)
+    expect(mockSearchOpenai).not.toHaveBeenCalled()
+  })
+
+  it('catalogue vide → fallback OpenAI + accumulation', async () => {
+    mockFetchLivetrail()
+    mockSearchCatalog.mockResolvedValue([])
+    mockSearchOpenai.mockResolvedValue(['https://ultramarin-breizhchrono.v3.livetrail.net/fr/2026'])
+    const target = { name: 'Ultra Marin', date: '2026-06-26', distance: 177, elevation: 1430 }
+    const out = await findRaceCandidates(target)
+    expect(mockSearchOpenai).toHaveBeenCalledTimes(1)
+    expect(out[0].raceName).toBe('Grand Raid')
+    expect(mockAccumulate).toHaveBeenCalledTimes(1)
+    expect((mockAccumulate.mock.calls[0][0] as any[])[0].raceName).toBe('Grand Raid')
+  })
+
+  it('hit catalogue NON confident → fallback OpenAI', async () => {
+    mockFetchLivetrail()
+    mockSearchCatalog.mockResolvedValue(['https://ultramarin-breizhchrono.v3.livetrail.net/fr/2026'])
+    mockSearchOpenai.mockResolvedValue([])
+    const target = { name: 'Ultra Marin', date: '2026-06-26', distance: 250, elevation: 9000 }
+    await findRaceCandidates(target)
+    expect(mockSearchOpenai).toHaveBeenCalledTimes(1)
   })
 })

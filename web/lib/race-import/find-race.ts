@@ -4,6 +4,7 @@
 import 'server-only'
 import { findParserForUrl } from './sources'
 import { searchRaceUrls } from './search-openai'
+import { searchCatalogUrls, accumulateCatalog } from './catalog'
 import { listLivetrailRaces } from './sources/livetrail'
 import { fetchRaceHtml } from './fetch-url'
 import { extractWaypoints } from './extract'
@@ -218,10 +219,28 @@ export async function resolveCandidates(target: RaceTarget, rawUrls: string[]): 
   return ranked
 }
 
-// Orchestrateur complet : recherche → résolution.
+// Orchestrateur : catalogue local d'abord (gratuit), sinon recherche OpenAI + accumulation.
 export async function findRaceCandidates(target: RaceTarget): Promise<RaceCandidate[]> {
+  // Tier 1 : catalogue local. Court-circuite OpenAI si un candidat est confident.
+  try {
+    const catalogUrls = await searchCatalogUrls(target)
+    if (catalogUrls.length > 0) {
+      const ranked = await resolveCandidates(target, catalogUrls)
+      if (ranked.length > 0 && ranked[0].confident) return ranked
+    }
+  } catch (err) {
+    console.warn('[find-race] tier catalogue ignoré:', (err as Error).message)
+  }
+
+  // Tier 2 : recherche OpenAI (inchangé) + accumulation passive best-effort.
   const rawUrls = await searchRaceUrls(target)
-  return resolveCandidates(target, rawUrls)
+  const ranked = await resolveCandidates(target, rawUrls)
+  try {
+    await accumulateCatalog(ranked)
+  } catch {
+    /* accumulation best-effort : ne casse jamais la résolution */
+  }
+  return ranked
 }
 
 // Classe les candidats : écart distance + écart D+ (plus bas = mieux).
