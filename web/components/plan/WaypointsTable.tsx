@@ -101,6 +101,7 @@ export function WaypointsTable({
   )
 
   const [editRow, setEditRow] = useState<number | null>(null)
+  const [editLines, setEditLines] = useState(false)
 
   const elapsed = useMemo(() => {
     if (targetDurationMin == null) return null
@@ -141,6 +142,27 @@ export function WaypointsTable({
     const r = parseClockInput(raw)
     if (!r.ok) return
     onStartTimeChange(r.empty ? null : r.value)
+  }
+
+  // Ajoute un point intermédiaire : km = milieu entre l'avant-dernier et le
+  // dernier (→ se range juste avant l'arrivée, jamais départ/arrivée par défaut).
+  const addRow = () => {
+    const n = waypoints.length
+    let km = 0
+    if (n >= 2) km = Math.round(((waypoints[n - 2].km + waypoints[n - 1].km) / 2) * 10) / 10
+    else if (n === 1) km = waypoints[0].km
+    const row: Draft = {
+      orderIndex: n, name: 'Nouveau point', km,
+      kmInter: null, dPlus: null, dMoins: null,
+      cutoffRaw: null, cutoffKind: null,
+      type: 'ravito', supplies: [], targetOverrideSec: null,
+    }
+    onChange(reindex([...waypoints, row]))
+  }
+
+  // Supprime une ligne ; reindex réassigne départ (1er km) / arrivée (dernier km).
+  const removeRow = (i: number) => {
+    onChange(reindex(waypoints.filter((_, idx) => idx !== i)))
   }
 
   return (
@@ -195,17 +217,38 @@ export function WaypointsTable({
         .wtbl .obj-in{font-family:var(--d);font-weight:600;font-size:12px;width:100%;background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.3);color:var(--orange);border-radius:7px;text-align:center;outline:none;padding:4px 2px;}
         .wtbl .obj-in:focus{border-color:var(--orange);background:rgba(255,107,53,.14);}
         .wtbl .segt{font-family:var(--d);font-size:9px;font-weight:600;line-height:1;text-align:center;color:var(--muted);}
+        .wtbl .nm-in{font-family:var(--d);font-weight:600;font-size:11px;color:var(--text);flex:1;min-width:0;background:transparent;border:0;outline:none;padding:0;line-height:1.15;text-overflow:ellipsis;}
+        .wtbl .nm-in:focus{color:var(--orange);}
+        /* Mode édition : × de suppression à gauche + spacer d'alignement en tête. */
+        .wtbl .row-wrap{display:flex;align-items:center;gap:4px;}
+        .wtbl .row-wrap>.gA{flex:1;min-width:0;}
+        .wtbl .del{flex:none;width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:none;border:0;border-radius:50%;color:var(--red);font-size:15px;line-height:1;cursor:pointer;padding:0;}
+        .wtbl .del-spacer{flex:none;width:18px;}
+        .wtbl .wtbl-bar{display:flex;justify-content:flex-end;padding:0 3px 6px;}
+        .wtbl .btn-lines{font-family:var(--d);font-size:11px;font-weight:600;color:var(--orange);background:none;border:0;cursor:pointer;padding:2px 4px;}
+        .wtbl .add-row{width:100%;margin-top:8px;padding:8px;font-family:var(--d);font-size:12px;font-weight:600;color:var(--orange);background:rgba(255,107,53,.08);border:1px dashed rgba(255,107,53,.4);border-radius:8px;cursor:pointer;}
       `}</style>
+
+      {!readOnly && (
+        <div className="wtbl-bar">
+          <button type="button" className="btn-lines" onClick={() => setEditLines((v) => !v)}>
+            {editLines ? '✓ Terminé' : '✎ Modifier les lignes'}
+          </button>
+        </div>
+      )}
 
       <div className="legend-mini">
         <b>+x</b> sous Dist · D+ · D− = l&apos;intermédiaire (depuis le point précédent) · <span className="bhk">BH</span> = barrière
         <br />ravitos : <span className="lg"><span className="chip liq">L</span>liquide</span><span className="lg"><span className="chip sol">S</span>solide</span><span className="lg"><span className="chip hot">C</span>chaud</span><span className="lg"><span className="chip base">BV</span>base vie</span><span className="lg"><span className="chip ass">A</span>assistance</span>
       </div>
 
-      <div className="gA head">
-        <span>Point</span><span className="r">Dist</span><span className="r">D+</span>
-        <span className="r">D-</span>
-        <span className="r">BH</span><span className="c">Ravito</span><span className="c">Obj</span>
+      <div className="row-wrap">
+        {editLines && !readOnly && <span className="del-spacer" />}
+        <div className="gA head">
+          <span>Point</span><span className="r">Dist</span><span className="r">D+</span>
+          <span className="r">D-</span>
+          <span className="r">BH</span><span className="c">Ravito</span><span className="c">Obj</span>
+        </div>
       </div>
 
       {waypoints.map((w, i) => {
@@ -225,12 +268,23 @@ export function WaypointsTable({
         const segSec = elapsed && i > 0 ? elapsed[i] - elapsed[i - 1] : null
 
         return (
-          <div className="gA row" key={`${w.orderIndex}-${i}`}>
+          <div className="row-wrap" key={`${w.orderIndex}-${i}`}>
+            {editLines && !readOnly && (
+              <button type="button" className="del" aria-label="Supprimer la ligne"
+                onClick={() => removeRow(i)}>×</button>
+            )}
+            <div className="gA row">
             {/* Point */}
             <div className="c-point">
               <span className="dot" style={{ background: lead.dot }} />
               {lead.icon && <span className="ic" style={{ color: lead.color! }}><Icon name={lead.icon} /></span>}
-              <span className="nm">{w.name}</span>
+              {readOnly ? (
+                <span className="nm">{w.name}</span>
+              ) : (
+                <input className="nm-in" type="text" value={w.name} placeholder="Nom du point"
+                  aria-label="Nom du point"
+                  onChange={(e) => update(i, { name: e.target.value })} />
+              )}
             </div>
 
             {/* Dist : km cumulé + inter */}
@@ -318,9 +372,16 @@ export function WaypointsTable({
                 </>
               )}
             </div>
+            </div>
           </div>
         )
       })}
+
+      {editLines && !readOnly && (
+        <button type="button" className="add-row" onClick={addRow}>
+          + Ajouter une ligne
+        </button>
+      )}
     </div>
   )
 }
