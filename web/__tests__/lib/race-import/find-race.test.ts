@@ -1,7 +1,53 @@
 import {
   normalizeTokens, nameSimilarity, harvestRaceUrls, rankRaceCandidates,
-  type RaceTarget,
+  resolveCandidates, type RaceTarget,
 } from '@/lib/race-import/find-race'
+import '@/lib/race-import/sources/utmb'        // enregistre le parser utmb
+import '@/lib/race-import/sources/livetrail'   // enregistre le parser livetrail
+
+// HTML UTMB minimal (JSON "points" embarqué) — dernier point Le Puy 138.4 km / 5267 D+.
+const UTMB_HTML = `<html><body><script type="application/json">
+{"race":{"name":"Ultra du Saint-Jacques","points":[
+{"name":"Saugues","distance":0,"gainElevation":0,"lossElevation":0,"supplies":"none","isAssistance":false,"hasBag":false,"cutoff":""},
+{"name":"Saint Jean Lachalm","distance":72400,"gainElevation":3242,"lossElevation":2900,"supplies":"hotFood","isAssistance":true,"hasBag":true,"cutoff":"sam. 11:20"},
+{"name":"Le Puy en Velay","distance":138400,"gainElevation":5267,"lossElevation":5550,"supplies":"food","isAssistance":false,"hasBag":true,"cutoff":"dim. 02:15"}
+]}}
+</script></body></html>`
+
+function mockFetchUtmb() {
+  global.fetch = jest.fn().mockImplementation((url: string) => {
+    if (new URL(url).hostname.endsWith('.utmb.world')) {
+      return Promise.resolve({ ok: true, text: async () => UTMB_HTML } as any)
+    }
+    return Promise.resolve({ ok: false, status: 404 } as any)
+  })
+}
+
+describe('resolveCandidates', () => {
+  afterEach(() => jest.restoreAllMocks())
+  const target: RaceTarget = { name: 'Ultra Saint-Jacques', date: '2026-06-12', distance: 138, elevation: 5300 }
+
+  it('parse les URLs UTMB, ignore les non-parsables, déduplique fr/en, classe', async () => {
+    mockFetchUtmb()
+    const out = await resolveCandidates(target, [
+      'https://saint-jacques.utmb.world/fr/races/100M',
+      'https://www.exemple.com/blog',                       // pas de parser → ignoré
+      'https://saint-jacques.utmb.world/en/races/100M',     // même course → dédupliquée
+    ])
+    expect(out).toHaveLength(1)
+    expect(out[0].parserId).toBe('utmb')
+    expect(out[0].totalKm).toBe(138.4)
+    expect(out[0].totalDplus).toBe(5267)
+    expect(out[0].confident).toBe(true)
+    expect(out[0].waypoints.length).toBeGreaterThan(0)
+  })
+
+  it('aucune URL parsable → []', async () => {
+    mockFetchUtmb()
+    const out = await resolveCandidates(target, ['https://www.exemple.com/x'])
+    expect(out).toEqual([])
+  })
+})
 
 describe('normalizeTokens', () => {
   it('minuscule, sans accents/ponctuation, en tokens', () => {
