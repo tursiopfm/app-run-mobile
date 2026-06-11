@@ -100,24 +100,42 @@ export async function PUT(
   if (insErr) return NextResponse.json({ error: insErr.message }, { status: 500 })
 
   if (body.meta) {
-    const detected: DetectedEdition = {
-      editionYear: body.meta.editionYear,
-      editionDate: body.meta.editionDate,
-      dateExplicit: body.meta.dateExplicit,
-      startDayOfMonth: body.meta.startDayOfMonth,
-    }
+    // La meta vient du client → on borne chaque champ avant calcul/persistance.
+    // Sinon une valeur aberrante (ex. editionYear géant, date non calendaire)
+    // ferait échouer le cast `date` Postgres et perdrait la meta en silence.
+    const m = body.meta
+    const targetYear = Number((race.date as string).slice(0, 4))
+    const editionYear =
+      typeof m.editionYear === 'number' && Number.isInteger(m.editionYear) &&
+      m.editionYear >= 2000 && m.editionYear <= targetYear + 1
+        ? m.editionYear
+        : null
+    const editionDate =
+      typeof m.editionDate === 'string' &&
+      /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(m.editionDate)
+        ? m.editionDate
+        : null
+    const startDayOfMonth =
+      typeof m.startDayOfMonth === 'number' && m.startDayOfMonth >= 1 && m.startDayOfMonth <= 31
+        ? m.startDayOfMonth
+        : null
+    const dateExplicit = m.dateExplicit === true
+    const sourceUrl = typeof m.sourceUrl === 'string' ? m.sourceUrl : null
+
+    const detected: DetectedEdition = { editionYear, editionDate, dateExplicit, startDayOfMonth }
     const fresh = computeFreshness(detected, race.date as string)
-    await supabase.from('race_tableau_meta').upsert({
+    const { error: metaErr } = await supabase.from('race_tableau_meta').upsert({
       race_id: params.id,
       edition_year: fresh.editionYear,
       edition_date: fresh.editionDate,
-      date_explicit: body.meta.dateExplicit,
+      date_explicit: dateExplicit,
       freshness_status: fresh.freshnessStatus,
-      source_url: body.meta.sourceUrl,
+      source_url: sourceUrl,
       source_hash: hashWaypoints(body.waypoints ?? []),
       source_checked_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }, { onConflict: 'race_id' })
+    if (metaErr) console.warn('[waypoints] upsert race_tableau_meta échouée:', metaErr.message)
   }
 
   const waypoints: RaceWaypoint[] = (inserted ?? []).map(rowToRaceWaypoint as any)
