@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stratégie d'allure — 3 maquettes (curseur type PacePro)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0A0F0E; --surface:#111A18; --card:#162420; --border:#1E3530; --border2:#274840;
+    --text:#E2ECE9; --muted:#8BA8A3; --faint:#5E7A75;
+    --orange:#FF6B35; --orange-d:#C44E22; --blue:#38BDF8; --green:#4ADE80; --yellow:#FBBF24; --red:#F87171;
+    --violet:#7C5CFC;
+    --display:"Space Grotesk",-apple-system,sans-serif;
+    --body:"Inter",-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;color:var(--text);font-family:var(--body);font-size:14px;-webkit-font-smoothing:antialiased;
+    background:radial-gradient(900px 500px at 80% -10%,rgba(255,107,53,.07),transparent 60%),
+               radial-gradient(700px 500px at -10% 10%,rgba(56,189,248,.05),transparent 55%),var(--bg);
+  }
+  .page{max-width:1280px;margin:0 auto;padding:32px 24px 80px;}
+  .eyebrow{font-family:var(--display);font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin:0 0 8px;}
+  h1{font-family:var(--display);font-size:26px;font-weight:700;margin:0 0 6px;letter-spacing:-.5px;}
+  .subtitle{color:var(--muted);margin:0;font-size:14px;max-width:820px;line-height:1.55;}
+  .subtitle b{color:var(--text);font-weight:600;}
+
+  .gallery{display:grid;grid-template-columns:repeat(3,minmax(360px,1fr));gap:30px;margin-top:34px;justify-items:center;}
+  @media(max-width:1180px){.gallery{grid-template-columns:1fr;}}
+  .variant{display:flex;flex-direction:column;align-items:center;width:100%;}
+  .variant-head{width:100%;max-width:400px;margin-bottom:12px;}
+  .variant-head .tag{font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--orange);}
+  .variant-head h2{font-family:var(--display);font-size:18px;font-weight:600;margin:3px 0 4px;}
+  .variant-head p{margin:0;color:var(--muted);font-size:12.5px;line-height:1.5;}
+
+  /* Cadre téléphone */
+  .phone{width:400px;max-width:94vw;background:#05080A;border:1px solid var(--border2);border-radius:34px;padding:11px;
+         box-shadow:0 30px 70px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.02) inset;}
+  .phone-screen{background:var(--bg);border-radius:24px;overflow:hidden;display:flex;flex-direction:column;}
+  .statusbar{height:30px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:11px;color:var(--muted);font-weight:600;font-family:var(--display);}
+  .scroll{padding:6px 12px 20px;}
+
+  /* En-tête course (contexte commun aux 3) */
+  .race-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:4px 4px 10px;}
+  .race-head .nm{font-family:var(--display);font-size:15px;font-weight:600;}
+  .race-head .meta{font-size:10.5px;color:var(--faint);}
+  .obj-chip{font-family:var(--display);font-weight:700;font-size:12px;color:var(--orange);background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.28);border-radius:8px;padding:3px 8px;white-space:nowrap;}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 13px;}
+  .card + .card{margin-top:12px;}
+  .card-title{font-family:var(--display);font-size:14px;font-weight:600;display:flex;align-items:center;gap:7px;}
+  .card-title .q{margin-left:auto;width:17px;height:17px;border-radius:50%;border:1px solid var(--border2);color:var(--faint);font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;cursor:help;font-family:var(--display);}
+
+  /* ---- Curseur générique ---- */
+  .slider-wrap{margin-top:14px;}
+  .slider-scale{display:flex;justify-content:space-between;font-family:var(--display);font-size:9.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--faint);margin-bottom:6px;}
+  .slider-scale .mid{color:var(--muted);}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;outline:none;cursor:pointer;
+    background:linear-gradient(90deg,var(--blue) 0%,var(--border2) 50%,var(--orange) 100%);}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--text);border:3px solid var(--card);box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:grab;}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--text);border:3px solid var(--card);cursor:grab;}
+  .tick-row{display:flex;justify-content:space-between;margin-top:4px;padding:0 9px;}
+  .tick{width:1px;height:5px;background:var(--border2);}
+
+  .phrase{margin-top:12px;font-size:12.5px;line-height:1.5;color:var(--text);}
+  .phrase .pace-tag{font-family:var(--display);font-weight:700;}
+  .pace-neg{color:var(--blue);} .pace-pos{color:var(--orange);} .pace-even{color:var(--green);}
+
+  .lock-note{margin-top:10px;display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:7px 9px;}
+  .lock-note b{color:var(--text);}
+
+  /* ---- Mini courbe (maquette 1) ---- */
+  .curve-box{margin-top:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 8px 6px;}
+  .curve-legend{display:flex;gap:12px;font-size:9.5px;color:var(--faint);font-family:var(--display);font-weight:600;margin-bottom:4px;padding:0 4px;}
+  .curve-legend i{width:9px;height:3px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle;}
+  svg.curve{width:100%;height:120px;display:block;}
+  .curve-xaxis{display:flex;justify-content:space-between;font-size:9px;color:var(--faint);padding:2px 2px 0;font-family:var(--display);}
+
+  /* ---- Méthode dépliable ---- */
+  details.method{margin-top:12px;border-top:1px solid var(--border);padding-top:10px;}
+  details.method summary{list-style:none;cursor:pointer;font-family:var(--display);font-size:11.5px;font-weight:600;color:var(--blue);display:flex;align-items:center;gap:6px;}
+  details.method summary::-webkit-details-marker{display:none;}
+  details.method summary .chev{transition:.2s;}
+  details.method[open] summary .chev{transform:rotate(90deg);}
+  .method-body{margin-top:9px;font-size:11.5px;line-height:1.6;color:var(--muted);}
+  .method-body b{color:var(--text);font-weight:600;}
+  .method-body .formula{font-family:var(--display);font-weight:600;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:6px 8px;margin:7px 0;font-size:11.5px;}
+  .method-body ol{margin:6px 0 0;padding-left:18px;}
+  .method-body li{margin-bottom:4px;}
+
+  /* ---- Presets (maquette 2) ---- */
+  .preset-grid{display:flex;flex-direction:column;gap:8px;margin-top:13px;}
+  .preset{display:flex;align-items:flex-start;gap:11px;text-align:left;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 12px;cursor:pointer;transition:.14s;}
+  .preset:hover{border-color:var(--border2);}
+  .preset.on{border-color:var(--orange);background:rgba(255,107,53,.07);box-shadow:0 0 0 1px rgba(255,107,53,.25);}
+  .preset .emo{font-size:20px;line-height:1;margin-top:1px;}
+  .preset .pt{font-family:var(--display);font-weight:600;font-size:13px;color:var(--text);}
+  .preset .pd{font-size:11px;color:var(--muted);line-height:1.4;margin-top:2px;}
+  .preset .pv{margin-left:auto;text-align:right;flex:none;}
+  .preset .pv .lab{font-size:8.5px;font-family:var(--display);font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--faint);}
+  .preset .pv .val{font-family:var(--display);font-weight:700;font-size:13px;color:var(--text);}
+  .preset.on .pv .val{color:var(--orange);}
+
+  /* ---- Tableau impact (maquette 3) ---- */
+  .impact-list{margin-top:13px;display:flex;flex-direction:column;gap:1px;border-radius:11px;overflow:hidden;border:1px solid var(--border);}
+  .impact-row{display:grid;grid-template-columns:1fr 64px 58px;align-items:center;gap:8px;padding:9px 11px;background:var(--surface);}
+  .impact-row.head{background:transparent;padding:4px 11px 6px;}
+  .impact-row.head span{font-family:var(--display);font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--faint);}
+  .impact-row.head .r{text-align:right;}
+  .impact-row .ip{min-width:0;}
+  .impact-row .ip .nm{font-family:var(--display);font-weight:600;font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;}
+  .impact-row .ip .km{font-size:9.5px;color:var(--faint);}
+  .impact-row .clock{font-family:var(--display);font-weight:700;font-size:15px;color:var(--text);text-align:right;}
+  .impact-row .delta{font-family:var(--display);font-weight:600;font-size:11px;text-align:right;}
+  .impact-row .dot{width:7px;height:7px;border-radius:50%;flex:none;}
+  .d-up{color:var(--orange);} .d-down{color:var(--blue);} .d-zero{color:var(--faint);}
+  .impact-row.finish{background:rgba(255,107,53,.06);}
+  .impact-row.finish .clock{color:var(--orange);}
+
+  .footer-note{margin-top:34px;color:var(--faint);font-size:11.5px;text-align:center;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="eyebrow">Plan · Bloc Objectif course</p>
+  <h1>Stratégie d'allure — curseur parlant</h1>
+  <p class="subtitle">
+    Remplace le champ obscur <b>« Fade 2e moitié » (0 → 2)</b> par un curseur compréhensible, à la manière du
+    <b>PacePro de Garmin</b> : l'athlète choisit comment répartir son effort, et voit immédiatement l'effet sur ses
+    heures de passage. Les 3 variantes partagent le <b>même moteur de calcul</b> (porté de
+    <code>lib/plan/pacing.ts</code>) sur une course d'exemple : <b>Ultra 100&nbsp;km / 6000&nbsp;m&nbsp;D+</b>,
+    objectif <b>18h00</b>, départ <b>04:00</b>. Bouge les curseurs : les temps recalculent en direct.
+  </p>
+
+  <div class="gallery">
+
+    <!-- ============== MAQUETTE 1 : COURBE LIVE (PacePro) ============== -->
+    <div class="variant">
+      <div class="variant-head">
+        <div class="tag">Maquette 1</div>
+        <h2>Courbe live (façon PacePro)</h2>
+        <p>Le plus visuel. Un curseur incline une courbe d'allure superposée au profil du dénivelé. On « voit » la stratégie.</p>
+      </div>
+      <div class="phone"><div class="phone-screen">
+        <div class="statusbar"><span>9:41</span><span>100&nbsp;%</span></div>
+        <div class="scroll">
+          <div class="race-head">
+            <div><div class="nm">Ultra 100K</div><div class="meta">100 km · 6000 m D+ · départ 04:00</div></div>
+            <div class="obj-chip">Obj 18h00</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Stratégie d'allure</div>
+            <div class="slider-wrap">
+              <div class="slider-scale"><span>Finir fort</span><span class="mid">Régulier</span><span>Partir vite</span></div>
+              <input type="range" min="-100" max="100" value="0" data-engine="1" id="s1" />
+              <div class="tick-row"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div>
+            </div>
+            <div class="phrase" id="p1"></div>
+
+            <div class="curve-box">
+              <div class="curve-legend">
+                <span><i style="background:var(--orange)"></i>Allure visée</span>
+                <span><i style="background:var(--blue)"></i>Dénivelé</span>
+              </div>
+              <svg class="curve" id="svg1" viewBox="0 0 300 120" preserveAspectRatio="none"></svg>
+              <div class="curve-xaxis"><span>0 km</span><span>50 km</span><span>100 km</span></div>
+            </div>
+
+            <details class="method">
+              <summary><span class="chev">▶</span>Comment c'est calculé ?</summary>
+              <div class="method-body">
+                Chaque tronçon reçoit une part du temps total <b>proportionnelle à son effort</b> :
+                <div class="formula">effort = distance + D+ ÷ 100</div>
+                (100 m de montée ≈ 1 km à plat). Le curseur <b>incline</b> ensuite cette répartition :
+                vers la gauche, tu pars prudemment ; vers la droite, tu pars vite.
+                Les heures que tu <b>fixes à la main</b> dans le tableau deviennent des points d'ancrage.
+              </div>
+            </details>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- ============== MAQUETTE 2 : PRESETS PARLANTS ============== -->
+    <div class="variant">
+      <div class="variant-head">
+        <div class="tag">Maquette 2</div>
+        <h2>Plans nommés</h2>
+        <p>Le plus simple. Pas de coefficient : l'athlète choisit une intention en langage naturel. Charge mentale minimale.</p>
+      </div>
+      <div class="phone"><div class="phone-screen">
+        <div class="statusbar"><span>9:41</span><span>100&nbsp;%</span></div>
+        <div class="scroll">
+          <div class="race-head">
+            <div><div class="nm">Ultra 100K</div><div class="meta">100 km · 6000 m D+ · départ 04:00</div></div>
+            <div class="obj-chip">Obj 18h00</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Comment veux-tu courir ?
+              <span class="q" title="Méthode de calcul">?</span>
+            </div>
+            <div class="preset-grid" id="presets">
+              <button class="preset" data-fade="-0.9" data-engine="2">
+                <span class="emo">🐢</span>
+                <span><span class="pt">Très prudent</span><span class="pd">Je pars tranquille et j'accélère sur la fin.</span></span>
+                <span class="pv"><span class="lab">Mi-course</span><span class="val" data-mid></span></span>
+              </button>
+              <button class="preset on" data-fade="-0.45" data-engine="2">
+                <span class="emo">🛡️</span>
+                <span><span class="pt">Je garde des forces</span><span class="pd">Marge en réserve, négatif split léger.</span></span>
+                <span class="pv"><span class="lab">Mi-course</span><span class="val" data-mid></span></span>
+              </button>
+              <button class="preset" data-fade="0" data-engine="2">
+                <span class="emo">⚖️</span>
+                <span><span class="pt">Régulier</span><span class="pd">Effort constant, ajusté au dénivelé.</span></span>
+                <span class="pv"><span class="lab">Mi-course</span><span class="val" data-mid></span></span>
+              </button>
+              <button class="preset" data-fade="0.6" data-engine="2">
+                <span class="emo">🔥</span>
+                <span><span class="pt">Je pars fort</span><span class="pd">Je prends de l'avance, quitte à ralentir.</span></span>
+                <span class="pv"><span class="lab">Mi-course</span><span class="val" data-mid></span></span>
+              </button>
+            </div>
+
+            <div class="phrase" id="p2"></div>
+            <div class="lock-note">🔒 <span>L'<b>arrivée reste à 18h00</b> — le plan ne change que la répartition entre le départ et l'arrivée.</span></div>
+
+            <details class="method">
+              <summary><span class="chev">▶</span>Comment les temps sont calculés ?</summary>
+              <div class="method-body">
+                <ol>
+                  <li>Chaque tronçon pèse son <b>effort = distance + D+ ÷ 100</b>.</li>
+                  <li>Le temps objectif est réparti au prorata de ces efforts.</li>
+                  <li>Le plan choisi <b>incline</b> la courbe (départ vs fin).</li>
+                  <li>Tes heures saisies à la main restent des <b>ancres fixes</b>.</li>
+                </ol>
+              </div>
+            </details>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- ============== MAQUETTE 3 : IMPACT CHIFFRÉ ============== -->
+    <div class="variant">
+      <div class="variant-head">
+        <div class="tag">Maquette 3</div>
+        <h2>Impact sur les passages</h2>
+        <p>Le plus concret. Le curseur déplace en direct tes heures à 3 points clés — on relie le réglage aux vrais temps.</p>
+      </div>
+      <div class="phone"><div class="phone-screen">
+        <div class="statusbar"><span>9:41</span><span>100&nbsp;%</span></div>
+        <div class="scroll">
+          <div class="race-head">
+            <div><div class="nm">Ultra 100K</div><div class="meta">100 km · 6000 m D+ · départ 04:00</div></div>
+            <div class="obj-chip">Obj 18h00</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Stratégie d'allure
+              <span class="q" title="Méthode">?</span>
+            </div>
+            <div class="slider-wrap">
+              <div class="slider-scale"><span>Finir fort</span><span class="mid">Régulier</span><span>Partir vite</span></div>
+              <input type="range" min="-100" max="100" value="0" data-engine="3" id="s3" />
+            </div>
+            <div class="phrase" id="p3"></div>
+
+            <div class="impact-list" id="impact3">
+              <div class="impact-row head"><span>Point clé</span><span class="r">Passage</span><span class="r">vs régulier</span></div>
+              <!-- rows injected -->
+            </div>
+
+            <div class="lock-note">⏱ <span>Tu bouges le curseur, <b>l'arrivée ne bouge pas</b> (18h00). Seule la façon d'y arriver change.</span></div>
+
+            <details class="method">
+              <summary><span class="chev">▶</span>D'où viennent ces heures ?</summary>
+              <div class="method-body">
+                Le temps total est découpé tronçon par tronçon selon l'effort
+                <b>(distance + D+ ÷ 100)</b>, puis incliné par le curseur. Chaque heure de passage
+                = départ + temps cumulé jusqu'au point. Une heure que tu fixes toi-même devient
+                une <b>ancre</b> autour de laquelle le reste se recale.
+              </div>
+            </details>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+  </div>
+
+  <p class="footer-note">
+    Moteur identique aux 3 variantes · porté de <code>web/lib/plan/pacing.ts</code> ·
+    le curseur mappe <code>pacingFade</code> ∈ [−1,2 ; +1,2]. À choisir : la variante, et où la poser
+    (modal d'édition vs au-dessus du tableau de course).
+  </p>
+</div>
+
+<script>
+/* ====== Moteur de pacing porté de lib/plan/pacing.ts ====== */
+function estimatePassageTimes(wps, totalSec, fade){
+  const n = wps.length;
+  if(n===0) return []; if(n===1) return [0];
+  const effort = new Array(n).fill(0);
+  for(let i=1;i<n;i++){
+    const dist = Math.max(0, wps[i].km - wps[i-1].km);
+    const dp = Math.max(0,(wps[i].dPlus||0)-(wps[i-1].dPlus||0));
+    effort[i] = dist + dp/100;
+  }
+  let tot = effort.reduce((s,e)=>s+e,0);
+  if(tot<=0){ for(let i=1;i<n;i++) effort[i]=1; tot=n-1; }
+  const weight = new Array(n).fill(0); let cum=0;
+  for(let i=1;i<n;i++){
+    const mid=(cum+effort[i]/2)/tot;
+    const f=Math.max(0.05, 1 + fade*(mid-0.5));
+    weight[i]=effort[i]*f; cum+=effort[i];
+  }
+  const elapsed=new Array(n).fill(0);
+  const anchors=[0];
+  for(let i=1;i<n-1;i++) if(wps[i].override!=null) anchors.push(i);
+  anchors.push(n-1);
+  elapsed[0]=0;
+  elapsed[n-1]= wps[n-1].override!=null ? wps[n-1].override : totalSec;
+  for(let i=1;i<n-1;i++) if(wps[i].override!=null) elapsed[i]=wps[i].override;
+  for(let a=0;a<anchors.length-1;a++){
+    const ia=anchors[a], ib=anchors[a+1];
+    const span=elapsed[ib]-elapsed[ia];
+    let sw=0; for(let k=ia+1;k<=ib;k++) sw+=weight[k];
+    for(let k=ia+1;k<ib;k++){
+      const w= sw>0 ? weight[k]/sw : 1/(ib-ia);
+      elapsed[k]=elapsed[k-1]+span*w;
+    }
+  }
+  return elapsed.map(s=>Math.round(s));
+}
+
+/* Course d'exemple (km + D+ cumulés). */
+const COURSE = [
+  {name:"Départ",            km:0,   dPlus:0,    key:false},
+  {name:"Ravito Forêt",      km:12,  dPlus:700,  key:false},
+  {name:"Col des Aigles",    km:27,  dPlus:1700, key:true},
+  {name:"Base vie mi-course",km:50,  dPlus:3200, key:true},
+  {name:"Ravito Lac",        km:68,  dPlus:4300, key:false},
+  {name:"Dernier gros ravito",km:85, dPlus:5400, key:true},
+  {name:"Arrivée",           km:100, dPlus:6000, key:false},
+];
+const TOTAL_SEC = 18*3600;       // objectif 18h00
+const START_TOD = 4*3600;        // départ 04:00
+const FADE_MAX  = 1.2;           // mapping curseur
+
+const pad=x=>String(x).padStart(2,'0');
+function clock(elapsed){
+  const total=START_TOD+Math.round(elapsed);
+  const day=Math.floor(total/86400)+1;
+  const tod=((total%86400)+86400)%86400;
+  const s=`${pad(Math.floor(tod/3600))}:${pad(Math.floor((tod%3600)/60))}`;
+  return day>1?`J${day} ${s}`:s;
+}
+function hShort(sec){const m=Math.round(sec/60);return `${Math.floor(m/60)}h${pad(m%60)}`;}
+function sliderToFade(v){return (v/100)*FADE_MAX;}
+
+/* Référence "régulier" (fade 0) pour les deltas. */
+const REF = estimatePassageTimes(COURSE.map(c=>({...c,override:null})), TOTAL_SEC, 0);
+
+function phraseFor(fade){
+  if(Math.abs(fade)<0.08) return `<span class="pace-tag pace-even">Effort régulier</span> — réparti selon le dénivelé, sans accélérer ni ralentir volontairement.`;
+  if(fade<0){
+    const pct=Math.round(Math.abs(fade)/FADE_MAX*100);
+    return `<span class="pace-tag pace-neg">Négatif split</span> — départ prudent pour finir plus vite (intensité ${pct<40?'légère':pct<75?'modérée':'marquée'}).`;
+  }
+  const pct=Math.round(fade/FADE_MAX*100);
+  return `<span class="pace-tag pace-pos">Positif split</span> — tu prends de l'avance et tu ralentis sur la fin (intensité ${pct<40?'légère':pct<75?'modérée':'marquée'}).`;
+}
+
+/* ---------- Maquette 1 : courbe ---------- */
+function renderCurve(fade){
+  const wps=COURSE.map(c=>({...c,override:null}));
+  const t=estimatePassageTimes(wps,TOTAL_SEC,fade);
+  // allure par tronçon (s/km) -> on inverse pour "vitesse" visuelle (haut = rapide)
+  const W=300,H=120, padL=4,padR=4;
+  const totalKm=COURSE[COURSE.length-1].km;
+  // profil dénivelé (aire bleue)
+  const maxDp=COURSE[COURSE.length-1].dPlus;
+  let elev=`M ${padL} ${H} `;
+  COURSE.forEach(c=>{ const x=padL+(c.km/totalKm)*(W-padL-padR); const y=H-(c.dPlus/maxDp)*(H*0.55); elev+=`L ${x.toFixed(1)} ${y.toFixed(1)} `; });
+  elev+=`L ${W-padR} ${H} Z`;
+  // courbe allure : pace par tronçon
+  const paces=[];
+  for(let i=1;i<COURSE.length;i++){
+    const dKm=COURSE[i].km-COURSE[i-1].km;
+    const dT=t[i]-t[i-1];
+    paces.push(dT/dKm); // s/km
+  }
+  const pMin=Math.min(...paces),pMax=Math.max(...paces);
+  const span=Math.max(1,pMax-pMin);
+  let line='';
+  for(let i=1;i<COURSE.length;i++){
+    const x0=padL+(COURSE[i-1].km/totalKm)*(W-padL-padR);
+    const x1=padL+(COURSE[i].km/totalKm)*(W-padL-padR);
+    // rapide (pace faible) en haut
+    const yv=12+((paces[i-1]-pMin)/span)*(H*0.6);
+    line+= (i===1?`M ${x0.toFixed(1)} ${yv.toFixed(1)} `:'')+`L ${x1.toFixed(1)} ${yv.toFixed(1)} `;
+  }
+  document.getElementById('svg1').innerHTML=
+    `<path d="${elev}" fill="rgba(56,189,248,.14)" stroke="rgba(56,189,248,.5)" stroke-width="1"/>`+
+    `<path d="${line}" fill="none" stroke="var(--orange)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
+  document.getElementById('p1').innerHTML=phraseFor(fade);
+}
+
+/* ---------- Maquette 2 : presets ---------- */
+function renderPresets(activeBtn){
+  const fade=parseFloat(activeBtn.dataset.fade);
+  document.querySelectorAll('#presets .preset').forEach(b=>b.classList.toggle('on',b===activeBtn));
+  // mi-course value sur chaque preset
+  document.querySelectorAll('#presets .preset').forEach(b=>{
+    const f=parseFloat(b.dataset.fade);
+    const t=estimatePassageTimes(COURSE.map(c=>({...c,override:null})),TOTAL_SEC,f);
+    b.querySelector('[data-mid]').textContent=clock(t[3]); // index 3 = mi-course
+  });
+  document.getElementById('p2').innerHTML=phraseFor(fade);
+}
+
+/* ---------- Maquette 3 : impact ---------- */
+const KEY_IDX=[3,5,6]; // mi-course, dernier gros ravito, arrivée
+function renderImpact(fade){
+  const t=estimatePassageTimes(COURSE.map(c=>({...c,override:null})),TOTAL_SEC,fade);
+  const box=document.getElementById('impact3');
+  box.querySelectorAll('.impact-row.data').forEach(e=>e.remove());
+  KEY_IDX.forEach(idx=>{
+    const c=COURSE[idx];
+    const d=t[idx]-REF[idx]; // delta vs régulier (s)
+    const isFin=idx===COURSE.length-1;
+    const min=Math.round(d/60);
+    const dcls=min>0?'d-up':min<0?'d-down':'d-zero';
+    const dtxt=min===0?'—':(min>0?'+':'−')+Math.abs(min)+' min';
+    const row=document.createElement('div');
+    row.className='impact-row data'+(isFin?' finish':'');
+    row.innerHTML=
+      `<div class="ip"><div class="nm">${isFin?'🏁 ':''}${c.name}</div><div class="km">km ${c.km} · ${c.dPlus} m D+</div></div>`+
+      `<div class="clock">${clock(t[idx])}</div>`+
+      `<div class="delta ${isFin?'d-zero':dcls}">${isFin?'fixe':dtxt}</div>`;
+    box.appendChild(row);
+  });
+  document.getElementById('p3').innerHTML=phraseFor(fade);
+}
+
+/* ====== Wiring ====== */
+document.getElementById('s1').addEventListener('input',e=>renderCurve(sliderToFade(+e.target.value)));
+document.getElementById('s3').addEventListener('input',e=>renderImpact(sliderToFade(+e.target.value)));
+document.querySelectorAll('#presets .preset').forEach(b=>b.addEventListener('click',()=>renderPresets(b)));
+
+/* init */
+renderCurve(0);
+renderPresets(document.querySelector('#presets .preset.on'));
+renderImpact(0);
+</script>
+</body>
+</html>
