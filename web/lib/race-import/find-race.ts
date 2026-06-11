@@ -32,29 +32,6 @@ export interface RaceCandidate extends ParsedCandidate {
 const TOL_KM = 0.12   // 12 % d'écart de distance toléré
 const TOL_D = 0.20    // 20 % d'écart de D+ toléré
 
-// "Ultra du Saint-Jacques !" → ['ultra','du','saint','jacques']
-export function normalizeTokens(s: string): string[] {
-  return s
-    .toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')   // retire les accents
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-}
-
-// Similarité de noms (Jaccard sur tokens) ∈ [0,1].
-export function nameSimilarity(a: string, b: string): number {
-  const ta = normalizeTokens(a)
-  const tb = normalizeTokens(b)
-  if (ta.length === 0 || tb.length === 0) return 0
-  const setA = new Set(ta)
-  const setB = new Set(tb)
-  const inter = ta.filter((t) => setB.has(t)).length
-  const union = new Set(ta.concat(tb)).size
-  return inter / union
-}
-
 // Dédup + validation syntaxique des URLs (fragment ignoré pour le dédoublonnage).
 export function harvestRaceUrls(urls: string[]): string[] {
   const seen = new Set<string>()
@@ -146,15 +123,14 @@ export async function findRaceCandidates(target: RaceTarget): Promise<RaceCandid
   return resolveCandidates(target, rawUrls)
 }
 
-// Classe les candidats : écart distance + écart D+ − bonus de nom (plus bas = mieux).
+// Classe les candidats : écart distance + écart D+ (plus bas = mieux).
 export function rankRaceCandidates(target: RaceTarget, parsed: ParsedCandidate[]): RaceCandidate[] {
   const scored = parsed.map((c) => {
     const errKm = Math.abs(c.totalKm - target.distance) / Math.max(target.distance, 1)
     const errD = target.elevation > 0 && c.totalDplus != null
       ? Math.abs(c.totalDplus - target.elevation) / target.elevation
       : 0.5
-    const nameSim = nameSimilarity(target.name, c.raceName ?? '')
-    const score = errKm + errD - 0.3 * nameSim
+    const score = errKm + errD
     const confident = errKm <= TOL_KM && errD <= TOL_D
     return { c, score, confident }
   })

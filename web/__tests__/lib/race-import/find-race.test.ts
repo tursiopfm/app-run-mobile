@@ -1,5 +1,5 @@
 import {
-  normalizeTokens, nameSimilarity, harvestRaceUrls, rankRaceCandidates,
+  harvestRaceUrls, rankRaceCandidates,
   resolveCandidates, type RaceTarget,
 } from '@/lib/race-import/find-race'
 import '@/lib/race-import/sources/utmb'        // enregistre le parser utmb
@@ -46,24 +46,6 @@ describe('resolveCandidates', () => {
     mockFetchUtmb()
     const out = await resolveCandidates(target, ['https://www.exemple.com/x'])
     expect(out).toEqual([])
-  })
-})
-
-describe('normalizeTokens', () => {
-  it('minuscule, sans accents/ponctuation, en tokens', () => {
-    expect(normalizeTokens('Ultra du Saint-Jacques !')).toEqual(['ultra', 'du', 'saint', 'jacques'])
-  })
-})
-
-describe('nameSimilarity', () => {
-  it('proche → score élevé', () => {
-    expect(nameSimilarity('Ultra du Saint-Jacques', 'Ultra Saint Jacques')).toBeGreaterThan(0.5)
-  })
-  it('différent → score bas', () => {
-    expect(nameSimilarity('Ultra du Saint-Jacques', 'Marathon de Paris')).toBeLessThan(0.2)
-  })
-  it('chaîne vide → 0', () => {
-    expect(nameSimilarity('X', '')).toBe(0)
   })
 })
 

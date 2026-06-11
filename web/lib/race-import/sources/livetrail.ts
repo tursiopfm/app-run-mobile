@@ -179,12 +179,12 @@ export const livetrailParser: RaceParser = {
   id: 'livetrail',
 
   match(url: string): boolean {
-    const u = url.toLowerCase()
-    return (
-      u.includes('livetrail.net') ||
-      u.includes('v3.livetrail.net') ||
-      u.includes('livetrail.run')
-    )
+    try {
+      const h = new URL(url).hostname
+      return h.endsWith('.livetrail.net') || h.endsWith('.livetrail.run')
+    } catch {
+      return false
+    }
   },
 
   async parse(url: string): Promise<ExtractedRaceData> {
