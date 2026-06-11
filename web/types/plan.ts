@@ -247,3 +247,40 @@ export interface RaceTableauMeta {
   sourceCheckedAt: string           // ISO timestamp
   sourceHash: string | null
 }
+
+// === Diff de re-check d'un tableau (Lot 2) ===
+type RaceWaypointData = Omit<RaceWaypoint, 'id' | 'raceId'>
+
+export interface WaypointFieldChange {
+  field: 'km' | 'dPlus' | 'dMoins' | 'cutoffRaw' | 'supplies'
+  from: unknown
+  to: unknown
+}
+export interface WaypointModified {
+  name: string
+  changes: WaypointFieldChange[]
+}
+export interface WaypointDiff {
+  added: RaceWaypointData[]
+  removed: RaceWaypointData[]
+  modified: WaypointModified[]
+}
+
+export interface PendingDiff {
+  kind: 'changed' | 'new_edition'
+  detectedAt: string                 // ISO
+  newWaypoints: RaceWaypointData[]   // à appliquer si l'utilisateur accepte (Lot 2b)
+  newMeta: {
+    editionYear: number | null
+    editionDate: string | null
+    dateExplicit: boolean
+    freshnessStatus: FreshnessStatus
+    sourceHash: string
+  }
+  summary: {
+    added: number
+    removed: number
+    modified: number
+    modifiedDetails: WaypointModified[]
+  }
+}
