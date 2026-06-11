@@ -1,7 +1,16 @@
+jest.mock('@/lib/race-import/fetch-url', () => ({
+  fetchRaceHtml: jest.fn(async () => '<html>roadbook</html>'),
+}))
+jest.mock('@/lib/race-import/extract', () => ({
+  extractWaypoints: jest.fn(),
+}))
+
 import {
   harvestRaceUrls, rankRaceCandidates,
   resolveCandidates, type RaceTarget,
 } from '@/lib/race-import/find-race'
+import { extractWaypoints } from '@/lib/race-import/extract'
+const mockExtract = extractWaypoints as jest.Mock
 import '@/lib/race-import/sources/utmb'        // enregistre le parser utmb
 import '@/lib/race-import/sources/livetrail'   // enregistre le parser livetrail
 
@@ -122,5 +131,40 @@ describe('rankRaceCandidates', () => {
       { ...base, url: 'm', raceName: 'Ultra du Saint-Jacques', totalKm: 138.6, totalDplus: null },
     ])
     expect(out[0].confident).toBe(false)
+  })
+})
+
+describe('resolveCandidates — fallback générique', () => {
+  beforeEach(() => { mockExtract.mockReset() })
+  afterEach(() => { jest.restoreAllMocks(); mockExtract.mockReset() })
+
+  it('extrait au LLM une URL « autre » quand aucun candidat parsable confident', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 404 } as any)
+    mockExtract.mockResolvedValue({
+      raceName: 'Ultra Marin', editionYear: null,
+      waypoints: [
+        { orderIndex: 0, name: 'Départ', km: 0, kmInter: null, dPlus: 0, dMoins: 0, cutoffRaw: null, cutoffKind: null, type: 'depart', supplies: [], targetOverrideSec: null },
+        { orderIndex: 1, name: 'Arrivée', km: 177, kmInter: null, dPlus: 1430, dMoins: 1430, cutoffRaw: null, cutoffKind: null, type: 'arrivee', supplies: [], targetOverrideSec: null },
+      ],
+    })
+    const target = { name: 'Ultra Marin', date: '2026-06-26', distance: 177, elevation: 1430 }
+    const out = await resolveCandidates(target, ['https://www.ultra-marin.fr/grand-raid'])
+    expect(mockExtract).toHaveBeenCalledTimes(1)
+    expect(out).toHaveLength(1)
+    expect(out[0].parserId).toBe('generic')
+    expect(out[0].totalKm).toBe(177)
+    expect(out[0].confident).toBe(true)
+  })
+
+  it('NE déclenche PAS le LLM si un candidat parsable confident existe', async () => {
+    mockFetchUtmb()
+    mockExtract.mockResolvedValue({ raceName: null, editionYear: null, waypoints: [] })
+    const target = { name: 'X', date: '2026-06-12', distance: 138, elevation: 5300 }
+    const out = await resolveCandidates(target, [
+      'https://saint-jacques.utmb.world/fr/races/100M',
+      'https://www.exemple.com/autre',
+    ])
+    expect(out[0].confident).toBe(true)
+    expect(mockExtract).not.toHaveBeenCalled()
   })
 })

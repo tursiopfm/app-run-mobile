@@ -5,6 +5,8 @@ import 'server-only'
 import OpenAI from 'openai'
 import { findParserForUrl } from './sources'
 import { listLivetrailRaces } from './sources/livetrail'
+import { fetchRaceHtml } from './fetch-url'
+import { extractWaypoints } from './extract'
 import type { ExtractedRaceData } from '@/types/plan'
 
 export interface RaceTarget {
@@ -48,6 +50,27 @@ export function harvestRaceUrls(urls: string[]): string[] {
 }
 
 const MAX_PARSE = 5
+const MAX_GENERIC = 2
+
+// Extraction LLM générique d'URLs non-parsables (site officiel / roadbook).
+async function extractGenericCandidates(urls: string[]): Promise<ParsedCandidate[]> {
+  const results = await Promise.all(urls.map(async (url): Promise<ParsedCandidate | null> => {
+    try {
+      const html = await fetchRaceHtml(url)
+      const data = await extractWaypoints({ html })
+      const wps = data.waypoints
+      if (wps.length === 0) return null
+      const last = wps[wps.length - 1]
+      return {
+        url, parserId: 'generic', raceName: data.raceName,
+        totalKm: last.km, totalDplus: last.dPlus, nbPoints: wps.length, waypoints: wps,
+      }
+    } catch {
+      return null
+    }
+  }))
+  return results.filter((c): c is ParsedCandidate => c != null)
+}
 
 // Recherche web OpenAI → liste d'URLs candidates (citations + filet regex).
 // Note : web_search_options / annotations ne sont pas toujours typés selon la
@@ -144,7 +167,19 @@ export async function resolveCandidates(target: RaceTarget, rawUrls: string[]): 
     } catch { /* événement livetrail injoignable → ignoré */ }
   }
 
-  return rankRaceCandidates(target, dedupCandidates(parsed))
+  let ranked = rankRaceCandidates(target, dedupCandidates(parsed))
+
+  // Fallback générique : seulement si aucune candidate confidente via UTMB/LiveTrail.
+  if (ranked.length === 0 || !ranked[0].confident) {
+    const otherUrls = urls.filter((u) => findParserForUrl(u) == null).slice(0, MAX_GENERIC)
+    if (otherUrls.length > 0) {
+      const generic = await extractGenericCandidates(otherUrls)
+      if (generic.length > 0) {
+        ranked = rankRaceCandidates(target, dedupCandidates([...parsed, ...generic]))
+      }
+    }
+  }
+  return ranked
 }
 
 // Orchestrateur complet : recherche → résolution.
