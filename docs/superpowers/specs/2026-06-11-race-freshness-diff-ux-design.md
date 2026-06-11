@@ -1,6 +1,6 @@
 # Re-checks & diff — Lot 2b : UX de validation
 
-> **Status: Spec** · 2026-06-11
+> **Status: Implémenté** · 2026-06-11 · Code: `web/app/api/races/[id]/tableau-recheck/route.ts` · `web/components/plan/TableauDiffModal.tsx` · `web/app/(main)/plan/courses/[id]/CoursePageClient.tsx` · `web/components/plan/ObjectifCourseBlock.tsx` · `web/lib/plan/storage.ts` (`getRacesWithPendingDiff`) · `web/lib/race-import/schema.ts` · branche `feat/race-freshness-diff-ux`
 >
 > Lot 2b (UX) du brief « versioning des éditions & fraîcheur ». Consomme le
 > `pending_diff` écrit par le **Lot 2a** (détection, déjà mergé). Pré-requis : Lot 1
