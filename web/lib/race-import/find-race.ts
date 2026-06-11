@@ -88,7 +88,7 @@ export async function searchRaceUrls(target: RaceTarget): Promise<string[]> {
     `ou sa page de résultats. Liste toutes les URLs directes pertinentes.`
   const res = await client.chat.completions.create({
     model: 'gpt-4o-search-preview',
-    web_search_options: {},
+    web_search_options: { search_context_size: 'high' },
     messages: [{ role: 'user', content: prompt }],
   } as any)
   const msg: any = res.choices[0]?.message
@@ -187,7 +187,14 @@ export async function resolveCandidates(target: RaceTarget, rawUrls: string[]): 
 // Orchestrateur complet : recherche → résolution.
 export async function findRaceCandidates(target: RaceTarget): Promise<RaceCandidate[]> {
   const rawUrls = await searchRaceUrls(target)
-  return resolveCandidates(target, rawUrls)
+  const candidates = await resolveCandidates(target, rawUrls)
+  // [find-diag] instrumentation temporaire (retirée après diagnostic Ultra Marin).
+  console.log('[find-diag]', JSON.stringify({
+    name: target.name, km: target.distance, dplus: target.elevation,
+    rawUrls,
+    candidates: candidates.map((c) => ({ p: c.parserId, n: c.raceName, km: c.totalKm, d: c.totalDplus, conf: c.confident })),
+  }))
+  return candidates
 }
 
 // Classe les candidats : écart distance + écart D+ (plus bas = mieux).
