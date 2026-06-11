@@ -30,8 +30,13 @@ export async function runFreshnessRecheck(): Promise<{ checked: number; changed:
     return { checked: 0, changed: 0, newEdition: 0 }
   }
 
+  // Seules les courses dues ET parsables (livetrail/utmb) occupent un slot du tick.
+  // Un source_url générique (LLM) est hors 2a : on l'exclut AVANT le cap, sinon il
+  // serait re-sélectionné à chaque tick (son horloge n'avance jamais) et affamerait
+  // les courses parsables.
   const due = (rows as any[])
-    .filter((r) => isDueForRecheck(daysUntil(r.races.date, nowMs), r.source_checked_at, nowISO))
+    .filter((r) => findParserForUrl(r.source_url) != null &&
+      isDueForRecheck(daysUntil(r.races.date, nowMs), r.source_checked_at, nowISO))
     .slice(0, MAX_RACES_PER_TICK)
 
   let changed = 0, newEdition = 0

@@ -70,7 +70,7 @@ describe('runFreshnessRecheck', () => {
     expect(capture[0].patch.source_checked_at).toBeDefined()
   })
 
-  it('parser absent (générique) → ignoré', async () => {
+  it('source_url générique (parser absent) → exclu du tick, n\'occupe pas de slot', async () => {
     const capture: any[] = []
     ;(createServiceClient as jest.Mock).mockReturnValue(makeClient(
       [{ race_id: 'r1', source_url: 'https://site-officiel.fr/course', source_hash: 'OLD', edition_year: 2026, freshness_status: 'confirmed', source_checked_at: null, races: { date: farFuture } }],
@@ -78,7 +78,7 @@ describe('runFreshnessRecheck', () => {
     ))
     ;(findParserForUrl as jest.Mock).mockReturnValue(null)
     const res = await runFreshnessRecheck()
-    expect(res.checked).toBe(1)
+    expect(res.checked).toBe(0)
     expect(capture).toHaveLength(0)
   })
 })
