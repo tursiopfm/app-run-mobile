@@ -1,10 +1,10 @@
 // Catalogue LiveTrail : index léger (nom→événement) pour résoudre une course sans OpenAI,
 // + accumulation passive, recherche et snapshot. AUCUN waypoint stocké (re-fetch frais).
-// (Les imports createServiceClient / listLivetrailRaces sont ajoutés en Task 3 / Task 6,
-//  quand les fonctions qui les utilisent sont écrites — évite les imports inutilisés.)
 import 'server-only'
 import { createServiceClient } from '@/lib/database/supabase-server'
 import type { RaceCandidate, RaceTarget } from './find-race'
+import { listLivetrailRaces } from './sources/livetrail'
+import type { ExtractedRaceData } from '@/types/plan'
 
 // ── Helpers purs ──
 
@@ -140,4 +140,50 @@ export async function searchCatalogUrls(target: RaceTarget): Promise<string[]> {
     .limit(100)
   if (error || !data) return []
   return rankEventUrls(target, data as CatalogMatch[]).slice(0, SEARCH_TOP_K)
+}
+
+const SNAPSHOT_MAX_EVENTS = 30
+const SNAPSHOT_UA = 'TrailCockpitBot/1.0 (+https://trailcockpit.run)'
+
+// Événement (raceName + waypoints) → candidats LiveTrail réutilisables par accumulateCatalog.
+function racesToCandidates(
+  url: string,
+  races: Array<{ raceName: string | null; data: ExtractedRaceData }>,
+): RaceCandidate[] {
+  const out: RaceCandidate[] = []
+  for (const r of races) {
+    const wps = r.data.waypoints
+    if (wps.length === 0) continue
+    const last = wps[wps.length - 1]
+    out.push({
+      url, parserId: 'livetrail', raceName: r.raceName,
+      totalKm: last.km, totalDplus: last.dPlus, nbPoints: wps.length,
+      waypoints: wps, confident: false,
+    })
+  }
+  return out
+}
+
+// Snapshot glissant : lit /fr/events, énumère les événements à venir et upsert le catalogue.
+// Séquentiel + cap (poli). User-Agent identifiable. Best-effort par événement.
+export async function runCatalogSnapshot(): Promise<{ events: number; upserted: number }> {
+  const res = await fetch('https://web.livetrail.net/fr/events', {
+    headers: { 'User-Agent': SNAPSHOT_UA },
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status} sur /fr/events`)
+  const html = await res.text()
+  const eventUrls = harvestEventUrls(html).slice(0, SNAPSHOT_MAX_EVENTS)
+
+  let upserted = 0
+  for (const url of eventUrls) {
+    try {
+      const races = await listLivetrailRaces(url)
+      const candidates = racesToCandidates(url, races)
+      await accumulateCatalog(candidates)
+      upserted += candidates.length
+    } catch {
+      /* événement injoignable → ignoré */
+    }
+  }
+  return { events: eventUrls.length, upserted }
 }

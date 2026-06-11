@@ -2,9 +2,16 @@ jest.mock('@/lib/database/supabase-server', () => ({ createServiceClient: jest.f
 import { createServiceClient } from '@/lib/database/supabase-server'
 const mockCreate = createServiceClient as jest.Mock
 
+jest.mock('@/lib/race-import/sources/livetrail', () => ({
+  listLivetrailRaces: jest.fn(),
+}))
+import { listLivetrailRaces } from '@/lib/race-import/sources/livetrail'
+const mockList = listLivetrailRaces as jest.Mock
+
 import {
   normalizeSearchText, yearFromLivetrailUrl, harvestEventUrls,
   candidatesToRows, rankEventUrls, accumulateCatalog, searchCatalogUrls,
+  runCatalogSnapshot,
 } from '@/lib/race-import/catalog'
 import type { RaceCandidate, RaceTarget } from '@/lib/race-import/find-race'
 
@@ -129,5 +136,30 @@ describe('searchCatalogUrls', () => {
     mockCreate.mockReturnValue({ from: jest.fn().mockReturnValue({
       select: () => ({ eq: () => ({ or: () => ({ limit }) }) }) }) })
     expect(await searchCatalogUrls(target)).toEqual([])
+  })
+})
+
+describe('runCatalogSnapshot', () => {
+  afterEach(() => jest.restoreAllMocks())
+
+  it('fetch /fr/events, énumère les événements et upsert', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      text: async () => '<a href="https://um.v3.livetrail.net/fr/2026">x</a>',
+    } as any)
+    mockList.mockResolvedValue([
+      { raceName: 'Grand Raid', data: { raceName: null, editionYear: null, waypoints: [
+        { orderIndex: 0, name: 'D', km: 0, kmInter: null, dPlus: 0, dMoins: 0, cutoffRaw: null, cutoffKind: null, type: 'depart', supplies: [], targetOverrideSec: null },
+        { orderIndex: 1, name: 'A', km: 177, kmInter: null, dPlus: 1430, dMoins: 0, cutoffRaw: null, cutoffKind: null, type: 'arrivee', supplies: [], targetOverrideSec: null },
+      ] } },
+    ])
+    const upsert = jest.fn().mockResolvedValue({ error: null })
+    mockCreate.mockReturnValue({ from: jest.fn().mockReturnValue({ upsert }) })
+
+    const out = await runCatalogSnapshot()
+    expect(out.events).toBe(1)
+    expect(upsert).toHaveBeenCalled()
+    expect(upsert.mock.calls[0][0][0].event_slug).toBe('um')
+    expect(upsert.mock.calls[0][0][0].total_km).toBe(177)
   })
 })
