@@ -102,10 +102,14 @@ Helper `upsertCatalogEntries(slug, races)` appelé dans
 courses + totaux. Écrit via `createServiceClient`. Tolérant aux échecs (un upsert qui rate ne
 casse pas la résolution).
 
-`races` provient de `listLivetrailRaces`. Sa forme actuelle est
-`Array<{ raceName, data }>` ; le sous-projet Fraîcheur l'étendra avec `editionYear?`/
-`editionDate?` (voir §7). `upsertCatalogEntries` lit ces champs de façon **optionnelle**
-(`?? null`) → fonctionne **avant et après** cette extension.
+`races` provient de `listLivetrailRaces` (forme `Array<{ raceName, data }>`). L'info
+d'édition vit sur **`race.data`** (`ExtractedRaceData.editionYear` — déjà présent — et
+`editionDate`, ajouté par Fraîcheur). Pour LiveTrail le XML n'a **ni mois ni année** : la
+session Fraîcheur dérive l'année de l'**URL source** (`/fr/{YYYY}/`) via le helper pur
+`extractYearFromLivetrailUrl(url)`. `upsertCatalogEntries` lit donc en **null-safe** :
+`edition_year = race.data.editionYear ?? extractYearFromLivetrailUrl(sourceUrl) ?? null` et
+`edition_date = race.data.editionDate ?? null` → fonctionne **avant et après** que Fraîcheur
+ait livré ces helpers/champs.
 
 ### 4.2 Snapshot glissant (seeding)
 
@@ -166,15 +170,17 @@ Points clés :
 
 ## 7. Interfaces avec le travail Fraîcheur (contrat de collaboration)
 
-Deux sessions travaillent en parallèle sur ce module. Frontière d'ownership (fichiers
-disjoints) :
+Deux sessions travaillent en parallèle sur ce module (même working tree). Spec Fraîcheur :
+[2026-06-11-race-edition-freshness-capture-design.md](2026-06-11-race-edition-freshness-capture-design.md)
+(Lot 1 = capture d'édition ; Lot 2 = re-checks/diff, à venir). Frontière d'ownership
+(fichiers disjoints) :
 
 | Couture | Propriétaire | Contrat |
 |---|---|---|
 | Migration champs édition/fraîcheur (course persistée) | **Fraîcheur** | migration **037** |
 | Migration `livetrail_catalog` | **Catalogue (ce doc)** | migration **038** |
-| `web/lib/race-import/sources/livetrail.ts` (extraction date XML) | **Fraîcheur** | étend `listLivetrailRaces()` → `Array<{ raceName, editionYear?, editionDate?, data }>` |
-| `web/lib/race-import/catalog.ts` + cron + `searchCatalogUrls` | **Catalogue** | consomme `editionYear?/editionDate?` en **optionnel** |
+| `web/lib/race-import/sources/livetrail.ts` (détection édition) | **Fraîcheur** | ajoute `extractYearFromLivetrailUrl(url)` + `parseLivetrailStart(hp)` + champs `editionDate`/`startDayOfMonth`/`startTimeRaw` sur `ExtractedRaceData` |
+| `web/lib/race-import/catalog.ts` + cron + `searchCatalogUrls` | **Catalogue** | dérive `edition_year` via `extractYearFromLivetrailUrl(sourceUrl)` ; lit `race.data.editionYear/editionDate` en **null-safe** |
 | Types schéma (`ExtractedRaceData`, champs fraîcheur) | **Fraîcheur** | Catalogue **n'édite pas** ces types ; `RaceCandidate.url` sert de `source_url` au chemin d'écriture Fraîcheur |
 | Badge fraîcheur sur la carte candidat | **Fraîcheur** | si un `edition_year` au niveau candidat devient nécessaire → suite coordonnée (hors scope ici) |
 | Crons `app/api/cron/*` | partagé | noms distincts : `livetrail-catalog` (moi) vs re-check (Fraîcheur) — pas de conflit fichier |
