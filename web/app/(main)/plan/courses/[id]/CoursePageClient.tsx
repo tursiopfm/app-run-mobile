@@ -7,6 +7,7 @@ import { getRaces, deleteRace, peekRaces, saveRace } from '@/lib/plan/storage'
 import { RaceEditorModal } from '@/components/plan/RaceEditorModal'
 import { EditButton } from '@/components/plan/EditButton'
 import { WaypointsTable } from '@/components/plan/WaypointsTable'
+import { PacingStrategyCard } from '@/components/plan/PacingStrategyCard'
 import { RaceImportSheet } from '@/components/plan/RaceImportSheet'
 import { FreshnessBadge } from '@/components/plan/FreshnessBadge'
 import { TableauDiffModal } from '@/components/plan/TableauDiffModal'
@@ -65,6 +66,18 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
       }, 600)
     },
     [raceId, waypoints],
+  )
+
+  const pacingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const handlePacingChange = useCallback(
+    (fade: number) => {
+      if (!race) return
+      const next = { ...race, pacingFade: fade }
+      setRace(next)
+      if (pacingTimer.current) clearTimeout(pacingTimer.current)
+      pacingTimer.current = setTimeout(() => { void saveRace(next) }, 600)
+    },
+    [race],
   )
 
   const reload = useCallback(async () => {
@@ -218,6 +231,14 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
                 {race.startTime && race.targetDurationMin != null ? 'Modifier' : "Définir l'objectif"}
               </button>
             </div>
+            {race.targetDurationMin != null && (
+              <PacingStrategyCard
+                waypoints={waypoints.map(({ km, dPlus, targetOverrideSec }) => ({ km, dPlus, targetOverrideSec }))}
+                targetDurationMin={race.targetDurationMin}
+                pacingFade={race.pacingFade ?? 0}
+                onChange={handlePacingChange}
+              />
+            )}
             <WaypointsTable
               waypoints={waypoints.map(({ id: _id, raceId: _rid, ...rest }) => rest)}
               onChange={handleWaypointsChange}
