@@ -41,10 +41,11 @@ export function TableActionsMenu({ onEditRace, onEditLines, onReimport, onExport
 
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={close} />
+          {/* Scrim sombre : assombrit la page pour faire ressortir le menu (fond bleu nuit ≈ surface). */}
+          <div className="fixed inset-0 z-40 bg-black/50" onClick={close} />
           <div
             role="menu"
-            className="absolute right-0 z-50 mt-1 min-w-[210px] rounded-[10px] border border-trail-border bg-trail-surface p-1 shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+            className="absolute right-0 z-50 mt-1 min-w-[210px] rounded-[10px] border border-[var(--ink-500)] bg-trail-card p-1 shadow-[0_12px_40px_rgba(0,0,0,0.6)]"
           >
             <MenuItem icon={<Pencil size={15} />} label="Modifier la course" onClick={() => run(onEditRace)} />
             <MenuItem icon={<Rows3 size={15} />} label="Modifier les lignes" onClick={() => run(onEditLines)} />

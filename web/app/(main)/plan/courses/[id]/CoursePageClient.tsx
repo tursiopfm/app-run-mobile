@@ -233,13 +233,15 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
                   <span className="text-trail-muted">Objectif non défini — renseigne départ + temps cible pour calculer les heures de passage.</span>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => setEditorOpen(true)}
-                className="text-caption text-trail-primary font-semibold whitespace-nowrap underline"
-              >
-                {race.startTime && race.targetDurationMin != null ? 'Modifier' : "Définir l'objectif"}
-              </button>
+              {!(race.startTime && race.targetDurationMin != null) && (
+                <button
+                  type="button"
+                  onClick={() => setEditorOpen(true)}
+                  className="text-caption text-trail-primary font-semibold whitespace-nowrap underline"
+                >
+                  Définir l&apos;objectif
+                </button>
+              )}
             </div>
             {race.targetDurationMin != null && (
               <PacingStrategyCard
