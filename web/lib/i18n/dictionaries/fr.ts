@@ -98,6 +98,26 @@ export type Dict = {
 
     noActivityFor: (sport: string) => string
   }
+  mission: {
+    cockpitTitle: string; planTitle: string; activitiesTitle: string
+    briefingTitle: string; briefingSub: string; briefingNew: string
+    formeTitle: string; formeScale: { tired: string; normal: string; fresh: string; sharp: string }
+    formeVerdict: Record<string, string>   // clé = FreshnessZone
+    formeBadge: Record<string, string>     // clé = FreshnessZone
+    weekTitle: string; weekSessionsCount: (n: number) => string
+    capTitle: string; capPhasePrefix: string; capVolume: string; capDplus: string
+    capMarkerHint: string; capOnTrack: string; capBehind: string
+    altitudeTitle: string; altitudeUp: string; altitudeDown: string; altitudeStable: string
+    todayTitle: string; restDay: string; intensityLabel: string
+    weekPlanTitle: string; statusDone: string; statusToday: string; statusUpcoming: string; statusRest: string
+    destinationTitle: string; destinationTableLink: string; destinationTargetPrefix: string
+    destinationEmptyTitle: string; destinationEmptyBody: string; destinationEmptyCta: string
+    prepaTitle: string; prepaWeekOf: (w: number, total: number) => string
+    prepaSessions: (done: number, total: number) => string
+    coachButton: string; coachBadge: string
+    lastActivityTitle: string; monthTitle: string; recentTitle: string
+    allHistory: string; volumeLabel: string; dplusLabel: string; sessionsLabel: string
+  }
   charge: {
     weeklyTitle: string; fatigueFitnessTitle: string; freshnessTitle: string; intensityTitle: string
     fatigue7d: string; fitness28d: string; tsbLabel: string; trainingCapacity: string
@@ -1298,6 +1318,48 @@ export const fr: Dict = {
 
     // LastActivity empty
     noActivityFor: (sport: string) => `Aucune activité ${sport.toLowerCase()}.`,
+  },
+
+  // --- Mission ---
+  mission: {
+    cockpitTitle: 'Cockpit', planTitle: 'Plan', activitiesTitle: 'Activités',
+    briefingTitle: 'Briefing du jour', briefingSub: 'Séance, météo, mot du coach', briefingNew: 'Nouveau',
+    formeTitle: 'État de forme',
+    formeScale: { tired: 'Fatigué', normal: 'Normal', fresh: 'Frais', sharp: 'Affûté' },
+    formeBadge: {
+      'very-fresh': 'Très frais', fresh: 'Frais', balanced: 'Équilibré',
+      'normal-fatigue': 'Légère fatigue', 'high-fatigue': 'Fatigue élevée',
+    },
+    formeVerdict: {
+      'very-fresh': '✓ Tu es très frais — parfait pour une séance clé ou une course.',
+      fresh: '✓ Continue comme ça — tu es frais, le plan peut suivre son cours.',
+      balanced: '✓ Continue comme ça — charge et récupération sont équilibrées.',
+      'normal-fatigue': '✓ Continue comme ça — cette fatigue est normale en pleine prépa. Soigne la récup.',
+      'high-fatigue': '⚠ Adapte : allège la prochaine séance ou prends un jour de repos de plus.',
+    },
+    weekTitle: 'Ma semaine',
+    weekSessionsCount: (n: number) => `${n} séance${n > 1 ? 's' : ''}`,
+    capTitle: 'Cap de la semaine', capPhasePrefix: 'objectif du plan ·',
+    capVolume: 'Volume', capDplus: 'Dénivelé',
+    capMarkerHint: 'Repère ┃ = où tu devrais en être aujourd\'hui.',
+    capOnTrack: 'Tu es dans l\'axe ✈️', capBehind: 'Un peu de retard — rien d\'alarmant.',
+    altitudeTitle: 'Altitude · 6 semaines',
+    altitudeUp: '↗ régulier', altitudeDown: '↘ en baisse', altitudeStable: '→ stable',
+    todayTitle: 'Aujourd\'hui', restDay: 'Repos', intensityLabel: 'Intensité',
+    weekPlanTitle: 'Ma semaine d\'entraînement',
+    statusDone: '✓ faite', statusToday: '● auj.', statusUpcoming: 'à venir', statusRest: '—',
+    destinationTitle: 'Destination', destinationTableLink: 'Mon tableau de course ›',
+    destinationTargetPrefix: 'obj.',
+    destinationEmptyTitle: 'Aucune course prévue',
+    destinationEmptyBody: 'Choisis ta prochaine destination pour structurer ta prépa.',
+    destinationEmptyCta: 'Ajouter une course',
+    prepaTitle: 'Ma prépa',
+    prepaWeekOf: (w: number, total: number) => `Semaine ${w} / ${total}`,
+    prepaSessions: (done: number, total: number) => `${done} séances faites sur ${total}`,
+    coachButton: '✨ Ajuster mon plan', coachBadge: 'Coach IA',
+    lastActivityTitle: 'Dernière sortie', monthTitle: 'Ce mois-ci', recentTitle: 'Sorties récentes',
+    allHistory: 'Tout mon historique →',
+    volumeLabel: 'Volume', dplusLabel: 'Dénivelé', sessionsLabel: 'Sorties',
   },
 
   // --- Charge tab ---
