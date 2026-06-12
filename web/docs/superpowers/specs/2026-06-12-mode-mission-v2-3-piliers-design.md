@@ -94,3 +94,18 @@ Structure et blocs identiques, **le contenu suit la discipline** (même principe
 Tout existe déjà : fraîcheur (`lib/analytics/fatigue.ts`, `charge-thresholds`), plan et
 phases (`lib/plan/storage`, `lib/training/phases`), course + tableau (`races`,
 `race_waypoints`), activités. Pas de migration Supabase pressentie.
+
+## Drift notes
+
+Écarts assumés entre la spec/maquette et l'implémentation (2026-06-12) :
+
+- **Triathlon — pastilles de la semaine non colorées par discipline.** La maquette
+  colore chaque pastille selon la discipline du jour (nat bleue, vélo verte, cap
+  orange) ; `SportOverview` agrège par sport mais n'expose pas la discipline dominante
+  par jour → pastilles en couleur par défaut pour les triathlètes. À reprendre si la
+  donnée jour×discipline devient disponible.
+- **Triathlon — « Cap de la semaine » reste en km/D+.** La spec prévoyait une bascule
+  en heures ; le modèle de phases (`PhaseWeeklyTarget`) n'a pas de cible horaire,
+  uniquement km/D+. La carte affiche donc la cible du plan telle quelle.
+- **Activités — pas de trace du profil sur la dernière sortie** (nécessite les
+  streams) ni de titre « Sorties récentes » au-dessus de la liste. Backlogués.

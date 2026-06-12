@@ -199,8 +199,6 @@ export const en: Dict = {
   },
 
   mission: {
-    cockpitTitle: 'Cockpit', planTitle: 'Plan', activitiesTitle: 'Activities',
-    briefingTitle: 'Daily briefing', briefingSub: 'Session, weather, coach\'s note', briefingNew: 'New',
     formeTitle: 'Form status',
     formeScale: { tired: 'Tired', normal: 'Normal', fresh: 'Fresh', sharp: 'Peaking' },
     formeBadge: {
@@ -234,7 +232,7 @@ export const en: Dict = {
     prepaWeekOf: (w: number, total: number) => `Week ${w} / ${total}`,
     prepaSessions: (done: number, total: number) => `${done} of ${total} sessions done`,
     coachButton: '✨ Adjust my plan', coachBadge: 'AI Coach',
-    lastActivityTitle: 'Last activity', monthTitle: 'This month', recentTitle: 'Recent activities',
+    lastActivityTitle: 'Last activity', monthTitle: 'This month',
     allHistory: 'Full history →',
     volumeLabel: 'Volume', dplusLabel: 'Elevation', sessionsLabel: 'Activities',
   },

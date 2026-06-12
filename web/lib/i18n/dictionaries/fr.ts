@@ -99,8 +99,6 @@ export type Dict = {
     noActivityFor: (sport: string) => string
   }
   mission: {
-    cockpitTitle: string; planTitle: string; activitiesTitle: string
-    briefingTitle: string; briefingSub: string; briefingNew: string
     formeTitle: string; formeScale: { tired: string; normal: string; fresh: string; sharp: string }
     formeVerdict: Record<string, string>   // clé = FreshnessZone
     formeBadge: Record<string, string>     // clé = FreshnessZone
@@ -115,7 +113,7 @@ export type Dict = {
     prepaTitle: string; prepaWeekOf: (w: number, total: number) => string
     prepaSessions: (done: number, total: number) => string
     coachButton: string; coachBadge: string
-    lastActivityTitle: string; monthTitle: string; recentTitle: string
+    lastActivityTitle: string; monthTitle: string
     allHistory: string; volumeLabel: string; dplusLabel: string; sessionsLabel: string
   }
   charge: {
@@ -1322,8 +1320,6 @@ export const fr: Dict = {
 
   // --- Mission ---
   mission: {
-    cockpitTitle: 'Cockpit', planTitle: 'Plan', activitiesTitle: 'Activités',
-    briefingTitle: 'Briefing du jour', briefingSub: 'Séance, météo, mot du coach', briefingNew: 'Nouveau',
     formeTitle: 'État de forme',
     formeScale: { tired: 'Fatigué', normal: 'Normal', fresh: 'Frais', sharp: 'Affûté' },
     formeBadge: {
@@ -1357,7 +1353,7 @@ export const fr: Dict = {
     prepaWeekOf: (w: number, total: number) => `Semaine ${w} / ${total}`,
     prepaSessions: (done: number, total: number) => `${done} séances faites sur ${total}`,
     coachButton: '✨ Ajuster mon plan', coachBadge: 'Coach IA',
-    lastActivityTitle: 'Dernière sortie', monthTitle: 'Ce mois-ci', recentTitle: 'Sorties récentes',
+    lastActivityTitle: 'Dernière sortie', monthTitle: 'Ce mois-ci',
     allHistory: 'Tout mon historique →',
     volumeLabel: 'Volume', dplusLabel: 'Dénivelé', sessionsLabel: 'Sorties',
   },
