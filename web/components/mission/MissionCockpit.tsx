@@ -1,15 +1,18 @@
 'use client'
 
 // Écran Cockpit du Mode Mission v2 — « je pilote » :
-// Briefing → État de forme → Ma semaine → Cap de la semaine → Altitude.
+// Briefing → État de forme → Ma semaine → Objectif → Altitude.
 // Spec : docs/superpowers/specs/2026-06-12-mode-mission-v2-3-piliers-design.md
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { MorningReportTile } from '@/components/cockpit/MorningReportTile'
-import { MissionCard, MissionCardLabel, DayDot, CapGauge, type DayDotState } from './cards'
+import { MissionCard, MissionCardLabel, DayDot, type DayDotState } from './cards'
 import { FormeCard } from './FormeCard'
+import { GoalsModal } from './GoalsModal'
+import { ObjectifCard } from './ObjectifCard'
 import { getAllMacrocycles, getPlannedSessions, isRaceMirrorSession } from '@/lib/plan/storage'
-import { resolveMissionWeeklyTarget, expectedWeekFraction, type MissionWeeklyTarget } from '@/lib/mission/weekly-target'
+import { resolveMissionWeeklyTarget, type MissionWeeklyTarget } from '@/lib/mission/weekly-target'
+import { readMissionGoals } from '@/lib/mission/goals'
 import { computeTriWeek, formatHoursMin } from '@/lib/mission/tri-week'
 import { defaultSportForDiscipline } from '@/lib/design/sport-settings'
 import type { SportOverview } from '@/lib/data/dashboard'
@@ -53,6 +56,9 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline }:
   // Cible hebdo + sessions planifiées de la semaine (client, comme les blocs Plan).
   const [target, setTarget] = useState<MissionWeeklyTarget | null>(null)
   const [planned, setPlanned] = useState<PlannedSession[]>([])
+  const [showGoals, setShowGoals] = useState(false)
+  const [goalsVersion, setGoalsVersion] = useState(0)
+
   useEffect(() => {
     let cancelled = false
     void (async () => {
@@ -69,6 +75,9 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline }:
     return () => { cancelled = true }
   }, [])
 
+  // Objectifs utilisateur (re-lu à chaque sauvegarde dans la modal).
+  const goals = useMemo(() => readMissionGoals(sport), [sport, goalsVersion])
+
   // États des 7 pastilles : fait (volume ce jour) > aujourd'hui > à venir (séance planifiée) > repos.
   const today = todayISO()
   const dots: { state: DayDotState; color?: string }[] = DAY_ABBR.map((_, i) => {
@@ -82,10 +91,6 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline }:
   })
 
   const tri = isTri ? computeTriWeek(sportOverviews) : null
-  const frac = expectedWeekFraction(today)
-  const volPct = target && target.km > 0 ? ((o?.weekKm ?? 0) / target.km) * 100 : 0
-  const dplusPct = target && target.dPlus > 0 ? ((o?.weekDPlus ?? 0) / target.dPlus) * 100 : 0
-  const onTrack = target != null && volPct >= frac * 100 - 15
 
   // Tendance 6 semaines (weeklyPoints contient la série hebdo, on prend les 6 dernières).
   const weekly = (o?.weeklyPoints ?? []).slice(-6)
@@ -103,7 +108,17 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline }:
 
       {/* Ma semaine */}
       <MissionCard>
-        <div className="mb-3"><MissionCardLabel>{M.weekTitle}</MissionCardLabel></div>
+        <div className="flex items-center justify-between mb-3">
+          <MissionCardLabel>{M.weekTitle}</MissionCardLabel>
+          <button
+            type="button"
+            onClick={() => setShowGoals(true)}
+            className="text-[11px] font-bold rounded-full px-2.5 py-[3px] border"
+            style={{ borderColor: 'var(--primary)', color: 'var(--primary-text)' }}
+          >
+            {M.goalsButton}
+          </button>
+        </div>
         <div className="flex justify-between mb-4">
           {dots.map((d, i) => (
             <div key={i} className="flex flex-col items-center gap-1">
@@ -140,37 +155,23 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline }:
         )}
       </MissionCard>
 
-      {/* Cap de la semaine — seulement si un plan actif fournit une cible */}
-      {target && (
-        <MissionCard>
-          <div className="flex items-center justify-between mb-3">
-            <MissionCardLabel>{M.capTitle}</MissionCardLabel>
-            <p className="text-[10px] font-semibold text-trail-muted">{M.capPhasePrefix} {target.phaseLabel}</p>
-          </div>
-          <div className="space-y-3.5">
-            <div>
-              <div className="flex justify-between text-[12px] mb-1.5">
-                <span className="text-trail-muted">{M.capVolume}</span>
-                <span className="font-bold text-trail-text">
-                  {Math.round(o?.weekKm ?? 0)} <span className="text-trail-muted">/ {target.km} km</span>
-                </span>
-              </div>
-              <CapGauge pct={volPct} markerPct={frac * 100} color="var(--primary)" />
-            </div>
-            <div>
-              <div className="flex justify-between text-[12px] mb-1.5">
-                <span className="text-trail-muted">{M.capDplus}</span>
-                <span className="font-bold" style={{ color: 'var(--status-info)' }}>
-                  {Math.round(o?.weekDPlus ?? 0).toLocaleString('fr-FR')} <span className="text-trail-muted">/ {target.dPlus.toLocaleString('fr-FR')} m</span>
-                </span>
-              </div>
-              <CapGauge pct={dplusPct} markerPct={frac * 100} color="var(--status-info)" />
-            </div>
-          </div>
-          <p className="text-[11px] mt-3 text-trail-muted">
-            {M.capMarkerHint} {onTrack ? M.capOnTrack : M.capBehind}
-          </p>
-        </MissionCard>
+      <ObjectifCard
+        goals={goals}
+        planTarget={target}
+        weekKm={o?.weekKm ?? 0}
+        weekDPlus={o?.weekDPlus ?? 0}
+        ytdKm={o?.ytdKm ?? 0}
+        todayISO={today}
+        onEditGoals={() => setShowGoals(true)}
+      />
+
+      {showGoals && (
+        <GoalsModal
+          sport={sport}
+          defaults={{ weekKm: target?.km, weekDPlus: target?.dPlus }}
+          onClose={() => setShowGoals(false)}
+          onSaved={() => setGoalsVersion(v => v + 1)}
+        />
       )}
 
       {/* Altitude · 6 semaines */}

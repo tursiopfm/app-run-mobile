@@ -114,6 +114,12 @@ export type Dict = {
     coachButton: string; coachBadge: string
     lastActivityTitle: string; monthTitle: string
     allHistory: string; volumeLabel: string; dplusLabel: string; sessionsLabel: string
+    goalsButton: string; goalsModalTitle: string
+    goalsWeekKm: string; goalsWeekDPlus: string; goalsYearKm: string
+    goalsYearEmptyHint: string; goalsCancel: string; goalsSave: string
+    objectifTitle: string; goalsYearLabel: string; goalsProjLabel: string
+    goalsProjectionNote: string; goalsDefine: string
+    projArrow: (ytd: string, proj: string) => string
   }
   charge: {
     weeklyTitle: string; fatigueFitnessTitle: string; freshnessTitle: string; intensityTitle: string
@@ -1332,7 +1338,7 @@ export const fr: Dict = {
     weekSessionsCount: (n: number) => `${n} séance${n > 1 ? 's' : ''}`,
     capTitle: 'Cap de la semaine', capPhasePrefix: 'objectif du plan ·',
     capVolume: 'Volume', capDplus: 'Dénivelé',
-    capMarkerHint: 'Repère ┃ = où tu devrais en être aujourd\'hui.',
+    capMarkerHint: 'Repère ┃ = attendu aujourd\'hui.',
     capOnTrack: 'Tu es dans l\'axe ✈️', capBehind: 'Un peu de retard — rien d\'alarmant.',
     altitudeTitle: 'Altitude · 6 semaines',
     altitudeUp: '↗ régulier', altitudeDown: '↘ en baisse', altitudeStable: '→ stable',
@@ -1351,6 +1357,20 @@ export const fr: Dict = {
     lastActivityTitle: 'Dernière sortie', monthTitle: 'Ce mois-ci',
     allHistory: 'Tout mon historique →',
     volumeLabel: 'Volume', dplusLabel: 'Dénivelé', sessionsLabel: 'Sorties',
+    goalsButton: 'Objectif',
+    goalsModalTitle: 'Mes objectifs',
+    goalsWeekKm: 'Semaine · volume',
+    goalsWeekDPlus: 'Semaine · dénivelé',
+    goalsYearKm: 'Année · volume',
+    goalsYearEmptyHint: 'Année vide ? Le bloc affichera la projection fin d\'année calculée sur ton rythme actuel.',
+    goalsCancel: 'Annuler',
+    goalsSave: 'Enregistrer',
+    objectifTitle: 'Objectif',
+    goalsYearLabel: 'Année · volume',
+    goalsProjLabel: 'Année · projection',
+    goalsProjectionNote: 'Pas d\'objectif annuel — projection sur ton rythme actuel.',
+    goalsDefine: 'Définir →',
+    projArrow: (ytd: string, proj: string) => `${ytd} km → ~${proj} fin d'année`,
   },
 
   // --- Charge tab ---

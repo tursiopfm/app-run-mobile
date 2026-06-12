@@ -34,7 +34,7 @@ function overview(partial: Record<string, unknown> = {}) {
 
 const overviews = { run: overview(), ride: overview(), swim: overview(), all: overview() } as never
 
-it('rend le héros semaine (km + D+) et la tendance', async () => {
+it('rend le héros semaine (km + D+), le bouton Objectif et la tendance', async () => {
   const { container } = render(
     <I18nProvider initialLang="fr">
       <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline={null} />
@@ -42,6 +42,7 @@ it('rend le héros semaine (km + D+) et la tendance', async () => {
   )
   expect(await screen.findByText('Ma semaine')).toBeInTheDocument()
   expect(screen.getByText('28')).toBeInTheDocument()
+  expect(screen.getByText('Objectif')).toBeInTheDocument()
   expect(screen.getByText(/Altitude/)).toBeInTheDocument()
   // Les lettres des jours (L M M J V S D) doivent apparaître, pas les noms d'activités.
   expect(screen.getAllByText('L').length).toBeGreaterThanOrEqual(1)

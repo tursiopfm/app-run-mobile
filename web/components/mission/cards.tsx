@@ -44,18 +44,20 @@ export function DayDot({ state, color }: { state: DayDotState; color?: string })
   return <span data-state="rest" className={base} style={{ background: 'var(--ink-600)', color: 'var(--text-disabled)' }}>–</span>
 }
 
-// Jauge horizontale réalisé/objectif avec repère « attendu aujourd'hui ».
-export function CapGauge({ pct, markerPct, color }: { pct: number; markerPct: number; color: string }) {
+// Jauge horizontale réalisé/objectif avec repère optionnel « attendu aujourd'hui ».
+export function CapGauge({ pct, markerPct, color }: { pct: number; markerPct?: number; color: string }) {
   return (
     <div className="relative h-[10px] rounded-full bg-trail-border">
       <span
         className="absolute inset-y-0 left-0 rounded-full"
         style={{ width: `${Math.min(100, Math.max(0, pct))}%`, background: color }}
       />
-      <span
-        className="absolute -top-[3px] -bottom-[3px] w-[2px] rounded-[1px]"
-        style={{ left: `${Math.min(100, Math.max(0, markerPct))}%`, background: 'var(--text-secondary)' }}
-      />
+      {markerPct != null && (
+        <span
+          className="absolute -top-[3px] -bottom-[3px] w-[2px] rounded-[1px]"
+          style={{ left: `${Math.min(100, Math.max(0, markerPct))}%`, background: 'var(--text-secondary)' }}
+        />
+      )}
     </div>
   )
 }
