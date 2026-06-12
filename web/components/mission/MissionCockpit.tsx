@@ -220,7 +220,7 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline, w
 
       {showVolume && (
         <MissionDetailSheet title={M.volumeDetailTitle} onClose={() => setShowVolume(false)}>
-          <ActivitiesBlock sportOverviews={sportOverviews} defaultSport={sport} />
+          <ActivitiesBlock sportOverviews={sportOverviews} defaultSport={sport} showFreshness={false} />
           <WeeklyStatsBlock sportOverviews={sportOverviews} defaultSport={sport} />
         </MissionDetailSheet>
       )}

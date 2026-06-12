@@ -34,9 +34,9 @@ function formatDPlusLabel(v: number): string {
   return `${Math.round(v)}`
 }
 
-type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void; defaultSport?: SportKey }
+type Props = { sportOverviews: Record<SportKey, SportOverview>; onHide?: () => void; defaultSport?: SportKey; showFreshness?: boolean }
 
-export function ActivitiesBlock({ sportOverviews, onHide, defaultSport }: Props) {
+export function ActivitiesBlock({ sportOverviews, onHide, defaultSport, showFreshness = true }: Props) {
   const t = useT()
   const L = t.cockpit
   // Lazy-init depuis LS — pas de flash entre default et préférences user.
@@ -71,7 +71,7 @@ export function ActivitiesBlock({ sportOverviews, onHide, defaultSport }: Props)
           <span className="text-[15px] font-semibold" style={{ color: cfg.color }}>{sportLabel(activeSport, t)}</span>
         </div>
         <div className="flex items-center gap-2">
-          <TsbBadge tsb={sportOverviews.all.tsb} onClick={() => setShowFreshnessHelp(true)} />
+          {showFreshness && <TsbBadge tsb={sportOverviews.all.tsb} onClick={() => setShowFreshnessHelp(true)} />}
           <button
             onClick={() => setShowModal(true)}
             className="text-trail-muted hover:text-trail-text px-1 text-h2 leading-none"
