@@ -148,7 +148,7 @@ export default function PlanClient({ mode = 'expert', mission = null }: { mode?:
       id: 'resume-semaine',
       label: L.blockResume,
       emoji: '📊',
-      render: () => <ResumeSemaineBlock reloadKey={reloadKey} simplified={mode === 'mission'} />,
+      render: () => <ResumeSemaineBlock reloadKey={reloadKey} simplified={false} />,
     },
     {
       id: 'structure',
@@ -201,7 +201,6 @@ export default function PlanClient({ mode = 'expert', mission = null }: { mode?:
         defaultOrder={DEFAULT_ORDER}
         blocks={blocks}
         addLabel={L.addBlock}
-        missionVisible={mode === 'mission' ? ['objectif', 'resume-semaine', 'semaine-bibliotheque'] : undefined}
       />
     </div>
   )

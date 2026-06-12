@@ -26,10 +26,6 @@ type Props = {
   blocks:        BlockDef[]
   addLabel?:     string
   defaultHidden?: string[]
-  // Mode Mission : si fourni, rend UNIQUEMENT ces blocs (dans cet ordre), en
-  // lecture seule — pas de drag, pas d'ajout/masquage, et AUCUNE lecture/écriture
-  // des clés de persistance (l'ordre/visibilité Expert reste intact).
-  missionVisible?: string[]
 }
 
 const BlockContext = createContext<{ hideSelf: () => void }>({ hideSelf: () => {} })
@@ -223,7 +219,7 @@ function AddBlockPanel({
   )
 }
 
-export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultHidden = [], missionVisible }: Props) {
+export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultHidden = [] }: Props) {
   const t = useT()
   const resolvedAddLabel = addLabel ?? t.cockpit.addBlock
   const { notifyChange, onHydrated } = usePreferences()
@@ -355,47 +351,6 @@ export function BlockGrid({ storageKey, defaultOrder, blocks, addLabel, defaultH
           {block.render()}
         </BlockContext.Provider>
       </SortableBlock>
-    )
-  }
-
-  // ── Mode Mission : rendu curé, lecture seule (pas de Dnd, pas d'ajout) ──────
-  if (missionVisible != null) {
-    const missionOrder = missionVisible.filter(id => blocks.some(b => b.id === id))
-    // Mode Mission desktop : TOUS les blocs en demi-largeur (2 colonnes),
-    // on ignore desktopCols (sinon morningReport/week/cumul prendraient toute
-    // la largeur). Mobile reste en pile pleine largeur.
-    const isFullM = () => false
-    const renderStatic = (id: string) => {
-      const block = blocks.find(b => b.id === id)
-      if (!block) return null
-      return (
-        <div key={id}>
-          {/* hideSelf no-op : aucune écriture de persistance en Mode Mission */}
-          <BlockContext.Provider value={{ hideSelf: () => {} }}>
-            {block.render()}
-          </BlockContext.Provider>
-        </div>
-      )
-    }
-    return (
-      <div suppressHydrationWarning>
-        {isDesktop ? (
-          <div className="space-y-2">
-            {buildRows(missionOrder, isFullM).map((row, i) =>
-              row.kind === 'full' ? (
-                renderStatic(row.id)
-              ) : (
-                <div key={`m-split-${i}`} className="flex gap-2 items-start">
-                  <div className="flex-1 min-w-0 space-y-2">{row.left.map(renderStatic)}</div>
-                  <div className="flex-1 min-w-0 space-y-2">{row.right.map(renderStatic)}</div>
-                </div>
-              ),
-            )}
-          </div>
-        ) : (
-          <div className="space-y-2">{missionOrder.map(renderStatic)}</div>
-        )}
-      </div>
     )
   }
 
