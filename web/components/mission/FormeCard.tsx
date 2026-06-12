@@ -42,37 +42,37 @@ export function FormeCard({ payload }: { payload: ChargeSportPayload }) {
         <MissionCardLabel>{M.formeTitle}</MissionCardLabel>
         <TsbBadge tsb={f.tsb} onClick={() => setShowHelp(true)} />
       </div>
-      <div className="flex items-center gap-3.5 mt-2">
-        <svg viewBox="0 0 140 86" width="146" aria-hidden>
-          <path d="M14,76 A60 60 0 0 1 33.5,32" fill="none" stroke="var(--status-danger)" strokeWidth="7" strokeLinecap="round" opacity=".8" />
-          <path d="M38,28 A60 60 0 0 1 70,16" fill="none" stroke="var(--status-warning)" strokeWidth="7" strokeLinecap="round" opacity=".85" />
-          <path d="M76,16 A60 60 0 0 1 104,27" fill="none" stroke="var(--status-success)" strokeWidth="7" strokeLinecap="round" opacity=".9" />
-          <path d="M109,31 A60 60 0 0 1 122,46" fill="none" stroke="var(--status-info)" strokeWidth="7" strokeLinecap="round" />
-          <path d="M124.5,51 A60 60 0 0 1 126,76" fill="none" stroke="#7DD3FC" strokeWidth="7" strokeLinecap="round" />
-          <line x1="70" y1="78" x2={tip.x} y2={tip.y} stroke="var(--trail-text)" strokeWidth="2.5" strokeLinecap="round" />
-          <circle cx="70" cy="78" r="5" fill="var(--ink-500)" stroke="var(--trail-text)" strokeWidth="1.5" />
-        </svg>
-        <div className="flex-1">
-          <button
-            type="button"
-            onClick={() => setShowDetail(true)}
-            aria-label={`${M.formeTitle} — détail`}
-            className="text-left"
-          >
-            <p className="font-display font-bold text-[34px] leading-none tabular-nums text-trail-text underline decoration-trail-border decoration-2 underline-offset-[6px]">{Math.round(f.tsb)}</p>
-          </button>
-          <p className="text-[11px] mt-1.5 text-trail-muted">
-            <b style={{ color: delta > 1 ? 'var(--status-success)' : delta < -1 ? 'var(--status-danger)' : 'var(--trail-muted)' }}>
-              {delta > 0 ? '↗ +' : delta < 0 ? '↘ ' : '→ '}{delta !== 0 ? delta : ''}
-            </b>{' '}{M.formeDeltaSuffix} · {qualifier}
-          </p>
+      {/* Toute la zone cadran + compteur + verdict ouvre la page de détail (grande
+          cible tap fiable, comme le bloc km/D+). Le badge en-tête reste séparé. */}
+      <button type="button" onClick={() => setShowDetail(true)} aria-label={`${M.formeTitle} — détail`} className="w-full text-left">
+        <div className="flex items-center gap-3.5 mt-2">
+          <svg viewBox="0 0 140 86" width="146" aria-hidden>
+            <path d="M14,76 A60 60 0 0 1 33.5,32" fill="none" stroke="var(--status-danger)" strokeWidth="7" strokeLinecap="round" opacity=".8" />
+            <path d="M38,28 A60 60 0 0 1 70,16" fill="none" stroke="var(--status-warning)" strokeWidth="7" strokeLinecap="round" opacity=".85" />
+            <path d="M76,16 A60 60 0 0 1 104,27" fill="none" stroke="var(--status-success)" strokeWidth="7" strokeLinecap="round" opacity=".9" />
+            <path d="M109,31 A60 60 0 0 1 122,46" fill="none" stroke="var(--status-info)" strokeWidth="7" strokeLinecap="round" />
+            <path d="M124.5,51 A60 60 0 0 1 126,76" fill="none" stroke="#7DD3FC" strokeWidth="7" strokeLinecap="round" />
+            <line x1="70" y1="78" x2={tip.x} y2={tip.y} stroke="var(--trail-text)" strokeWidth="2.5" strokeLinecap="round" />
+            <circle cx="70" cy="78" r="5" fill="var(--ink-500)" stroke="var(--trail-text)" strokeWidth="1.5" />
+          </svg>
+          <div className="flex-1">
+            <div className="flex items-baseline gap-2">
+              <p className="font-display font-bold text-[34px] leading-none tabular-nums text-trail-text">{Math.round(f.tsb)}</p>
+              <span className="text-[12px] font-semibold" style={{ color: 'var(--primary-text)' }}>Détail ›</span>
+            </div>
+            <p className="text-[11px] mt-1.5 text-trail-muted">
+              <b style={{ color: delta > 1 ? 'var(--status-success)' : delta < -1 ? 'var(--status-danger)' : 'var(--trail-muted)' }}>
+                {delta > 0 ? '↗ +' : delta < 0 ? '↘ ' : '→ '}{delta !== 0 ? delta : ''}
+              </b>{' '}{M.formeDeltaSuffix} · {qualifier}
+            </p>
+          </div>
         </div>
-      </div>
-      <p className="text-[12px] leading-relaxed mt-2 text-trail-muted">
-        <span className="font-bold" style={{ color: verdict.tone === 'adapt' ? 'var(--status-warning)' : 'var(--status-success)' }}>
-          {M.formeVerdict[f.zone]}
-        </span>
-      </p>
+        <p className="text-[12px] leading-relaxed mt-2 text-trail-muted">
+          <span className="font-bold" style={{ color: verdict.tone === 'adapt' ? 'var(--status-warning)' : 'var(--status-success)' }}>
+            {M.formeVerdict[f.zone]}
+          </span>
+        </p>
+      </button>
       {showHelp && <FreshnessHelpSheet currentId={id} onClose={() => setShowHelp(false)} />}
       {showDetail && (
         <MissionDetailSheet title={M.formeTitle} onClose={() => setShowDetail(false)}>

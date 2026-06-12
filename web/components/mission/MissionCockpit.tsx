@@ -15,13 +15,13 @@ import { SessionsSemaineCard } from './SessionsSemaineCard'
 import { CumulCard } from './CumulCard'
 import { MissionDetailSheet } from './MissionDetailSheet'
 import { ActivitiesBlock } from '@/components/cockpit/ActivitiesBlock'
-import { WeekBlock } from '@/components/cockpit/WeekBlock'
+import { WeeklyStatsBlock } from '@/components/cockpit/WeeklyStatsBlock'
 import { getAllMacrocycles, getPlannedSessions, isRaceMirrorSession } from '@/lib/plan/storage'
 import { resolveMissionWeeklyTarget, type MissionWeeklyTarget } from '@/lib/mission/weekly-target'
 import { readMissionGoals } from '@/lib/mission/goals'
 import { computeTriWeek, formatHoursMin } from '@/lib/mission/tri-week'
 import { defaultSportForDiscipline } from '@/lib/design/sport-settings'
-import type { SportOverview, DaySession } from '@/lib/data/dashboard'
+import type { SportOverview } from '@/lib/data/dashboard'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
 import type { SportKey } from '@/lib/design/sports'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
@@ -33,7 +33,6 @@ type Props = {
   freshnessPayload: ChargeSportPayload | null
   discipline: string | null
   weekActivities: ActivityRow[]
-  weekSessions: DaySession[]
 }
 
 const SPORT_DOT_COLOR: Record<string, string> = {
@@ -56,7 +55,7 @@ function isoOfWeekDay(idx: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-export function MissionCockpit({ sportOverviews, freshnessPayload, discipline, weekActivities, weekSessions }: Props) {
+export function MissionCockpit({ sportOverviews, freshnessPayload, discipline, weekActivities }: Props) {
   const M = useT().mission
   const router = useRouter()
   const sport: SportKey = defaultSportForDiscipline(discipline) ?? 'run'
@@ -165,7 +164,7 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline, w
             )
           })}
         </div>
-        {/* km/D+ (ou heures tri) → ouvre la page « Mon volume » (blocs Activités + Semaines Expert) */}
+        {/* km/D+ (ou heures tri) → ouvre la page « Mon volume » (blocs Activités + Semaines Vol/Ratio Expert) */}
         <button type="button" onClick={() => setShowVolume(true)} className="flex w-full items-end gap-4 text-left">
           {isTri && tri ? (
             <>
@@ -222,7 +221,7 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline, w
       {showVolume && (
         <MissionDetailSheet title={M.volumeDetailTitle} onClose={() => setShowVolume(false)}>
           <ActivitiesBlock sportOverviews={sportOverviews} defaultSport={sport} />
-          <WeekBlock sportOverviews={sportOverviews} allSessions={weekSessions} defaultSport={sport} />
+          <WeeklyStatsBlock sportOverviews={sportOverviews} defaultSport={sport} />
         </MissionDetailSheet>
       )}
     </div>
