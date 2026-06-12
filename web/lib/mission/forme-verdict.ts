@@ -5,8 +5,9 @@
 
 import type { FreshnessZone } from '@/lib/analytics/charge-insights.types'
 
-// Échelle visuelle Fatigué → Affûté. Bornes alignées sur FRESHNESS
-// (charge-thresholds: highFatigue=-25, veryFresh=15) avec de la marge.
+// Échelle visuelle Fatigué → Affûté. Bornes = seuils FRESHNESS
+// (charge-thresholds: highFatigue=-25, veryFresh=15) élargis de 10 pts de
+// chaque côté pour que le curseur ne sature pas aux extrêmes.
 const TSB_MIN = -35
 const TSB_MAX = 25
 
