@@ -21,12 +21,15 @@ export type PhaseSegment = {
   cursorPct: number | null   // position du jour dans la phase active, sinon null
 }
 
+// Nombre de jours INCLUSIF (from et to comptés) — d'où le +1.
 function days(fromISO: string, toISO: string): number {
   return Math.max(1, Math.round(
     (new Date(`${toISO}T00:00:00Z`).getTime() - new Date(`${fromISO}T00:00:00Z`).getTime()) / MS_DAY,
   ) + 1)
 }
 
+// Suppose les phases contiguës (l'UI de création de plan l'impose) : les jours
+// hors phase ne sont pas représentés, et un today dans un trou n'a pas de curseur.
 export function computePhaseSegments(plan: TrainingPlan, todayISO: string): PhaseSegment[] {
   const totalDays = plan.phases.reduce((s, p) => s + days(p.startDate, p.endDate), 0)
   if (totalDays === 0) return []

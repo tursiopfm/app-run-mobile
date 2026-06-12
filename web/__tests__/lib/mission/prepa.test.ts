@@ -55,4 +55,8 @@ describe('weekOfPlan', () => {
     expect(weekOfPlan(plan, '2026-05-04')).toEqual({ week: 1, total: 12 })
     expect(weekOfPlan(plan, '2026-06-12')).toEqual({ week: 6, total: 12 })
   })
+  it('clampe avant le début et après la fin du plan', () => {
+    expect(weekOfPlan(plan, '2026-01-01')).toEqual({ week: 1, total: 12 })
+    expect(weekOfPlan(plan, '2026-09-01')).toEqual({ week: 12, total: 12 })
+  })
 })
