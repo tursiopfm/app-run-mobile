@@ -152,7 +152,7 @@ export function PacingStrategyCard({
         .pstrat > summary{list-style:none;}
         .pstrat summary::-webkit-details-marker{display:none;}
         .pstrat .psum{display:flex;align-items:center;gap:8px;cursor:pointer;flex-wrap:wrap;}
-        .pstrat .psum-title{font-family:var(--d);font-weight:600;font-size:14px;color:var(--trail-muted);}
+        .pstrat .psum-title{font-family:var(--d);font-weight:600;font-size:12.5px;color:var(--trail-muted);}
         .pstrat .psum-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
         .pstrat .psum-goal{font-family:var(--d);font-size:11px;color:var(--trail-muted);white-space:nowrap;}
         .pstrat .psum-val{font-family:var(--d);font-weight:700;font-size:12px;color:var(--trail-text);background:none;border:0;border-bottom:1px dashed var(--trail-muted);padding:0 1px;cursor:pointer;}
