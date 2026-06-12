@@ -643,13 +643,18 @@ export default function ActivitiesClient({
   initial,
   hasMore,
   athleteProfile,
+  initialDate,
 }: {
   initial:        ActivityRow[]
   hasMore:        boolean
   athleteProfile: AthleteHrProfile
+  initialDate?:   string  // YYYY-MM-DD : filtre « sorties de ce jour » (depuis le Cockpit Mission)
 }) {
   const L_main = useT().activities
   const [localActivities, setLocalActivities] = useState<ActivityRow[]>(initial)
+  // Filtre jour exact (clé = YYYY-MM-DD comparée à start_time.slice(0,10)).
+  // Indépendant du filtre date-range du panneau, et retirable via la bannière.
+  const [dayFilter, setDayFilter] = useState<string | null>(initialDate ?? null)
   const [loadingMore,     setLoadingMore]     = useState<boolean>(hasMore)
   const [panel,           setPanel]           = useState<'none' | 'search' | 'filter'>('none')
   const [search,          setSearch]          = useState<SearchState>(DEFAULT_SEARCH)
@@ -739,6 +744,8 @@ export default function ActivitiesClient({
   const filtered = useMemo(() => {
     let list = applySearch([...localActivities], search)
 
+    if (dayFilter) list = list.filter(a => a.start_time.slice(0, 10) === dayFilter)
+
     if (filter.sport !== 'Toutes') {
       list = list.filter(a => normalizeSportType(a.sport_type) === filter.sport)
     }
@@ -796,11 +803,11 @@ export default function ActivitiesClient({
     })
 
     return list
-  }, [localActivities, search, filter])
+  }, [localActivities, search, filter, dayFilter])
 
   // Reset the progressive render window whenever the filtered set changes,
   // so the user always starts at the top of the new result list.
-  useEffect(() => { setVisibleCount(RENDER_BATCH) }, [search, filter])
+  useEffect(() => { setVisibleCount(RENDER_BATCH) }, [search, filter, dayFilter])
 
   // Reveal more cards as the sentinel approaches the viewport.
   useEffect(() => {
@@ -901,6 +908,25 @@ export default function ActivitiesClient({
             </svg>
           </button>
         </div>
+
+        {dayFilter && (
+          <div className="flex items-center justify-between rounded-[10px] border border-trail-border bg-trail-card px-3 py-2 mb-[8px]">
+            <span className="text-body-sm text-trail-text">
+              {L_main.dayFilterPrefix}{' '}
+              <span className="font-semibold">
+                {new Date(`${dayFilter}T00:00:00`).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
+              </span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setDayFilter(null)}
+              className="text-trail-muted text-[15px] leading-none px-1"
+              aria-label={L_main.dayFilterClear}
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {(hasActiveSearch || hasActiveFilter) && (
           <p className="text-body-sm text-trail-muted px-1 mb-[6px]">

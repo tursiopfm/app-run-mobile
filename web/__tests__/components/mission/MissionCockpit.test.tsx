@@ -14,6 +14,9 @@ jest.mock('@/lib/plan/storage', () => ({
 jest.mock('@/lib/hooks/useMorningReportSeen', () => ({
   useMorningReportSeen: () => ({ seen: true }),
 }))
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn() }),
+}))
 jest.mock('@/components/charts/CockpitCumulChart', () => ({
   CockpitCumulChart: () => <div data-testid="cumul-chart" />,
 }))
@@ -59,7 +62,7 @@ const overviews = { run: overview(), ride: overview(), swim: overview(), all: ov
 it('rend le héros semaine (km + D+), le bouton Objectif et les sessions', async () => {
   const { container } = render(
     <I18nProvider initialLang="fr">
-      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline={null} weekActivities={weekActivities} />
+      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline={null} weekActivities={weekActivities} weekSessions={[]} />
     </I18nProvider>,
   )
   expect(await screen.findByText('Ma semaine')).toBeInTheDocument()
@@ -75,7 +78,7 @@ it('rend le héros semaine (km + D+), le bouton Objectif et les sessions', async
 it('affiche les sessions de la semaine et le chart cumul', async () => {
   render(
     <I18nProvider initialLang="fr">
-      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline={null} weekActivities={weekActivities} />
+      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline={null} weekActivities={weekActivities} weekSessions={[]} />
     </I18nProvider>,
   )
   expect(await screen.findByText('Sessions de la semaine')).toBeInTheDocument()
@@ -87,7 +90,7 @@ it('affiche les sessions de la semaine et le chart cumul', async () => {
 it('triathlon → volume en heures avec répartition', async () => {
   render(
     <I18nProvider initialLang="fr">
-      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline="triathlon" weekActivities={[]} />
+      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline="triathlon" weekActivities={[]} weekSessions={[]} />
     </I18nProvider>,
   )
   // 3 sports × 6000 s/semaine chacun = 18000 s = 5h
@@ -115,7 +118,7 @@ it('pastille upcoming si séance planifiée demain (si demain est dans la semain
 
   const { container } = render(
     <I18nProvider initialLang="fr">
-      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline={null} weekActivities={[]} />
+      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline={null} weekActivities={[]} weekSessions={[]} />
     </I18nProvider>,
   )
 

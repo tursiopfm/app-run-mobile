@@ -10,7 +10,7 @@ const INITIAL_LIMIT = 300
 
 export default async function ActivitiesPage({
   searchParams,
-}: { searchParams?: { full?: string } }) {
+}: { searchParams?: { full?: string; date?: string } }) {
   const user = await getServerUser()
   if (!user) redirect('/login')
   const supabase = await createClient()
@@ -37,5 +37,6 @@ export default async function ActivitiesPage({
   if (mode === 'mission' && searchParams?.full !== '1') {
     return <MissionActivities activities={initial} />
   }
-  return <ActivitiesClient initial={initial} hasMore={hasMore} athleteProfile={profile} />
+  const initialDate = /^\d{4}-\d{2}-\d{2}$/.test(searchParams?.date ?? '') ? searchParams!.date : undefined
+  return <ActivitiesClient initial={initial} hasMore={hasMore} athleteProfile={profile} initialDate={initialDate} />
 }

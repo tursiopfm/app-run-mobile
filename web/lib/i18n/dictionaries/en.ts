@@ -215,6 +215,7 @@ export const en: Dict = {
     sessionsTitle: "This week's sessions",
     cumulTitleMonth: 'Cumulative km · month', cumulTitleYear: 'Cumulative km · year',
     cumulToYear: 'Year', cumulToMonth: 'Month',
+    volumeDetailTitle: 'My volume',
     todayTitle: 'Today', restDay: 'Rest', intensityLabel: 'Intensity',
     weekPlanTitle: 'My training week',
     statusDone: '✓ done', statusToday: '● today', statusUpcoming: 'upcoming', statusRest: '—',
@@ -780,6 +781,8 @@ export const en: Dict = {
     tileEffort:             'Effort',
     historyLoadingHint:     ' (loading history…)',
     historyLoading:         'Loading full history…',
+    dayFilterPrefix:        'Activities on',
+    dayFilterClear:         'Clear day filter',
     connectStravaImport:    'Connect Strava in Settings to import your activities.',
     noActivityMatch:        'No activity matches the filters.',
 

@@ -40,7 +40,9 @@ export function ObjectifCard({ goals, planTarget, weekKm, weekDPlus, ytdKm, toda
 
   const weekTarget = goals.weekKm ?? planTarget?.km
   const dpTarget = goals.weekDPlus ?? planTarget?.dPlus
-  const yearTarget = goals.yearKm
+  // Objectif annuel absent ou à 0 = pas d'objectif → on affiche la projection
+  // (barre verte seule), pas une barre « … / 0 km ».
+  const yearTarget = goals.yearKm && goals.yearKm > 0 ? goals.yearKm : undefined
 
   const frac = expectedWeekFraction(todayISO)
   const yearFrac = yearElapsedFraction(todayISO)

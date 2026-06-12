@@ -121,6 +121,7 @@ export type Dict = {
     objectifTitle: string; goalsYearLabel: string; goalsProjLabel: string
     goalsProjectionNote: string; goalsDefine: string
     projArrow: (ytd: string, proj: string) => string
+    volumeDetailTitle: string
   }
   charge: {
     weeklyTitle: string; fatigueFitnessTitle: string; freshnessTitle: string; intensityTitle: string
@@ -347,6 +348,7 @@ export type Dict = {
     placeholderKm: string; placeholderHms: string; placeholderM: string; placeholderPace: string
     speedLabel: string; cesShortLabel: string; tileEffort: string
     historyLoadingHint: string; historyLoading: string
+    dayFilterPrefix: string; dayFilterClear: string
     connectStravaImport: string; noActivityMatch: string
 
     detailCardio: string; detailPerformance: string; detailTime: string
@@ -1342,6 +1344,7 @@ export const fr: Dict = {
     sessionsTitle: 'Sessions de la semaine',
     cumulTitleMonth: 'Cumul km · mois', cumulTitleYear: 'Cumul km · année',
     cumulToYear: 'Année', cumulToMonth: 'Mois',
+    volumeDetailTitle: 'Mon volume',
     todayTitle: 'Aujourd\'hui', restDay: 'Repos', intensityLabel: 'Intensité',
     weekPlanTitle: 'Ma semaine d\'entraînement',
     statusDone: '✓ faite', statusToday: '● auj.', statusUpcoming: 'à venir', statusRest: '—',
@@ -1927,6 +1930,8 @@ export const fr: Dict = {
     tileEffort:             'Effort',
     historyLoadingHint:     ' (historique en cours de chargement…)',
     historyLoading:         "Chargement de l'historique complet…",
+    dayFilterPrefix:        'Sorties du',
+    dayFilterClear:         'Retirer le filtre du jour',
     connectStravaImport:    'Connecte Strava dans Réglages pour importer tes activités.',
     noActivityMatch:        'Aucune activité ne correspond aux filtres.',
 

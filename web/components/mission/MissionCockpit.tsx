@@ -5,6 +5,7 @@
 // Spec : docs/superpowers/specs/2026-06-12-mode-mission-v2-3-piliers-design.md
 
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { MorningReportTile } from '@/components/cockpit/MorningReportTile'
 import { MissionCard, MissionCardLabel, DayDot, type DayDotState } from './cards'
 import { FormeCard } from './FormeCard'
@@ -12,12 +13,15 @@ import { GoalsModal } from './GoalsModal'
 import { ObjectifCard } from './ObjectifCard'
 import { SessionsSemaineCard } from './SessionsSemaineCard'
 import { CumulCard } from './CumulCard'
+import { MissionDetailSheet } from './MissionDetailSheet'
+import { ActivitiesBlock } from '@/components/cockpit/ActivitiesBlock'
+import { WeekBlock } from '@/components/cockpit/WeekBlock'
 import { getAllMacrocycles, getPlannedSessions, isRaceMirrorSession } from '@/lib/plan/storage'
 import { resolveMissionWeeklyTarget, type MissionWeeklyTarget } from '@/lib/mission/weekly-target'
 import { readMissionGoals } from '@/lib/mission/goals'
 import { computeTriWeek, formatHoursMin } from '@/lib/mission/tri-week'
 import { defaultSportForDiscipline } from '@/lib/design/sport-settings'
-import type { SportOverview } from '@/lib/data/dashboard'
+import type { SportOverview, DaySession } from '@/lib/data/dashboard'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
 import type { SportKey } from '@/lib/design/sports'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
@@ -29,6 +33,7 @@ type Props = {
   freshnessPayload: ChargeSportPayload | null
   discipline: string | null
   weekActivities: ActivityRow[]
+  weekSessions: DaySession[]
 }
 
 const SPORT_DOT_COLOR: Record<string, string> = {
@@ -51,8 +56,9 @@ function isoOfWeekDay(idx: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-export function MissionCockpit({ sportOverviews, freshnessPayload, discipline, weekActivities }: Props) {
+export function MissionCockpit({ sportOverviews, freshnessPayload, discipline, weekActivities, weekSessions }: Props) {
   const M = useT().mission
+  const router = useRouter()
   const sport: SportKey = defaultSportForDiscipline(discipline) ?? 'run'
   const isTri = sport === 'all'
   const o = sportOverviews[sport]
@@ -61,7 +67,30 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline, w
   const [target, setTarget] = useState<MissionWeeklyTarget | null>(null)
   const [planned, setPlanned] = useState<PlannedSession[]>([])
   const [showGoals, setShowGoals] = useState(false)
+  const [showVolume, setShowVolume] = useState(false)
   const [goalsVersion, setGoalsVersion] = useState(0)
+
+  // Activités réalisées de la semaine indexées par date (clé = YYYY-MM-DD local
+  // étiqueté UTC, cf. start_time). Sert au clic sur une pastille de jour.
+  const activitiesByDay = useMemo(() => {
+    const m = new Map<string, ActivityRow[]>()
+    for (const a of weekActivities) {
+      const key = a.start_time.slice(0, 10)
+      const arr = m.get(key)
+      if (arr) arr.push(a)
+      else m.set(key, [a])
+    }
+    return m
+  }, [weekActivities])
+
+  // Clic sur un jour : 1 activité → son détail ; plusieurs → onglet Activités
+  // filtré sur la date.
+  function goToDay(iso: string) {
+    const acts = activitiesByDay.get(iso) ?? []
+    if (acts.length === 0) return
+    if (acts.length === 1) router.push(`/activities/${acts[0].id}`)
+    else router.push(`/activities?full=1&date=${iso}`)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -79,7 +108,9 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline, w
     return () => { cancelled = true }
   }, [])
 
-  // Objectifs utilisateur (re-lu à chaque sauvegarde dans la modal).
+  // Objectifs utilisateur. `goalsVersion` force la relecture après sauvegarde
+  // dans la modal (volontairement dans les deps même s'il n'est pas lu).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const goals = useMemo(() => readMissionGoals(sport), [sport, goalsVersion])
 
   // États des 7 pastilles : fait (volume ce jour) > aujourd'hui > à venir (séance planifiée) > repos.
@@ -116,39 +147,53 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline, w
           </button>
         </div>
         <div className="flex justify-between mb-4">
-          {dots.map((d, i) => (
-            <div key={i} className="flex flex-col items-center gap-1">
-              <span className="text-[10px] font-semibold text-trail-muted">{DAY_ABBR[i]}</span>
-              <DayDot state={d.state} color={d.color} />
-            </div>
-          ))}
+          {dots.map((d, i) => {
+            const iso = isoOfWeekDay(i)
+            const clickable = (activitiesByDay.get(iso)?.length ?? 0) > 0
+            const inner = (
+              <>
+                <span className="text-[10px] font-semibold text-trail-muted">{DAY_ABBR[i]}</span>
+                <DayDot state={d.state} color={d.color} />
+              </>
+            )
+            return clickable ? (
+              <button key={i} type="button" onClick={() => goToDay(iso)} className="flex flex-col items-center gap-1">
+                {inner}
+              </button>
+            ) : (
+              <div key={i} className="flex flex-col items-center gap-1">{inner}</div>
+            )
+          })}
         </div>
-        {isTri && tri ? (
-          <div className="flex items-end gap-4">
-            <p className="font-display text-[40px] font-bold leading-none text-trail-text">{formatHoursMin(tri.totalSec)}</p>
-            <p className="text-[11px] pb-1 font-semibold text-trail-muted">
-              <span style={{ color: 'var(--data-swim)' }}>{formatHoursMin(tri.swimSec)} nat</span>
-              {' · '}
-              <span style={{ color: 'var(--data-bike)' }}>{formatHoursMin(tri.rideSec)} vélo</span>
-              {' · '}
-              <span style={{ color: 'var(--data-run)' }}>{formatHoursMin(tri.runSec)} cap</span>
-            </p>
-          </div>
-        ) : (
-          <div className="flex items-end gap-4">
-            <p className="font-display text-[40px] font-bold leading-none text-trail-text">
-              {Math.round(o?.weekKm ?? 0)}<span className="text-[20px] text-trail-muted"> km</span>
-            </p>
-            <div className="pb-0.5">
-              <p className="font-display text-[20px] font-semibold leading-none" style={{ color: 'var(--status-info)' }}>
-                +{Math.round(o?.weekDPlus ?? 0).toLocaleString('fr-FR')} m
+        {/* km/D+ (ou heures tri) → ouvre la page « Mon volume » (blocs Activités + Semaines Expert) */}
+        <button type="button" onClick={() => setShowVolume(true)} className="flex w-full items-end gap-4 text-left">
+          {isTri && tri ? (
+            <>
+              <p className="font-display text-[40px] font-bold leading-none text-trail-text">{formatHoursMin(tri.totalSec)}</p>
+              <p className="text-[11px] pb-1 font-semibold text-trail-muted">
+                <span style={{ color: 'var(--data-swim)' }}>{formatHoursMin(tri.swimSec)} nat</span>
+                {' · '}
+                <span style={{ color: 'var(--data-bike)' }}>{formatHoursMin(tri.rideSec)} vélo</span>
+                {' · '}
+                <span style={{ color: 'var(--data-run)' }}>{formatHoursMin(tri.runSec)} cap</span>
               </p>
-              <p className="text-[10px] mt-0.5 uppercase tracking-wider text-trail-muted">
-                D+ · {M.weekSessionsCount(o?.weekSessions ?? 0)}
+            </>
+          ) : (
+            <>
+              <p className="font-display text-[40px] font-bold leading-none text-trail-text">
+                {Math.round(o?.weekKm ?? 0)}<span className="text-[20px] text-trail-muted"> km</span>
               </p>
-            </div>
-          </div>
-        )}
+              <div className="pb-0.5">
+                <p className="font-display text-[20px] font-semibold leading-none" style={{ color: 'var(--status-info)' }}>
+                  +{Math.round(o?.weekDPlus ?? 0).toLocaleString('fr-FR')} m
+                </p>
+                <p className="text-[10px] mt-0.5 uppercase tracking-wider text-trail-muted">
+                  D+ · {M.weekSessionsCount(o?.weekSessions ?? 0)}
+                </p>
+              </div>
+            </>
+          )}
+        </button>
       </MissionCard>
 
       <ObjectifCard
@@ -173,6 +218,13 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline, w
       <SessionsSemaineCard activities={weekActivities} />
 
       {o && <CumulCard overview={o} />}
+
+      {showVolume && (
+        <MissionDetailSheet title={M.volumeDetailTitle} onClose={() => setShowVolume(false)}>
+          <ActivitiesBlock sportOverviews={sportOverviews} defaultSport={sport} />
+          <WeekBlock sportOverviews={sportOverviews} allSessions={weekSessions} defaultSport={sport} />
+        </MissionDetailSheet>
+      )}
     </div>
   )
 }

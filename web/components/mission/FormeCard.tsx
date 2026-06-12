@@ -5,8 +5,11 @@
 
 import { useState } from 'react'
 import { MissionCard, MissionCardLabel } from './cards'
+import { MissionDetailSheet } from './MissionDetailSheet'
 import { TsbBadge } from '@/components/ui/TsbBadge'
 import { FreshnessHelpSheet } from '@/components/ui/FreshnessHelpSheet'
+import { LoadStatusCard } from '@/components/charge/blocks/LoadStatusCard'
+import { FitnessFatigueChart } from '@/components/charge/blocks/FitnessFatigueChart'
 import { computeFreshness } from '@/lib/analytics/charge-insights'
 import { kpiStatusFreshness } from '@/lib/analytics/charge-kpi-status'
 import { cursorPctFromTsb, formeVerdict } from '@/lib/mission/forme-verdict'
@@ -24,6 +27,7 @@ export function FormeCard({ payload }: { payload: ChargeSportPayload }) {
   const M = t.mission
   const C = t.charge
   const [showHelp, setShowHelp] = useState(false)
+  const [showDetail, setShowDetail] = useState(false)
   const f = computeFreshness(payload.dailyMetrics)
   const verdict = formeVerdict(f.zone)
   const { id } = kpiStatusFreshness(Math.round(f.tsb))
@@ -49,7 +53,14 @@ export function FormeCard({ payload }: { payload: ChargeSportPayload }) {
           <circle cx="70" cy="78" r="5" fill="var(--ink-500)" stroke="var(--trail-text)" strokeWidth="1.5" />
         </svg>
         <div className="flex-1">
-          <p className="font-display font-bold text-[34px] leading-none tabular-nums text-trail-text">{Math.round(f.tsb)}</p>
+          <button
+            type="button"
+            onClick={() => setShowDetail(true)}
+            aria-label={`${M.formeTitle} — détail`}
+            className="text-left"
+          >
+            <p className="font-display font-bold text-[34px] leading-none tabular-nums text-trail-text underline decoration-trail-border decoration-2 underline-offset-[6px]">{Math.round(f.tsb)}</p>
+          </button>
           <p className="text-[11px] mt-1.5 text-trail-muted">
             <b style={{ color: delta > 1 ? 'var(--status-success)' : delta < -1 ? 'var(--status-danger)' : 'var(--trail-muted)' }}>
               {delta > 0 ? '↗ +' : delta < 0 ? '↘ ' : '→ '}{delta !== 0 ? delta : ''}
@@ -63,6 +74,12 @@ export function FormeCard({ payload }: { payload: ChargeSportPayload }) {
         </span>
       </p>
       {showHelp && <FreshnessHelpSheet currentId={id} onClose={() => setShowHelp(false)} />}
+      {showDetail && (
+        <MissionDetailSheet title={M.formeTitle} onClose={() => setShowDetail(false)}>
+          <LoadStatusCard payload={payload} />
+          <FitnessFatigueChart payload={payload} />
+        </MissionDetailSheet>
+      )}
     </MissionCard>
   )
 }

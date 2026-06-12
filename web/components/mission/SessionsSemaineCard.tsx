@@ -34,8 +34,8 @@ export function SessionsSemaineCard({ activities }: { activities: ActivityRow[] 
                 className={`flex items-center justify-between py-[7px] ${i < rows.length - 1 ? 'border-b border-trail-border' : ''}`}>
             <span className="w-9 text-trail-muted">{DAYS[new Date(a.start_time).getUTCDay()]}</span>
             <span className="flex-1 truncate pr-2 text-trail-text">{a.name}</span>
-            <span className="font-semibold tabular-nums text-trail-text">
-              {dist(a).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} km · <span style={{ color: 'var(--status-info)' }}>{elev(a)} m</span>
+            <span className="font-semibold tabular-nums text-trail-text whitespace-nowrap">
+              {dist(a).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} km · <span style={{ color: 'var(--status-info)' }}>{elev(a)} m</span> · <span className="text-trail-muted">{fmtDur(durSec(a))}</span>
             </span>
           </Link>
         ))}

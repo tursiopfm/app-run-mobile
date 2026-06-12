@@ -62,6 +62,22 @@ agira sur le plan.
    (`SportOverview.cumulMonths` / `cumulYears`) : valeurs de fin de courbe et infobulle
    au doigt natives. Bouton bascule en haut à droite : **« Année » ⇄ « Mois »**.
 
+### Interactions (itération 2026-06-12)
+
+- **Objectif sans cible annuelle** : on n'affiche QUE la barre verte de projection
+  fin d'année (un `yearKm` à 0 ou absent ne rend pas de barre « … / 0 km »).
+- **Compteur de forme cliquable** → ouvre une page plein écran (`MissionDetailSheet`)
+  contenant les deux blocs Charge Expert `LoadStatusCard` (« État de forme du jour »)
+  + `FitnessFatigueChart` (« Fatigue vs Base de forme »), alimentés par le même
+  `freshnessPayload`. Le badge « Légère fatigue » garde son rôle (fenêtre
+  `FreshnessHelpSheet`).
+- **Pastille de jour cliquable** (quand activité réalisée ce jour) → 1 activité :
+  `/activities/{id}` ; plusieurs : `/activities?full=1&date=YYYY-MM-DD` (filtre jour
+  exact dans `ActivitiesClient`, bannière retirable).
+- **km / D+ (ou heures tri) de « Ma semaine » cliquable** → page plein écran avec les
+  blocs Cockpit Expert `ActivitiesBlock` (« Activités ») + `WeekBlock` (« Semaines »).
+- **Sessions de la semaine** : chaque ligne affiche aussi le **chrono**.
+
 Supprimés par ce redesign : « Cap de la semaine » (absorbé par Objectif) et
 « Altitude · 6 semaines » (remplacé par Sessions de la semaine + Cumul).
 
