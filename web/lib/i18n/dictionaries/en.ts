@@ -1219,6 +1219,8 @@ export const en: Dict = {
     pacingMethodSummary:  'How is it calculated?',
     pacingMethodFormula:  '100 m of D+ = 1 extra km',
     pacingMethodBody:     'We split the race aid station by aid station and share your total time between them. A longer chunk, or the one that climbs the most, takes more effort, so it gets more time. And because climbing is tiring, we count 100 m of climb as 1 km on the flat. The slider then chooses whether you start fast or save energy for the end. Finally, if you type a time yourself in the table, it stays put — everything else is arranged around it.',
+    pacingLockedNote:     'Goal = final cutoff → times pinned to the cutoffs (zero margin).',
+    pacingLockedBadge:    'Cutoffs',
     pacingCurveLegendPace:'Target pace',
     pacingCurveLegendElev:'Cumulative D+',
     objectifHelpTitle:   'Your goal',

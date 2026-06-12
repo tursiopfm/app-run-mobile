@@ -544,6 +544,7 @@ export type Dict = {
     pacingPhrasePos: (intensity: string) => string
     pacingIntLight: string; pacingIntModerate: string; pacingIntStrong: string
     pacingMethodSummary: string; pacingMethodFormula: string; pacingMethodBody: string
+    pacingLockedNote: string; pacingLockedBadge: string
     pacingCurveLegendPace: string; pacingCurveLegendElev: string
     objectifEmpty: string; objectifEmptyHint: string; objectifFirstCTA: string; objectifFirstAria: string
     objectifAddRaceAria: string
@@ -2399,6 +2400,8 @@ export const fr: Dict = {
     pacingMethodSummary:  "Comment c'est calculé ?",
     pacingMethodFormula:  '100 m de D+ = 1 km en plus',
     pacingMethodBody:     "On découpe la course en ravitaillements et on partage ton temps entre eux. Un morceau plus long, ou qui monte le plus, demande plus d'effort : il reçoit donc plus de temps. Et comme grimper fatigue, on compte 100 m de montée comme 1 km sur plat. Le curseur, lui, choisit si tu pars vite ou si tu gardes des forces pour la fin. Enfin, si tu écris une heure toi-même dans le tableau, elle ne bouge plus : tout le reste se cale autour.",
+    pacingLockedNote:     'Objectif = barrière finale → heures calées sur les barrières (zéro marge).',
+    pacingLockedBadge:    'Barrières',
     pacingCurveLegendPace:'Allure visée',
     pacingCurveLegendElev:'D+ cumulé',
     objectifEmpty:       'Définis ton objectif',
