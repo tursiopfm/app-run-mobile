@@ -92,6 +92,9 @@ export function resolveElapsed(
 
   const anchorVal = (i: number): number | null => {
     if (i === 0) return 0
+    // Arrivée = objectif (= sa barrière, puisque le mode n'est actif que dans ce cas).
+    // Un override manuel sur l'arrivée est volontairement ignoré ici, contrairement
+    // au mode normal d'estimatePassageTimes.
     if (i === n - 1) return totalSec
     if (waypoints[i].targetOverrideSec != null) return waypoints[i].targetOverrideSec
     return series[i]
