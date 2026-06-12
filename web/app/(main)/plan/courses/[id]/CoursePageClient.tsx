@@ -8,6 +8,7 @@ import { RaceEditorModal } from '@/components/plan/RaceEditorModal'
 import { WaypointsTable } from '@/components/plan/WaypointsTable'
 import { TableActionsMenu } from '@/components/plan/TableActionsMenu'
 import { PacingStrategyCard } from '@/components/plan/PacingStrategyCard'
+import { isBarrierLocked } from '@/lib/plan/barrier-lock'
 import { RaceImportSheet } from '@/components/plan/RaceImportSheet'
 import { TableauDiffModal } from '@/components/plan/TableauDiffModal'
 import { TimeEditModal } from '@/components/plan/TimeEditModal'
@@ -269,6 +270,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
                 targetDurationMin={race.targetDurationMin}
                 startTime={race.startTime}
                 pacingFade={race.pacingFade ?? 0}
+                barrierLocked={isBarrierLocked(waypoints, race.startTime, race.targetDurationMin)}
                 onChange={handlePacingChange}
                 onEditObjective={() => setEditField('objective')}
                 onEditStart={() => setEditField('start')}
