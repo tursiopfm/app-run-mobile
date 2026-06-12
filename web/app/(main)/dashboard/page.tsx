@@ -116,6 +116,7 @@ export default async function DashboardPage() {
             sportOverviews={sportOverviews}
             freshnessPayload={freshnessPayload}
             discipline={athleteProfile?.onboarding_discipline ?? null}
+            weekActivities={weekActivities}
           />
         </div>
       ) : (

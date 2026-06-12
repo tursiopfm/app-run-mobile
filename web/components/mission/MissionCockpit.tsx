@@ -10,12 +10,15 @@ import { MissionCard, MissionCardLabel, DayDot, type DayDotState } from './cards
 import { FormeCard } from './FormeCard'
 import { GoalsModal } from './GoalsModal'
 import { ObjectifCard } from './ObjectifCard'
+import { SessionsSemaineCard } from './SessionsSemaineCard'
+import { CumulCard } from './CumulCard'
 import { getAllMacrocycles, getPlannedSessions, isRaceMirrorSession } from '@/lib/plan/storage'
 import { resolveMissionWeeklyTarget, type MissionWeeklyTarget } from '@/lib/mission/weekly-target'
 import { readMissionGoals } from '@/lib/mission/goals'
 import { computeTriWeek, formatHoursMin } from '@/lib/mission/tri-week'
 import { defaultSportForDiscipline } from '@/lib/design/sport-settings'
 import type { SportOverview } from '@/lib/data/dashboard'
+import type { ActivityRow } from '@/components/ui/ActivityCard'
 import type { SportKey } from '@/lib/design/sports'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 import type { PlannedSession } from '@/types/plan'
@@ -25,6 +28,7 @@ type Props = {
   sportOverviews: Record<SportKey, SportOverview>
   freshnessPayload: ChargeSportPayload | null
   discipline: string | null
+  weekActivities: ActivityRow[]
 }
 
 const SPORT_DOT_COLOR: Record<string, string> = {
@@ -47,7 +51,7 @@ function isoOfWeekDay(idx: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-export function MissionCockpit({ sportOverviews, freshnessPayload, discipline }: Props) {
+export function MissionCockpit({ sportOverviews, freshnessPayload, discipline, weekActivities }: Props) {
   const M = useT().mission
   const sport: SportKey = defaultSportForDiscipline(discipline) ?? 'run'
   const isTri = sport === 'all'
@@ -91,14 +95,6 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline }:
   })
 
   const tri = isTri ? computeTriWeek(sportOverviews) : null
-
-  // Tendance 6 semaines (weeklyPoints contient la série hebdo, on prend les 6 dernières).
-  const weekly = (o?.weeklyPoints ?? []).slice(-6)
-  const maxKm = Math.max(1, ...weekly.map(w => w.km))
-  const trend = weekly.length >= 2
-    ? (weekly[weekly.length - 1].km > weekly[weekly.length - 2].km ? 'up'
-      : weekly[weekly.length - 1].km < weekly[weekly.length - 2].km ? 'down' : 'stable')
-    : 'stable'
 
   return (
     <div className="space-y-3">
@@ -174,36 +170,9 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline }:
         />
       )}
 
-      {/* Altitude · 6 semaines */}
-      {weekly.length >= 2 && (
-        <MissionCard>
-          <div className="flex items-center justify-between mb-3">
-            <MissionCardLabel>{M.altitudeTitle}</MissionCardLabel>
-            <p className="text-[11px] font-bold" style={{ color: trend === 'up' ? 'var(--status-success)' : trend === 'down' ? 'var(--status-warning)' : 'var(--trail-muted)' }}>
-              {trend === 'up' ? M.altitudeUp : trend === 'down' ? M.altitudeDown : M.altitudeStable}
-            </p>
-          </div>
-          <div className="flex items-end gap-2 h-[64px]">
-            {weekly.map((w, i) => (
-              <div
-                key={w.weekLabel}
-                className="flex-1 rounded-t"
-                style={{
-                  height: `${Math.max(6, (w.km / maxKm) * 100)}%`,
-                  background: i === weekly.length - 1 ? 'var(--primary)' : 'var(--ink-500)',
-                }}
-              />
-            ))}
-          </div>
-          <div className="flex justify-between text-[9px] mt-1.5 text-trail-muted">
-            {weekly.map((w, i) => (
-              <span key={w.weekLabel} style={i === weekly.length - 1 ? { color: 'var(--primary-text)', fontWeight: 700 } : undefined}>
-                {w.weekLabel}
-              </span>
-            ))}
-          </div>
-        </MissionCard>
-      )}
+      <SessionsSemaineCard activities={weekActivities} />
+
+      {o && <CumulCard overview={o} />}
     </div>
   )
 }

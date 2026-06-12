@@ -102,9 +102,10 @@ export type Dict = {
     formeTitle: string; formeDeltaSuffix: string
     formeVerdict: Record<string, string>   // clé = FreshnessZone
     weekTitle: string; weekSessionsCount: (n: number) => string
-    capTitle: string; capPhasePrefix: string; capVolume: string; capDplus: string
     capMarkerHint: string; capOnTrack: string; capBehind: string
-    altitudeTitle: string; altitudeUp: string; altitudeDown: string; altitudeStable: string
+    sessionsTitle: string
+    cumulTitleMonth: string; cumulTitleYear: string
+    cumulToYear: string; cumulToMonth: string
     todayTitle: string; restDay: string; intensityLabel: string
     weekPlanTitle: string; statusDone: string; statusToday: string; statusUpcoming: string; statusRest: string
     destinationTitle: string; destinationTableLink: string; destinationTargetPrefix: string
@@ -1336,12 +1337,11 @@ export const fr: Dict = {
     },
     weekTitle: 'Ma semaine',
     weekSessionsCount: (n: number) => `${n} séance${n > 1 ? 's' : ''}`,
-    capTitle: 'Cap de la semaine', capPhasePrefix: 'objectif du plan ·',
-    capVolume: 'Volume', capDplus: 'Dénivelé',
     capMarkerHint: 'Repère ┃ = attendu aujourd\'hui.',
     capOnTrack: 'Tu es dans l\'axe ✈️', capBehind: 'Un peu de retard — rien d\'alarmant.',
-    altitudeTitle: 'Altitude · 6 semaines',
-    altitudeUp: '↗ régulier', altitudeDown: '↘ en baisse', altitudeStable: '→ stable',
+    sessionsTitle: 'Sessions de la semaine',
+    cumulTitleMonth: 'Cumul km · mois', cumulTitleYear: 'Cumul km · année',
+    cumulToYear: 'Année', cumulToMonth: 'Mois',
     todayTitle: 'Aujourd\'hui', restDay: 'Repos', intensityLabel: 'Intensité',
     weekPlanTitle: 'Ma semaine d\'entraînement',
     statusDone: '✓ faite', statusToday: '● auj.', statusUpcoming: 'à venir', statusRest: '—',

@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { MissionCockpit } from '@/components/mission/MissionCockpit'
 import { I18nProvider } from '@/lib/i18n/I18nProvider'
+import type { ActivityRow } from '@/components/ui/ActivityCard'
 
 // Le storage plan touche Supabase côté client → mock complet.
 // pickActiveMacrocycle est importé par weekly-target.ts → doit être dans le mock.
@@ -13,6 +14,26 @@ jest.mock('@/lib/plan/storage', () => ({
 jest.mock('@/lib/hooks/useMorningReportSeen', () => ({
   useMorningReportSeen: () => ({ seen: true }),
 }))
+jest.mock('@/components/charts/CockpitCumulChart', () => ({
+  CockpitCumulChart: () => <div data-testid="cumul-chart" />,
+}))
+
+function act(p: Partial<ActivityRow> = {}): ActivityRow {
+  return {
+    id: 'a1', name: 'Sortie longue', sport_type: 'TrailRun',
+    start_time: '2026-06-09T06:00:00.000Z',
+    ces: 80, avg_hr: null, max_hr: null,
+    distance_m: 14200, elevation_gain_m: 620, moving_time_sec: 5880,
+    manual_intensity: null, manual_sport_type: null, manual_workout_type: null,
+    manual_distance_m: null, manual_elevation_gain_m: null, manual_moving_time_sec: null,
+    ...p,
+  }
+}
+
+const weekActivities: ActivityRow[] = [
+  act({ id: 'w1', name: 'Trail du Salève' }),
+  act({ id: 'w2', name: 'Footing matin', distance_m: 8000, elevation_gain_m: 150 }),
+]
 
 function overview(partial: Record<string, unknown> = {}) {
   return {
@@ -27,23 +48,23 @@ function overview(partial: Record<string, unknown> = {}) {
       { weekLabel: 'S-1', km: 40, dPlus: 0 },
       { weekLabel: 'S', km: 28, dPlus: 0 },
     ],
-    cumulMonths: [], cumulYears: [], workoutTypeBreakdown: [], dailyHistory: [],
+    cumulMonths: [{ label: 'Juin', color: '#FF7900', dailyCumul: [5, 12, 20] }],
+    cumulYears: [], workoutTypeBreakdown: [], dailyHistory: [],
     ...partial,
   }
 }
 
 const overviews = { run: overview(), ride: overview(), swim: overview(), all: overview() } as never
 
-it('rend le héros semaine (km + D+), le bouton Objectif et la tendance', async () => {
+it('rend le héros semaine (km + D+), le bouton Objectif et les sessions', async () => {
   const { container } = render(
     <I18nProvider initialLang="fr">
-      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline={null} />
+      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline={null} weekActivities={weekActivities} />
     </I18nProvider>,
   )
   expect(await screen.findByText('Ma semaine')).toBeInTheDocument()
   expect(screen.getByText('28')).toBeInTheDocument()
   expect(screen.getByText('Objectif')).toBeInTheDocument()
-  expect(screen.getByText(/Altitude/)).toBeInTheDocument()
   // Les lettres des jours (L M M J V S D) doivent apparaître, pas les noms d'activités.
   expect(screen.getAllByText('L').length).toBeGreaterThanOrEqual(1)
   expect(screen.queryByText('Sortie longue')).not.toBeInTheDocument()
@@ -51,10 +72,22 @@ it('rend le héros semaine (km + D+), le bouton Objectif et la tendance', async 
   expect(container.querySelectorAll('[data-state]').length).toBe(7)
 })
 
+it('affiche les sessions de la semaine et le chart cumul', async () => {
+  render(
+    <I18nProvider initialLang="fr">
+      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline={null} weekActivities={weekActivities} />
+    </I18nProvider>,
+  )
+  expect(await screen.findByText('Sessions de la semaine')).toBeInTheDocument()
+  expect(screen.getByText('Trail du Salève')).toBeInTheDocument()
+  expect(screen.getByTestId('cumul-chart')).toBeInTheDocument()
+  expect(screen.queryByText(/Altitude/)).toBeNull()
+})
+
 it('triathlon → volume en heures avec répartition', async () => {
   render(
     <I18nProvider initialLang="fr">
-      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline="triathlon" />
+      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline="triathlon" weekActivities={[]} />
     </I18nProvider>,
   )
   // 3 sports × 6000 s/semaine chacun = 18000 s = 5h
@@ -82,7 +115,7 @@ it('pastille upcoming si séance planifiée demain (si demain est dans la semain
 
   const { container } = render(
     <I18nProvider initialLang="fr">
-      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline={null} />
+      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline={null} weekActivities={[]} />
     </I18nProvider>,
   )
 
