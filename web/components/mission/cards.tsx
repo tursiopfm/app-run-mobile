@@ -27,20 +27,21 @@ export function DayDot({ state, color }: { state: DayDotState; color?: string })
   const c = color ?? 'var(--primary)'
   const base = 'w-[34px] h-[34px] rounded-full flex items-center justify-center text-[13px] font-bold'
   if (state === 'done') {
-    return <span className={base} style={{ background: c, color: 'var(--ink-900)' }}>✓</span>
+    return <span data-state="done" className={base} style={{ background: c, color: 'var(--ink-900)' }}>✓</span>
   }
   if (state === 'today') {
     return (
       <span
+        data-state="today"
         className={base}
         style={{ border: '2px solid var(--primary)', color: 'var(--primary-text)', boxShadow: '0 0 0 4px var(--primary-glow)' }}
       >●</span>
     )
   }
   if (state === 'upcoming') {
-    return <span className={base} style={{ border: '2px dashed var(--ink-500)' }} />
+    return <span data-state="upcoming" className={base} style={{ border: '2px dashed var(--ink-500)' }} />
   }
-  return <span className={base} style={{ background: 'var(--ink-600)', color: 'var(--text-disabled)' }}>–</span>
+  return <span data-state="rest" className={base} style={{ background: 'var(--ink-600)', color: 'var(--text-disabled)' }}>–</span>
 }
 
 // Jauge horizontale réalisé/objectif avec repère « attendu aujourd'hui ».

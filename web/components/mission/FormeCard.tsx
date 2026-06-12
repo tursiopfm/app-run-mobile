@@ -3,10 +3,10 @@
 import { MissionCard, MissionCardLabel } from './cards'
 import { computeFreshness } from '@/lib/analytics/charge-insights'
 import { cursorPctFromTsb, formeVerdict } from '@/lib/mission/forme-verdict'
-import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
+import type { ChargeSportPayload, FreshnessZone } from '@/lib/analytics/charge-insights.types'
 import { useT } from '@/lib/i18n/I18nProvider'
 
-const ZONE_BADGE_STYLE: Record<string, { bg: string; fg: string; bd: string }> = {
+const ZONE_BADGE_STYLE: Record<FreshnessZone, { bg: string; fg: string; bd: string }> = {
   'high-fatigue':   { bg: 'rgba(248,113,113,0.14)', fg: 'var(--status-danger)',  bd: 'rgba(248,113,113,0.35)' },
   'normal-fatigue': { bg: 'rgba(251,191,36,0.14)',  fg: 'var(--status-warning)', bd: 'rgba(251,191,36,0.35)'  },
   balanced:         { bg: 'rgba(74,222,128,0.14)',  fg: 'var(--status-success)', bd: 'rgba(74,222,128,0.35)'  },

@@ -18,7 +18,8 @@ function overview(partial: Record<string, unknown> = {}) {
   return {
     weekKm: 28, weekDPlus: 1240, weekSessions: 3,
     dailyKm: [10, 0, 8, 0, 0, 0, 0], dailyDPlus: [], dailyDurationSec: [3600, 0, 2400, 0, 0, 0, 0],
-    dailyLabels: ['L', 'M', 'M', 'J', 'V', 'S', 'D'],
+    // Production shape: dailyLabels contains first activity name of the day, NOT day letters.
+    dailyLabels: ['Sortie longue', '', 'Côtes', '', '', '', ''],
     ytdKm: 0, ytdDPlus: 0, ytdSessions: 0, monthlyKm: [], monthlyDPlus: [],
     atl: 0, ctl: 0, tsb: 0, weekCes: 0, last7Tsb: [],
     weeklyPoints: [
@@ -34,7 +35,7 @@ function overview(partial: Record<string, unknown> = {}) {
 const overviews = { run: overview(), ride: overview(), swim: overview(), all: overview() } as never
 
 it('rend le héros semaine (km + D+) et la tendance', async () => {
-  render(
+  const { container } = render(
     <I18nProvider initialLang="fr">
       <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline={null} />
     </I18nProvider>,
@@ -42,6 +43,11 @@ it('rend le héros semaine (km + D+) et la tendance', async () => {
   expect(await screen.findByText('Ma semaine')).toBeInTheDocument()
   expect(screen.getByText('28')).toBeInTheDocument()
   expect(screen.getByText(/Altitude/)).toBeInTheDocument()
+  // Les lettres des jours (L M M J V S D) doivent apparaître, pas les noms d'activités.
+  expect(screen.getAllByText('L').length).toBeGreaterThanOrEqual(1)
+  expect(screen.queryByText('Sortie longue')).not.toBeInTheDocument()
+  // 7 pastilles présentes
+  expect(container.querySelectorAll('[data-state]').length).toBe(7)
 })
 
 it('triathlon → volume en heures avec répartition', async () => {
@@ -52,4 +58,37 @@ it('triathlon → volume en heures avec répartition', async () => {
   )
   // 3 sports × 6000 s/semaine chacun = 18000 s = 5h
   expect(await screen.findByText('5h')).toBeInTheDocument()
+})
+
+it('pastille upcoming si séance planifiée demain (si demain est dans la semaine)', async () => {
+  // Calcule si demain est encore dans la semaine ISO courante (lundi–dimanche).
+  const now = new Date()
+  const dow = now.getDay() || 7  // 1=lundi … 7=dimanche
+  const hasTomorrowThisWeek = dow < 7  // dimanche = dernier jour, pas de demain cette semaine
+
+  if (!hasTomorrowThisWeek) return  // tolérance : dimanche → test skippé
+
+  // ISO de demain
+  const tomorrow = new Date(now)
+  tomorrow.setDate(now.getDate() + 1)
+  const tomorrowISO = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`
+
+  const planStorage = await import('@/lib/plan/storage')
+  const getPlannedSessions = planStorage.getPlannedSessions as unknown as jest.Mock
+  getPlannedSessions.mockResolvedValueOnce([
+    { id: 'test-1', date: tomorrowISO, sport: 'run', workoutType: 'endurance', durationMin: 60, isRaceMirror: false },
+  ])
+
+  const { container } = render(
+    <I18nProvider initialLang="fr">
+      <MissionCockpit sportOverviews={overviews} freshnessPayload={null} discipline={null} />
+    </I18nProvider>,
+  )
+
+  // Attendre que l'effet async soit terminé (planned est chargé).
+  await screen.findByText('Ma semaine')
+  // Donne le temps à setPlanned de s'appliquer (effet asynchrone).
+  await new Promise(r => setTimeout(r, 0))
+
+  expect(container.querySelectorAll('[data-state="upcoming"]').length).toBe(1)
 })

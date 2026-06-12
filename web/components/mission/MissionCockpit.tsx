@@ -28,6 +28,8 @@ const SPORT_DOT_COLOR: Record<string, string> = {
   run: 'var(--data-run)', ride: 'var(--data-bike)', swim: 'var(--data-swim)',
 }
 
+const DAY_ABBR = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+
 function todayISO(): string {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -52,26 +54,31 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline }:
   const [target, setTarget] = useState<MissionWeeklyTarget | null>(null)
   const [planned, setPlanned] = useState<PlannedSession[]>([])
   useEffect(() => {
+    let cancelled = false
     void (async () => {
-      const [macros, sessions] = await Promise.all([
-        getAllMacrocycles(),
-        getPlannedSessions(isoOfWeekDay(0), isoOfWeekDay(6)),
-      ])
-      setTarget(resolveMissionWeeklyTarget(macros, todayISO()))
-      setPlanned(sessions.filter(s => !isRaceMirrorSession(s)))
+      try {
+        const [macros, sessions] = await Promise.all([
+          getAllMacrocycles(),
+          getPlannedSessions(isoOfWeekDay(0), isoOfWeekDay(6)),
+        ])
+        if (cancelled) return
+        setTarget(resolveMissionWeeklyTarget(macros, todayISO()))
+        setPlanned(sessions.filter(s => !isRaceMirrorSession(s)))
+      } catch { /* cible et séances restent vides : cartes Cap/pastilles dégradent proprement */ }
     })()
+    return () => { cancelled = true }
   }, [])
 
   // États des 7 pastilles : fait (volume ce jour) > aujourd'hui > à venir (séance planifiée) > repos.
   const today = todayISO()
-  const dots: { state: DayDotState; color?: string }[] = (o?.dailyLabels ?? ['L','M','M','J','V','S','D']).map((_, i) => {
+  const dots: { state: DayDotState; color?: string }[] = DAY_ABBR.map((_, i) => {
     const iso = isoOfWeekDay(i)
     const km = o?.dailyKm?.[i] ?? 0
     const dur = o?.dailyDurationSec?.[i] ?? 0
     if (km > 0 || dur > 0) return { state: 'done', color: isTri ? undefined : SPORT_DOT_COLOR[sport] }
     if (iso === today) return { state: 'today' }
     if (iso > today && planned.some(s => s.date === iso)) return { state: 'upcoming' }
-    return iso > today ? { state: 'upcoming' } : { state: 'rest' }
+    return { state: 'rest' }
   })
 
   const tri = isTri ? computeTriWeek(sportOverviews) : null
@@ -84,7 +91,8 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline }:
   const weekly = (o?.weeklyPoints ?? []).slice(-6)
   const maxKm = Math.max(1, ...weekly.map(w => w.km))
   const trend = weekly.length >= 2
-    ? (weekly[weekly.length - 1].km >= weekly[weekly.length - 2].km ? 'up' : 'down')
+    ? (weekly[weekly.length - 1].km > weekly[weekly.length - 2].km ? 'up'
+      : weekly[weekly.length - 1].km < weekly[weekly.length - 2].km ? 'down' : 'stable')
     : 'stable'
 
   return (
@@ -99,7 +107,7 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline }:
         <div className="flex justify-between mb-4">
           {dots.map((d, i) => (
             <div key={i} className="flex flex-col items-center gap-1">
-              <span className="text-[10px] font-semibold text-trail-muted">{o?.dailyLabels?.[i] ?? ''}</span>
+              <span className="text-[10px] font-semibold text-trail-muted">{DAY_ABBR[i]}</span>
               <DayDot state={d.state} color={d.color} />
             </div>
           ))}
