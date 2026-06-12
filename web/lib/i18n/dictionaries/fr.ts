@@ -99,9 +99,8 @@ export type Dict = {
     noActivityFor: (sport: string) => string
   }
   mission: {
-    formeTitle: string; formeScale: { tired: string; normal: string; fresh: string; sharp: string }
+    formeTitle: string; formeDeltaSuffix: string
     formeVerdict: Record<string, string>   // clé = FreshnessZone
-    formeBadge: Record<string, string>     // clé = FreshnessZone
     weekTitle: string; weekSessionsCount: (n: number) => string
     capTitle: string; capPhasePrefix: string; capVolume: string; capDplus: string
     capMarkerHint: string; capOnTrack: string; capBehind: string
@@ -1321,11 +1320,7 @@ export const fr: Dict = {
   // --- Mission ---
   mission: {
     formeTitle: 'État de forme',
-    formeScale: { tired: 'Fatigué', normal: 'Normal', fresh: 'Frais', sharp: 'Affûté' },
-    formeBadge: {
-      'very-fresh': 'Très frais', fresh: 'Frais', balanced: 'Équilibré',
-      'normal-fatigue': 'Légère fatigue', 'high-fatigue': 'Fatigue élevée',
-    },
+    formeDeltaSuffix: 'vs il y a 7 j',
     formeVerdict: {
       'very-fresh': '✓ Tu es très frais — parfait pour une séance clé ou une course.',
       fresh: '✓ Continue comme ça — tu es frais, le plan peut suivre son cours.',

@@ -200,11 +200,7 @@ export const en: Dict = {
 
   mission: {
     formeTitle: 'Form status',
-    formeScale: { tired: 'Tired', normal: 'Normal', fresh: 'Fresh', sharp: 'Peaking' },
-    formeBadge: {
-      'very-fresh': 'Very fresh', fresh: 'Fresh', balanced: 'Balanced',
-      'normal-fatigue': 'Slight fatigue', 'high-fatigue': 'High fatigue',
-    },
+    formeDeltaSuffix: 'vs 7 days ago',
     formeVerdict: {
       'very-fresh': '✓ Very fresh — perfect for a key session or a race.',
       fresh: '✓ Keep going — you are fresh, stick to the plan.',

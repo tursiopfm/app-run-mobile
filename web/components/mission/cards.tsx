@@ -13,7 +13,7 @@ export function MissionCard({ children, className = '' }: { children: React.Reac
 
 export function MissionCardLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-trail-muted">
+    <p className="text-[15px] font-semibold text-trail-muted font-display leading-none">
       {children}
     </p>
   )
