@@ -1,7 +1,7 @@
 'use client'
 
 // Écran Cockpit du Mode Mission v2 — « je pilote » :
-// Briefing → État de forme → Ma semaine → Objectif → Altitude.
+// Briefing → État de forme → Ma semaine → Objectif → Sessions → Cumul.
 // Spec : docs/superpowers/specs/2026-06-12-mode-mission-v2-3-piliers-design.md
 
 import { useEffect, useMemo, useState } from 'react'
