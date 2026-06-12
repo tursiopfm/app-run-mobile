@@ -1,6 +1,7 @@
 # Mode Mission v2 — 3 piliers : Cockpit · Plan · Activités
 
 > **Status: Implémenté** · 2026-06-12 · Code: `web/components/mission/` + `web/lib/mission/` · Maquette : `Prompts/mode-mission-3-piliers-mockup-v2.html`
+> **Révision Cockpit (design A)** · 2026-06-12 · Maquette : `Prompts/cockpit-mission-blocs-v2-mockups.html` — voir section « Écran Cockpit »
 
 ## Contexte & problème
 
@@ -32,19 +33,37 @@ agira sur le plan.
   sommeil/HRV) et débouche toujours sur un **verdict actionnable** : continuer ou adapter.
 - **Mode Expert inchangé.**
 
-## Écran Cockpit — « je pilote » (5 blocs)
+## Écran Cockpit — « je pilote » (6 blocs, design A « Glass Cockpit » révisé)
+
+> Redesign validé le 2026-06-12 sur maquette
+> `Prompts/cockpit-mission-blocs-v2-mockups.html` (direction A). Titres de blocs en
+> police brand (Space Grotesk 15px semibold muted, comme l'Expert), pas de décoration.
+> Le header reste celui du shell Mission (TrailCockpit · bouton Expert · nom athlète).
 
 1. **Briefing du jour** — tuile d'entrée du rapport matinal (reprend `MorningReportTile`).
-2. **État de forme** — échelle colorée Fatigué → Normal → Frais → Affûté avec curseur
-   (position issue du TSB), badge d'état (libellés fraîcheur existants) et **verdict** :
-   « ✓ Continue comme ça… » / « ⚠ Adapte : allège… ». Mapping statut → verdict à
-   détailler au plan d'implémentation (réutilise `charge-thresholds` / `FreshnessCard`).
+2. **État de forme** — cadran SVG à aiguille (zones colorées alignées sur `FRESHNESS`),
+   valeur TSB en grand, delta vs 7 j (« ↗ +3 · tu remontes »), verdict une phrase.
+   **Badge d'état en haut à droite = `TsbBadge` cliquable** → ouvre la fenêtre Expert
+   existante **`FreshnessHelpSheet`** (« Fraîcheur — que faire ? », zone courante surlignée).
 3. **Ma semaine** — 7 pastilles jour (fait ✓ / aujourd'hui / à venir / repos) + chiffre
-   fort : km + D+ (heures si triathlon, cf. adaptation sport).
-4. **Cap de la semaine** — jauges réalisé vs objectif du plan (volume, D+) avec repère
-   « où tu devrais en être aujourd'hui » (`GoalsBlock` recontextualisé par la phase).
-5. **Altitude · 6 semaines** — barres de volume hebdo, semaine courante en orange
-   (le Cumul simplifié), avec tendance (↗ régulier…).
+   fort : km + D+ (heures si triathlon) + **bouton « Objectif »** en haut à droite →
+   fenêtre de saisie : volume semaine (km), dénivelé semaine (m), volume année (km).
+   Stockage = **mêmes clés localStorage que le `GoalsBlock` Expert**
+   (`cockpit_goals_targets`, par sport) — objectifs partagés entre les deux modes.
+4. **Objectif** — 3 barres avec repère « attendu aujourd'hui » : semaine·volume (orange),
+   semaine·dénivelé (bleu), **année·volume (vert)**. Cibles semaine : override utilisateur
+   sinon cible du plan (`resolveMissionWeeklyTarget`). Année sans objectif saisi →
+   **projection fin d'année** (barre pointillée, `ytdKm / fraction d'année écoulée`).
+   Le bloc n'apparaît que s'il existe au moins une cible (saisie ou plan).
+5. **Sessions de la semaine** — liste des activités réalisées de la semaine (jour, nom,
+   km, D+) + ligne de totaux (km · D+ · durée). Données : `weekActivities` (déjà fetchées
+   par la page dashboard).
+6. **Cumul km · mois** — réutilise **`CockpitCumulChart`** de l'Expert
+   (`SportOverview.cumulMonths` / `cumulYears`) : valeurs de fin de courbe et infobulle
+   au doigt natives. Bouton bascule en haut à droite : **« Année » ⇄ « Mois »**.
+
+Supprimés par ce redesign : « Cap de la semaine » (absorbé par Objectif) et
+« Altitude · 6 semaines » (remplacé par Sessions de la semaine + Cumul).
 
 ## Écran Plan — « ma feuille de route, jusqu'à la course » (5 blocs)
 
