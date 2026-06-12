@@ -12,6 +12,7 @@ import { useUserLocation } from '@/lib/hooks/useUserLocation'
 import { useWeather } from '@/lib/hooks/useWeather'
 import { WeatherCurrentBlock } from '@/components/morning-report/WeatherCurrentBlock'
 import { WeatherDayBlock } from '@/components/morning-report/WeatherDayBlock'
+import { WeatherPrimingBlock } from '@/components/morning-report/WeatherPrimingBlock'
 import { BestWindowBlock } from '@/components/morning-report/BestWindowBlock'
 import { WeekVolumeBlock } from '@/components/morning-report/WeekVolumeBlock'
 import { MonthlyVolumeBlock } from '@/components/morning-report/MonthlyVolumeBlock'
@@ -26,10 +27,10 @@ function todayISO(): string {
 export function MorningReportClient({ data }: { data: MorningReportData }) {
   const today = todayISO()
   const { markSeen } = useMorningReportSeen(today)
-  const coords = useUserLocation()
-  const weather = useWeather(coords)
+  const location = useUserLocation()
+  const weather = useWeather(location.coords)
 
-  const locationLabel = coords?.city ?? null
+  const locationLabel = location.coords?.city ?? null
 
   const weatherProps =
     weather.status === 'ready' ? { status: 'ready' as const, data: weather.data, locationLabel } :
@@ -62,11 +63,17 @@ export function MorningReportClient({ data }: { data: MorningReportData }) {
 
       <FitnessFatigue10dChart dailyMetrics={all.dailyMetrics} />
 
-      <div className="grid grid-cols-2 gap-2.5">
-        <WeatherCurrentBlock {...weatherProps} />
-        <WeatherDayBlock     {...weatherProps} />
-      </div>
-      <BestWindowBlock {...weatherProps} />
+      {location.status === 'idle' ? (
+        <WeatherPrimingBlock onRequest={location.request} />
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-2.5">
+            <WeatherCurrentBlock {...weatherProps} />
+            <WeatherDayBlock     {...weatherProps} />
+          </div>
+          <BestWindowBlock {...weatherProps} />
+        </>
+      )}
 
       <div className="md:grid md:grid-cols-2 md:gap-3 space-y-3 md:space-y-0">
         <div className="grid grid-cols-3 gap-2.5">
