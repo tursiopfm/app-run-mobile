@@ -13,6 +13,7 @@ import {
 } from '@/lib/plan/print-columns'
 import { PrintColumnsDialog } from '@/components/plan/PrintColumnsDialog'
 import { toJpeg } from 'html-to-image'
+import { FileText, Image as ImageIcon, Share2, Settings2 } from 'lucide-react'
 
 const fmt = (n: number) => String(n).replace('.', ',')
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -182,9 +183,11 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           background:var(--trail-bg); min-height:100vh; display:flex; flex-direction:column; align-items:center;
           padding:28px 16px 60px; color:var(--trail-text); font-family:system-ui,sans-serif;
         }
-        .pdfroot .toolbar{display:flex;gap:8px;align-items:center;color:var(--trail-text);font-size:13px;margin-bottom:8px;width:120mm;max-width:100%;flex-wrap:wrap;}
-        .pdfroot .toolbar .ttl{font-family:var(--d);font-weight:600;font-size:14px;margin-right:auto;}
-        .pdfroot .btn{font-family:var(--d);font-weight:600;font-size:13px;padding:8px 14px;border-radius:10px;border:0;background:var(--trail-primary);color:#fff;cursor:pointer;}
+        /* Toolbar en colonne (mobile-first) : titre, 3 boutons d'export égaux, colonnes. */
+        .pdfroot .toolbar{display:flex;flex-direction:column;gap:8px;color:var(--trail-text);font-size:13px;margin-bottom:8px;width:120mm;max-width:100%;}
+        .pdfroot .toolbar .ttl{font-family:var(--d);font-weight:600;font-size:14px;}
+        .pdfroot .toolbar .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+        .pdfroot .btn{font-family:var(--d);font-weight:600;font-size:13px;padding:10px 8px;border-radius:10px;border:0;background:var(--trail-primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
         .pdfroot .btn.ghost{background:var(--trail-surface);border:1px solid var(--trail-border);color:var(--trail-text);}
         .pdfroot .caption{width:120mm;max-width:100%;color:var(--trail-muted);font-size:11px;margin-bottom:16px;line-height:1.4;}
         .pdfroot .cut{padding:6mm;border:1px dashed var(--trail-border);border-radius:6px;background:var(--trail-surface);}
@@ -258,12 +261,14 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
 
       <div className="toolbar">
         <span className="ttl">Carte de course</span>
-        <button className="btn ghost" onClick={() => setDialogOpen(true)}>Personnaliser les colonnes</button>
-        <button className="btn ghost" onClick={() => void exportJpeg()} disabled={busy}>JPEG</button>
-        <button className="btn ghost" ref={shareBtnRef} onClick={() => void shareJpeg()} disabled={busy}>Partager</button>
-        <button className="btn" onClick={() => window.print()}>Imprimer / PDF</button>
+        <div className="actions">
+          <button className="btn" onClick={() => window.print()}><FileText size={16} /> PDF</button>
+          <button className="btn" onClick={() => void exportJpeg()} disabled={busy}><ImageIcon size={16} /> JPEG</button>
+          <button className="btn" ref={shareBtnRef} onClick={() => void shareJpeg()} disabled={busy}><Share2 size={16} /> Partager</button>
+        </div>
+        <button className="btn ghost" onClick={() => setDialogOpen(true)}><Settings2 size={16} /> Personnaliser les colonnes</button>
       </div>
-      <p className="caption">{"Aperçu tourné à l'écran (format carte de poche). À l'impression : carte à l'horizontale, en haut de la feuille A4. Découpe, plastifie — tient dans une poche de veste."}</p>
+      <p className="caption">{"Les colonnes choisies s'appliquent aux trois formats (PDF, JPEG, partage). Aperçu tourné à l'écran (format carte de poche). À l'impression : carte à l'horizontale, en haut de la feuille A4. Découpe, plastifie — tient dans une poche de veste."}</p>
 
       <div className="cut">
         <span className="scis">✂ — — — — — — — — découper — — — — — — — —</span>

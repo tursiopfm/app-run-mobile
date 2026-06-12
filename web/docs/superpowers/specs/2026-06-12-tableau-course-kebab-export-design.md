@@ -144,3 +144,18 @@ thème (`--trail-surface`, `--trail-border`, `--trail-primary`).
   image tournée/rognée). Police « Space Grotesk » doit être chargée au moment de la capture
   (attendre `document.fonts.ready`).
 - Pas de migration Supabase.
+
+## Drift notes
+
+Retours de Franck après test en prod (2026-06-12, même jour) :
+- **Undo (§4)** : snackbar transient remplacé par un **bouton « ↶ Annuler » à côté de
+  « ✓ Terminé »** dans la barre d'édition — pile LIFO (annulations multiples), vidée en
+  sortant du mode édition. Pas de timer, plus de `.wtbl-snack`.
+- **Toolbar `/print`** : la rangée horizontale débordait sur mobile (`width:120mm` > écran,
+  boutons empilés au même endroit). Refaite en **colonne** : titre → 3 boutons d'export
+  égaux (PDF · JPEG · Partager, icônes lucide) → « Personnaliser les colonnes » pleine
+  largeur (s'applique aux 3 formats — la carte capturée respecte déjà la config colonnes).
+- **Bandeau objectif** : lien « Modifier » retiré (doublon du kebab) ; « Définir l'objectif »
+  conservé quand l'objectif n'est pas renseigné.
+- **Menu kebab** : `bg-trail-surface` quasi invisible sur fond bleu nuit → surface élevée
+  (`bg-trail-card`), bordure `--ink-500`, ombre renforcée + **scrim** `bg-black/50`.

@@ -5,7 +5,7 @@
 // ravito en icônes, dist+inter et cumul+segment empilés, objectif = temps écoulé
 // éditable + marge colorée avant barrière. Colonnes auto via lib/plan/waypoint-view,
 // heures via lib/plan/pacing. Suppression de ligne annulable (snackbar « Annuler »).
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { RaceWaypoint, WaypointSupply } from '@/types/plan'
 import {
   deriveSegment, formatElapsedShort, parseElapsedShort, formatMargin,
@@ -105,12 +105,9 @@ export function WaypointsTable({
   )
 
   const [editRow, setEditRow] = useState<number | null>(null)
-  const [lastDeleted, setLastDeleted] = useState<{ row: Draft; index: number } | null>(null)
-  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => () => { if (undoTimer.current) clearTimeout(undoTimer.current) }, [])
-  // Sortir du mode édition efface le snackbar en attente.
-  useEffect(() => { if (!editLines) setLastDeleted(null) }, [editLines])
+  // Pile des lignes supprimées (undo multiple) ; vidée en sortant du mode édition.
+  const [deleted, setDeleted] = useState<{ row: Draft; index: number }[]>([])
+  useEffect(() => { if (!editLines) setDeleted([]) }, [editLines])
 
   const elapsed = useMemo(() => {
     if (targetDurationMin == null) return null
@@ -169,21 +166,19 @@ export function WaypointsTable({
     onChange(reindex([...waypoints, row]))
   }
 
-  // Supprime une ligne (mémorisée pour undo) ; reindex réassigne départ/arrivée.
+  // Supprime une ligne (empilée pour undo) ; reindex réassigne départ/arrivée.
   const removeRow = (i: number) => {
-    setLastDeleted({ row: waypoints[i], index: i })
-    if (undoTimer.current) clearTimeout(undoTimer.current)
-    undoTimer.current = setTimeout(() => setLastDeleted(null), 6000)
+    setDeleted((d) => [...d, { row: waypoints[i], index: i }])
     onChange(reindex(waypoints.filter((_, idx) => idx !== i)))
   }
 
-  // Réinsère la dernière ligne supprimée à sa position d'origine (km → tri stable).
+  // Réinsère la dernière ligne supprimée (LIFO) à sa position d'origine.
   const undoDelete = () => {
-    if (!lastDeleted) return
-    if (undoTimer.current) clearTimeout(undoTimer.current)
+    const last = deleted[deleted.length - 1]
+    if (!last) return
+    setDeleted((d) => d.slice(0, -1))
     const next = [...waypoints]
-    next.splice(lastDeleted.index, 0, lastDeleted.row)
-    setLastDeleted(null)
+    next.splice(last.index, 0, last.row)
     onChange(reindex(next))
   }
 
@@ -249,12 +244,16 @@ export function WaypointsTable({
         .wtbl .wtbl-bar{display:flex;justify-content:flex-end;padding:0 3px 6px;}
         .wtbl .btn-lines{font-family:var(--d);font-size:11px;font-weight:600;color:var(--orange);background:none;border:0;cursor:pointer;padding:2px 4px;}
         .wtbl .add-row{width:100%;margin-top:8px;padding:8px;font-family:var(--d);font-size:12px;font-weight:600;color:var(--orange);background:rgba(255,107,53,.08);border:1px dashed rgba(255,107,53,.4);border-radius:8px;cursor:pointer;}
-        .wtbl .wtbl-snack{position:sticky;bottom:8px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--trail-surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-family:var(--d);font-size:12px;font-weight:600;color:var(--text);box-shadow:0 6px 18px rgba(0,0,0,.18);}
-        .wtbl .snack-undo{background:none;border:0;color:var(--orange);font-family:var(--d);font-size:12px;font-weight:700;cursor:pointer;padding:2px 4px;}
+        .wtbl .btn-lines.undo{color:var(--muted);margin-right:10px;}
       `}</style>
 
       {!readOnly && editLines && (
         <div className="wtbl-bar">
+          {deleted.length > 0 && (
+            <button type="button" className="btn-lines undo" onClick={undoDelete}>
+              ↶ Annuler
+            </button>
+          )}
           <button type="button" className="btn-lines" onClick={() => onEditLinesChange?.(false)}>
             ✓ Terminé
           </button>
@@ -406,12 +405,6 @@ export function WaypointsTable({
         <b>+x</b> sous Dist · D+ · D− = l&apos;intermédiaire (depuis le point précédent) · <span className="bhk">BH</span> = barrière
         <br />ravitos : <span className="lg"><span className="chip liq">L</span>liquide</span><span className="lg"><span className="chip sol">S</span>solide</span><span className="lg"><span className="chip hot">C</span>chaud</span><span className="lg"><span className="chip base">BV</span>base vie</span><span className="lg"><span className="chip ass">A</span>assistance</span>
       </div>
-      {lastDeleted && (
-        <div className="wtbl-snack" role="status">
-          <span>Ligne supprimée</span>
-          <button type="button" className="snack-undo" onClick={undoDelete}>Annuler</button>
-        </div>
-      )}
     </div>
   )
 }
