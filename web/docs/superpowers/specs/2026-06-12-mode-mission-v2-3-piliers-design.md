@@ -1,6 +1,6 @@
 # Mode Mission v2 — 3 piliers : Cockpit · Plan · Activités
 
-> **Status: Design validé (maquette)** · 2026-06-12 · Maquette : `Prompts/mode-mission-3-piliers-mockup-v2.html`
+> **Status: Implémenté** · 2026-06-12 · Code: `web/components/mission/` + `web/lib/mission/` · Maquette : `Prompts/mode-mission-3-piliers-mockup-v2.html`
 
 ## Contexte & problème
 

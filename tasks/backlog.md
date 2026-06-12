@@ -230,6 +230,23 @@ C:\Users\Franc\app-run-mobile\web> npm run dev
 - **À faire** : voir l'esquisse détaillée en fin de `web/docs/superpowers/plans/2026-06-09-garmin-gdpr-import.md` (worker pool, unzip streaming < 50 Mo, matching FIT↔résumé, pack `fflate.gzipSync` vers `activity_streams source='garmin'`).
 - **Identifié** : 2026-06-09
 
+### Mission v2 — trace du profil altimétrique sur la dernière sortie
+- **Quoi** : l'écran Activités du Mode Mission v2 (maquette `Prompts/mode-mission-3-piliers-mockup-v2.html`) prévoyait une mini-trace du profil de la dernière sortie sous le héros ; non implémenté car nécessite les streams (`activity_streams`).
+- **Pourquoi** : touche visuelle validée sur la maquette, différée volontairement au plan d'implémentation.
+- **À faire** : sparkline SVG depuis le stream altitude de la dernière activité (si présent), sinon rien.
+- **Identifié** : 2026-06-12
+
+### Mission v2 — brancher le module Coach IA sur « Ajuster mon plan »
+- **Quoi** : l'écran Plan Mission affiche un bouton désactivé « ✨ Ajuster mon plan · Coach IA » (placeholder). Le module conversationnel qui modifie le plan n'existe pas encore.
+- **Pourquoi** : emplacement UX réservé dès la refonte Mission v2 ; à activer quand le module IA sera développé (cf. « Coach IA fonctionnel » en priorité haute).
+- **Identifié** : 2026-06-12
+
+### Extraire `pickActiveMacrocycle` (+ utils purs) hors de `lib/plan/storage.ts`
+- **Quoi** : `pickActiveMacrocycle` et `isRaceMirrorSession` sont des fonctions pures mais vivent dans `storage.ts` (~1000 lignes, couplé Supabase/localStorage). `lib/mission/weekly-target.ts` et `lib/mission/prepa.ts` les importent, traînant tout le module dans leur graphe.
+- **Pourquoi** : remonté en revue de code Mission v2 (Task 2) — smell architectural, complique les tests et le tree-shaking.
+- **À faire** : déplacer (ou ré-exporter depuis) un module pur `lib/plan/macrocycle-utils.ts`.
+- **Identifié** : 2026-06-12
+
 ---
 
 ## Modèle de fiche pour un nouvel item
