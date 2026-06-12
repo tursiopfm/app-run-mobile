@@ -3,6 +3,7 @@ import { getServerUser } from '@/lib/database/get-user'
 import { DashboardGrid } from '@/components/cockpit/DashboardGrid'
 import { FirstActivityBanner } from '@/components/cockpit/FirstActivityBanner'
 import { MorningReportAutoOpen } from '@/components/morning-report/MorningReportAutoOpen'
+import { MissionCockpit } from '@/components/mission/MissionCockpit'
 import { getDashboardData } from '@/lib/data/dashboard'
 import { getChargePageData } from '@/lib/data/charge'
 import { getServerAppMode } from '@/lib/preferences/server'
@@ -109,16 +110,24 @@ export default async function DashboardPage() {
     <div className="px-2 py-2 max-w-lg mx-auto md:max-w-none md:px-6">
       <MorningReportAutoOpen createdAt={user.created_at} />
       {activityCount === 0 && <FirstActivityBanner />}
-      <DashboardGrid
-        sportOverviews={sportOverviews}
-        weekSessions={weekSessions}
-        latestPerSport={latestPerSport}
-        weekActivities={weekActivities}
-        athleteProfile={athleteProfile ?? null}
-        mode={mode}
-        freshnessPayload={freshnessPayload}
-        discipline={athleteProfile?.onboarding_discipline ?? null}
-      />
+      {mode === 'mission' ? (
+        <div className="max-w-lg mx-auto">
+          <MissionCockpit
+            sportOverviews={sportOverviews}
+            freshnessPayload={freshnessPayload}
+            discipline={athleteProfile?.onboarding_discipline ?? null}
+          />
+        </div>
+      ) : (
+        <DashboardGrid
+          sportOverviews={sportOverviews}
+          weekSessions={weekSessions}
+          latestPerSport={latestPerSport}
+          weekActivities={weekActivities}
+          athleteProfile={athleteProfile ?? null}
+          discipline={athleteProfile?.onboarding_discipline ?? null}
+        />
+      )}
     </div>
   )
 }
