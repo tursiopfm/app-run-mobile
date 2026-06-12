@@ -59,7 +59,7 @@ export function TableActionsMenu({ onEditRace, onEditLines, onReimport, onExport
             {exportOpen && (
               <div className="my-0.5 ml-3 border-l border-trail-border pl-3">
                 <MenuItem icon={<FileText size={15} />} label="PDF" onClick={() => run(() => onExport('pdf'))} />
-                <MenuItem icon={<ImageIcon size={15} />} label="JPEG" onClick={() => run(() => onExport('jpeg'))} />
+                <MenuItem icon={<ImageIcon size={15} />} label="Image" onClick={() => run(() => onExport('jpeg'))} />
                 <MenuItem icon={<Share2 size={15} />} label="Partager" onClick={() => run(() => onExport('share'))} />
               </div>
             )}

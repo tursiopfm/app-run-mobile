@@ -4,8 +4,9 @@
 // (cf. Prompts/tableau-course-mockup-optionA.html) : grille fixe (zéro scroll X),
 // ravito en icônes, dist+inter et cumul+segment empilés, objectif = temps écoulé
 // éditable + marge colorée avant barrière. Colonnes auto via lib/plan/waypoint-view,
-// heures via lib/plan/pacing. Suppression de ligne annulable (snackbar « Annuler »).
-import { useCallback, useEffect, useMemo, useState } from 'react'
+// heures via lib/plan/pacing. Mode édition annulable : « Annuler » restaure
+// l'état des lignes tel qu'il était à l'entrée du mode (snapshot).
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { RaceWaypoint, WaypointSupply } from '@/types/plan'
 import {
   deriveSegment, formatElapsedShort, parseElapsedShort, formatMargin,
@@ -105,9 +106,18 @@ export function WaypointsTable({
   )
 
   const [editRow, setEditRow] = useState<number | null>(null)
-  // Pile des lignes supprimées (undo multiple) ; vidée en sortant du mode édition.
-  const [deleted, setDeleted] = useState<{ row: Draft; index: number }[]>([])
-  useEffect(() => { if (!editLines) setDeleted([]) }, [editLines])
+  // Snapshot des lignes à l'entrée du mode édition — « Annuler » restaure TOUT
+  // (suppressions, ajouts, cellules éditées) et sort du mode.
+  const editSnapshot = useRef<Draft[] | null>(null)
+  useEffect(() => {
+    editSnapshot.current = editLines ? waypoints.map((w) => ({ ...w })) : null
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editLines])
+
+  const cancelEdit = () => {
+    if (editSnapshot.current) onChange(editSnapshot.current)
+    onEditLinesChange?.(false)
+  }
 
   const elapsed = useMemo(() => {
     if (targetDurationMin == null) return null
@@ -166,20 +176,9 @@ export function WaypointsTable({
     onChange(reindex([...waypoints, row]))
   }
 
-  // Supprime une ligne (empilée pour undo) ; reindex réassigne départ/arrivée.
+  // Supprime une ligne ; récupérable via « Annuler » (snapshot du mode édition).
   const removeRow = (i: number) => {
-    setDeleted((d) => [...d, { row: waypoints[i], index: i }])
     onChange(reindex(waypoints.filter((_, idx) => idx !== i)))
-  }
-
-  // Réinsère la dernière ligne supprimée (LIFO) à sa position d'origine.
-  const undoDelete = () => {
-    const last = deleted[deleted.length - 1]
-    if (!last) return
-    setDeleted((d) => d.slice(0, -1))
-    const next = [...waypoints]
-    next.splice(last.index, 0, last.row)
-    onChange(reindex(next))
   }
 
   return (
@@ -249,11 +248,9 @@ export function WaypointsTable({
 
       {!readOnly && editLines && (
         <div className="wtbl-bar">
-          {deleted.length > 0 && (
-            <button type="button" className="btn-lines undo" onClick={undoDelete}>
-              ↶ Annuler
-            </button>
-          )}
+          <button type="button" className="btn-lines undo" onClick={cancelEdit}>
+            ↶ Annuler
+          </button>
           <button type="button" className="btn-lines" onClick={() => onEditLinesChange?.(false)}>
             ✓ Terminé
           </button>

@@ -19,9 +19,9 @@ it('ouvre le menu, déclenche le sous-menu export et les actions', () => {
   fireEvent.click(screen.getByLabelText('Actions du tableau'))
   expect(screen.getByText('Modifier la course')).toBeInTheDocument()
 
-  // sous-menu export
+  // sous-menu export (libellé « Image », valeur interne 'jpeg')
   fireEvent.click(screen.getByText('Exporter'))
-  fireEvent.click(screen.getByText('JPEG'))
+  fireEvent.click(screen.getByText('Image'))
   expect(onExport).toHaveBeenCalledWith('jpeg')
 
   // un item ferme le menu : on rouvre puis on déclenche Modifier la course

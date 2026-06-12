@@ -203,7 +203,17 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
         </div>
       </div>
 
-      <Section title="Tableau de course">
+      <Section
+        title="Tableau de course"
+        action={waypoints.length > 0 ? (
+          <TableActionsMenu
+            onEditRace={() => setEditorOpen(true)}
+            onEditLines={() => setEditLines((v) => !v)}
+            onReimport={() => setImportOpen(true)}
+            onExport={handleExport}
+          />
+        ) : undefined}
+      >
         {waypoints.length === 0 ? (
           <button type="button" onClick={() => setImportOpen(true)}
             className="text-caption text-trail-primary underline">
@@ -251,14 +261,6 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
                 onChange={handlePacingChange}
               />
             )}
-            <div className="flex justify-end">
-              <TableActionsMenu
-                onEditRace={() => setEditorOpen(true)}
-                onEditLines={() => setEditLines((v) => !v)}
-                onReimport={() => setImportOpen(true)}
-                onExport={handleExport}
-              />
-            </div>
             <WaypointsTable
               waypoints={waypoints.map(({ id: _id, raceId: _rid, ...rest }) => rest)}
               onChange={handleWaypointsChange}
@@ -327,10 +329,13 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-4">
-      <h2 className="text-body font-semibold text-trail-muted mb-2 font-display">{title}</h2>
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-body font-semibold text-trail-muted font-display">{title}</h2>
+        {action}
+      </div>
       {children}
     </div>
   )

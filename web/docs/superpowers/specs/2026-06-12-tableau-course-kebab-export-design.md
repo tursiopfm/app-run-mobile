@@ -159,3 +159,19 @@ Retours de Franck après test en prod (2026-06-12, même jour) :
   conservé quand l'objectif n'est pas renseigné.
 - **Menu kebab** : `bg-trail-surface` quasi invisible sur fond bleu nuit → surface élevée
   (`bg-trail-card`), bordure `--ink-500`, ombre renforcée + **scrim** `bg-black/50`.
+
+Deuxième vague de retours prod (2026-06-12) :
+- **« Annuler » = annulation complète du mode édition** (pas un undo LIFO action par
+  action) : snapshot des lignes pris à l'entrée du mode « Modifier les lignes »,
+  « Annuler » restaure tout (suppressions, ajouts, cellules) et sort du mode.
+- **Libellé « JPEG » → « Image »** partout (sous-menu kebab, bouton `/print`, caption).
+- **Kebab → Image n'exporte plus directement** : `?export=jpeg` met seulement le focus
+  (liseré blanc, comme `?export=share`) sur le bouton Image — l'utilisateur passe par
+  l'aperçu pour personnaliser les colonnes avant d'exporter.
+- **Bug flash portrait→paysage→portrait à la capture** : la capture basculait l'aperçu
+  à plat (`setFlat`) puis le restaurait. Désormais on rasterise un **clone hors écran**
+  (wrapper `pdfroot exporting` en `position:fixed;left:-10000px`) — l'aperçu ne bouge plus.
+- **« Personnaliser les colonnes » plus visible** : `--trail-card` + bordure `--ink-500`
+  + texte blanc (au lieu de surface/bordure sombres).
+- **Kebab déplacé dans l'en-tête du bloc** « Tableau de course » (prop `action` du
+  composant `Section`), à droite du titre.

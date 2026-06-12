@@ -56,23 +56,28 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
   const updateCfg = (next: PrintColConfig) => { setCfg(next); savePrintColConfig(next) }
 
   const cardRef = useRef<HTMLDivElement>(null)
+  const jpegBtnRef = useRef<HTMLButtonElement>(null)
   const shareBtnRef = useRef<HTMLButtonElement>(null)
-  const [flat, setFlat] = useState(false)
   const [busy, setBusy] = useState(false)
 
-  // Rend la carte « à plat » (non tournée, comme à l'impression) puis la rasterise.
+  // Rasterise un CLONE de la carte, à plat, hors écran — l'aperçu tourné à
+  // l'écran ne bouge pas (pas de flash portrait→paysage pendant la capture).
   const renderJpeg = useCallback(async () => {
     const el = cardRef.current
     if (!el) return null
     await document.fonts?.ready
-    setFlat(true)
-    await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+    const wrap = document.createElement('div')
+    wrap.className = 'pdfroot exporting'
+    wrap.style.cssText = 'position:fixed;left:-10000px;top:0;padding:0;min-height:0;background:#fff;'
+    wrap.appendChild(el.cloneNode(true))
+    document.body.appendChild(wrap)
     try {
-      const dataUrl = await toJpeg(el, { backgroundColor: '#ffffff', pixelRatio: 2, quality: 0.95, cacheBust: true })
+      const card = wrap.firstElementChild as HTMLElement
+      const dataUrl = await toJpeg(card, { backgroundColor: '#ffffff', pixelRatio: 2, quality: 0.95, cacheBust: true })
       const blob = await (await fetch(dataUrl)).blob()
       return { dataUrl, blob }
     } finally {
-      setFlat(false)
+      wrap.remove()
     }
   }, [])
 
@@ -107,14 +112,13 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
     }
   }, [busy, renderJpeg, race])
 
-  // Auto-déclenchement selon ?export= : jpeg télécharge directement ; share exige
-  // un geste utilisateur → on met juste le focus sur le bouton « Partager ».
+  // ?export= met en avant (focus = liseré blanc) le bouton visé, sans rien
+  // déclencher : l'utilisateur personnalise d'abord les colonnes sur l'aperçu.
   useEffect(() => {
     if (!ready || !race) return
     const action = new URLSearchParams(window.location.search).get('export')
-    if (action === 'jpeg') void exportJpeg()
+    if (action === 'jpeg') jpegBtnRef.current?.focus()
     else if (action === 'share') shareBtnRef.current?.focus()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, race])
 
   if (!ready) return <div className="p-6 text-sm">Préparation…</div>
@@ -174,7 +178,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
   }
 
   return (
-    <div className={flat ? 'pdfroot exporting' : 'pdfroot'}>
+    <div className="pdfroot">
       <style>{`
         .pdfroot{
           --ink:#0E1513; --ink-soft:#55615E; --ink-faint:#8A938F;
@@ -188,7 +192,10 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .toolbar .ttl{font-family:var(--d);font-weight:600;font-size:14px;}
         .pdfroot .toolbar .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
         .pdfroot .btn{font-family:var(--d);font-weight:600;font-size:13px;padding:10px 8px;border-radius:10px;border:0;background:var(--trail-primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
-        .pdfroot .btn.ghost{background:var(--trail-surface);border:1px solid var(--trail-border);color:var(--trail-text);}
+        /* Liseré blanc sur le bouton ciblé par ?export= (focus programmatique). */
+        .pdfroot .btn:focus{outline:2px solid #fff;outline-offset:2px;}
+        /* « Personnaliser les colonnes » : surface élevée + bordure claire pour ressortir sous les 3 boutons orange. */
+        .pdfroot .btn.ghost{background:var(--trail-card);border:1px solid var(--ink-500);color:#fff;}
         .pdfroot .caption{width:120mm;max-width:100%;color:var(--trail-muted);font-size:11px;margin-bottom:16px;line-height:1.4;}
         .pdfroot .cut{padding:6mm;border:1px dashed var(--trail-border);border-radius:6px;background:var(--trail-surface);}
         .pdfroot .scis{font-size:10px;color:var(--trail-muted);margin-bottom:4px;display:block;}
@@ -234,8 +241,8 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .legend .k{display:inline-flex;align-items:center;gap:3px;}
         .pdfroot .legend .rb{transform:scale(.78);}
 
-        /* Capture image (html-to-image) : carte à plat (non tournée), comme @media print. */
-        .pdfroot.exporting .cardwrap{position:static;width:auto;height:auto;}
+        /* Capture image (html-to-image) : appliquée au WRAPPER hors écran qui
+           contient le clone de la carte (cf. renderJpeg) — met le clone à plat. */
         .pdfroot.exporting .card{position:static;transform:none;top:auto;left:auto;margin:0 auto;box-shadow:none;}
         .pdfroot .btn:disabled{opacity:.5;cursor:default;}
 
@@ -263,12 +270,12 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         <span className="ttl">Carte de course</span>
         <div className="actions">
           <button className="btn" onClick={() => window.print()}><FileText size={16} /> PDF</button>
-          <button className="btn" onClick={() => void exportJpeg()} disabled={busy}><ImageIcon size={16} /> JPEG</button>
+          <button className="btn" ref={jpegBtnRef} onClick={() => void exportJpeg()} disabled={busy}><ImageIcon size={16} /> Image</button>
           <button className="btn" ref={shareBtnRef} onClick={() => void shareJpeg()} disabled={busy}><Share2 size={16} /> Partager</button>
         </div>
         <button className="btn ghost" onClick={() => setDialogOpen(true)}><Settings2 size={16} /> Personnaliser les colonnes</button>
       </div>
-      <p className="caption">{"Les colonnes choisies s'appliquent aux trois formats (PDF, JPEG, partage). Aperçu tourné à l'écran (format carte de poche). À l'impression : carte à l'horizontale, en haut de la feuille A4. Découpe, plastifie — tient dans une poche de veste."}</p>
+      <p className="caption">{"Les colonnes choisies s'appliquent aux trois formats (PDF, image, partage). Aperçu tourné à l'écran (format carte de poche). À l'impression : carte à l'horizontale, en haut de la feuille A4. Découpe, plastifie — tient dans une poche de veste."}</p>
 
       <div className="cut">
         <span className="scis">✂ — — — — — — — — découper — — — — — — — —</span>
