@@ -7,6 +7,7 @@ import { getRaces, deleteRace, peekRaces, saveRace } from '@/lib/plan/storage'
 import { RaceEditorModal } from '@/components/plan/RaceEditorModal'
 import { EditButton } from '@/components/plan/EditButton'
 import { WaypointsTable } from '@/components/plan/WaypointsTable'
+import { TableActionsMenu } from '@/components/plan/TableActionsMenu'
 import { PacingStrategyCard } from '@/components/plan/PacingStrategyCard'
 import { RaceImportSheet } from '@/components/plan/RaceImportSheet'
 import { FreshnessBadge } from '@/components/plan/FreshnessBadge'
@@ -39,6 +40,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   const [autoSearch, setAutoSearch] = useState(false)
   const [diffOpen, setDiffOpen] = useState(false)
   const [diffBusy, setDiffBusy] = useState(false)
+  const [editLines, setEditLines] = useState(false)
 
   // Arrivée depuis « Oui, chercher » à la création (RaceEditorModal) :
   // ?import=auto → on ouvre la feuille sur l'onglet Auto et on lance la recherche.
@@ -79,6 +81,14 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
     },
     [race],
   )
+
+  // Export du tableau : ouvre la page /print (hub d'export). jpeg/share y sont
+  // déclenchés au chargement / au tap (cf. print/page.tsx).
+  const handleExport = useCallback((kind: 'pdf' | 'jpeg' | 'share') => {
+    const base = `/plan/courses/${raceId}/print`
+    const url = kind === 'pdf' ? base : `${base}?export=${kind}`
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }, [raceId])
 
   const reload = useCallback(async () => {
     const list = await getRaces()
@@ -239,6 +249,14 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
                 onChange={handlePacingChange}
               />
             )}
+            <div className="flex justify-end">
+              <TableActionsMenu
+                onEditRace={() => setEditorOpen(true)}
+                onEditLines={() => setEditLines((v) => !v)}
+                onReimport={() => setImportOpen(true)}
+                onExport={handleExport}
+              />
+            </div>
             <WaypointsTable
               waypoints={waypoints.map(({ id: _id, raceId: _rid, ...rest }) => rest)}
               onChange={handleWaypointsChange}
@@ -246,17 +264,9 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
               targetDurationMin={race.targetDurationMin}
               pacingFade={race.pacingFade}
               onStartTimeChange={handleStartTimeChange}
+              editLines={editLines}
+              onEditLinesChange={setEditLines}
             />
-            <div className="mt-2 flex items-center gap-4">
-              <a href={`/plan/courses/${raceId}/print`} target="_blank" rel="noopener noreferrer"
-                className="text-caption text-trail-primary underline">
-                Exporter en PDF
-              </a>
-              <button type="button" onClick={() => setImportOpen(true)}
-                className="text-caption text-trail-muted underline">
-                Ré-importer
-              </button>
-            </div>
           </>
         )}
       </Section>

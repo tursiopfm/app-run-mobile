@@ -2,7 +2,7 @@
 
 // Export PDF — carte de course format iPhone (cf. Prompts/tableau-course-pdf-mockup.html).
 // Colonnes personnalisables (choix + ordre) via PrintColumnsDialog, largeurs auto.
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Race, RaceWaypoint } from '@/types/plan'
 import { getRaces } from '@/lib/plan/storage'
 import { estimatePassageTimes } from '@/lib/plan/pacing'
@@ -12,9 +12,23 @@ import {
   PRINT_COL_DEFS, DEFAULT_PRINT_CONFIG, type PrintColConfig, type PrintColKey,
 } from '@/lib/plan/print-columns'
 import { PrintColumnsDialog } from '@/components/plan/PrintColumnsDialog'
+import { toJpeg } from 'html-to-image'
 
 const fmt = (n: number) => String(n).replace('.', ',')
 const pad = (n: number) => String(n).padStart(2, '0')
+
+const slug = (s: string) =>
+  s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'tableau'
+
+function triggerDownload(dataUrl: string, filename: string) {
+  const a = document.createElement('a')
+  a.href = dataUrl
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+}
 
 export default function PrintCoursePage({ params }: { params: { id: string } }) {
   const [race, setRace] = useState<Race | null>(null)
@@ -39,6 +53,68 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
   // « Imprimer / PDF » quand il est prêt.
 
   const updateCfg = (next: PrintColConfig) => { setCfg(next); savePrintColConfig(next) }
+
+  const cardRef = useRef<HTMLDivElement>(null)
+  const shareBtnRef = useRef<HTMLButtonElement>(null)
+  const [flat, setFlat] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  // Rend la carte « à plat » (non tournée, comme à l'impression) puis la rasterise.
+  const renderJpeg = useCallback(async () => {
+    const el = cardRef.current
+    if (!el) return null
+    await document.fonts?.ready
+    setFlat(true)
+    await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+    try {
+      const dataUrl = await toJpeg(el, { backgroundColor: '#ffffff', pixelRatio: 2, quality: 0.95, cacheBust: true })
+      const blob = await (await fetch(dataUrl)).blob()
+      return { dataUrl, blob }
+    } finally {
+      setFlat(false)
+    }
+  }, [])
+
+  const exportJpeg = useCallback(async () => {
+    if (busy) return
+    setBusy(true)
+    try {
+      const r = await renderJpeg()
+      if (r && race) triggerDownload(r.dataUrl, `${slug(race.name)}.jpg`)
+    } finally {
+      setBusy(false)
+    }
+  }, [busy, renderJpeg, race])
+
+  const shareJpeg = useCallback(async () => {
+    if (busy) return
+    setBusy(true)
+    try {
+      const r = await renderJpeg()
+      if (!r || !race) return
+      const file = new File([r.blob], `${slug(race.name)}.jpg`, { type: 'image/jpeg' })
+      const nav = navigator as Navigator & { canShare?: (d: { files?: File[] }) => boolean }
+      if (nav.canShare?.({ files: [file] })) {
+        await nav.share({ files: [file], title: race.name })
+      } else {
+        triggerDownload(r.dataUrl, `${slug(race.name)}.jpg`)
+      }
+    } catch {
+      // partage annulé par l'utilisateur ou indisponible — silencieux
+    } finally {
+      setBusy(false)
+    }
+  }, [busy, renderJpeg, race])
+
+  // Auto-déclenchement selon ?export= : jpeg télécharge directement ; share exige
+  // un geste utilisateur → on met juste le focus sur le bouton « Partager ».
+  useEffect(() => {
+    if (!ready || !race) return
+    const action = new URLSearchParams(window.location.search).get('export')
+    if (action === 'jpeg') void exportJpeg()
+    else if (action === 'share') shareBtnRef.current?.focus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, race])
 
   if (!ready) return <div className="p-6 text-sm">Préparation…</div>
   if (!race) return <div className="p-6 text-sm">Course introuvable.</div>
@@ -97,7 +173,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
   }
 
   return (
-    <div className="pdfroot">
+    <div className={flat ? 'pdfroot exporting' : 'pdfroot'}>
       <style>{`
         .pdfroot{
           --ink:#0E1513; --ink-soft:#55615E; --ink-faint:#8A938F;
@@ -155,6 +231,11 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .legend .k{display:inline-flex;align-items:center;gap:3px;}
         .pdfroot .legend .rb{transform:scale(.78);}
 
+        /* Capture image (html-to-image) : carte à plat (non tournée), comme @media print. */
+        .pdfroot.exporting .cardwrap{position:static;width:auto;height:auto;}
+        .pdfroot.exporting .card{position:static;transform:none;top:auto;left:auto;margin:0 auto;box-shadow:none;}
+        .pdfroot .btn:disabled{opacity:.5;cursor:default;}
+
         @page{size:A4 portrait;margin:8mm;}
         @media print{
           /* UNE page : on annule les min-height de la coquille app (2× min-h-screen,
@@ -178,6 +259,8 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
       <div className="toolbar">
         <span className="ttl">Carte de course</span>
         <button className="btn ghost" onClick={() => setDialogOpen(true)}>Personnaliser les colonnes</button>
+        <button className="btn ghost" onClick={() => void exportJpeg()} disabled={busy}>JPEG</button>
+        <button className="btn ghost" ref={shareBtnRef} onClick={() => void shareJpeg()} disabled={busy}>Partager</button>
         <button className="btn" onClick={() => window.print()}>Imprimer / PDF</button>
       </div>
       <p className="caption">{"Aperçu tourné à l'écran (format carte de poche). À l'impression : carte à l'horizontale, en haut de la feuille A4. Découpe, plastifie — tient dans une poche de veste."}</p>
@@ -186,7 +269,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         <span className="scis">✂ — — — — — — — — découper — — — — — — — —</span>
 
         <div className="cardwrap">
-        <div className="card">
+        <div className="card" ref={cardRef}>
           <div className="hd">
             <div>
               <div className="race">{race.name}</div>

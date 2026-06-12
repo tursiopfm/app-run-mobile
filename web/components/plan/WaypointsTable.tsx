@@ -4,8 +4,8 @@
 // (cf. Prompts/tableau-course-mockup-optionA.html) : grille fixe (zéro scroll X),
 // ravito en icônes, dist+inter et cumul+segment empilés, objectif = temps écoulé
 // éditable + marge colorée avant barrière. Colonnes auto via lib/plan/waypoint-view,
-// heures via lib/plan/pacing. Pas d'undo (re-import pour reset).
-import { useCallback, useMemo, useState } from 'react'
+// heures via lib/plan/pacing. Suppression de ligne annulable (snackbar « Annuler »).
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { RaceWaypoint, WaypointSupply } from '@/types/plan'
 import {
   deriveSegment, formatElapsedShort, parseElapsedShort, formatMargin,
@@ -18,6 +18,9 @@ type Props = {
   waypoints: Draft[]
   onChange: (next: Draft[]) => void
   readOnly?: boolean
+  // Mode « Modifier les lignes » contrôlé par le parent (menu kebab).
+  editLines?: boolean
+  onEditLinesChange?: (v: boolean) => void
   // Pacing (optionnel) : si absent, la colonne Objectif reste vide.
   startTime?: string
   targetDurationMin?: number
@@ -90,7 +93,8 @@ function reindex(rows: Draft[]): Draft[] {
 }
 
 export function WaypointsTable({
-  waypoints, onChange, readOnly, startTime, targetDurationMin, pacingFade, onStartTimeChange,
+  waypoints, onChange, readOnly, editLines = false, onEditLinesChange,
+  startTime, targetDurationMin, pacingFade, onStartTimeChange,
 }: Props) {
   const update = useCallback(
     (i: number, patch: Partial<Draft>) => {
@@ -101,7 +105,12 @@ export function WaypointsTable({
   )
 
   const [editRow, setEditRow] = useState<number | null>(null)
-  const [editLines, setEditLines] = useState(false)
+  const [lastDeleted, setLastDeleted] = useState<{ row: Draft; index: number } | null>(null)
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => { if (undoTimer.current) clearTimeout(undoTimer.current) }, [])
+  // Sortir du mode édition efface le snackbar en attente.
+  useEffect(() => { if (!editLines) setLastDeleted(null) }, [editLines])
 
   const elapsed = useMemo(() => {
     if (targetDurationMin == null) return null
@@ -160,9 +169,22 @@ export function WaypointsTable({
     onChange(reindex([...waypoints, row]))
   }
 
-  // Supprime une ligne ; reindex réassigne départ (1er km) / arrivée (dernier km).
+  // Supprime une ligne (mémorisée pour undo) ; reindex réassigne départ/arrivée.
   const removeRow = (i: number) => {
+    setLastDeleted({ row: waypoints[i], index: i })
+    if (undoTimer.current) clearTimeout(undoTimer.current)
+    undoTimer.current = setTimeout(() => setLastDeleted(null), 6000)
     onChange(reindex(waypoints.filter((_, idx) => idx !== i)))
+  }
+
+  // Réinsère la dernière ligne supprimée à sa position d'origine (km → tri stable).
+  const undoDelete = () => {
+    if (!lastDeleted) return
+    if (undoTimer.current) clearTimeout(undoTimer.current)
+    const next = [...waypoints]
+    next.splice(lastDeleted.index, 0, lastDeleted.row)
+    setLastDeleted(null)
+    onChange(reindex(next))
   }
 
   return (
@@ -227,20 +249,17 @@ export function WaypointsTable({
         .wtbl .wtbl-bar{display:flex;justify-content:flex-end;padding:0 3px 6px;}
         .wtbl .btn-lines{font-family:var(--d);font-size:11px;font-weight:600;color:var(--orange);background:none;border:0;cursor:pointer;padding:2px 4px;}
         .wtbl .add-row{width:100%;margin-top:8px;padding:8px;font-family:var(--d);font-size:12px;font-weight:600;color:var(--orange);background:rgba(255,107,53,.08);border:1px dashed rgba(255,107,53,.4);border-radius:8px;cursor:pointer;}
+        .wtbl .wtbl-snack{position:sticky;bottom:8px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--trail-surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-family:var(--d);font-size:12px;font-weight:600;color:var(--text);box-shadow:0 6px 18px rgba(0,0,0,.18);}
+        .wtbl .snack-undo{background:none;border:0;color:var(--orange);font-family:var(--d);font-size:12px;font-weight:700;cursor:pointer;padding:2px 4px;}
       `}</style>
 
-      {!readOnly && (
+      {!readOnly && editLines && (
         <div className="wtbl-bar">
-          <button type="button" className="btn-lines" onClick={() => setEditLines((v) => !v)}>
-            {editLines ? '✓ Terminé' : '✎ Modifier les lignes'}
+          <button type="button" className="btn-lines" onClick={() => onEditLinesChange?.(false)}>
+            ✓ Terminé
           </button>
         </div>
       )}
-
-      <div className="legend-mini">
-        <b>+x</b> sous Dist · D+ · D− = l&apos;intermédiaire (depuis le point précédent) · <span className="bhk">BH</span> = barrière
-        <br />ravitos : <span className="lg"><span className="chip liq">L</span>liquide</span><span className="lg"><span className="chip sol">S</span>solide</span><span className="lg"><span className="chip hot">C</span>chaud</span><span className="lg"><span className="chip base">BV</span>base vie</span><span className="lg"><span className="chip ass">A</span>assistance</span>
-      </div>
 
       <div className="row-wrap">
         {editLines && !readOnly && <span className="del-spacer" />}
@@ -381,6 +400,17 @@ export function WaypointsTable({
         <button type="button" className="add-row" onClick={addRow}>
           + Ajouter une ligne
         </button>
+      )}
+
+      <div className="legend-mini">
+        <b>+x</b> sous Dist · D+ · D− = l&apos;intermédiaire (depuis le point précédent) · <span className="bhk">BH</span> = barrière
+        <br />ravitos : <span className="lg"><span className="chip liq">L</span>liquide</span><span className="lg"><span className="chip sol">S</span>solide</span><span className="lg"><span className="chip hot">C</span>chaud</span><span className="lg"><span className="chip base">BV</span>base vie</span><span className="lg"><span className="chip ass">A</span>assistance</span>
+      </div>
+      {lastDeleted && (
+        <div className="wtbl-snack" role="status">
+          <span>Ligne supprimée</span>
+          <button type="button" className="snack-undo" onClick={undoDelete}>Annuler</button>
+        </div>
       )}
     </div>
   )
