@@ -46,3 +46,19 @@ it('sans tableau, seul « Modifier la course » est proposé', () => {
   expect(screen.queryByText('Ré-importer')).not.toBeInTheDocument()
   expect(screen.queryByText('Exporter')).not.toBeInTheDocument()
 })
+
+it('showEditRace=false masque « Modifier la course » et garde les actions tableau', () => {
+  render(
+    <TableActionsMenu
+      showEditRace={false}
+      label="Actions du tableau"
+      onEditLines={() => {}}
+      onReimport={() => {}}
+      onExport={() => {}}
+    />,
+  )
+  fireEvent.click(screen.getByLabelText('Actions du tableau'))
+  expect(screen.queryByText('Modifier la course')).not.toBeInTheDocument()
+  expect(screen.getByText('Modifier les lignes')).toBeInTheDocument()
+  expect(screen.getByText('Exporter')).toBeInTheDocument()
+})

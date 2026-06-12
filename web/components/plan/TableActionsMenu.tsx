@@ -3,20 +3,26 @@
 // Menu d'actions (⋮) de la course : Modifier la course / Modifier les lignes /
 // Ré-importer / Exporter (ouvre la page d'aperçu /print). Sans état métier : le
 // parent (CoursePageClient) fournit les callbacks. Les actions liées au tableau
-// ne sont affichées que si un tableau existe (hasTableau).
+// ne sont affichées que si un tableau existe (hasTableau) ; « Modifier la course »
+// peut être masquée (showEditRace=false) pour le kebab du bloc tableau.
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { MoreVertical, Pencil, Rows3, Download, Share } from 'lucide-react'
 
 type Props = {
-  onEditRace: () => void
+  onEditRace?: () => void
   onEditLines: () => void
   onReimport: () => void
   onExport: () => void
   hasTableau?: boolean
+  showEditRace?: boolean
+  label?: string
 }
 
-export function TableActionsMenu({ onEditRace, onEditLines, onReimport, onExport, hasTableau = true }: Props) {
+export function TableActionsMenu({
+  onEditRace, onEditLines, onReimport, onExport,
+  hasTableau = true, showEditRace = true, label = 'Actions de la course',
+}: Props) {
   const [open, setOpen] = useState(false)
 
   const close = () => setOpen(false)
@@ -26,7 +32,7 @@ export function TableActionsMenu({ onEditRace, onEditLines, onReimport, onExport
     <div className="relative">
       <button
         type="button"
-        aria-label="Actions de la course"
+        aria-label={label}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
@@ -43,7 +49,9 @@ export function TableActionsMenu({ onEditRace, onEditLines, onReimport, onExport
             role="menu"
             className="absolute right-0 z-50 mt-1 min-w-[210px] rounded-[10px] border border-[var(--ink-500)] bg-trail-card p-1 shadow-[0_12px_40px_rgba(0,0,0,0.6)]"
           >
-            <MenuItem icon={<Pencil size={15} />} label="Modifier la course" onClick={() => run(onEditRace)} />
+            {showEditRace && onEditRace && (
+              <MenuItem icon={<Pencil size={15} />} label="Modifier la course" onClick={() => run(onEditRace)} />
+            )}
             {hasTableau && (
               <>
                 <MenuItem icon={<Rows3 size={15} />} label="Modifier les lignes" onClick={() => run(onEditLines)} />

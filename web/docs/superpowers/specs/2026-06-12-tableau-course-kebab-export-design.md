@@ -222,3 +222,13 @@ Cinquième vague de retours prod (2026-06-12) :
   `PRINT_COL_DEFS`/`DEFAULT_PRINT_ORDER` ; **masquée par défaut** (opt-in via `DEFAULT_HIDDEN`,
   `sanitize` la masque aussi pour les configs LS existantes). Toggle dans « Personnaliser les
   colonnes ».
+
+Sixième vague de retours prod (2026-06-12) :
+- **Colonne `objclock` renommée « Objectif (horaire) »** (label dialog ; `th` carte = « Horaire »)
+  et **rangée juste après « Objectif »** même pour les configs LS existantes : `sanitize` insère
+  désormais une clé manquante après son prédécesseur par défaut présent (au lieu de l'ajouter en
+  fin de liste).
+- **2e menu kebab dans l'en-tête du bloc « Tableau de course »** (haut-droite), en plus de celui
+  du bloc nom de course. `TableActionsMenu` gagne `showEditRace?` (false → masque « Modifier la
+  course ») et `label?` (aria « Actions du tableau »). `onEditRace` devient optionnel. Le composant
+  `Section` regagne un slot `action` (en-tête en flex row, `mb-2` déplacé sur la row).

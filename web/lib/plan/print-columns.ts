@@ -26,7 +26,7 @@ export const PRINT_COL_DEFS: Record<PrintColKey, PrintColDef> = {
   dmoins: { key: 'dmoins', label: '▼ D− (tronçon)',    th: '▼D−',      weight: 1.0,  align: 'r' },
   rav:    { key: 'rav',    label: 'Ravito',            th: 'Ravito',   weight: 1.9,  align: 'c' },
   obj:      { key: 'obj',      label: 'Objectif',           th: 'Objectif', weight: 1.0,  align: 'r' },
-  objclock: { key: 'objclock', label: 'Heure (à la montre)', th: 'Heure',   weight: 1.0,  align: 'r' },
+  objclock: { key: 'objclock', label: 'Objectif (horaire)',  th: 'Horaire',  weight: 1.0,  align: 'r' },
   segt:     { key: 'segt',     label: 'Temps tronçon',      th: 'Tps',      weight: 1.0,  align: 'r' },
   bh:       { key: 'bh',       label: 'Barrière',           th: 'Barrière', weight: 1.0,  align: 'r' },
 }
@@ -54,12 +54,18 @@ function sanitize(cfg: Partial<PrintColConfig>): PrintColConfig {
   const hidden = (cfg.hidden ?? [])
     .filter((k): k is PrintColKey => known.has(k as PrintColKey) && !PRINT_COL_DEFS[k].fixed)
   for (const k of DEFAULT_PRINT_ORDER) {
-    if (!order.includes(k)) {
-      order.push(k)
-      // colonne nouvellement connue (config antérieure) : masquée par défaut si
-      // opt-in, pour ne pas l'imposer aux utilisateurs existants.
-      if (DEFAULT_HIDDEN.includes(k) && !hidden.includes(k)) hidden.push(k)
+    if (order.includes(k)) continue
+    // Insère la clé manquante juste après son prédécesseur par défaut présent
+    // (→ « Objectif (horaire) » se range à côté d'« Objectif », pas à la fin).
+    let at = order.length
+    for (let j = DEFAULT_PRINT_ORDER.indexOf(k) - 1; j >= 0; j--) {
+      const pi = order.indexOf(DEFAULT_PRINT_ORDER[j])
+      if (pi !== -1) { at = pi + 1; break }
     }
+    order.splice(at, 0, k)
+    // Colonne opt-in nouvellement connue : masquée par défaut (pas imposée aux
+    // utilisateurs existants).
+    if (DEFAULT_HIDDEN.includes(k) && !hidden.includes(k)) hidden.push(k)
   }
   return { order, hidden }
 }

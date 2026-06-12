@@ -233,7 +233,19 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
         </div>
       </div>
 
-      <Section title="Tableau de course" titleClassName="text-h2 font-semibold text-trail-text mb-2 font-display">
+      <Section
+        title="Tableau de course"
+        titleClassName="text-h2 font-semibold text-trail-text font-display"
+        action={waypoints.length > 0 ? (
+          <TableActionsMenu
+            showEditRace={false}
+            label="Actions du tableau"
+            onEditLines={() => setEditLines((v) => !v)}
+            onReimport={() => setImportOpen(true)}
+            onExport={handleExport}
+          />
+        ) : undefined}
+      >
         {waypoints.length === 0 ? (
           <button type="button" onClick={() => setImportOpen(true)}
             className="text-caption text-trail-primary underline">
@@ -361,10 +373,13 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   )
 }
 
-function Section({ title, titleClassName, children }: { title: string; titleClassName?: string; children: React.ReactNode }) {
+function Section({ title, titleClassName, action, children }: { title: string; titleClassName?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-4">
-      <h2 className={titleClassName ?? 'text-body font-semibold text-trail-muted mb-2 font-display'}>{title}</h2>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h2 className={titleClassName ?? 'text-body font-semibold text-trail-muted font-display'}>{title}</h2>
+        {action}
+      </div>
       {children}
     </div>
   )
