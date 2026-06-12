@@ -40,6 +40,24 @@ function emptyDraft(): Race {
   }
 }
 
+// Recherche best-effort du site officiel à la création d'une course.
+// Fire-and-forget : la course est déjà enregistrée, on ne bloque jamais l'UI et
+// on avale toute erreur (réseau, OPENAI_API_KEY absente, rien trouvé).
+async function searchAndStoreWebsite(race: Race): Promise<void> {
+  try {
+    const res = await fetch('/api/race-import/website', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: race.name, date: race.date }),
+    })
+    if (!res.ok) return
+    const { url } = (await res.json()) as { url: string | null }
+    if (url) await saveRace({ ...race, websiteUrl: url })
+  } catch {
+    /* best-effort */
+  }
+}
+
 export function RaceEditorModal({ race, open, onClose, onSaved, onDeleted }: Props) {
   const L = useT().plan
   const isEdit = race !== null
@@ -117,6 +135,7 @@ export function RaceEditorModal({ race, open, onClose, onSaved, onDeleted }: Pro
       if (isEdit) {
         onClose()
       } else {
+        void searchAndStoreWebsite(toSave)  // fond : remplit le bloc « Site web »
         setCreatedId(toSave.id)   // création → on propose de chercher le tableau
       }
     } finally {

@@ -159,3 +159,100 @@ Retours de Franck après test en prod (2026-06-12, même jour) :
   conservé quand l'objectif n'est pas renseigné.
 - **Menu kebab** : `bg-trail-surface` quasi invisible sur fond bleu nuit → surface élevée
   (`bg-trail-card`), bordure `--ink-500`, ombre renforcée + **scrim** `bg-black/50`.
+
+Deuxième vague de retours prod (2026-06-12) :
+- **« Annuler » = annulation complète du mode édition** (pas un undo LIFO action par
+  action) : snapshot des lignes pris à l'entrée du mode « Modifier les lignes »,
+  « Annuler » restaure tout (suppressions, ajouts, cellules) et sort du mode.
+- **Libellé « JPEG » → « Image »** partout (sous-menu kebab, bouton `/print`, caption).
+- **Kebab → Image n'exporte plus directement** : `?export=jpeg` met seulement le focus
+  (liseré blanc, comme `?export=share`) sur le bouton Image — l'utilisateur passe par
+  l'aperçu pour personnaliser les colonnes avant d'exporter.
+- **Bug flash portrait→paysage→portrait à la capture** : la capture basculait l'aperçu
+  à plat (`setFlat`) puis le restaurait. Désormais on rasterise un **clone hors écran**
+  (wrapper `pdfroot exporting` en `position:fixed;left:-10000px`) — l'aperçu ne bouge plus.
+- **« Personnaliser les colonnes » plus visible** : `--trail-card` + bordure `--ink-500`
+  + texte blanc (au lieu de surface/bordure sombres).
+- **Kebab déplacé dans l'en-tête du bloc** « Tableau de course » (prop `action` du
+  composant `Section`), à droite du titre.
+
+Troisième vague de retours prod (2026-06-12) :
+- **Bouton « Modifier » (EditButton) retiré** du haut de la fiche course (doublon du kebab).
+- **Kebab déplacé dans l'en-tête du bloc « nom de la course »** (à droite du titre `<h1>`),
+  plus dans la `Section` Tableau (prop `action` de `Section` retirée, composant restauré).
+  Nouvelle prop `hasTableau` : sans tableau, seul « Modifier la course » s'affiche.
+- **Sous-menu « Exporter » supprimé** : « Exporter » est une action directe qui ouvre la
+  page `/print` (l'utilisateur y choisit PDF / Image / Partager après avoir personnalisé
+  les colonnes). `onExport` passe de `(kind) => void` à `() => void`. Libellé d'accès du
+  kebab : « Actions du tableau » → « Actions de la course ».
+- **Chevron de dépliage de « Stratégie d'allure »** trop discret → pastille ronde
+  (`--trail-surface` + bordure, `--trail-text`, 24 px) au lieu d'un ▾ muted 10 px.
+- **Bouton « Personnaliser les colonnes » invisible en thème CLAIR** (texte blanc sur fond
+  clair — régression de la 2e vague) → style **contour orange** thème-agnostique
+  (`border/color: var(--trail-primary)`, fond transparent). Focus des boutons : `#fff` →
+  `var(--trail-text)` (contrasté sur les 2 thèmes).
+
+Quatrième vague de retours prod (2026-06-12) :
+- **Badge de fraîcheur retiré** du bloc (« ✓ Confirmé édition 2026 ») : `FreshnessBadge`
+  supprimé de `CoursePageClient`. (Le bandeau jaune `pendingDiff` « nouvelle édition / tableau
+  changé » reste, c'est un composant distinct.)
+- **Objectif + départ déplacés dans l'en-tête de « Stratégie d'allure »** (à droite du titre) :
+  l'ancien bandeau objectif autonome est supprimé. Nouvelles props de `PacingStrategyCard` :
+  `startTime`, `onEditObjective`, `onEditStart`. Quand l'objectif n'est pas défini (carte non
+  rendue), un encart « Définir l'objectif » s'affiche à la place.
+- **Édition par pop-ups indépendantes** : cliquer sur la valeur objectif (« 35h00 ») ou départ
+  (« 19:00 ») ouvre une petite fenêtre dédiée (`QuickEditModal`, nouveau composant générique
+  validate/onSave). Parsers dans `CoursePageClient` : `parseObjectiveMin` (35h00/35:00/35h/35)
+  et `parseClockHHMM` (19:00/19h00). Les boutons font `preventDefault`+`stopPropagation` pour
+  ne pas (dé)plier le `<details>`.
+- **Badge de stratégie coloré selon l'état** : Régulier = gris (`--trail-muted`), Finir fort =
+  bleu (#38BDF8), Partir vite = orange (`--trail-primary`). Variantes CSS `.psum-cur.v-even/
+  v-start/v-end`. Défaut = Régulier (fade 0, inchangé). Le résumé `.psum` passe en `flex-wrap`
+  pour gérer objectif/départ + badge + chevron sur mobile.
+
+Cinquième vague de retours prod (2026-06-12) :
+- **Saisie objectif/départ via clavier numérique impossible** (pas de « : ») → `QuickEditModal`
+  (champ texte unique) remplacé par **`TimeEditModal`** : deux champs numériques `HH : MM`
+  (`inputMode=numeric`, bornage heures `maxHours` = 23 horloge / 99 durée, minutes ≤ 59,
+  auto-avance HH→MM). API `onSave(hours, minutes)`. Cohérent pour objectif ET départ.
+  `parseObjectiveMin`/`parseClockHHMM`/`fmtObjective` supprimés ; ajout `parseStartClock`.
+- **Nouvelle colonne d'export « Heure (à la montre) »** (`objclock`) UNIQUEMENT dans la carte
+  `/print` (pas le tableau écran) : heure d'horloge projetée à chaque point = départ + temps
+  écoulé cumulé (`formatElapsedToClock(startTime, elapsed[i])`, préfixe jour retiré). Ajoutée à
+  `PRINT_COL_DEFS`/`DEFAULT_PRINT_ORDER` ; **masquée par défaut** (opt-in via `DEFAULT_HIDDEN`,
+  `sanitize` la masque aussi pour les configs LS existantes). Toggle dans « Personnaliser les
+  colonnes ».
+
+Sixième vague de retours prod (2026-06-12) :
+- **Colonne `objclock` renommée « Objectif (horaire) »** (label dialog ; `th` carte = « Horaire »)
+  et **rangée juste après « Objectif »** même pour les configs LS existantes : `sanitize` insère
+  désormais une clé manquante après son prédécesseur par défaut présent (au lieu de l'ajouter en
+  fin de liste).
+- **2e menu kebab dans l'en-tête du bloc « Tableau de course »** (haut-droite), en plus de celui
+  du bloc nom de course. `TableActionsMenu` gagne `showEditRace?` (false → masque « Modifier la
+  course ») et `label?` (aria « Actions du tableau »). `onEditRace` devient optionnel. Le composant
+  `Section` regagne un slot `action` (en-tête en flex row, `mb-2` déplacé sur la row).
+
+Septième vague de retours prod (2026-06-12) — carte `/print` :
+- **Marque « TRAIL COCKPIT » en haut de la carte** (`.brand`, TRAIL en `--accent` / COCKPIT en
+  `--ink-soft`) — présente aussi en PDF et image (dans `.card`, capturé par `renderJpeg`).
+- **Zoom de l'aperçu écran** : barre `−/%/+` (1×→3×, pas 0,5). État `zoom` → variable CSS
+  `--zoom` sur `.pdfroot`. `.zoomview` réserve la taille mise à l'échelle (`calc(65mm/120mm × --zoom)`)
+  et `.cardwrap` est `scale(--zoom)` (origin top-left) ; `.previewscroll` (overflow auto, max-h 78vh)
+  permet de défiler la carte agrandie. **N'affecte NI le PDF NI l'image** : `@media print` et le
+  clone `.exporting` remettent `transform:none` / `width:auto`. Zoom=1 = rendu identique à avant.
+
+Huitième vague de retours prod (2026-06-12) — carte `/print` :
+- **Logo agrandi + `.RUN`** : `.brand` passe à 10px, ajout `.b3` « .RUN » en `--accent` →
+  « TRAIL COCKPIT.RUN » (bandeau horizontal centré, choix Franck vs vertical/empilé).
+- **Zoom au pincement, plus de barre `−/%/+`** (retirée) : listeners natifs non-passifs sur
+  `.previewscroll` (`touchstart/move/end` 2 doigts → ratio de distance × zoom de départ, clamp
+  1–3 ; `preventDefault` car React passe `onTouchMove` en passif) + `ctrl+wheel` (pincement
+  trackpad desktop). `touch-action:pan-x pan-y` = pan 1 doigt via overflow, pas de pinch-zoom
+  navigateur. `zoomRef` suit `zoom` pour les handlers attachés une fois (deps `[ready, race]`).
+
+Neuvième vague (2026-06-12) — carte `/print` :
+- **Logo déplacé du bandeau supérieur vers le MILIEU de l'en-tête** (`.brand` désormais
+  enfant de `.hd`, entre le bloc nom/infos à gauche et l'objectif à droite) : `flex:1;
+  align-self:center;text-align:center` → aligné verticalement avec les 2 lignes nom+infos.
+  Plus de ligne de marque séparée en haut.

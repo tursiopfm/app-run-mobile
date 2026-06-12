@@ -5,14 +5,21 @@ import { useRouter } from 'next/navigation'
 import type { Race, RaceTableauMeta, RaceWaypoint } from '@/types/plan'
 import { getRaces, deleteRace, peekRaces, saveRace } from '@/lib/plan/storage'
 import { RaceEditorModal } from '@/components/plan/RaceEditorModal'
-import { EditButton } from '@/components/plan/EditButton'
 import { WaypointsTable } from '@/components/plan/WaypointsTable'
 import { TableActionsMenu } from '@/components/plan/TableActionsMenu'
 import { PacingStrategyCard } from '@/components/plan/PacingStrategyCard'
 import { RaceImportSheet } from '@/components/plan/RaceImportSheet'
-import { FreshnessBadge } from '@/components/plan/FreshnessBadge'
 import { TableauDiffModal } from '@/components/plan/TableauDiffModal'
+import { TimeEditModal } from '@/components/plan/TimeEditModal'
 import { colors } from '@/lib/design/colors'
+
+const pad2 = (n: number) => String(n).padStart(2, '0')
+
+// Heure de départ « HH:MM » → [heures, minutes] (défaut 08:00 si absent).
+function parseStartClock(s?: string): [number, number] {
+  const m = /^(\d{1,2}):(\d{2})/.exec(s ?? '')
+  return m ? [parseInt(m[1], 10), parseInt(m[2], 10)] : [8, 0]
+}
 
 function formatLongDate(iso: string): string {
   if (!iso || iso.length < 10) return iso
@@ -41,6 +48,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   const [diffOpen, setDiffOpen] = useState(false)
   const [diffBusy, setDiffBusy] = useState(false)
   const [editLines, setEditLines] = useState(false)
+  const [editField, setEditField] = useState<null | 'objective' | 'start'>(null)
 
   // Arrivée depuis « Oui, chercher » à la création (RaceEditorModal) :
   // ?import=auto → on ouvre la feuille sur l'onglet Auto et on lance la recherche.
@@ -82,12 +90,10 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
     [race],
   )
 
-  // Export du tableau : ouvre la page /print (hub d'export). jpeg/share y sont
-  // déclenchés au chargement / au tap (cf. print/page.tsx).
-  const handleExport = useCallback((kind: 'pdf' | 'jpeg' | 'share') => {
-    const base = `/plan/courses/${raceId}/print`
-    const url = kind === 'pdf' ? base : `${base}?export=${kind}`
-    window.open(url, '_blank', 'noopener,noreferrer')
+  // Export du tableau : ouvre la page /print (hub d'export) où l'utilisateur
+  // personnalise les colonnes puis choisit PDF / Image / Partager.
+  const handleExport = useCallback(() => {
+    window.open(`/plan/courses/${raceId}/print`, '_blank', 'noopener,noreferrer')
   }, [raceId])
 
   const reload = useCallback(async () => {
@@ -121,6 +127,22 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   const handleStartTimeChange = useCallback(async (hhmm: string | null) => {
     if (!race) return
     const next = { ...race, startTime: hhmm ?? undefined }
+    setRace(next)
+    await saveRace(next)
+  }, [race])
+
+  // Pop-ups indépendantes : objectif (temps visé) et heure de départ.
+  const saveObjective = useCallback(async (h: number, m: number) => {
+    const min = h * 60 + m
+    if (min <= 0 || !race) return
+    const next = { ...race, targetDurationMin: min }
+    setRace(next)
+    await saveRace(next)
+  }, [race])
+
+  const saveStart = useCallback(async (h: number, m: number) => {
+    if (!race) return
+    const next = { ...race, startTime: `${pad2(h)}:${pad2(m)}` }
     setRace(next)
     await saveRace(next)
   }, [race])
@@ -175,16 +197,24 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
         >
           ← Retour
         </button>
-        <EditButton onClick={() => setEditorOpen(true)} />
       </div>
 
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-4 space-y-2">
-        <h1
-          className="text-display leading-tight text-trail-text"
-          style={{ fontFamily: "var(--font-data)" }}
-        >
-          {race.name}
-        </h1>
+        <div className="flex items-start justify-between gap-2">
+          <h1
+            className="text-display leading-tight text-trail-text"
+            style={{ fontFamily: "var(--font-data)" }}
+          >
+            {race.name}
+          </h1>
+          <TableActionsMenu
+            hasTableau={waypoints.length > 0}
+            onEditRace={() => setEditorOpen(true)}
+            onEditLines={() => setEditLines((v) => !v)}
+            onReimport={() => setImportOpen(true)}
+            onExport={handleExport}
+          />
+        </div>
         <p className="text-body-sm text-trail-muted">
           {formatLongDate(race.date)}{race.location ? ` — ${race.location}` : ''}
         </p>
@@ -203,7 +233,19 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
         </div>
       </div>
 
-      <Section title="Tableau de course">
+      <Section
+        title="Tableau de course"
+        titleClassName="text-h2 font-semibold text-trail-text font-display"
+        action={waypoints.length > 0 ? (
+          <TableActionsMenu
+            showEditRace={false}
+            label="Actions du tableau"
+            onEditLines={() => setEditLines((v) => !v)}
+            onReimport={() => setImportOpen(true)}
+            onExport={handleExport}
+          />
+        ) : undefined}
+      >
         {waypoints.length === 0 ? (
           <button type="button" onClick={() => setImportOpen(true)}
             className="text-caption text-trail-primary underline">
@@ -221,44 +263,28 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
                 <span className="block text-caption text-trail-muted">Touche pour vérifier et valider.</span>
               </button>
             )}
-            <FreshnessBadge meta={meta} />
-            <div className="mb-3 flex items-center justify-between gap-3 rounded-[10px] bg-trail-surface border border-trail-border px-3 py-2">
-              <div className="text-caption min-w-0">
-                {race.startTime && race.targetDurationMin != null ? (
-                  <span className="text-trail-text">
-                    ⏱ Objectif <b>{Math.floor(race.targetDurationMin / 60)}h{String(race.targetDurationMin % 60).padStart(2, '0')}</b>
-                    <span className="text-trail-muted"> · Départ {race.startTime}</span>
-                  </span>
-                ) : (
-                  <span className="text-trail-muted">Objectif non défini — renseigne départ + temps cible pour calculer les heures de passage.</span>
-                )}
-              </div>
-              {!(race.startTime && race.targetDurationMin != null) && (
+            {race.targetDurationMin != null ? (
+              <PacingStrategyCard
+                waypoints={waypoints.map(({ km, dPlus, targetOverrideSec }) => ({ km, dPlus, targetOverrideSec }))}
+                targetDurationMin={race.targetDurationMin}
+                startTime={race.startTime}
+                pacingFade={race.pacingFade ?? 0}
+                onChange={handlePacingChange}
+                onEditObjective={() => setEditField('objective')}
+                onEditStart={() => setEditField('start')}
+              />
+            ) : (
+              <div className="mb-3 flex items-center justify-between gap-3 rounded-[10px] bg-trail-surface border border-trail-border px-3 py-2">
+                <span className="text-caption text-trail-muted min-w-0">Objectif non défini — règle ton temps cible pour calculer les heures de passage.</span>
                 <button
                   type="button"
-                  onClick={() => setEditorOpen(true)}
+                  onClick={() => setEditField('objective')}
                   className="text-caption text-trail-primary font-semibold whitespace-nowrap underline"
                 >
                   Définir l&apos;objectif
                 </button>
-              )}
-            </div>
-            {race.targetDurationMin != null && (
-              <PacingStrategyCard
-                waypoints={waypoints.map(({ km, dPlus, targetOverrideSec }) => ({ km, dPlus, targetOverrideSec }))}
-                targetDurationMin={race.targetDurationMin}
-                pacingFade={race.pacingFade ?? 0}
-                onChange={handlePacingChange}
-              />
+              </div>
             )}
-            <div className="flex justify-end">
-              <TableActionsMenu
-                onEditRace={() => setEditorOpen(true)}
-                onEditLines={() => setEditLines((v) => !v)}
-                onReimport={() => setImportOpen(true)}
-                onExport={handleExport}
-              />
-            </div>
             <WaypointsTable
               waypoints={waypoints.map(({ id: _id, raceId: _rid, ...rest }) => rest)}
               onChange={handleWaypointsChange}
@@ -280,7 +306,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
       </Section>
 
       <Section title="Site web">
-        <p className="text-caption text-trail-muted">Bientôt — lien officiel de la course.</p>
+        <WebsiteBlock race={race} onChange={setRace} />
       </Section>
 
       <Section title="Notes">
@@ -323,15 +349,135 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
           onClose={() => setDiffOpen(false)}
         />
       )}
+      <TimeEditModal
+        open={editField === 'objective'}
+        title="Objectif (temps visé)"
+        hours={race.targetDurationMin != null ? Math.floor(race.targetDurationMin / 60) : 0}
+        minutes={race.targetDurationMin != null ? race.targetDurationMin % 60 : 0}
+        maxHours={99}
+        hint="Heures : minutes (ex. 35 : 00)"
+        onSave={saveObjective}
+        onClose={() => setEditField(null)}
+      />
+      <TimeEditModal
+        open={editField === 'start'}
+        title="Heure de départ"
+        hours={parseStartClock(race.startTime)[0]}
+        minutes={parseStartClock(race.startTime)[1]}
+        maxHours={23}
+        hint="Heure de départ (ex. 19 : 00)"
+        onSave={saveStart}
+        onClose={() => setEditField(null)}
+      />
     </div>
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, titleClassName, action, children }: { title: string; titleClassName?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-4">
-      <h2 className="text-body font-semibold text-trail-muted mb-2 font-display">{title}</h2>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h2 className={titleClassName ?? 'text-body font-semibold text-trail-muted font-display'}>{title}</h2>
+        {action}
+      </div>
       {children}
+    </div>
+  )
+}
+
+function WebsiteBlock({ race, onChange }: { race: Race; onChange: (r: Race) => void }) {
+  const [editing, setEditing] = useState(false)
+  const [input, setInput] = useState(race.websiteUrl ?? '')
+  const [searching, setSearching] = useState(false)
+
+  // Re-sync si l'URL change en fond (fire-and-forget post-création → reload parent).
+  useEffect(() => { setInput(race.websiteUrl ?? '') }, [race.websiteUrl])
+
+  function normalize(raw: string): string {
+    const v = raw.trim()
+    if (!v) return ''
+    return /^https?:\/\//i.test(v) ? v : `https://${v}`
+  }
+
+  async function persist(url: string) {
+    const next = { ...race, websiteUrl: url || undefined }
+    onChange(next)
+    await saveRace(next)
+  }
+
+  async function handleSaveInput() {
+    const url = normalize(input)
+    setInput(url)
+    setEditing(false)
+    await persist(url)
+  }
+
+  async function handleSearch() {
+    setSearching(true)
+    try {
+      const res = await fetch('/api/race-import/website', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: race.name, date: race.date }),
+      })
+      if (res.ok) {
+        const { url } = (await res.json()) as { url: string | null }
+        if (url) await persist(url)
+      }
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  if (race.websiteUrl && !editing) {
+    return (
+      <div className="flex items-center justify-between gap-2">
+        <a
+          href={race.websiteUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-body-sm text-trail-primary underline truncate"
+        >
+          {race.websiteUrl.replace(/^https?:\/\//, '')}
+        </a>
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="text-caption text-trail-muted hover:text-trail-text shrink-0"
+        >
+          Modifier
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      <input
+        type="url"
+        inputMode="url"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="https://…"
+        className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
+      />
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleSaveInput}
+          className="px-3 py-1.5 rounded-[10px] bg-trail-primary text-white text-caption font-semibold"
+        >
+          Enregistrer
+        </button>
+        <button
+          type="button"
+          onClick={handleSearch}
+          disabled={searching}
+          className="px-3 py-1.5 rounded-[10px] border border-trail-border text-trail-text text-caption font-semibold disabled:opacity-50"
+        >
+          {searching ? 'Recherche…' : 'Rechercher le site'}
+        </button>
+      </div>
     </div>
   )
 }

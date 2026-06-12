@@ -22,35 +22,32 @@ function Harness() {
   )
 }
 
-it('supprime une ligne puis Annuler (barre d’édition) la restaure', () => {
+it('Annuler restaure l’état d’entrée du mode édition (suppression + cellule) et sort du mode', () => {
   render(<Harness />)
   expect(screen.getByDisplayValue('Ravito B')).toBeInTheDocument()
-  // Pas de bouton Annuler tant que rien n'est supprimé.
-  expect(screen.queryByRole('button', { name: /Annuler/ })).not.toBeInTheDocument()
 
-  const delButtons = screen.getAllByLabelText('Supprimer la ligne')
-  fireEvent.click(delButtons[1]) // ligne du milieu
-
+  // Suppression d'une ligne + édition d'un nom pendant le mode édition.
+  fireEvent.click(screen.getAllByLabelText('Supprimer la ligne')[1])
   expect(screen.queryByDisplayValue('Ravito B')).not.toBeInTheDocument()
+  fireEvent.change(screen.getByDisplayValue('Départ'), { target: { value: 'Départ modifié' } })
 
   fireEvent.click(screen.getByRole('button', { name: /Annuler/ }))
 
+  // Tout est restauré…
   expect(screen.getByDisplayValue('Ravito B')).toBeInTheDocument()
-  // Pile vide → le bouton disparaît.
+  expect(screen.getByDisplayValue('Départ')).toBeInTheDocument()
+  expect(screen.queryByDisplayValue('Départ modifié')).not.toBeInTheDocument()
+  // …et on est sorti du mode édition.
+  expect(screen.queryByRole('button', { name: /Terminé/ })).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /Annuler/ })).not.toBeInTheDocument()
 })
 
-it('plusieurs suppressions s’annulent en chaîne (LIFO)', () => {
+it('Terminé conserve les modifications', () => {
   render(<Harness />)
-  const delButtons = screen.getAllByLabelText('Supprimer la ligne')
-  fireEvent.click(delButtons[1]) // supprime Ravito B
-  // Après reindex il reste 2 lignes ; supprime la nouvelle ligne du milieu impossible → supprime l'index 1 (Arrivée reclassée)
   fireEvent.click(screen.getAllByLabelText('Supprimer la ligne')[1])
 
-  fireEvent.click(screen.getByRole('button', { name: /Annuler/ }))
-  fireEvent.click(screen.getByRole('button', { name: /Annuler/ }))
+  fireEvent.click(screen.getByRole('button', { name: /Terminé/ }))
 
-  expect(screen.getByDisplayValue('Ravito B')).toBeInTheDocument()
-  expect(screen.getByDisplayValue('Arrivée')).toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: /Annuler/ })).not.toBeInTheDocument()
+  expect(screen.queryByDisplayValue('Ravito B')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /Terminé/ })).not.toBeInTheDocument()
 })

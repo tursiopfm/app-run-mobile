@@ -3,6 +3,7 @@
 // Export PDF — carte de course format iPhone (cf. Prompts/tableau-course-pdf-mockup.html).
 // Colonnes personnalisables (choix + ordre) via PrintColumnsDialog, largeurs auto.
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import type { Race, RaceWaypoint } from '@/types/plan'
 import { getRaces } from '@/lib/plan/storage'
 import { estimatePassageTimes } from '@/lib/plan/pacing'
@@ -56,23 +57,32 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
   const updateCfg = (next: PrintColConfig) => { setCfg(next); savePrintColConfig(next) }
 
   const cardRef = useRef<HTMLDivElement>(null)
+  const jpegBtnRef = useRef<HTMLButtonElement>(null)
   const shareBtnRef = useRef<HTMLButtonElement>(null)
-  const [flat, setFlat] = useState(false)
+  const previewRef = useRef<HTMLDivElement>(null)
+  const zoomRef = useRef(1)
   const [busy, setBusy] = useState(false)
+  const [zoom, setZoom] = useState(1) // zoom de l'aperçu écran (n'affecte ni le PDF ni l'image)
+  useEffect(() => { zoomRef.current = zoom }, [zoom])
 
-  // Rend la carte « à plat » (non tournée, comme à l'impression) puis la rasterise.
+  // Rasterise un CLONE de la carte, à plat, hors écran — l'aperçu tourné à
+  // l'écran ne bouge pas (pas de flash portrait→paysage pendant la capture).
   const renderJpeg = useCallback(async () => {
     const el = cardRef.current
     if (!el) return null
     await document.fonts?.ready
-    setFlat(true)
-    await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+    const wrap = document.createElement('div')
+    wrap.className = 'pdfroot exporting'
+    wrap.style.cssText = 'position:fixed;left:-10000px;top:0;padding:0;min-height:0;background:#fff;'
+    wrap.appendChild(el.cloneNode(true))
+    document.body.appendChild(wrap)
     try {
-      const dataUrl = await toJpeg(el, { backgroundColor: '#ffffff', pixelRatio: 2, quality: 0.95, cacheBust: true })
+      const card = wrap.firstElementChild as HTMLElement
+      const dataUrl = await toJpeg(card, { backgroundColor: '#ffffff', pixelRatio: 2, quality: 0.95, cacheBust: true })
       const blob = await (await fetch(dataUrl)).blob()
       return { dataUrl, blob }
     } finally {
-      setFlat(false)
+      wrap.remove()
     }
   }, [])
 
@@ -107,14 +117,49 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
     }
   }, [busy, renderJpeg, race])
 
-  // Auto-déclenchement selon ?export= : jpeg télécharge directement ; share exige
-  // un geste utilisateur → on met juste le focus sur le bouton « Partager ».
+  // ?export= met en avant (focus = liseré blanc) le bouton visé, sans rien
+  // déclencher : l'utilisateur personnalise d'abord les colonnes sur l'aperçu.
   useEffect(() => {
     if (!ready || !race) return
     const action = new URLSearchParams(window.location.search).get('export')
-    if (action === 'jpeg') void exportJpeg()
+    if (action === 'jpeg') jpegBtnRef.current?.focus()
     else if (action === 'share') shareBtnRef.current?.focus()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, race])
+
+  // Zoom au pincement (2 doigts) + pincement trackpad (ctrl+molette). Listeners
+  // natifs non-passifs (React passe onTouchMove en passif → preventDefault KO).
+  // Le pan se fait au défilement (un doigt) via l'overflow de .previewscroll.
+  useEffect(() => {
+    const el = previewRef.current
+    if (!el) return
+    const clamp = (z: number) => Math.round(Math.min(3, Math.max(1, z)) * 100) / 100
+    const apply = (z: number) => { const c = clamp(z); zoomRef.current = c; setZoom(c) }
+    const dist = (ts: TouchList) =>
+      Math.hypot(ts[0].clientX - ts[1].clientX, ts[0].clientY - ts[1].clientY)
+    let start: { d: number; z: number } | null = null
+    const onStart = (e: TouchEvent) => { if (e.touches.length === 2) start = { d: dist(e.touches), z: zoomRef.current } }
+    const onMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && start) {
+        e.preventDefault()
+        apply(start.z * (dist(e.touches) / start.d))
+      }
+    }
+    const onEnd = (e: TouchEvent) => { if (e.touches.length < 2) start = null }
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return
+      e.preventDefault()
+      apply(zoomRef.current * (1 - e.deltaY * 0.01))
+    }
+    el.addEventListener('touchstart', onStart, { passive: false })
+    el.addEventListener('touchmove', onMove, { passive: false })
+    el.addEventListener('touchend', onEnd)
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => {
+      el.removeEventListener('touchstart', onStart)
+      el.removeEventListener('touchmove', onMove)
+      el.removeEventListener('touchend', onEnd)
+      el.removeEventListener('wheel', onWheel)
+    }
   }, [ready, race])
 
   if (!ready) return <div className="p-6 text-sm">Préparation…</div>
@@ -168,13 +213,18 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         </span>
       )
       case 'obj':    return <span className="obj">{objLabel ?? dash}</span>
+      case 'objclock': {
+        // Objectif à l'heure d'horloge = départ + temps écoulé cumulé (sans préfixe jour).
+        const clock = race.startTime && elapsed ? noDay(formatElapsedToClock(race.startTime, elapsed[i])?.label) : null
+        return <span className="bh">{clock ?? dash}</span>
+      }
       case 'segt':   return <span className="obj">{segt ?? dash}</span>
       case 'bh':     return <span className="bh">{bhLabel ?? dash}</span>
     }
   }
 
   return (
-    <div className={flat ? 'pdfroot exporting' : 'pdfroot'}>
+    <div className="pdfroot" style={{ '--zoom': String(zoom) } as CSSProperties}>
       <style>{`
         .pdfroot{
           --ink:#0E1513; --ink-soft:#55615E; --ink-faint:#8A938F;
@@ -188,7 +238,10 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .toolbar .ttl{font-family:var(--d);font-weight:600;font-size:14px;}
         .pdfroot .toolbar .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
         .pdfroot .btn{font-family:var(--d);font-weight:600;font-size:13px;padding:10px 8px;border-radius:10px;border:0;background:var(--trail-primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
-        .pdfroot .btn.ghost{background:var(--trail-surface);border:1px solid var(--trail-border);color:var(--trail-text);}
+        /* Liseré sur le bouton ciblé par ?export= (focus) — contrasté sur les 2 thèmes. */
+        .pdfroot .btn:focus{outline:2px solid var(--trail-text);outline-offset:2px;}
+        /* « Personnaliser les colonnes » : contour orange (secondaire) — visible en clair ET sombre, distinct des 3 boutons pleins. */
+        .pdfroot .btn.ghost{background:transparent;border:1.5px solid var(--trail-primary);color:var(--trail-primary);}
         .pdfroot .caption{width:120mm;max-width:100%;color:var(--trail-muted);font-size:11px;margin-bottom:16px;line-height:1.4;}
         .pdfroot .cut{padding:6mm;border:1px dashed var(--trail-border);border-radius:6px;background:var(--trail-surface);}
         .pdfroot .scis{font-size:10px;color:var(--trail-muted);margin-bottom:4px;display:block;}
@@ -234,10 +287,26 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .legend .k{display:inline-flex;align-items:center;gap:3px;}
         .pdfroot .legend .rb{transform:scale(.78);}
 
-        /* Capture image (html-to-image) : carte à plat (non tournée), comme @media print. */
-        .pdfroot.exporting .cardwrap{position:static;width:auto;height:auto;}
+        /* Capture image (html-to-image) : appliquée au WRAPPER hors écran qui
+           contient le clone de la carte (cf. renderJpeg) — met le clone à plat. */
         .pdfroot.exporting .card{position:static;transform:none;top:auto;left:auto;margin:0 auto;box-shadow:none;}
         .pdfroot .btn:disabled{opacity:.5;cursor:default;}
+
+        /* Marque en haut de la carte (présente aussi en PDF / image). */
+        /* Marque AU MILIEU de l'en-tête : prend l'espace central, centrée et alignée
+           verticalement avec les 2 lignes (nom + infos). */
+        .pdfroot .brand{flex:1;min-width:0;align-self:center;text-align:center;font-family:var(--d);font-weight:800;font-size:10px;letter-spacing:.6px;line-height:1;padding:0 6px;white-space:nowrap;}
+        .pdfroot .brand .b1{color:var(--accent);}
+        .pdfroot .brand .b2{color:var(--ink-soft);}
+        .pdfroot .brand .b3{color:var(--accent);}
+
+        /* Zoom de l'aperçu ÉCRAN (pincement) : zoomview réserve la taille mise à l'échelle
+           (→ scroll/pan), cardwrap est scalé. N'affecte ni l'impression ni l'export image
+           (cf. @media print et le clone .exporting). */
+        .pdfroot .previewscroll{width:100%;max-width:100%;max-height:78vh;overflow:auto;touch-action:pan-x pan-y;}
+        .pdfroot .cut{width:max-content;margin:0 auto;}
+        .pdfroot .zoomview{width:calc(65mm * var(--zoom,1));height:calc(120mm * var(--zoom,1));margin:0 auto;}
+        .pdfroot .zoomview .cardwrap{transform:scale(var(--zoom,1));transform-origin:top left;}
 
         @page{size:A4 portrait;margin:8mm;}
         @media print{
@@ -250,6 +319,9 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           /* Carte à l'HORIZONTALE (non tournée), calée en HAUT de la feuille portrait. */
           .pdfroot{position:absolute !important;top:0;left:0;right:0;width:100% !important;background:#fff;padding:0 !important;display:block !important;}
           .pdfroot .toolbar,.pdfroot .caption,.pdfroot .scis{display:none !important;}
+          .pdfroot .previewscroll{overflow:visible !important;max-height:none !important;}
+          .pdfroot .zoomview{width:auto !important;height:auto !important;}
+          .pdfroot .zoomview .cardwrap{transform:none !important;}
           .pdfroot .cut{border:none;background:none;padding:0;margin:0;width:auto;}
           .pdfroot .cardwrap{position:static !important;width:auto !important;height:auto !important;}
           .pdfroot .card{position:static !important;transform:none !important;top:auto;left:auto;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
@@ -263,16 +335,18 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         <span className="ttl">Carte de course</span>
         <div className="actions">
           <button className="btn" onClick={() => window.print()}><FileText size={16} /> PDF</button>
-          <button className="btn" onClick={() => void exportJpeg()} disabled={busy}><ImageIcon size={16} /> JPEG</button>
+          <button className="btn" ref={jpegBtnRef} onClick={() => void exportJpeg()} disabled={busy}><ImageIcon size={16} /> Image</button>
           <button className="btn" ref={shareBtnRef} onClick={() => void shareJpeg()} disabled={busy}><Share2 size={16} /> Partager</button>
         </div>
         <button className="btn ghost" onClick={() => setDialogOpen(true)}><Settings2 size={16} /> Personnaliser les colonnes</button>
       </div>
-      <p className="caption">{"Les colonnes choisies s'appliquent aux trois formats (PDF, JPEG, partage). Aperçu tourné à l'écran (format carte de poche). À l'impression : carte à l'horizontale, en haut de la feuille A4. Découpe, plastifie — tient dans une poche de veste."}</p>
+      <p className="caption">{"Les colonnes choisies s'appliquent aux trois formats (PDF, image, partage). Pince à deux doigts pour zoomer l'aperçu. À l'impression : carte à l'horizontale, en haut de la feuille A4. Découpe, plastifie — tient dans une poche de veste."}</p>
 
+      <div className="previewscroll" ref={previewRef}>
       <div className="cut">
         <span className="scis">✂ — — — — — — — — découper — — — — — — — —</span>
 
+        <div className="zoomview">
         <div className="cardwrap">
         <div className="card" ref={cardRef}>
           <div className="hd">
@@ -284,6 +358,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
                 {arrClock ? <> · Arr. visée <b>{arrClock}</b></> : null}
               </div>
             </div>
+            <div className="brand"><span className="b1">TRAIL</span> <span className="b2">COCKPIT</span><span className="b3">.RUN</span></div>
             {goal ? <div className="goal"><span className="lbl">Objectif</span> {goal}</div> : null}
           </div>
 
@@ -330,6 +405,8 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           </div>
         </div>
         </div>
+        </div>
+      </div>
       </div>
 
       <PrintColumnsDialog open={dialogOpen} config={cfg} onChange={updateCfg} onClose={() => setDialogOpen(false)} />
