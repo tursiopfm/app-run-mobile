@@ -241,3 +241,12 @@ Septième vague de retours prod (2026-06-12) — carte `/print` :
   et `.cardwrap` est `scale(--zoom)` (origin top-left) ; `.previewscroll` (overflow auto, max-h 78vh)
   permet de défiler la carte agrandie. **N'affecte NI le PDF NI l'image** : `@media print` et le
   clone `.exporting` remettent `transform:none` / `width:auto`. Zoom=1 = rendu identique à avant.
+
+Huitième vague de retours prod (2026-06-12) — carte `/print` :
+- **Logo agrandi + `.RUN`** : `.brand` passe à 10px, ajout `.b3` « .RUN » en `--accent` →
+  « TRAIL COCKPIT.RUN » (bandeau horizontal centré, choix Franck vs vertical/empilé).
+- **Zoom au pincement, plus de barre `−/%/+`** (retirée) : listeners natifs non-passifs sur
+  `.previewscroll` (`touchstart/move/end` 2 doigts → ratio de distance × zoom de départ, clamp
+  1–3 ; `preventDefault` car React passe `onTouchMove` en passif) + `ctrl+wheel` (pincement
+  trackpad desktop). `touch-action:pan-x pan-y` = pan 1 doigt via overflow, pas de pinch-zoom
+  navigateur. `zoomRef` suit `zoom` pour les handlers attachés une fois (deps `[ready, race]`).

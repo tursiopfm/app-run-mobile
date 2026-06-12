@@ -59,8 +59,11 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
   const cardRef = useRef<HTMLDivElement>(null)
   const jpegBtnRef = useRef<HTMLButtonElement>(null)
   const shareBtnRef = useRef<HTMLButtonElement>(null)
+  const previewRef = useRef<HTMLDivElement>(null)
+  const zoomRef = useRef(1)
   const [busy, setBusy] = useState(false)
   const [zoom, setZoom] = useState(1) // zoom de l'aperçu écran (n'affecte ni le PDF ni l'image)
+  useEffect(() => { zoomRef.current = zoom }, [zoom])
 
   // Rasterise un CLONE de la carte, à plat, hors écran — l'aperçu tourné à
   // l'écran ne bouge pas (pas de flash portrait→paysage pendant la capture).
@@ -121,6 +124,42 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
     const action = new URLSearchParams(window.location.search).get('export')
     if (action === 'jpeg') jpegBtnRef.current?.focus()
     else if (action === 'share') shareBtnRef.current?.focus()
+  }, [ready, race])
+
+  // Zoom au pincement (2 doigts) + pincement trackpad (ctrl+molette). Listeners
+  // natifs non-passifs (React passe onTouchMove en passif → preventDefault KO).
+  // Le pan se fait au défilement (un doigt) via l'overflow de .previewscroll.
+  useEffect(() => {
+    const el = previewRef.current
+    if (!el) return
+    const clamp = (z: number) => Math.round(Math.min(3, Math.max(1, z)) * 100) / 100
+    const apply = (z: number) => { const c = clamp(z); zoomRef.current = c; setZoom(c) }
+    const dist = (ts: TouchList) =>
+      Math.hypot(ts[0].clientX - ts[1].clientX, ts[0].clientY - ts[1].clientY)
+    let start: { d: number; z: number } | null = null
+    const onStart = (e: TouchEvent) => { if (e.touches.length === 2) start = { d: dist(e.touches), z: zoomRef.current } }
+    const onMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && start) {
+        e.preventDefault()
+        apply(start.z * (dist(e.touches) / start.d))
+      }
+    }
+    const onEnd = (e: TouchEvent) => { if (e.touches.length < 2) start = null }
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return
+      e.preventDefault()
+      apply(zoomRef.current * (1 - e.deltaY * 0.01))
+    }
+    el.addEventListener('touchstart', onStart, { passive: false })
+    el.addEventListener('touchmove', onMove, { passive: false })
+    el.addEventListener('touchend', onEnd)
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => {
+      el.removeEventListener('touchstart', onStart)
+      el.removeEventListener('touchmove', onMove)
+      el.removeEventListener('touchend', onEnd)
+      el.removeEventListener('wheel', onWheel)
+    }
   }, [ready, race])
 
   if (!ready) return <div className="p-6 text-sm">Préparation…</div>
@@ -254,18 +293,15 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .btn:disabled{opacity:.5;cursor:default;}
 
         /* Marque en haut de la carte (présente aussi en PDF / image). */
-        .pdfroot .brand{font-family:var(--d);font-weight:800;font-size:6.5px;letter-spacing:.6px;text-align:center;line-height:1;margin-bottom:1.5px;flex:none;}
+        .pdfroot .brand{font-family:var(--d);font-weight:800;font-size:10px;letter-spacing:.6px;text-align:center;line-height:1;margin-bottom:2.5px;flex:none;}
         .pdfroot .brand .b1{color:var(--accent);}
         .pdfroot .brand .b2{color:var(--ink-soft);}
+        .pdfroot .brand .b3{color:var(--accent);}
 
-        /* Zoom de l'aperçu ÉCRAN : zoomview réserve la taille mise à l'échelle (→ scroll),
-           cardwrap est scalé. N'affecte ni l'impression ni l'export image (cf. @media print
-           et le clone .exporting). */
-        .pdfroot .zoombar{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px;font-family:var(--d);}
-        .pdfroot .zoombar button{width:34px;height:34px;border-radius:9px;border:1px solid var(--trail-border);background:var(--trail-surface);color:var(--trail-text);font-size:18px;font-weight:700;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-        .pdfroot .zoombar button:disabled{opacity:.4;cursor:default;}
-        .pdfroot .zoombar .zval{min-width:52px;text-align:center;font-weight:600;font-size:13px;color:var(--trail-text);}
-        .pdfroot .previewscroll{width:100%;max-width:100%;max-height:78vh;overflow:auto;}
+        /* Zoom de l'aperçu ÉCRAN (pincement) : zoomview réserve la taille mise à l'échelle
+           (→ scroll/pan), cardwrap est scalé. N'affecte ni l'impression ni l'export image
+           (cf. @media print et le clone .exporting). */
+        .pdfroot .previewscroll{width:100%;max-width:100%;max-height:78vh;overflow:auto;touch-action:pan-x pan-y;}
         .pdfroot .cut{width:max-content;margin:0 auto;}
         .pdfroot .zoomview{width:calc(65mm * var(--zoom,1));height:calc(120mm * var(--zoom,1));margin:0 auto;}
         .pdfroot .zoomview .cardwrap{transform:scale(var(--zoom,1));transform-origin:top left;}
@@ -280,7 +316,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           .pdfroot, .pdfroot * { visibility:visible !important; }
           /* Carte à l'HORIZONTALE (non tournée), calée en HAUT de la feuille portrait. */
           .pdfroot{position:absolute !important;top:0;left:0;right:0;width:100% !important;background:#fff;padding:0 !important;display:block !important;}
-          .pdfroot .toolbar,.pdfroot .caption,.pdfroot .scis,.pdfroot .zoombar{display:none !important;}
+          .pdfroot .toolbar,.pdfroot .caption,.pdfroot .scis{display:none !important;}
           .pdfroot .previewscroll{overflow:visible !important;max-height:none !important;}
           .pdfroot .zoomview{width:auto !important;height:auto !important;}
           .pdfroot .zoomview .cardwrap{transform:none !important;}
@@ -302,24 +338,16 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         </div>
         <button className="btn ghost" onClick={() => setDialogOpen(true)}><Settings2 size={16} /> Personnaliser les colonnes</button>
       </div>
-      <p className="caption">{"Les colonnes choisies s'appliquent aux trois formats (PDF, image, partage). Aperçu tourné à l'écran (format carte de poche). À l'impression : carte à l'horizontale, en haut de la feuille A4. Découpe, plastifie — tient dans une poche de veste."}</p>
+      <p className="caption">{"Les colonnes choisies s'appliquent aux trois formats (PDF, image, partage). Pince à deux doigts pour zoomer l'aperçu. À l'impression : carte à l'horizontale, en haut de la feuille A4. Découpe, plastifie — tient dans une poche de veste."}</p>
 
-      <div className="zoombar">
-        <button type="button" aria-label="Dézoomer" disabled={zoom <= 1}
-          onClick={() => setZoom((z) => Math.max(1, Math.round((z - 0.5) * 100) / 100))}>−</button>
-        <span className="zval">{Math.round(zoom * 100)} %</span>
-        <button type="button" aria-label="Zoomer" disabled={zoom >= 3}
-          onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.5) * 100) / 100))}>+</button>
-      </div>
-
-      <div className="previewscroll">
+      <div className="previewscroll" ref={previewRef}>
       <div className="cut">
         <span className="scis">✂ — — — — — — — — découper — — — — — — — —</span>
 
         <div className="zoomview">
         <div className="cardwrap">
         <div className="card" ref={cardRef}>
-          <div className="brand"><span className="b1">TRAIL</span> <span className="b2">COCKPIT</span></div>
+          <div className="brand"><span className="b1">TRAIL</span> <span className="b2">COCKPIT</span><span className="b3">.RUN</span></div>
           <div className="hd">
             <div>
               <div className="race">{race.name}</div>
