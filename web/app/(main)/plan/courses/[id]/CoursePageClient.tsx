@@ -9,9 +9,29 @@ import { WaypointsTable } from '@/components/plan/WaypointsTable'
 import { TableActionsMenu } from '@/components/plan/TableActionsMenu'
 import { PacingStrategyCard } from '@/components/plan/PacingStrategyCard'
 import { RaceImportSheet } from '@/components/plan/RaceImportSheet'
-import { FreshnessBadge } from '@/components/plan/FreshnessBadge'
 import { TableauDiffModal } from '@/components/plan/TableauDiffModal'
+import { QuickEditModal } from '@/components/plan/QuickEditModal'
 import { colors } from '@/lib/design/colors'
+
+// Parse une durée objectif : « 35h00 » / « 35:00 » / « 35h » / « 35 » → minutes.
+function parseObjectiveMin(raw: string): number | null {
+  const m = /^(\d{1,2})\s*[h:]?\s*(\d{0,2})$/.exec(raw.trim())
+  if (!m) return null
+  const min = m[2] === '' ? 0 : parseInt(m[2], 10)
+  if (min > 59) return null
+  const total = parseInt(m[1], 10) * 60 + min
+  return total > 0 ? total : null
+}
+const fmtObjective = (min: number) => `${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}`
+
+// Parse une heure d'horloge : « 19:00 » / « 19h00 » / « 9:30 » → « HH:MM ».
+function parseClockHHMM(raw: string): string | null {
+  const m = /^(\d{1,2})[:hH](\d{2})$/.exec(raw.trim())
+  if (!m) return null
+  const h = parseInt(m[1], 10)
+  if (h > 23 || parseInt(m[2], 10) > 59) return null
+  return `${String(h).padStart(2, '0')}:${m[2]}`
+}
 
 function formatLongDate(iso: string): string {
   if (!iso || iso.length < 10) return iso
@@ -40,6 +60,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   const [diffOpen, setDiffOpen] = useState(false)
   const [diffBusy, setDiffBusy] = useState(false)
   const [editLines, setEditLines] = useState(false)
+  const [editField, setEditField] = useState<null | 'objective' | 'start'>(null)
 
   // Arrivée depuis « Oui, chercher » à la création (RaceEditorModal) :
   // ?import=auto → on ouvre la feuille sur l'onglet Auto et on lance la recherche.
@@ -118,6 +139,23 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   const handleStartTimeChange = useCallback(async (hhmm: string | null) => {
     if (!race) return
     const next = { ...race, startTime: hhmm ?? undefined }
+    setRace(next)
+    await saveRace(next)
+  }, [race])
+
+  // Pop-ups indépendantes : objectif (temps visé) et heure de départ.
+  const saveObjective = useCallback(async (raw: string) => {
+    const min = parseObjectiveMin(raw)
+    if (min == null || !race) return
+    const next = { ...race, targetDurationMin: min }
+    setRace(next)
+    await saveRace(next)
+  }, [race])
+
+  const saveStart = useCallback(async (raw: string) => {
+    const hhmm = parseClockHHMM(raw)
+    if (!hhmm || !race) return
+    const next = { ...race, startTime: hhmm }
     setRace(next)
     await saveRace(next)
   }, [race])
@@ -226,35 +264,27 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
                 <span className="block text-caption text-trail-muted">Touche pour vérifier et valider.</span>
               </button>
             )}
-            <FreshnessBadge meta={meta} />
-            <div className="mb-3 flex items-center justify-between gap-3 rounded-[10px] bg-trail-surface border border-trail-border px-3 py-2">
-              <div className="text-caption min-w-0">
-                {race.startTime && race.targetDurationMin != null ? (
-                  <span className="text-trail-text">
-                    ⏱ Objectif <b>{Math.floor(race.targetDurationMin / 60)}h{String(race.targetDurationMin % 60).padStart(2, '0')}</b>
-                    <span className="text-trail-muted"> · Départ {race.startTime}</span>
-                  </span>
-                ) : (
-                  <span className="text-trail-muted">Objectif non défini — renseigne départ + temps cible pour calculer les heures de passage.</span>
-                )}
-              </div>
-              {!(race.startTime && race.targetDurationMin != null) && (
+            {race.targetDurationMin != null ? (
+              <PacingStrategyCard
+                waypoints={waypoints.map(({ km, dPlus, targetOverrideSec }) => ({ km, dPlus, targetOverrideSec }))}
+                targetDurationMin={race.targetDurationMin}
+                startTime={race.startTime}
+                pacingFade={race.pacingFade ?? 0}
+                onChange={handlePacingChange}
+                onEditObjective={() => setEditField('objective')}
+                onEditStart={() => setEditField('start')}
+              />
+            ) : (
+              <div className="mb-3 flex items-center justify-between gap-3 rounded-[10px] bg-trail-surface border border-trail-border px-3 py-2">
+                <span className="text-caption text-trail-muted min-w-0">Objectif non défini — règle ton temps cible pour calculer les heures de passage.</span>
                 <button
                   type="button"
-                  onClick={() => setEditorOpen(true)}
+                  onClick={() => setEditField('objective')}
                   className="text-caption text-trail-primary font-semibold whitespace-nowrap underline"
                 >
                   Définir l&apos;objectif
                 </button>
-              )}
-            </div>
-            {race.targetDurationMin != null && (
-              <PacingStrategyCard
-                waypoints={waypoints.map(({ km, dPlus, targetOverrideSec }) => ({ km, dPlus, targetOverrideSec }))}
-                targetDurationMin={race.targetDurationMin}
-                pacingFade={race.pacingFade ?? 0}
-                onChange={handlePacingChange}
-              />
+              </div>
             )}
             <WaypointsTable
               waypoints={waypoints.map(({ id: _id, raceId: _rid, ...rest }) => rest)}
@@ -320,6 +350,26 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
           onClose={() => setDiffOpen(false)}
         />
       )}
+      <QuickEditModal
+        open={editField === 'objective'}
+        title="Objectif (temps visé)"
+        initial={race.targetDurationMin != null ? fmtObjective(race.targetDurationMin) : ''}
+        placeholder="35h00"
+        hint="Format : 35h00 ou 35:00"
+        validate={(r) => parseObjectiveMin(r) != null}
+        onSave={saveObjective}
+        onClose={() => setEditField(null)}
+      />
+      <QuickEditModal
+        open={editField === 'start'}
+        title="Heure de départ"
+        initial={race.startTime ? race.startTime.slice(0, 5) : ''}
+        placeholder="19:00"
+        hint="Format : 19:00"
+        validate={(r) => parseClockHHMM(r) != null}
+        onSave={saveStart}
+        onClose={() => setEditField(null)}
+      />
     </div>
   )
 }

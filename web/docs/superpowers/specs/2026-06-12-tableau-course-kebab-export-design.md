@@ -191,3 +191,21 @@ Troisième vague de retours prod (2026-06-12) :
   clair — régression de la 2e vague) → style **contour orange** thème-agnostique
   (`border/color: var(--trail-primary)`, fond transparent). Focus des boutons : `#fff` →
   `var(--trail-text)` (contrasté sur les 2 thèmes).
+
+Quatrième vague de retours prod (2026-06-12) :
+- **Badge de fraîcheur retiré** du bloc (« ✓ Confirmé édition 2026 ») : `FreshnessBadge`
+  supprimé de `CoursePageClient`. (Le bandeau jaune `pendingDiff` « nouvelle édition / tableau
+  changé » reste, c'est un composant distinct.)
+- **Objectif + départ déplacés dans l'en-tête de « Stratégie d'allure »** (à droite du titre) :
+  l'ancien bandeau objectif autonome est supprimé. Nouvelles props de `PacingStrategyCard` :
+  `startTime`, `onEditObjective`, `onEditStart`. Quand l'objectif n'est pas défini (carte non
+  rendue), un encart « Définir l'objectif » s'affiche à la place.
+- **Édition par pop-ups indépendantes** : cliquer sur la valeur objectif (« 35h00 ») ou départ
+  (« 19:00 ») ouvre une petite fenêtre dédiée (`QuickEditModal`, nouveau composant générique
+  validate/onSave). Parsers dans `CoursePageClient` : `parseObjectiveMin` (35h00/35:00/35h/35)
+  et `parseClockHHMM` (19:00/19h00). Les boutons font `preventDefault`+`stopPropagation` pour
+  ne pas (dé)plier le `<details>`.
+- **Badge de stratégie coloré selon l'état** : Régulier = gris (`--trail-muted`), Finir fort =
+  bleu (#38BDF8), Partir vite = orange (`--trail-primary`). Variantes CSS `.psum-cur.v-even/
+  v-start/v-end`. Défaut = Régulier (fade 0, inchangé). Le résumé `.psum` passe en `flex-wrap`
+  pour gérer objectif/départ + badge + chevron sur mobile.

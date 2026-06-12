@@ -26,6 +26,10 @@ type Props = {
   pacingFade: number
   onChange: (fade: number) => void
   readOnly?: boolean
+  // Objectif / départ affichés à droite du titre, cliquables (popups d'édition).
+  startTime?: string
+  onEditObjective?: () => void
+  onEditStart?: () => void
 }
 
 const clampFade = (f: number) => Math.max(-FADE_MAX, Math.min(FADE_MAX, f))
@@ -123,10 +127,14 @@ function PaceCurve({
 
 export function PacingStrategyCard({
   waypoints, targetDurationMin, pacingFade, onChange, readOnly,
+  startTime, onEditObjective, onEditStart,
 }: Props) {
   const L = useT().plan
   const totalSec = targetDurationMin * 60
   const fade = clampFade(pacingFade ?? 0)
+  // Variante de couleur du badge : régulier=gris · finir fort=bleu · partir vite=orange.
+  const variant = Math.abs(fade) < 0.08 ? 'even' : fade < 0 ? 'start' : 'end'
+  const objLabel = `${Math.floor(targetDurationMin / 60)}h${String(targetDurationMin % 60).padStart(2, '0')}`
 
   const phrase = useMemo(() => {
     if (Math.abs(fade) < 0.08) return L.pacingPhraseEven
@@ -143,9 +151,16 @@ export function PacingStrategyCard({
         .pstrat{--d:var(--font-display,'Space Grotesk',sans-serif);}
         .pstrat > summary{list-style:none;}
         .pstrat summary::-webkit-details-marker{display:none;}
-        .pstrat .psum{display:flex;align-items:center;gap:8px;cursor:pointer;}
+        .pstrat .psum{display:flex;align-items:center;gap:8px;cursor:pointer;flex-wrap:wrap;}
         .pstrat .psum-title{font-family:var(--d);font-weight:600;font-size:14px;color:var(--trail-muted);}
-        .pstrat .psum-cur{margin-left:auto;font-family:var(--d);font-weight:700;font-size:12px;color:var(--trail-primary);background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.28);border-radius:7px;padding:2px 8px;white-space:nowrap;}
+        .pstrat .psum-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+        .pstrat .psum-goal{font-family:var(--d);font-size:11px;color:var(--trail-muted);white-space:nowrap;}
+        .pstrat .psum-val{font-family:var(--d);font-weight:700;font-size:12px;color:var(--trail-text);background:none;border:0;border-bottom:1px dashed var(--trail-muted);padding:0 1px;cursor:pointer;}
+        .pstrat .psum-val:hover{color:var(--trail-primary);border-bottom-color:var(--trail-primary);}
+        .pstrat .psum-cur{font-family:var(--d);font-weight:700;font-size:12px;border-radius:7px;padding:2px 8px;white-space:nowrap;border:1px solid transparent;}
+        .pstrat .psum-cur.v-even{color:var(--trail-muted);background:rgba(127,127,127,.12);border-color:var(--trail-border);}
+        .pstrat .psum-cur.v-start{color:#38BDF8;background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.35);}
+        .pstrat .psum-cur.v-end{color:var(--trail-primary);background:rgba(255,107,53,.1);border-color:rgba(255,107,53,.28);}
         .pstrat .psum-chev{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--trail-surface);border:1px solid var(--trail-border);color:var(--trail-text);font-size:12px;line-height:1;transition:transform .2s,background .2s;}
         .pstrat .psum:hover .psum-chev{background:var(--trail-border);}
         .pstrat[open] .psum-chev{transform:rotate(180deg);}
@@ -176,8 +191,22 @@ export function PacingStrategyCard({
 
       <summary className="psum">
         <span className="psum-title">{L.pacingTitle}</span>
-        <span className="psum-cur">{curLabel}</span>
-        <span className="psum-chev" aria-hidden>▾</span>
+        <div className="psum-right">
+          {(onEditObjective || onEditStart) && (
+            <span className="psum-goal">
+              {onEditObjective && (
+                <>Objectif <button type="button" className="psum-val"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditObjective() }}>{objLabel}</button></>
+              )}
+              {onEditStart && (
+                <>{onEditObjective ? ' · ' : ''}Départ <button type="button" className="psum-val"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditStart() }}>{startTime ? startTime.slice(0, 5) : '—'}</button></>
+              )}
+            </span>
+          )}
+          <span className={`psum-cur v-${variant}`}>{curLabel}</span>
+          <span className="psum-chev" aria-hidden>▾</span>
+        </div>
       </summary>
 
       <div className="pbody">
