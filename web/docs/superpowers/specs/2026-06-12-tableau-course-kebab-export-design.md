@@ -250,3 +250,9 @@ Huitième vague de retours prod (2026-06-12) — carte `/print` :
   1–3 ; `preventDefault` car React passe `onTouchMove` en passif) + `ctrl+wheel` (pincement
   trackpad desktop). `touch-action:pan-x pan-y` = pan 1 doigt via overflow, pas de pinch-zoom
   navigateur. `zoomRef` suit `zoom` pour les handlers attachés une fois (deps `[ready, race]`).
+
+Neuvième vague (2026-06-12) — carte `/print` :
+- **Logo déplacé du bandeau supérieur vers le MILIEU de l'en-tête** (`.brand` désormais
+  enfant de `.hd`, entre le bloc nom/infos à gauche et l'objectif à droite) : `flex:1;
+  align-self:center;text-align:center` → aligné verticalement avec les 2 lignes nom+infos.
+  Plus de ligne de marque séparée en haut.

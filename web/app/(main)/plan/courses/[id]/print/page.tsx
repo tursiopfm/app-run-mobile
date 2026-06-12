@@ -293,7 +293,9 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .btn:disabled{opacity:.5;cursor:default;}
 
         /* Marque en haut de la carte (présente aussi en PDF / image). */
-        .pdfroot .brand{font-family:var(--d);font-weight:800;font-size:10px;letter-spacing:.6px;text-align:center;line-height:1;margin-bottom:2.5px;flex:none;}
+        /* Marque AU MILIEU de l'en-tête : prend l'espace central, centrée et alignée
+           verticalement avec les 2 lignes (nom + infos). */
+        .pdfroot .brand{flex:1;min-width:0;align-self:center;text-align:center;font-family:var(--d);font-weight:800;font-size:10px;letter-spacing:.6px;line-height:1;padding:0 6px;white-space:nowrap;}
         .pdfroot .brand .b1{color:var(--accent);}
         .pdfroot .brand .b2{color:var(--ink-soft);}
         .pdfroot .brand .b3{color:var(--accent);}
@@ -347,7 +349,6 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         <div className="zoomview">
         <div className="cardwrap">
         <div className="card" ref={cardRef}>
-          <div className="brand"><span className="b1">TRAIL</span> <span className="b2">COCKPIT</span><span className="b3">.RUN</span></div>
           <div className="hd">
             <div>
               <div className="race">{race.name}</div>
@@ -357,6 +358,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
                 {arrClock ? <> · Arr. visée <b>{arrClock}</b></> : null}
               </div>
             </div>
+            <div className="brand"><span className="b1">TRAIL</span> <span className="b2">COCKPIT</span><span className="b3">.RUN</span></div>
             {goal ? <div className="goal"><span className="lbl">Objectif</span> {goal}</div> : null}
           </div>
 
