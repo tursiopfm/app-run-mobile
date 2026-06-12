@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import type { Race, RaceWaypoint } from '@/types/plan'
 import { getRaces } from '@/lib/plan/storage'
-import { estimatePassageTimes } from '@/lib/plan/pacing'
+import { resolveElapsed } from '@/lib/plan/barrier-lock'
 import { deriveSegment, formatElapsedToClock, formatElapsedShort, formatBarrierClock, formatMargin } from '@/lib/plan/waypoint-view'
 import {
   loadPrintColConfig, savePrintColConfig, visiblePrintCols,
@@ -166,12 +166,15 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
   if (!race) return <div className="p-6 text-sm">Course introuvable.</div>
 
   const totalSec = race.targetDurationMin != null ? race.targetDurationMin * 60 : null
-  const elapsed = totalSec != null
-    ? estimatePassageTimes(
-        wps.map((w) => ({ km: w.km, dPlus: w.dPlus, targetOverrideSec: w.targetOverrideSec })),
-        { totalDurationSec: totalSec, fade: race.pacingFade ?? 0 },
-      )
-    : null
+  const elapsed = resolveElapsed(
+    wps.map((w) => ({
+      km: w.km, dPlus: w.dPlus, targetOverrideSec: w.targetOverrideSec,
+      cutoffRaw: w.cutoffRaw, cutoffKind: w.cutoffKind,
+    })),
+    race.startTime,
+    race.targetDurationMin ?? null,
+    race.pacingFade ?? 0,
+  ).elapsed
   const noDay = (s: string | undefined) => (s ? s.replace(/^J\d+\s+/, '') : null)
   const startClock = race.startTime ? noDay(formatElapsedToClock(race.startTime, 0)?.label) : null
   const arrClock = race.startTime && totalSec != null ? noDay(formatElapsedToClock(race.startTime, totalSec)?.label) : null
