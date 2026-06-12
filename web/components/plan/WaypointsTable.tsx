@@ -11,7 +11,7 @@ import type { RaceWaypoint, WaypointSupply } from '@/types/plan'
 import {
   deriveSegment, formatElapsedShort, parseElapsedShort, formatMargin,
 } from '@/lib/plan/waypoint-view'
-import { estimatePassageTimes } from '@/lib/plan/pacing'
+import { resolveElapsed } from '@/lib/plan/barrier-lock'
 
 type Draft = Omit<RaceWaypoint, 'id' | 'raceId'>
 
@@ -120,12 +120,16 @@ export function WaypointsTable({
   }
 
   const elapsed = useMemo(() => {
-    if (targetDurationMin == null) return null
-    return estimatePassageTimes(
-      waypoints.map((w) => ({ km: w.km, dPlus: w.dPlus, targetOverrideSec: w.targetOverrideSec })),
-      { totalDurationSec: targetDurationMin * 60, fade: pacingFade ?? 0 },
-    )
-  }, [waypoints, targetDurationMin, pacingFade])
+    return resolveElapsed(
+      waypoints.map((w) => ({
+        km: w.km, dPlus: w.dPlus, targetOverrideSec: w.targetOverrideSec,
+        cutoffRaw: w.cutoffRaw, cutoffKind: w.cutoffKind,
+      })),
+      startTime,
+      targetDurationMin ?? null,
+      pacingFade ?? 0,
+    ).elapsed
+  }, [waypoints, startTime, targetDurationMin, pacingFade])
 
   const segInputs = useMemo(
     () => waypoints.map((w) => ({ km: w.km, dPlus: w.dPlus, dMoins: w.dMoins })),
