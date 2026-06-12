@@ -306,7 +306,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
       </Section>
 
       <Section title="Site web">
-        <p className="text-caption text-trail-muted">Bientôt — lien officiel de la course.</p>
+        <WebsiteBlock race={race} onChange={setRace} />
       </Section>
 
       <Section title="Notes">
@@ -381,6 +381,103 @@ function Section({ title, titleClassName, action, children }: { title: string; t
         {action}
       </div>
       {children}
+    </div>
+  )
+}
+
+function WebsiteBlock({ race, onChange }: { race: Race; onChange: (r: Race) => void }) {
+  const [editing, setEditing] = useState(false)
+  const [input, setInput] = useState(race.websiteUrl ?? '')
+  const [searching, setSearching] = useState(false)
+
+  // Re-sync si l'URL change en fond (fire-and-forget post-création → reload parent).
+  useEffect(() => { setInput(race.websiteUrl ?? '') }, [race.websiteUrl])
+
+  function normalize(raw: string): string {
+    const v = raw.trim()
+    if (!v) return ''
+    return /^https?:\/\//i.test(v) ? v : `https://${v}`
+  }
+
+  async function persist(url: string) {
+    const next = { ...race, websiteUrl: url || undefined }
+    onChange(next)
+    await saveRace(next)
+  }
+
+  async function handleSaveInput() {
+    const url = normalize(input)
+    setInput(url)
+    setEditing(false)
+    await persist(url)
+  }
+
+  async function handleSearch() {
+    setSearching(true)
+    try {
+      const res = await fetch('/api/race-import/website', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: race.name, date: race.date }),
+      })
+      if (res.ok) {
+        const { url } = (await res.json()) as { url: string | null }
+        if (url) await persist(url)
+      }
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  if (race.websiteUrl && !editing) {
+    return (
+      <div className="flex items-center justify-between gap-2">
+        <a
+          href={race.websiteUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-body-sm text-trail-primary underline truncate"
+        >
+          {race.websiteUrl.replace(/^https?:\/\//, '')}
+        </a>
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="text-caption text-trail-muted hover:text-trail-text shrink-0"
+        >
+          Modifier
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      <input
+        type="url"
+        inputMode="url"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="https://…"
+        className="w-full px-3 py-2 rounded-[10px] bg-trail-surface border border-trail-border text-trail-text text-body focus:outline-none focus:border-trail-primary"
+      />
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleSaveInput}
+          className="px-3 py-1.5 rounded-[10px] bg-trail-primary text-white text-caption font-semibold"
+        >
+          Enregistrer
+        </button>
+        <button
+          type="button"
+          onClick={handleSearch}
+          disabled={searching}
+          className="px-3 py-1.5 rounded-[10px] border border-trail-border text-trail-text text-caption font-semibold disabled:opacity-50"
+        >
+          {searching ? 'Recherche…' : 'Rechercher le site'}
+        </button>
+      </div>
     </div>
   )
 }
