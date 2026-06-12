@@ -113,6 +113,8 @@ type RaceRow = {
   start_time?: string | null
   target_duration_min?: number | null
   pacing_fade?: number | null
+  // Migration 041 — optionnel pour tolérer DB non migrée (strippé au retry de saveRace).
+  website_url?: string | null
 }
 
 function raceFromRow(r: RaceRow): Race {
@@ -133,6 +135,7 @@ function raceFromRow(r: RaceRow): Race {
     startTime: r.start_time ? r.start_time.slice(0, 5) : undefined,
     targetDurationMin: r.target_duration_min ?? undefined,
     pacingFade: r.pacing_fade ?? undefined,
+    websiteUrl: r.website_url ?? undefined,
   }
 }
 
@@ -155,6 +158,7 @@ function raceToRow(race: Race, athleteId: string): RaceRow {
     start_time: race.startTime ?? null,
     target_duration_min: race.targetDurationMin ?? null,
     pacing_fade: race.pacingFade ?? 0,
+    website_url: race.websiteUrl ?? null,
   }
 }
 
@@ -531,7 +535,7 @@ export async function saveRace(race: Race): Promise<void> {
     if (!error) {
       saved = true
     } else if (isMissingColumnError(error)) {
-      // Colonne absente (migration 022 et/ou 035 non appliquée) : retry sans les
+      // Colonne absente (migration 022, 035 et/ou 041 non appliquée) : retry sans les
       // colonnes optionnelles plutôt que fallback LS (qui ferait disparaître la
       // race côté serveur).
       const {
@@ -539,6 +543,7 @@ export async function saveRace(race: Race): Promise<void> {
         start_time: _st,
         target_duration_min: _td,
         pacing_fade: _pf,
+        website_url: _wu,
         ...legacyRow
       } = row
       const { error: retryErr } = await ctx.supabase

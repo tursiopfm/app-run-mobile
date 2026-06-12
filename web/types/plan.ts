@@ -83,6 +83,7 @@ export interface Race {
   startTime?: string         // 'HH:MM' heure locale de départ
   targetDurationMin?: number // temps cible total en minutes (ex : 37 h = 2220)
   pacingFade?: number        // coef fade 2e moitié (0 = neutre)
+  websiteUrl?: string        // site officiel de l'organisation (auto à la création + éditable)
 }
 
 // === Plan d'entraînement (macrocycle) ===
