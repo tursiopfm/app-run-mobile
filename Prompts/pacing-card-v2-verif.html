@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --trail-bg:#0A0F0E;--trail-surface:#111A18;--trail-card:#162420;--trail-border:#1E3530;
+    --trail-text:#E2ECE9;--trail-muted:#8BA8A3;--trail-primary:#FF6B35;
+    --font-display:"Space Grotesk",sans-serif;
+  }
+  body{margin:0;background:#0A0F0E;font-family:"Inter",sans-serif;padding:28px;display:flex;gap:28px;align-items:flex-start;}
+  .frame{width:380px;background:#05080A;border:1px solid #274840;border-radius:24px;padding:14px;}
+  .lab{color:#8BA8A3;font:600 12px var(--font-display);margin-bottom:8px;}
+
+  /* ===== styles copiés du composant (.pstrat) ===== */
+  .pstrat{border-radius:12px;background:var(--trail-card);border:1px solid var(--trail-border);padding:16px;color:var(--trail-text);--d:var(--font-display);}
+  .pstrat > summary{list-style:none;}
+  .pstrat summary::-webkit-details-marker{display:none;}
+  .pstrat .psum{display:flex;align-items:center;gap:8px;cursor:pointer;}
+  .pstrat .psum-title{font-family:var(--d);font-weight:600;font-size:14px;color:var(--trail-muted);}
+  .pstrat .psum-cur{margin-left:auto;font-family:var(--d);font-weight:700;font-size:12px;color:var(--trail-primary);background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.28);border-radius:7px;padding:2px 8px;white-space:nowrap;}
+  .pstrat .psum-chev{color:var(--trail-muted);font-size:10px;transition:transform .2s;}
+  .pstrat[open] .psum-chev{transform:rotate(180deg);}
+  .pstrat .pbody{margin-top:14px;}
+  .pstrat .prange{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;outline:none;cursor:pointer;background:linear-gradient(90deg,#38BDF8 0%,var(--trail-border) 50%,var(--trail-primary) 100%);}
+  .pstrat .prange::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--trail-text);border:3px solid var(--trail-card);box-shadow:0 2px 8px rgba(0,0,0,.5);}
+  .pstrat .pscale{display:flex;justify-content:space-between;font-size:9.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--trail-muted);margin-bottom:6px;font-family:var(--d);}
+  .pstrat .pscale .mid{color:var(--trail-text);}
+  .pstrat .pbody>p{font-size:13px;color:var(--trail-text);margin:12px 0 0;line-height:1.4;}
+  .pstrat .pcv{margin-top:14px;border-radius:10px;background:var(--trail-surface);border:1px solid var(--trail-border);padding:8px;}
+  .pstrat .pcv-legend{display:flex;gap:12px;font-size:9.5px;font-weight:600;color:var(--trail-muted);margin-bottom:5px;padding:0 2px;font-family:var(--d);}
+  .pstrat .pcv-legend i{display:inline-block;width:10px;height:3px;border-radius:2px;margin-right:4px;vertical-align:middle;}
+  .pstrat .pcv-row{display:flex;align-items:stretch;gap:5px;}
+  .pstrat .pcv-yL,.pstrat .pcv-yR{display:flex;flex-direction:column;justify-content:space-between;font-size:8.5px;font-weight:700;font-family:var(--d);padding:1px 0;}
+  .pstrat .pcv-yL{align-items:flex-end;color:var(--trail-primary);min-width:24px;}
+  .pstrat .pcv-yR{align-items:flex-start;color:#38BDF8;min-width:30px;}
+  .pstrat .pcv-svg{position:relative;flex:1;height:120px;min-width:0;}
+  .pstrat .pcurve{width:100%;height:120px;display:block;}
+  .pstrat .pcv-x{display:flex;justify-content:space-between;font-size:9px;color:var(--trail-muted);padding-top:3px;margin:0 30px 0 24px;font-family:var(--d);}
+  .pstrat .pcv-tip{position:absolute;top:-4px;transform:translateX(-50%);background:var(--trail-card);border:1px solid var(--trail-border);border-radius:7px;padding:4px 8px;display:flex;flex-direction:column;gap:1px;font-size:9.5px;font-weight:600;font-family:var(--d);white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.45);z-index:2;}
+  .pstrat .pcv-tip b{color:var(--trail-text);font-weight:700;}
+  .pstrat .pmethod{margin-top:14px;border-top:1px solid var(--trail-border);padding-top:10px;}
+  .pstrat .pmethod>summary{list-style:none;cursor:pointer;font-family:var(--d);font-weight:600;font-size:11.5px;color:#38BDF8;}
+  .pstrat .pmethod .mb{margin-top:8px;font-size:11.5px;color:var(--trail-muted);line-height:1.55;}
+  .pstrat .pmethod-formula{font-family:var(--d);font-weight:700;color:var(--trail-text);background:var(--trail-surface);border:1px solid var(--trail-border);border-radius:7px;padding:6px 9px;margin:8px 0;display:inline-block;font-size:12px;}
+</style></head>
+<body>
+<div class="frame"><div class="lab">REPLIÉ (défaut)</div>
+  <details class="pstrat"><summary class="psum"><span class="psum-title">Stratégie d'allure</span><span class="psum-cur">Régulier</span><span class="psum-chev">▾</span></summary></details>
+</div>
+<div class="frame"><div class="lab">DÉPLIÉ + survol</div>
+  <details class="pstrat" open><summary class="psum"><span class="psum-title">Stratégie d'allure</span><span class="psum-cur">Partir vite</span><span class="psum-chev">▾</span></summary>
+    <div class="pbody">
+      <div class="pscale"><span>Finir fort</span><span class="mid">Régulier</span><span>Partir vite</span></div>
+      <input class="prange" type="range" min="-100" max="100" value="50">
+      <p>Positif split — tu prends de l'avance et tu ralentis sur la fin (intensité modérée).</p>
+      <div class="pcv">
+        <div class="pcv-legend"><span><i style="background:var(--trail-primary)"></i>Allure visée</span><span><i style="background:#38BDF8"></i>D+ cumulé</span></div>
+        <div class="pcv-row">
+          <div class="pcv-yL"><span id="pmin"></span><span id="pmax"></span></div>
+          <div class="pcv-svg">
+            <svg class="pcurve" id="svg" viewBox="0 0 300 120" preserveAspectRatio="none"></svg>
+            <div class="pcv-tip" id="tip"></div>
+          </div>
+          <div class="pcv-yR"><span id="dmax"></span><span>0</span></div>
+        </div>
+        <div class="pcv-x"><span>0 km</span><span>50 km</span><span>100 km</span></div>
+      </div>
+      <details class="pmethod" open><summary>Comment c'est calculé ?</summary>
+        <div class="mb"><div class="pmethod-formula">100 m de montée = 1 km en plus</div>
+        <p>On découpe la course en petits morceaux et on partage ton temps entre eux. Un morceau plus long, ou qui grimpe plus, demande plus d'effort : il reçoit donc plus de temps. Et comme grimper fatigue, on compte 100 m de montée comme 1 km en plus. Le curseur, lui, choisit si tu pars vite ou si tu gardes des forces pour la fin. Enfin, si tu écris une heure toi-même dans le tableau, elle ne bouge plus : tout le reste se cale autour.</p></div>
+      </details>
+    </div>
+  </details>
+</div>
+<script>
+function estimate(wps,total,fade){const n=wps.length;if(n<2)return[0];const e=new Array(n).fill(0);for(let i=1;i<n;i++){e[i]=Math.max(0,wps[i].km-wps[i-1].km)+Math.max(0,(wps[i].dPlus||0)-(wps[i-1].dPlus||0))/100;}let t=e.reduce((s,v)=>s+v,0);const w=new Array(n).fill(0);let c=0;for(let i=1;i<n;i++){const m=(c+e[i]/2)/t;w[i]=e[i]*Math.max(0.05,1+fade*(m-0.5));c+=e[i];}const el=new Array(n).fill(0);el[n-1]=total;let sw=0;for(let k=1;k<n;k++)sw+=w[k];for(let k=1;k<n;k++)el[k]=el[k-1]+total*(w[k]/sw);return el;}
+function paces(wps,total,fade){const el=estimate(wps,total,fade);const p=new Array(wps.length).fill(0);for(let i=1;i<wps.length;i++){const dk=wps[i].km-wps[i-1].km;p[i]=dk>0?(el[i]-el[i-1])/dk:0;}return p;}
+const C=[{km:0,dPlus:0},{km:12,dPlus:700},{km:27,dPlus:1700},{km:50,dPlus:3200},{km:68,dPlus:4300},{km:85,dPlus:5400},{km:100,dPlus:6000}];
+const TOT=18*3600,FADE=0.6;
+const W=300,H=120,padX=4,padTop=10,padBot=10,usable=H-padTop-padBot;
+const totalKm=100,x=km=>padX+(km/totalKm)*(W-2*padX);
+const maxDp=6000,elevY=dp=>padTop+(1-dp/maxDp)*usable;
+let area=`M ${x(0)} ${H} `;C.forEach(w=>area+=`L ${x(w.km).toFixed(1)} ${elevY(w.dPlus).toFixed(1)} `);area+=`L ${x(100)} ${H} Z`;
+const P=paces(C,TOT,FADE),seg=P.slice(1),pMin=Math.min(...seg),pMax=Math.max(...seg),span=Math.max(1,pMax-pMin),paceY=p=>padTop+((p-pMin)/span)*usable;
+let line='';for(let i=1;i<C.length;i++){const x0=x(C[i-1].km),x1=x(C[i].km),yv=paceY(P[i]);line+=`${i===1?'M':'L'} ${x0.toFixed(1)} ${yv.toFixed(1)} L ${x1.toFixed(1)} ${yv.toFixed(1)} `;}
+const fmtP=s=>`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')}`;
+// segment survolé = km 27-50 (i=3)
+const hi=3,hx=(x(C[hi-1].km)+x(C[hi].km))/2,hy=paceY(P[hi]);
+document.getElementById('svg').innerHTML=
+ `<path d="${area}" fill="rgba(56,189,248,.14)" stroke="rgba(56,189,248,.5)" stroke-width="1"/>`+
+ `<path d="${line}" fill="none" stroke="var(--trail-primary)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`+
+ `<line x1="${hx}" x2="${hx}" y1="0" y2="120" stroke="var(--trail-text)" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.5"/>`+
+ `<circle cx="${hx}" cy="${hy}" r="3.2" fill="var(--trail-primary)"/>`;
+document.getElementById('pmin').textContent=fmtP(pMin);
+document.getElementById('pmax').textContent=fmtP(pMax);
+document.getElementById('dmax').textContent=maxDp+' m';
+const tip=document.getElementById('tip');tip.style.left=((hx/W)*100)+'%';
+tip.innerHTML=`<b>km 27–50</b><span style="color:var(--trail-primary)">${fmtP(P[hi])} /km</span><span style="color:#38BDF8">D+ ${C[hi].dPlus} m</span>`;
+</script>
+</body></html>

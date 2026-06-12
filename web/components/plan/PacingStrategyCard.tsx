@@ -1,13 +1,16 @@
 'use client'
 
 // Bloc « Stratégie d'allure » — curseur parlant (Finir fort ↔ Partir vite), façon
-// PacePro, posé au-dessus du tableau de course. Recalcule en live une courbe
-// d'allure par tronçon superposée au profil dénivelé, et pilote pacingFade (qui
-// alimente aussi WaypointsTable). Style scoped (même pattern que WaypointsTable).
+// PacePro. Replié par défaut : l'athlète l'ouvre s'il veut régler. Dépliée : curseur
+// + courbe d'allure (step-line) sur le profil D+ CUMULÉ, axes chiffrés (allure /
+// dénivelé) et tooltip de valeurs au survol. Pilote pacingFade (alimente aussi
+// WaypointsTable). Style scoped (même pattern que WaypointsTable).
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { segmentPaces } from '@/lib/plan/pacing'
 import { useT } from '@/lib/i18n/I18nProvider'
+
+type PlanDict = ReturnType<typeof useT>['plan']
 
 const FADE_MAX = 1.2
 
@@ -29,42 +32,93 @@ const clampFade = (f: number) => Math.max(-FADE_MAX, Math.min(FADE_MAX, f))
 const sliderFromFade = (f: number) => Math.round((clampFade(f) / FADE_MAX) * 100)
 const fadeFromSlider = (v: number) => clampFade((v / 100) * FADE_MAX)
 
-type CurvePaths = { elevArea: string; paceLine: string } | null
+const fmtPace = (s: number): string => {
+  const t = Math.round(s) // arrondir AVANT de découper, sinon 779,5 → « 12:60 »
+  return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`
+}
+const fmtKm = (k: number) => (Number.isInteger(k) ? String(k) : k.toFixed(1).replace('.', ','))
 
-function buildCurvePaths(
-  waypoints: PacingStrategyWaypoint[],
-  totalSec: number,
-  fade: number,
-): CurvePaths {
-  const n = waypoints.length
-  if (n < 2) return null
-  const totalKm = waypoints[n - 1].km - waypoints[0].km
-  if (totalKm <= 0) return null
-  const W = 300, H = 120, padX = 4
-  const x = (km: number) => padX + ((km - waypoints[0].km) / totalKm) * (W - 2 * padX)
+// --- Courbe interactive : allure (orange) sur profil D+ cumulé (bleu), axes + tooltip ---
+function PaceCurve({
+  waypoints, totalSec, fade, L,
+}: { waypoints: PacingStrategyWaypoint[]; totalSec: number; fade: number; L: PlanDict }) {
+  const [hover, setHover] = useState<number | null>(null)
 
-  const maxDp = Math.max(1, ...waypoints.map((w) => w.dPlus ?? 0))
-  let elevArea = `M ${x(waypoints[0].km).toFixed(1)} ${H} `
-  waypoints.forEach((w) => {
-    const y = H - ((w.dPlus ?? 0) / maxDp) * (H * 0.55)
-    elevArea += `L ${x(w.km).toFixed(1)} ${y.toFixed(1)} `
-  })
-  elevArea += `L ${x(waypoints[n - 1].km).toFixed(1)} ${H} Z`
+  const model = useMemo(() => {
+    const n = waypoints.length
+    if (n < 2) return null
+    const totalKm = waypoints[n - 1].km - waypoints[0].km
+    if (totalKm <= 0) return null
+    const W = 300, H = 120, padX = 4, padTop = 10, padBot = 10
+    const usable = H - padTop - padBot
+    const x = (km: number) => padX + ((km - waypoints[0].km) / totalKm) * (W - 2 * padX)
+    const maxDp = Math.max(1, waypoints[n - 1].dPlus ?? 0)
+    const elevY = (dp: number) => padTop + (1 - dp / maxDp) * usable
 
-  const paces = segmentPaces(waypoints, { totalDurationSec: totalSec, fade })
-  const seg = paces.slice(1)
-  const pMin = Math.min(...seg), pMax = Math.max(...seg)
-  const span = Math.max(1, pMax - pMin)
-  const yPace = (p: number) => 12 + ((p - pMin) / span) * (H * 0.6)
-  // Step-line : marche horizontale par tronçon (allure constante) + saut vertical
-  // au point de passage. Plus fidèle qu'une diagonale (chaque tronçon a une allure).
-  let paceLine = ''
-  for (let i = 1; i < n; i++) {
-    const x0 = x(waypoints[i - 1].km), x1 = x(waypoints[i].km)
-    const yv = yPace(paces[i])
-    paceLine += `${i === 1 ? 'M' : 'L'} ${x0.toFixed(1)} ${yv.toFixed(1)} L ${x1.toFixed(1)} ${yv.toFixed(1)} `
-  }
-  return { elevArea, paceLine }
+    let elevArea = `M ${x(waypoints[0].km).toFixed(1)} ${H} `
+    waypoints.forEach((w) => { elevArea += `L ${x(w.km).toFixed(1)} ${elevY(w.dPlus ?? 0).toFixed(1)} ` })
+    elevArea += `L ${x(waypoints[n - 1].km).toFixed(1)} ${H} Z`
+
+    const paces = segmentPaces(waypoints, { totalDurationSec: totalSec, fade })
+    const seg = paces.slice(1)
+    const pMin = Math.min(...seg), pMax = Math.max(...seg)
+    const span = Math.max(1, pMax - pMin)
+    const paceY = (p: number) => padTop + ((p - pMin) / span) * usable
+
+    let paceLine = ''
+    const segs: { i: number; x0: number; x1: number; midPct: number; yv: number; kmA: number; kmB: number; pace: number; cumDp: number }[] = []
+    for (let i = 1; i < n; i++) {
+      const x0 = x(waypoints[i - 1].km), x1 = x(waypoints[i].km)
+      const yv = paceY(paces[i])
+      paceLine += `${i === 1 ? 'M' : 'L'} ${x0.toFixed(1)} ${yv.toFixed(1)} L ${x1.toFixed(1)} ${yv.toFixed(1)} `
+      segs.push({
+        i, x0, x1, yv, midPct: ((x0 + x1) / 2 / W) * 100,
+        kmA: waypoints[i - 1].km, kmB: waypoints[i].km,
+        pace: paces[i], cumDp: waypoints[i].dPlus ?? 0,
+      })
+    }
+    return { H, elevArea, paceLine, segs, pMin, pMax, maxDp, totalKm }
+  }, [waypoints, totalSec, fade])
+
+  if (!model) return null
+  const hv = hover != null ? model.segs.find((s) => s.i === hover) ?? null : null
+  const cx = hv ? (hv.x0 + hv.x1) / 2 : 0
+
+  return (
+    <div className="pcv">
+      <div className="pcv-legend">
+        <span><i style={{ background: 'var(--trail-primary)' }} />{L.pacingCurveLegendPace}</span>
+        <span><i style={{ background: '#38BDF8' }} />{L.pacingCurveLegendElev}</span>
+      </div>
+      <div className="pcv-row">
+        <div className="pcv-yL"><span>{fmtPace(model.pMin)}</span><span>{fmtPace(model.pMax)}</span></div>
+        <div className="pcv-svg" onMouseLeave={() => setHover(null)}>
+          <svg className="pcurve" viewBox="0 0 300 120" preserveAspectRatio="none">
+            <path d={model.elevArea} fill="rgba(56,189,248,.14)" stroke="rgba(56,189,248,.5)" strokeWidth={1} />
+            <path d={model.paceLine} fill="none" stroke="var(--trail-primary)" strokeWidth={2.4} strokeLinejoin="round" strokeLinecap="round" />
+            {hv && <line x1={cx} x2={cx} y1={0} y2={120} stroke="var(--trail-text)" strokeWidth={0.8} strokeDasharray="3 3" opacity={0.5} />}
+            {hv && <circle cx={cx} cy={hv.yv} r={3.2} fill="var(--trail-primary)" />}
+            {model.segs.map((s) => (
+              <rect key={s.i} x={s.x0} y={0} width={Math.max(0.5, s.x1 - s.x0)} height={120}
+                fill="transparent" style={{ cursor: 'pointer' }}
+                onMouseEnter={() => setHover(s.i)} onClick={() => setHover(s.i)} />
+            ))}
+          </svg>
+          {hv && (
+            <div className="pcv-tip" style={{ left: `${hv.midPct}%` }}>
+              <b>km {fmtKm(hv.kmA)}–{fmtKm(hv.kmB)}</b>
+              <span style={{ color: 'var(--trail-primary)' }}>{fmtPace(hv.pace)} /km</span>
+              <span style={{ color: '#38BDF8' }}>D+ {hv.cumDp} m</span>
+            </div>
+          )}
+        </div>
+        <div className="pcv-yR"><span>{model.maxDp} m</span><span>0</span></div>
+      </div>
+      <div className="pcv-x">
+        <span>0 km</span><span>{Math.round(model.totalKm / 2)} km</span><span>{Math.round(model.totalKm)} km</span>
+      </div>
+    </div>
+  )
 }
 
 export function PacingStrategyCard({
@@ -74,11 +128,6 @@ export function PacingStrategyCard({
   const totalSec = targetDurationMin * 60
   const fade = clampFade(pacingFade ?? 0)
 
-  const curve = useMemo(
-    () => buildCurvePaths(waypoints, totalSec, fade),
-    [waypoints, totalSec, fade],
-  )
-
   const phrase = useMemo(() => {
     if (Math.abs(fade) < 0.08) return L.pacingPhraseEven
     const pct = Math.round((Math.abs(fade) / FADE_MAX) * 100)
@@ -86,67 +135,77 @@ export function PacingStrategyCard({
     return fade < 0 ? L.pacingPhraseNeg(intensity) : L.pacingPhrasePos(intensity)
   }, [fade, L])
 
-  const totalKm = waypoints.length >= 2 ? waypoints[waypoints.length - 1].km - waypoints[0].km : 0
+  const curLabel = Math.abs(fade) < 0.08 ? L.pacingScaleMid : fade < 0 ? L.pacingScaleStart : L.pacingScaleEnd
 
   return (
-    <div className="pstrat rounded-[12px] bg-trail-card border border-trail-border p-4 mb-3">
+    <details className="pstrat rounded-[12px] bg-trail-card border border-trail-border p-4 mb-3">
       <style>{`
+        .pstrat{--d:var(--font-display,'Space Grotesk',sans-serif);}
+        .pstrat > summary{list-style:none;}
+        .pstrat summary::-webkit-details-marker{display:none;}
+        .pstrat .psum{display:flex;align-items:center;gap:8px;cursor:pointer;}
+        .pstrat .psum-title{font-family:var(--d);font-weight:600;font-size:14px;color:var(--trail-muted);}
+        .pstrat .psum-cur{margin-left:auto;font-family:var(--d);font-weight:700;font-size:12px;color:var(--trail-primary);background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.28);border-radius:7px;padding:2px 8px;white-space:nowrap;}
+        .pstrat .psum-chev{color:var(--trail-muted);font-size:10px;transition:transform .2s;}
+        .pstrat[open] .psum-chev{transform:rotate(180deg);}
+        .pstrat .pbody{margin-top:14px;}
         .pstrat .prange{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;outline:none;cursor:pointer;
           background:linear-gradient(90deg,#38BDF8 0%,var(--trail-border) 50%,var(--trail-primary) 100%);}
         .pstrat .prange::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--trail-text);border:3px solid var(--trail-card);box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:grab;}
         .pstrat .prange::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--trail-text);border:3px solid var(--trail-card);cursor:grab;}
         .pstrat .prange:disabled{opacity:.6;cursor:default;}
+        .pstrat .pscale{display:flex;justify-content:space-between;font-size:9.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--trail-muted);margin-bottom:6px;font-family:var(--d);}
+        .pstrat .pscale .mid{color:var(--trail-text);}
+        .pstrat .pcv{margin-top:14px;border-radius:10px;background:var(--trail-surface);border:1px solid var(--trail-border);padding:8px;}
+        .pstrat .pcv-legend{display:flex;gap:12px;font-size:9.5px;font-weight:600;color:var(--trail-muted);margin-bottom:5px;padding:0 2px;font-family:var(--d);}
+        .pstrat .pcv-legend i{display:inline-block;width:10px;height:3px;border-radius:2px;margin-right:4px;vertical-align:middle;}
+        .pstrat .pcv-row{display:flex;align-items:stretch;gap:5px;}
+        .pstrat .pcv-yL,.pstrat .pcv-yR{display:flex;flex-direction:column;justify-content:space-between;font-size:8.5px;font-weight:700;font-family:var(--d);padding:1px 0;}
+        .pstrat .pcv-yL{align-items:flex-end;color:var(--trail-primary);min-width:24px;}
+        .pstrat .pcv-yR{align-items:flex-start;color:#38BDF8;min-width:30px;}
+        .pstrat .pcv-svg{position:relative;flex:1;height:120px;min-width:0;}
         .pstrat .pcurve{width:100%;height:120px;display:block;}
-        .pstrat summary::-webkit-details-marker{display:none;}
+        .pstrat .pcv-x{display:flex;justify-content:space-between;font-size:9px;color:var(--trail-muted);padding-top:3px;margin:0 30px 0 24px;font-family:var(--d);}
+        .pstrat .pcv-tip{position:absolute;top:-4px;transform:translateX(-50%);background:var(--trail-card);border:1px solid var(--trail-border);border-radius:7px;padding:4px 8px;display:flex;flex-direction:column;gap:1px;font-size:9.5px;font-weight:600;font-family:var(--d);white-space:nowrap;pointer-events:none;box-shadow:0 6px 16px rgba(0,0,0,.45);z-index:2;}
+        .pstrat .pcv-tip b{color:var(--trail-text);font-weight:700;}
+        .pstrat .pmethod{margin-top:14px;border-top:1px solid var(--trail-border);padding-top:10px;}
+        .pstrat .pmethod > summary{list-style:none;cursor:pointer;font-family:var(--d);font-weight:600;font-size:11.5px;color:#38BDF8;}
+        .pstrat .pmethod-formula{font-family:var(--d);font-weight:700;color:var(--trail-text);background:var(--trail-surface);border:1px solid var(--trail-border);border-radius:7px;padding:6px 9px;margin:8px 0;display:inline-block;font-size:12px;}
       `}</style>
 
-      <h2 className="text-body font-semibold text-trail-muted mb-3 font-display">{L.pacingTitle}</h2>
+      <summary className="psum">
+        <span className="psum-title">{L.pacingTitle}</span>
+        <span className="psum-cur">{curLabel}</span>
+        <span className="psum-chev" aria-hidden>▾</span>
+      </summary>
 
-      <div className="flex justify-between text-[9.5px] font-semibold uppercase tracking-wide text-trail-muted mb-1.5 font-display">
-        <span>{L.pacingScaleStart}</span>
-        <span className="text-trail-text">{L.pacingScaleMid}</span>
-        <span>{L.pacingScaleEnd}</span>
+      <div className="pbody">
+        <div className="pscale">
+          <span>{L.pacingScaleStart}</span>
+          <span className="mid">{L.pacingScaleMid}</span>
+          <span>{L.pacingScaleEnd}</span>
+        </div>
+        <input
+          type="range" min={-100} max={100} step={1}
+          className="prange"
+          value={sliderFromFade(fade)}
+          disabled={readOnly}
+          onChange={(e) => onChange(fadeFromSlider(Number(e.target.value)))}
+          aria-label={L.pacingTitle}
+        />
+
+        <p className="text-body-sm text-trail-text mt-3 leading-snug">{phrase}</p>
+
+        <PaceCurve waypoints={waypoints} totalSec={totalSec} fade={fade} L={L} />
+
+        <details className="pmethod">
+          <summary>{L.pacingMethodSummary}</summary>
+          <div className="mt-2 text-caption text-trail-muted leading-relaxed">
+            <div className="pmethod-formula">{L.pacingMethodFormula}</div>
+            <p>{L.pacingMethodBody}</p>
+          </div>
+        </details>
       </div>
-      <input
-        type="range" min={-100} max={100} step={1}
-        className="prange"
-        value={sliderFromFade(fade)}
-        disabled={readOnly}
-        onChange={(e) => onChange(fadeFromSlider(Number(e.target.value)))}
-        aria-label={L.pacingTitle}
-      />
-
-      <p className="text-body-sm text-trail-text mt-3 leading-snug">{phrase}</p>
-
-      {curve && (
-        <div className="mt-3 rounded-[10px] bg-trail-surface border border-trail-border p-2">
-          <div className="flex gap-3 text-[9.5px] font-semibold text-trail-muted mb-1 px-1 font-display">
-            <span><i className="inline-block w-2.5 h-[3px] rounded-sm align-middle mr-1" style={{ background: 'var(--trail-primary)' }} />{L.pacingCurveLegendPace}</span>
-            <span><i className="inline-block w-2.5 h-[3px] rounded-sm align-middle mr-1" style={{ background: '#38BDF8' }} />{L.pacingCurveLegendElev}</span>
-          </div>
-          <svg className="pcurve" viewBox="0 0 300 120" preserveAspectRatio="none">
-            <path d={curve.elevArea} fill="rgba(56,189,248,.14)" stroke="rgba(56,189,248,.5)" strokeWidth={1} />
-            <path d={curve.paceLine} fill="none" stroke="var(--trail-primary)" strokeWidth={2.4} strokeLinejoin="round" strokeLinecap="round" />
-          </svg>
-          <div className="flex justify-between text-[9px] text-trail-muted pt-0.5 px-0.5 font-display">
-            <span>0 km</span>
-            <span>{Math.round(totalKm / 2)} km</span>
-            <span>{Math.round(totalKm)} km</span>
-          </div>
-        </div>
-      )}
-
-      <details className="mt-3 border-t border-trail-border pt-2.5">
-        <summary className="cursor-pointer text-caption font-semibold font-display list-none" style={{ color: '#38BDF8' }}>
-          {L.pacingMethodSummary}
-        </summary>
-        <div className="mt-2 text-caption text-trail-muted leading-relaxed">
-          <div className="font-display font-semibold text-trail-text bg-trail-surface border border-trail-border rounded-[7px] px-2 py-1.5 my-1.5 inline-block">
-            {L.pacingMethodFormula}
-          </div>
-          <p>{L.pacingMethodBody}</p>
-        </div>
-      </details>
-    </div>
+    </details>
   )
 }
