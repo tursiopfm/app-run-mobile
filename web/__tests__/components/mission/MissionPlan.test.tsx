@@ -20,4 +20,5 @@ it('sans plan ni course → Repos + état vide Destination', async () => {
   expect(repos.length).toBeGreaterThan(0)
   expect(screen.getByText('Aucune course prévue')).toBeInTheDocument()
   expect(screen.getByText(/Ajouter une course/)).toBeInTheDocument()
+  expect(screen.getByText(/Ajuster mon plan/)).toBeInTheDocument()
 })
