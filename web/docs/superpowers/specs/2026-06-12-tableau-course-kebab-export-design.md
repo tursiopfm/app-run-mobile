@@ -232,3 +232,12 @@ Sixième vague de retours prod (2026-06-12) :
   du bloc nom de course. `TableActionsMenu` gagne `showEditRace?` (false → masque « Modifier la
   course ») et `label?` (aria « Actions du tableau »). `onEditRace` devient optionnel. Le composant
   `Section` regagne un slot `action` (en-tête en flex row, `mb-2` déplacé sur la row).
+
+Septième vague de retours prod (2026-06-12) — carte `/print` :
+- **Marque « TRAIL COCKPIT » en haut de la carte** (`.brand`, TRAIL en `--accent` / COCKPIT en
+  `--ink-soft`) — présente aussi en PDF et image (dans `.card`, capturé par `renderJpeg`).
+- **Zoom de l'aperçu écran** : barre `−/%/+` (1×→3×, pas 0,5). État `zoom` → variable CSS
+  `--zoom` sur `.pdfroot`. `.zoomview` réserve la taille mise à l'échelle (`calc(65mm/120mm × --zoom)`)
+  et `.cardwrap` est `scale(--zoom)` (origin top-left) ; `.previewscroll` (overflow auto, max-h 78vh)
+  permet de défiler la carte agrandie. **N'affecte NI le PDF NI l'image** : `@media print` et le
+  clone `.exporting` remettent `transform:none` / `width:auto`. Zoom=1 = rendu identique à avant.

@@ -3,6 +3,7 @@
 // Export PDF — carte de course format iPhone (cf. Prompts/tableau-course-pdf-mockup.html).
 // Colonnes personnalisables (choix + ordre) via PrintColumnsDialog, largeurs auto.
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import type { Race, RaceWaypoint } from '@/types/plan'
 import { getRaces } from '@/lib/plan/storage'
 import { estimatePassageTimes } from '@/lib/plan/pacing'
@@ -59,6 +60,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
   const jpegBtnRef = useRef<HTMLButtonElement>(null)
   const shareBtnRef = useRef<HTMLButtonElement>(null)
   const [busy, setBusy] = useState(false)
+  const [zoom, setZoom] = useState(1) // zoom de l'aperçu écran (n'affecte ni le PDF ni l'image)
 
   // Rasterise un CLONE de la carte, à plat, hors écran — l'aperçu tourné à
   // l'écran ne bouge pas (pas de flash portrait→paysage pendant la capture).
@@ -183,7 +185,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
   }
 
   return (
-    <div className="pdfroot">
+    <div className="pdfroot" style={{ '--zoom': String(zoom) } as CSSProperties}>
       <style>{`
         .pdfroot{
           --ink:#0E1513; --ink-soft:#55615E; --ink-faint:#8A938F;
@@ -251,6 +253,23 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot.exporting .card{position:static;transform:none;top:auto;left:auto;margin:0 auto;box-shadow:none;}
         .pdfroot .btn:disabled{opacity:.5;cursor:default;}
 
+        /* Marque en haut de la carte (présente aussi en PDF / image). */
+        .pdfroot .brand{font-family:var(--d);font-weight:800;font-size:6.5px;letter-spacing:.6px;text-align:center;line-height:1;margin-bottom:1.5px;flex:none;}
+        .pdfroot .brand .b1{color:var(--accent);}
+        .pdfroot .brand .b2{color:var(--ink-soft);}
+
+        /* Zoom de l'aperçu ÉCRAN : zoomview réserve la taille mise à l'échelle (→ scroll),
+           cardwrap est scalé. N'affecte ni l'impression ni l'export image (cf. @media print
+           et le clone .exporting). */
+        .pdfroot .zoombar{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px;font-family:var(--d);}
+        .pdfroot .zoombar button{width:34px;height:34px;border-radius:9px;border:1px solid var(--trail-border);background:var(--trail-surface);color:var(--trail-text);font-size:18px;font-weight:700;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+        .pdfroot .zoombar button:disabled{opacity:.4;cursor:default;}
+        .pdfroot .zoombar .zval{min-width:52px;text-align:center;font-weight:600;font-size:13px;color:var(--trail-text);}
+        .pdfroot .previewscroll{width:100%;max-width:100%;max-height:78vh;overflow:auto;}
+        .pdfroot .cut{width:max-content;margin:0 auto;}
+        .pdfroot .zoomview{width:calc(65mm * var(--zoom,1));height:calc(120mm * var(--zoom,1));margin:0 auto;}
+        .pdfroot .zoomview .cardwrap{transform:scale(var(--zoom,1));transform-origin:top left;}
+
         @page{size:A4 portrait;margin:8mm;}
         @media print{
           /* UNE page : on annule les min-height de la coquille app (2× min-h-screen,
@@ -261,7 +280,10 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           .pdfroot, .pdfroot * { visibility:visible !important; }
           /* Carte à l'HORIZONTALE (non tournée), calée en HAUT de la feuille portrait. */
           .pdfroot{position:absolute !important;top:0;left:0;right:0;width:100% !important;background:#fff;padding:0 !important;display:block !important;}
-          .pdfroot .toolbar,.pdfroot .caption,.pdfroot .scis{display:none !important;}
+          .pdfroot .toolbar,.pdfroot .caption,.pdfroot .scis,.pdfroot .zoombar{display:none !important;}
+          .pdfroot .previewscroll{overflow:visible !important;max-height:none !important;}
+          .pdfroot .zoomview{width:auto !important;height:auto !important;}
+          .pdfroot .zoomview .cardwrap{transform:none !important;}
           .pdfroot .cut{border:none;background:none;padding:0;margin:0;width:auto;}
           .pdfroot .cardwrap{position:static !important;width:auto !important;height:auto !important;}
           .pdfroot .card{position:static !important;transform:none !important;top:auto;left:auto;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
@@ -282,11 +304,22 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
       </div>
       <p className="caption">{"Les colonnes choisies s'appliquent aux trois formats (PDF, image, partage). Aperçu tourné à l'écran (format carte de poche). À l'impression : carte à l'horizontale, en haut de la feuille A4. Découpe, plastifie — tient dans une poche de veste."}</p>
 
+      <div className="zoombar">
+        <button type="button" aria-label="Dézoomer" disabled={zoom <= 1}
+          onClick={() => setZoom((z) => Math.max(1, Math.round((z - 0.5) * 100) / 100))}>−</button>
+        <span className="zval">{Math.round(zoom * 100)} %</span>
+        <button type="button" aria-label="Zoomer" disabled={zoom >= 3}
+          onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.5) * 100) / 100))}>+</button>
+      </div>
+
+      <div className="previewscroll">
       <div className="cut">
         <span className="scis">✂ — — — — — — — — découper — — — — — — — —</span>
 
+        <div className="zoomview">
         <div className="cardwrap">
         <div className="card" ref={cardRef}>
+          <div className="brand"><span className="b1">TRAIL</span> <span className="b2">COCKPIT</span></div>
           <div className="hd">
             <div>
               <div className="race">{race.name}</div>
@@ -342,6 +375,8 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           </div>
         </div>
         </div>
+        </div>
+      </div>
       </div>
 
       <PrintColumnsDialog open={dialogOpen} config={cfg} onChange={updateCfg} onClose={() => setDialogOpen(false)} />
