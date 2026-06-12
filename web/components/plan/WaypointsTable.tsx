@@ -4,7 +4,7 @@
 // (cf. Prompts/tableau-course-mockup-optionA.html) : grille fixe (zéro scroll X),
 // ravito en icônes, dist+inter et cumul+segment empilés, objectif = temps écoulé
 // éditable + marge colorée avant barrière. Colonnes auto via lib/plan/waypoint-view,
-// heures via lib/plan/pacing. Pas d'undo (re-import pour reset).
+// heures via lib/plan/pacing. Suppression de ligne annulable (snackbar « Annuler »).
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { RaceWaypoint, WaypointSupply } from '@/types/plan'
 import {
