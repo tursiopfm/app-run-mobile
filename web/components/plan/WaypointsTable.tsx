@@ -18,6 +18,9 @@ type Props = {
   waypoints: Draft[]
   onChange: (next: Draft[]) => void
   readOnly?: boolean
+  // Mode « Modifier les lignes » contrôlé par le parent (menu kebab).
+  editLines?: boolean
+  onEditLinesChange?: (v: boolean) => void
   // Pacing (optionnel) : si absent, la colonne Objectif reste vide.
   startTime?: string
   targetDurationMin?: number
@@ -90,7 +93,8 @@ function reindex(rows: Draft[]): Draft[] {
 }
 
 export function WaypointsTable({
-  waypoints, onChange, readOnly, startTime, targetDurationMin, pacingFade, onStartTimeChange,
+  waypoints, onChange, readOnly, editLines = false, onEditLinesChange,
+  startTime, targetDurationMin, pacingFade, onStartTimeChange,
 }: Props) {
   const update = useCallback(
     (i: number, patch: Partial<Draft>) => {
@@ -101,7 +105,6 @@ export function WaypointsTable({
   )
 
   const [editRow, setEditRow] = useState<number | null>(null)
-  const [editLines, setEditLines] = useState(false)
 
   const elapsed = useMemo(() => {
     if (targetDurationMin == null) return null
@@ -229,18 +232,13 @@ export function WaypointsTable({
         .wtbl .add-row{width:100%;margin-top:8px;padding:8px;font-family:var(--d);font-size:12px;font-weight:600;color:var(--orange);background:rgba(255,107,53,.08);border:1px dashed rgba(255,107,53,.4);border-radius:8px;cursor:pointer;}
       `}</style>
 
-      {!readOnly && (
+      {!readOnly && editLines && (
         <div className="wtbl-bar">
-          <button type="button" className="btn-lines" onClick={() => setEditLines((v) => !v)}>
-            {editLines ? '✓ Terminé' : '✎ Modifier les lignes'}
+          <button type="button" className="btn-lines" onClick={() => onEditLinesChange?.(false)}>
+            ✓ Terminé
           </button>
         </div>
       )}
-
-      <div className="legend-mini">
-        <b>+x</b> sous Dist · D+ · D− = l&apos;intermédiaire (depuis le point précédent) · <span className="bhk">BH</span> = barrière
-        <br />ravitos : <span className="lg"><span className="chip liq">L</span>liquide</span><span className="lg"><span className="chip sol">S</span>solide</span><span className="lg"><span className="chip hot">C</span>chaud</span><span className="lg"><span className="chip base">BV</span>base vie</span><span className="lg"><span className="chip ass">A</span>assistance</span>
-      </div>
 
       <div className="row-wrap">
         {editLines && !readOnly && <span className="del-spacer" />}
@@ -382,6 +380,11 @@ export function WaypointsTable({
           + Ajouter une ligne
         </button>
       )}
+
+      <div className="legend-mini">
+        <b>+x</b> sous Dist · D+ · D− = l&apos;intermédiaire (depuis le point précédent) · <span className="bhk">BH</span> = barrière
+        <br />ravitos : <span className="lg"><span className="chip liq">L</span>liquide</span><span className="lg"><span className="chip sol">S</span>solide</span><span className="lg"><span className="chip hot">C</span>chaud</span><span className="lg"><span className="chip base">BV</span>base vie</span><span className="lg"><span className="chip ass">A</span>assistance</span>
+      </div>
     </div>
   )
 }
