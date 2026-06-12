@@ -1,11 +1,6 @@
 # Mode barrières — objectif calé sur les barrières horaires
 
-> **Status: Spec** · 2026-06-12 · Code cible : `web/lib/plan/barrier-lock.ts` (nouveau),
-> `web/components/plan/WaypointsTable.tsx`,
-> `web/app/(main)/plan/courses/[id]/print/page.tsx`,
-> `web/components/plan/PacingStrategyCard.tsx`,
-> `web/app/(main)/plan/courses/[id]/CoursePageClient.tsx`,
-> `web/lib/i18n/dictionaries/{fr,en}.ts`.
+> **Status: Implémenté** · 2026-06-12 · Code: web/lib/plan/barrier-lock.ts, web/components/plan/{WaypointsTable,PacingStrategyCard}.tsx, web/app/(main)/plan/courses/[id]/{CoursePageClient,print/page}.tsx, web/lib/i18n/dictionaries/{fr,en}.ts
 
 ## Problème
 
