@@ -26,6 +26,7 @@ type Props = {
   pacingFade: number
   onChange: (fade: number) => void
   readOnly?: boolean
+  barrierLocked?: boolean
   // Objectif / départ affichés à droite du titre, cliquables (popups d'édition).
   startTime?: string
   onEditObjective?: () => void
@@ -126,14 +127,14 @@ function PaceCurve({
 }
 
 export function PacingStrategyCard({
-  waypoints, targetDurationMin, pacingFade, onChange, readOnly,
+  waypoints, targetDurationMin, pacingFade, onChange, readOnly, barrierLocked,
   startTime, onEditObjective, onEditStart,
 }: Props) {
   const L = useT().plan
   const totalSec = targetDurationMin * 60
   const fade = clampFade(pacingFade ?? 0)
-  // Variante de couleur du badge : régulier=gris · finir fort=bleu · partir vite=orange.
-  const variant = Math.abs(fade) < 0.08 ? 'even' : fade < 0 ? 'start' : 'end'
+  // Variante de couleur du badge : barrières=neutre · régulier=gris · finir fort=bleu · partir vite=orange.
+  const variant = barrierLocked ? 'lock' : Math.abs(fade) < 0.08 ? 'even' : fade < 0 ? 'start' : 'end'
   const objLabel = `${Math.floor(targetDurationMin / 60)}h${String(targetDurationMin % 60).padStart(2, '0')}`
 
   const phrase = useMemo(() => {
@@ -143,7 +144,9 @@ export function PacingStrategyCard({
     return fade < 0 ? L.pacingPhraseNeg(intensity) : L.pacingPhrasePos(intensity)
   }, [fade, L])
 
-  const curLabel = Math.abs(fade) < 0.08 ? L.pacingScaleMid : fade < 0 ? L.pacingScaleStart : L.pacingScaleEnd
+  const curLabel = barrierLocked
+    ? L.pacingLockedBadge
+    : Math.abs(fade) < 0.08 ? L.pacingScaleMid : fade < 0 ? L.pacingScaleStart : L.pacingScaleEnd
 
   return (
     <details className="pstrat rounded-[12px] bg-trail-card border border-trail-border p-4 mb-3">
@@ -161,6 +164,7 @@ export function PacingStrategyCard({
         .pstrat .psum-cur.v-even{color:var(--trail-muted);background:rgba(127,127,127,.12);border-color:var(--trail-border);}
         .pstrat .psum-cur.v-start{color:#38BDF8;background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.35);}
         .pstrat .psum-cur.v-end{color:var(--trail-primary);background:rgba(255,107,53,.1);border-color:rgba(255,107,53,.28);}
+        .pstrat .psum-cur.v-lock{color:var(--trail-muted);background:rgba(127,127,127,.12);border-color:var(--trail-border);}
         .pstrat .psum-chev{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--trail-surface);border:1px solid var(--trail-border);color:var(--trail-text);font-size:12px;line-height:1;transition:transform .2s,background .2s;}
         .pstrat .psum:hover .psum-chev{background:var(--trail-border);}
         .pstrat[open] .psum-chev{transform:rotate(180deg);}
@@ -219,22 +223,24 @@ export function PacingStrategyCard({
           type="range" min={-100} max={100} step={1}
           className="prange"
           value={sliderFromFade(fade)}
-          disabled={readOnly}
+          disabled={readOnly || barrierLocked}
           onChange={(e) => onChange(fadeFromSlider(Number(e.target.value)))}
           aria-label={L.pacingTitle}
         />
 
-        <p className="text-body-sm text-trail-text mt-3 leading-snug">{phrase}</p>
+        <p className="text-body-sm text-trail-text mt-3 leading-snug">{barrierLocked ? L.pacingLockedNote : phrase}</p>
 
-        <PaceCurve waypoints={waypoints} totalSec={totalSec} fade={fade} L={L} />
+        {!barrierLocked && <PaceCurve waypoints={waypoints} totalSec={totalSec} fade={fade} L={L} />}
 
-        <details className="pmethod">
-          <summary>{L.pacingMethodSummary}</summary>
-          <div className="mt-2 text-caption text-trail-muted leading-relaxed">
-            <div className="pmethod-formula">{L.pacingMethodFormula}</div>
-            <p>{L.pacingMethodBody}</p>
-          </div>
-        </details>
+        {!barrierLocked && (
+          <details className="pmethod">
+            <summary>{L.pacingMethodSummary}</summary>
+            <div className="mt-2 text-caption text-trail-muted leading-relaxed">
+              <div className="pmethod-formula">{L.pacingMethodFormula}</div>
+              <p>{L.pacingMethodBody}</p>
+            </div>
+          </details>
+        )}
       </div>
     </details>
   )
