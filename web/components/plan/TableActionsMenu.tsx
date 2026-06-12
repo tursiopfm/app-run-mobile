@@ -1,36 +1,32 @@
 'use client'
 
-// Menu d'actions (⋮) du Tableau de course : Modifier la course / Modifier les
-// lignes / Ré-importer / Exporter (sous-menu PDF·JPEG·Partager). Sans état métier :
-// le parent (CoursePageClient) fournit les callbacks.
+// Menu d'actions (⋮) de la course : Modifier la course / Modifier les lignes /
+// Ré-importer / Exporter (ouvre la page d'aperçu /print). Sans état métier : le
+// parent (CoursePageClient) fournit les callbacks. Les actions liées au tableau
+// ne sont affichées que si un tableau existe (hasTableau).
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import {
-  MoreVertical, Pencil, Rows3, Download, Share, ChevronRight,
-  FileText, Image as ImageIcon, Share2,
-} from 'lucide-react'
-
-type ExportKind = 'pdf' | 'jpeg' | 'share'
+import { MoreVertical, Pencil, Rows3, Download, Share } from 'lucide-react'
 
 type Props = {
   onEditRace: () => void
   onEditLines: () => void
   onReimport: () => void
-  onExport: (kind: ExportKind) => void
+  onExport: () => void
+  hasTableau?: boolean
 }
 
-export function TableActionsMenu({ onEditRace, onEditLines, onReimport, onExport }: Props) {
+export function TableActionsMenu({ onEditRace, onEditLines, onReimport, onExport, hasTableau = true }: Props) {
   const [open, setOpen] = useState(false)
-  const [exportOpen, setExportOpen] = useState(false)
 
-  const close = () => { setOpen(false); setExportOpen(false) }
+  const close = () => setOpen(false)
   const run = (fn: () => void) => { fn(); close() }
 
   return (
     <div className="relative">
       <button
         type="button"
-        aria-label="Actions du tableau"
+        aria-label="Actions de la course"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
@@ -48,20 +44,12 @@ export function TableActionsMenu({ onEditRace, onEditLines, onReimport, onExport
             className="absolute right-0 z-50 mt-1 min-w-[210px] rounded-[10px] border border-[var(--ink-500)] bg-trail-card p-1 shadow-[0_12px_40px_rgba(0,0,0,0.6)]"
           >
             <MenuItem icon={<Pencil size={15} />} label="Modifier la course" onClick={() => run(onEditRace)} />
-            <MenuItem icon={<Rows3 size={15} />} label="Modifier les lignes" onClick={() => run(onEditLines)} />
-            <MenuItem icon={<Download size={15} />} label="Ré-importer" onClick={() => run(onReimport)} />
-            <MenuItem
-              icon={<Share size={15} />}
-              label="Exporter"
-              trailing={<ChevronRight size={15} className={`transition-transform ${exportOpen ? 'rotate-90' : ''}`} />}
-              onClick={() => setExportOpen((v) => !v)}
-            />
-            {exportOpen && (
-              <div className="my-0.5 ml-3 border-l border-trail-border pl-3">
-                <MenuItem icon={<FileText size={15} />} label="PDF" onClick={() => run(() => onExport('pdf'))} />
-                <MenuItem icon={<ImageIcon size={15} />} label="Image" onClick={() => run(() => onExport('jpeg'))} />
-                <MenuItem icon={<Share2 size={15} />} label="Partager" onClick={() => run(() => onExport('share'))} />
-              </div>
+            {hasTableau && (
+              <>
+                <MenuItem icon={<Rows3 size={15} />} label="Modifier les lignes" onClick={() => run(onEditLines)} />
+                <MenuItem icon={<Download size={15} />} label="Ré-importer" onClick={() => run(onReimport)} />
+                <MenuItem icon={<Share size={15} />} label="Exporter" onClick={() => run(onExport)} />
+              </>
             )}
           </div>
         </>

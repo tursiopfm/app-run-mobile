@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import type { Race, RaceTableauMeta, RaceWaypoint } from '@/types/plan'
 import { getRaces, deleteRace, peekRaces, saveRace } from '@/lib/plan/storage'
 import { RaceEditorModal } from '@/components/plan/RaceEditorModal'
-import { EditButton } from '@/components/plan/EditButton'
 import { WaypointsTable } from '@/components/plan/WaypointsTable'
 import { TableActionsMenu } from '@/components/plan/TableActionsMenu'
 import { PacingStrategyCard } from '@/components/plan/PacingStrategyCard'
@@ -82,12 +81,10 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
     [race],
   )
 
-  // Export du tableau : ouvre la page /print (hub d'export). jpeg/share y sont
-  // déclenchés au chargement / au tap (cf. print/page.tsx).
-  const handleExport = useCallback((kind: 'pdf' | 'jpeg' | 'share') => {
-    const base = `/plan/courses/${raceId}/print`
-    const url = kind === 'pdf' ? base : `${base}?export=${kind}`
-    window.open(url, '_blank', 'noopener,noreferrer')
+  // Export du tableau : ouvre la page /print (hub d'export) où l'utilisateur
+  // personnalise les colonnes puis choisit PDF / Image / Partager.
+  const handleExport = useCallback(() => {
+    window.open(`/plan/courses/${raceId}/print`, '_blank', 'noopener,noreferrer')
   }, [raceId])
 
   const reload = useCallback(async () => {
@@ -175,16 +172,24 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
         >
           ← Retour
         </button>
-        <EditButton onClick={() => setEditorOpen(true)} />
       </div>
 
       <div className="rounded-[12px] bg-trail-card border border-trail-border p-4 space-y-2">
-        <h1
-          className="text-display leading-tight text-trail-text"
-          style={{ fontFamily: "var(--font-data)" }}
-        >
-          {race.name}
-        </h1>
+        <div className="flex items-start justify-between gap-2">
+          <h1
+            className="text-display leading-tight text-trail-text"
+            style={{ fontFamily: "var(--font-data)" }}
+          >
+            {race.name}
+          </h1>
+          <TableActionsMenu
+            hasTableau={waypoints.length > 0}
+            onEditRace={() => setEditorOpen(true)}
+            onEditLines={() => setEditLines((v) => !v)}
+            onReimport={() => setImportOpen(true)}
+            onExport={handleExport}
+          />
+        </div>
         <p className="text-body-sm text-trail-muted">
           {formatLongDate(race.date)}{race.location ? ` — ${race.location}` : ''}
         </p>
@@ -203,17 +208,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
         </div>
       </div>
 
-      <Section
-        title="Tableau de course"
-        action={waypoints.length > 0 ? (
-          <TableActionsMenu
-            onEditRace={() => setEditorOpen(true)}
-            onEditLines={() => setEditLines((v) => !v)}
-            onReimport={() => setImportOpen(true)}
-            onExport={handleExport}
-          />
-        ) : undefined}
-      >
+      <Section title="Tableau de course">
         {waypoints.length === 0 ? (
           <button type="button" onClick={() => setImportOpen(true)}
             className="text-caption text-trail-primary underline">
@@ -329,13 +324,10 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   )
 }
 
-function Section({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-4">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-body font-semibold text-trail-muted font-display">{title}</h2>
-        {action}
-      </div>
+      <h2 className="text-body font-semibold text-trail-muted mb-2 font-display">{title}</h2>
       {children}
     </div>
   )

@@ -192,10 +192,10 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .toolbar .ttl{font-family:var(--d);font-weight:600;font-size:14px;}
         .pdfroot .toolbar .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
         .pdfroot .btn{font-family:var(--d);font-weight:600;font-size:13px;padding:10px 8px;border-radius:10px;border:0;background:var(--trail-primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
-        /* Liseré blanc sur le bouton ciblé par ?export= (focus programmatique). */
-        .pdfroot .btn:focus{outline:2px solid #fff;outline-offset:2px;}
-        /* « Personnaliser les colonnes » : surface élevée + bordure claire pour ressortir sous les 3 boutons orange. */
-        .pdfroot .btn.ghost{background:var(--trail-card);border:1px solid var(--ink-500);color:#fff;}
+        /* Liseré sur le bouton ciblé par ?export= (focus) — contrasté sur les 2 thèmes. */
+        .pdfroot .btn:focus{outline:2px solid var(--trail-text);outline-offset:2px;}
+        /* « Personnaliser les colonnes » : contour orange (secondaire) — visible en clair ET sombre, distinct des 3 boutons pleins. */
+        .pdfroot .btn.ghost{background:transparent;border:1.5px solid var(--trail-primary);color:var(--trail-primary);}
         .pdfroot .caption{width:120mm;max-width:100%;color:var(--trail-muted);font-size:11px;margin-bottom:16px;line-height:1.4;}
         .pdfroot .cut{padding:6mm;border:1px dashed var(--trail-border);border-radius:6px;background:var(--trail-surface);}
         .pdfroot .scis{font-size:10px;color:var(--trail-muted);margin-bottom:4px;display:block;}

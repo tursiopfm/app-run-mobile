@@ -175,3 +175,19 @@ Deuxième vague de retours prod (2026-06-12) :
   + texte blanc (au lieu de surface/bordure sombres).
 - **Kebab déplacé dans l'en-tête du bloc** « Tableau de course » (prop `action` du
   composant `Section`), à droite du titre.
+
+Troisième vague de retours prod (2026-06-12) :
+- **Bouton « Modifier » (EditButton) retiré** du haut de la fiche course (doublon du kebab).
+- **Kebab déplacé dans l'en-tête du bloc « nom de la course »** (à droite du titre `<h1>`),
+  plus dans la `Section` Tableau (prop `action` de `Section` retirée, composant restauré).
+  Nouvelle prop `hasTableau` : sans tableau, seul « Modifier la course » s'affiche.
+- **Sous-menu « Exporter » supprimé** : « Exporter » est une action directe qui ouvre la
+  page `/print` (l'utilisateur y choisit PDF / Image / Partager après avoir personnalisé
+  les colonnes). `onExport` passe de `(kind) => void` à `() => void`. Libellé d'accès du
+  kebab : « Actions du tableau » → « Actions de la course ».
+- **Chevron de dépliage de « Stratégie d'allure »** trop discret → pastille ronde
+  (`--trail-surface` + bordure, `--trail-text`, 24 px) au lieu d'un ▾ muted 10 px.
+- **Bouton « Personnaliser les colonnes » invisible en thème CLAIR** (texte blanc sur fond
+  clair — régression de la 2e vague) → style **contour orange** thème-agnostique
+  (`border/color: var(--trail-primary)`, fond transparent). Focus des boutons : `#fff` →
+  `var(--trail-text)` (contrasté sur les 2 thèmes).
