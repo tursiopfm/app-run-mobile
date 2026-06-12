@@ -535,7 +535,7 @@ export async function saveRace(race: Race): Promise<void> {
     if (!error) {
       saved = true
     } else if (isMissingColumnError(error)) {
-      // Colonne absente (migration 022 et/ou 035 non appliquée) : retry sans les
+      // Colonne absente (migration 022, 035 et/ou 041 non appliquée) : retry sans les
       // colonnes optionnelles plutôt que fallback LS (qui ferait disparaître la
       // race côté serveur).
       const {
