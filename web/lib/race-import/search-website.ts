@@ -30,5 +30,6 @@ export async function searchOfficialWebsite(target: WebsiteTarget): Promise<stri
   }
   const content: string = msg?.content ?? ''
   const m = content.match(/https?:\/\/[^\s)\]"'<>]+/)
-  return m ? m[0] : null
+  // Retire la ponctuation de fin de phrase collée à l'URL (« …com. », « …com, »).
+  return m ? m[0].replace(/[.,;!]+$/, '') : null
 }

@@ -38,6 +38,16 @@ test('filet : 1re URL du contenu si aucune annotation', async () => {
   await expect(searchOfficialWebsite(target)).resolves.toBe('https://marathondumontblanc.com')
 })
 
+test('retire la ponctuation de fin collée à l’URL', async () => {
+  mockCreate.mockResolvedValue({
+    choices: [{ message: {
+      content: 'Le site officiel est https://utmbmontblanc.com.',
+      annotations: [],
+    } }],
+  })
+  await expect(searchOfficialWebsite(target)).resolves.toBe('https://utmbmontblanc.com')
+})
+
 test('retourne null si aucune URL', async () => {
   mockCreate.mockResolvedValue({
     choices: [{ message: { content: 'Je ne trouve pas.', annotations: [] } }],
