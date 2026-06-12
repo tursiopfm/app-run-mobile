@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { readMissionGoals, saveMissionGoals, type MissionGoals } from '@/lib/mission/goals'
 import type { SportKey } from '@/lib/design/sports'
 import { useT } from '@/lib/i18n/I18nProvider'
@@ -25,7 +26,9 @@ export function GoalsModal({ sport, defaults, onClose, onSaved }: Props) {
 
   const row = 'flex items-center justify-between gap-3 rounded-[10px] border border-trail-border bg-trail-bg px-3 py-2.5 text-[13px]'
   const input = 'w-24 bg-transparent text-right font-display font-bold tabular-nums text-trail-text outline-none'
-  return (
+  if (typeof document === 'undefined') return null
+  // Portal vers document.body (cf. MissionDetailSheet) : sort de <PullToRefresh>.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div className="w-full max-w-sm rounded-[16px] bg-trail-card border border-trail-border p-4" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
@@ -61,6 +64,7 @@ export function GoalsModal({ sport, defaults, onClose, onSaved }: Props) {
           <button onClick={save} className="rounded-full px-4 py-1.5" style={{ background: 'var(--primary)', color: 'var(--ink-900)' }}>{M.goalsSave}</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

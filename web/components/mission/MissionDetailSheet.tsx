@@ -5,6 +5,7 @@
 // déjà alimentés côté client — pas de nouvelle route ni de fetch serveur.
 
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 type Props = { title: string; onClose: () => void; children: React.ReactNode }
 
@@ -21,7 +22,12 @@ export function MissionDetailSheet({ title, onClose, children }: Props) {
     }
   }, [onClose])
 
-  return (
+  if (typeof document === 'undefined') return null
+
+  // Portal vers document.body : le contenu de page est rendu dans <PullToRefresh>
+  // (main relatif) ; comme les autres overlays plein écran (BlockHelpSheet), on
+  // sort de cet arbre pour garantir un positionnement viewport fiable.
+  return createPortal(
     <div className="fixed inset-0 z-[100] overflow-y-auto bg-trail-bg">
       <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-trail-border bg-trail-bg/95 px-3 py-3 backdrop-blur">
         <button
@@ -35,6 +41,7 @@ export function MissionDetailSheet({ title, onClose, children }: Props) {
         <p className="font-display text-[17px] font-bold text-trail-text">{title}</p>
       </div>
       <div className="mx-auto max-w-lg space-y-3 px-3 py-3 pb-24">{children}</div>
-    </div>
+    </div>,
+    document.body,
   )
 }
