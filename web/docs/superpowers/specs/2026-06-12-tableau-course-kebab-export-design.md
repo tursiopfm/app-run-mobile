@@ -209,3 +209,16 @@ Quatrième vague de retours prod (2026-06-12) :
   bleu (#38BDF8), Partir vite = orange (`--trail-primary`). Variantes CSS `.psum-cur.v-even/
   v-start/v-end`. Défaut = Régulier (fade 0, inchangé). Le résumé `.psum` passe en `flex-wrap`
   pour gérer objectif/départ + badge + chevron sur mobile.
+
+Cinquième vague de retours prod (2026-06-12) :
+- **Saisie objectif/départ via clavier numérique impossible** (pas de « : ») → `QuickEditModal`
+  (champ texte unique) remplacé par **`TimeEditModal`** : deux champs numériques `HH : MM`
+  (`inputMode=numeric`, bornage heures `maxHours` = 23 horloge / 99 durée, minutes ≤ 59,
+  auto-avance HH→MM). API `onSave(hours, minutes)`. Cohérent pour objectif ET départ.
+  `parseObjectiveMin`/`parseClockHHMM`/`fmtObjective` supprimés ; ajout `parseStartClock`.
+- **Nouvelle colonne d'export « Heure (à la montre) »** (`objclock`) UNIQUEMENT dans la carte
+  `/print` (pas le tableau écran) : heure d'horloge projetée à chaque point = départ + temps
+  écoulé cumulé (`formatElapsedToClock(startTime, elapsed[i])`, préfixe jour retiré). Ajoutée à
+  `PRINT_COL_DEFS`/`DEFAULT_PRINT_ORDER` ; **masquée par défaut** (opt-in via `DEFAULT_HIDDEN`,
+  `sanitize` la masque aussi pour les configs LS existantes). Toggle dans « Personnaliser les
+  colonnes ».

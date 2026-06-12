@@ -172,6 +172,11 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         </span>
       )
       case 'obj':    return <span className="obj">{objLabel ?? dash}</span>
+      case 'objclock': {
+        // Objectif à l'heure d'horloge = départ + temps écoulé cumulé (sans préfixe jour).
+        const clock = race.startTime && elapsed ? noDay(formatElapsedToClock(race.startTime, elapsed[i])?.label) : null
+        return <span className="bh">{clock ?? dash}</span>
+      }
       case 'segt':   return <span className="obj">{segt ?? dash}</span>
       case 'bh':     return <span className="bh">{bhLabel ?? dash}</span>
     }

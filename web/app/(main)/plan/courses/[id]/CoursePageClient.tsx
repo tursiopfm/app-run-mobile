@@ -10,27 +10,15 @@ import { TableActionsMenu } from '@/components/plan/TableActionsMenu'
 import { PacingStrategyCard } from '@/components/plan/PacingStrategyCard'
 import { RaceImportSheet } from '@/components/plan/RaceImportSheet'
 import { TableauDiffModal } from '@/components/plan/TableauDiffModal'
-import { QuickEditModal } from '@/components/plan/QuickEditModal'
+import { TimeEditModal } from '@/components/plan/TimeEditModal'
 import { colors } from '@/lib/design/colors'
 
-// Parse une durée objectif : « 35h00 » / « 35:00 » / « 35h » / « 35 » → minutes.
-function parseObjectiveMin(raw: string): number | null {
-  const m = /^(\d{1,2})\s*[h:]?\s*(\d{0,2})$/.exec(raw.trim())
-  if (!m) return null
-  const min = m[2] === '' ? 0 : parseInt(m[2], 10)
-  if (min > 59) return null
-  const total = parseInt(m[1], 10) * 60 + min
-  return total > 0 ? total : null
-}
-const fmtObjective = (min: number) => `${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}`
+const pad2 = (n: number) => String(n).padStart(2, '0')
 
-// Parse une heure d'horloge : « 19:00 » / « 19h00 » / « 9:30 » → « HH:MM ».
-function parseClockHHMM(raw: string): string | null {
-  const m = /^(\d{1,2})[:hH](\d{2})$/.exec(raw.trim())
-  if (!m) return null
-  const h = parseInt(m[1], 10)
-  if (h > 23 || parseInt(m[2], 10) > 59) return null
-  return `${String(h).padStart(2, '0')}:${m[2]}`
+// Heure de départ « HH:MM » → [heures, minutes] (défaut 08:00 si absent).
+function parseStartClock(s?: string): [number, number] {
+  const m = /^(\d{1,2}):(\d{2})/.exec(s ?? '')
+  return m ? [parseInt(m[1], 10), parseInt(m[2], 10)] : [8, 0]
 }
 
 function formatLongDate(iso: string): string {
@@ -144,18 +132,17 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   }, [race])
 
   // Pop-ups indépendantes : objectif (temps visé) et heure de départ.
-  const saveObjective = useCallback(async (raw: string) => {
-    const min = parseObjectiveMin(raw)
-    if (min == null || !race) return
+  const saveObjective = useCallback(async (h: number, m: number) => {
+    const min = h * 60 + m
+    if (min <= 0 || !race) return
     const next = { ...race, targetDurationMin: min }
     setRace(next)
     await saveRace(next)
   }, [race])
 
-  const saveStart = useCallback(async (raw: string) => {
-    const hhmm = parseClockHHMM(raw)
-    if (!hhmm || !race) return
-    const next = { ...race, startTime: hhmm }
+  const saveStart = useCallback(async (h: number, m: number) => {
+    if (!race) return
+    const next = { ...race, startTime: `${pad2(h)}:${pad2(m)}` }
     setRace(next)
     await saveRace(next)
   }, [race])
@@ -350,23 +337,23 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
           onClose={() => setDiffOpen(false)}
         />
       )}
-      <QuickEditModal
+      <TimeEditModal
         open={editField === 'objective'}
         title="Objectif (temps visé)"
-        initial={race.targetDurationMin != null ? fmtObjective(race.targetDurationMin) : ''}
-        placeholder="35h00"
-        hint="Format : 35h00 ou 35:00"
-        validate={(r) => parseObjectiveMin(r) != null}
+        hours={race.targetDurationMin != null ? Math.floor(race.targetDurationMin / 60) : 0}
+        minutes={race.targetDurationMin != null ? race.targetDurationMin % 60 : 0}
+        maxHours={99}
+        hint="Heures : minutes (ex. 35 : 00)"
         onSave={saveObjective}
         onClose={() => setEditField(null)}
       />
-      <QuickEditModal
+      <TimeEditModal
         open={editField === 'start'}
         title="Heure de départ"
-        initial={race.startTime ? race.startTime.slice(0, 5) : ''}
-        placeholder="19:00"
-        hint="Format : 19:00"
-        validate={(r) => parseClockHHMM(r) != null}
+        hours={parseStartClock(race.startTime)[0]}
+        minutes={parseStartClock(race.startTime)[1]}
+        maxHours={23}
+        hint="Heure de départ (ex. 19 : 00)"
         onSave={saveStart}
         onClose={() => setEditField(null)}
       />
