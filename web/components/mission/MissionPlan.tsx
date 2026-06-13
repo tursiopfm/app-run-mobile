@@ -22,6 +22,7 @@ import { adviseWeek, applySlider, type SliderBase, type SliderOutcome, type Reas
 import { buildWeekFeed, sessionCategory, type FeedEntry } from '@/lib/mission/week-feed'
 import { activityCategory } from '@/lib/plan/session-matching'
 import { weeklyVolumes, habitualWeekly } from '@/lib/mission/rhythm'
+import { raceProfile } from '@/lib/mission/race-profile'
 import { resolveMissionWeeklyTarget } from '@/lib/mission/weekly-target'
 import { computePhaseSegments, weekOfPlan } from '@/lib/mission/prepa'
 import { computeFreshness } from '@/lib/analytics/charge-insights'
@@ -181,7 +182,7 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
     const planTarget = resolveMissionWeeklyTarget(macros, today)
     const targetKm = planTarget?.km ?? (habitualWeekly(recentActivities, today).km || null)
     const phaseType = plan?.phases.find(p => p.startDate <= today && today <= p.endDate)?.type ?? null
-    return { todayISO: today, weekDates, freshnessZone, weekDoneKm, recentHardCount, targetKm, phaseType, daysToRace: race ? daysUntil(race.date) : null }
+    return { todayISO: today, weekDates, freshnessZone, weekDoneKm, recentHardCount, targetKm, phaseType, daysToRace: race ? daysUntil(race.date) : null, raceProfile: raceProfile(race) }
   }, [weekActivities, weekPlanned, freshnessPayload, macros, plan, race, today, weekDates, recentActivities])
 
   // Inputs « planifié » dérivés d'une liste (réutilisé avec/sans la séance du curseur).
