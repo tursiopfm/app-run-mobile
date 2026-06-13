@@ -1,13 +1,15 @@
 'use client'
 
-// Menu d'actions (⋮) de la course : Modifier la course / Modifier les lignes /
+// Menu d'actions de la course : Modifier la course / Modifier les lignes /
 // Ré-importer / Exporter (ouvre la page d'aperçu /print). Sans état métier : le
 // parent (CoursePageClient) fournit les callbacks. Les actions liées au tableau
 // ne sont affichées que si un tableau existe (hasTableau) ; « Modifier la course »
 // peut être masquée (showEditRace=false) pour le kebab du bloc tableau.
+// Déclencheur libellé « Gérer ▾ » + menu descriptif (chaque action explique ce
+// qu'elle fait) pour que l'utilisateur sache ce qu'il va trouver avant d'ouvrir.
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import { MoreVertical, Pencil, Rows3, Download, Share } from 'lucide-react'
+import { Settings2, ChevronDown, Pencil, Rows3, Download, Share } from 'lucide-react'
 
 type Props = {
   onEditRace?: () => void
@@ -36,9 +38,11 @@ export function TableActionsMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="-mr-1.5 rounded-md p-1.5 text-trail-muted hover:text-trail-text"
+        className="inline-flex items-center gap-1.5 rounded-[10px] border border-trail-border px-2.5 py-1.5 text-body-sm font-semibold text-trail-text hover:border-[var(--ink-500)] hover:bg-white/5"
       >
-        <MoreVertical size={18} />
+        <Settings2 size={15} className="text-[var(--primary-text)]" />
+        Gérer
+        <ChevronDown size={14} className={`text-trail-muted transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
@@ -47,16 +51,39 @@ export function TableActionsMenu({
           <div className="fixed inset-0 z-40 bg-black/50" onClick={close} />
           <div
             role="menu"
-            className="absolute right-0 z-50 mt-1 min-w-[210px] rounded-[10px] border border-[var(--ink-500)] bg-trail-card p-1 shadow-[0_12px_40px_rgba(0,0,0,0.6)]"
+            className="absolute right-0 z-50 mt-2 w-[280px] max-w-[calc(100vw-2rem)] rounded-[14px] border border-[var(--ink-500)] bg-[#1B2430] p-1.5 shadow-[0_16px_44px_rgba(0,0,0,0.6)]"
           >
+            <div className="px-2.5 pb-1.5 pt-1 text-micro font-bold uppercase tracking-wider text-trail-muted">
+              {label}
+            </div>
             {showEditRace && onEditRace && (
-              <MenuItem icon={<Pencil size={15} />} label="Modifier la course" onClick={() => run(onEditRace)} />
+              <MenuItem
+                icon={<Pencil size={17} />}
+                label="Modifier la course"
+                description="Nom, date, distance, D+, objectif"
+                onClick={() => run(onEditRace)}
+              />
             )}
             {hasTableau && (
               <>
-                <MenuItem icon={<Rows3 size={15} />} label="Modifier les lignes" onClick={() => run(onEditLines)} />
-                <MenuItem icon={<Download size={15} />} label="Ré-importer" onClick={() => run(onReimport)} />
-                <MenuItem icon={<Share size={15} />} label="Exporter" onClick={() => run(onExport)} />
+                <MenuItem
+                  icon={<Rows3 size={17} />}
+                  label="Modifier les lignes"
+                  description="Horaires, ravitos et D+ de chaque point"
+                  onClick={() => run(onEditLines)}
+                />
+                <MenuItem
+                  icon={<Download size={17} />}
+                  label="Ré-importer"
+                  description="Recharger le tracé depuis le site officiel"
+                  onClick={() => run(onReimport)}
+                />
+                <MenuItem
+                  icon={<Share size={17} />}
+                  label="Exporter"
+                  description="Image, PDF ou partage du tableau"
+                  onClick={() => run(onExport)}
+                />
               </>
             )}
           </div>
@@ -66,10 +93,10 @@ export function TableActionsMenu({
   )
 }
 
-function MenuItem({ icon, label, trailing, onClick }: {
+function MenuItem({ icon, label, description, onClick }: {
   icon: ReactNode
   label: string
-  trailing?: ReactNode
+  description: string
   onClick: () => void
 }) {
   return (
@@ -77,11 +104,15 @@ function MenuItem({ icon, label, trailing, onClick }: {
       type="button"
       role="menuitem"
       onClick={onClick}
-      className="flex w-full items-center gap-2.5 rounded-[7px] px-3 py-2 text-left text-body-sm font-medium text-trail-text hover:bg-trail-border/30"
+      className="flex w-full items-start gap-3 rounded-[10px] p-2.5 text-left hover:bg-white/5"
     >
-      <span className="text-trail-muted">{icon}</span>
-      <span className="flex-1">{label}</span>
-      {trailing}
+      <span className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[9px] border border-trail-border bg-white/5 text-[var(--primary-text)]">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-body-sm font-semibold text-trail-text">{label}</span>
+        <span className="block text-caption leading-snug text-trail-muted">{description}</span>
+      </span>
     </button>
   )
 }
