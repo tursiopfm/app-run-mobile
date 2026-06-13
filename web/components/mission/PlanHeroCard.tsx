@@ -98,14 +98,27 @@ function FormSlider({ pos, onChange }: { pos: number; onChange: (p: number) => v
   const M = useT().mission
   const labels = M.sliderLabels
   const last = Math.max(1, labels.length - 1)
+  const thumbHidden =
+    '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:opacity-0 ' +
+    '[&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:opacity-0 [&::-moz-range-thumb]:border-0'
   return (
     <div className="mt-4">
       <p className="text-[10px] uppercase tracking-[0.12em] font-bold mb-2.5" style={{ color: 'var(--text-muted)' }}>{M.sliderCaption}</p>
-      <div className="relative h-2 rounded-full" style={{ background: 'linear-gradient(90deg,#6B7785 0%,#4ADE80 45%,#FBBF24 72%,#FF7900 100%)' }}>
+      {/* zone tactile h-6 : la piste, les crans et la pastille sont décoratifs
+          (pointer-events-none) ; l'input range transparent par-dessus capte le
+          tap n'importe où + le glissement (souris/doigt). */}
+      <div className="relative h-6">
+        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2 rounded-full pointer-events-none" style={{ background: 'linear-gradient(90deg,#6B7785 0%,#4ADE80 45%,#FBBF24 72%,#FF7900 100%)' }} />
         {labels.map((_, i) => (
-          <span key={i} className="absolute top-1/2 w-[5px] h-[5px] rounded-full -translate-x-1/2 -translate-y-1/2" style={{ left: `${(i / last) * 100}%`, background: 'rgba(11,15,20,0.55)' }} />
+          <span key={i} className="absolute top-1/2 w-[5px] h-[5px] rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none" style={{ left: `${(i / last) * 100}%`, background: 'rgba(11,15,20,0.55)' }} />
         ))}
-        <span className="absolute top-1/2 w-5 h-5 rounded-full bg-white -translate-x-1/2 -translate-y-1/2" style={{ left: `${(pos / last) * 100}%`, boxShadow: '0 1px 6px rgba(0,0,0,.55)', border: '3px solid var(--primary)' }} />
+        <span className="absolute top-1/2 w-5 h-5 rounded-full bg-white -translate-x-1/2 -translate-y-1/2 pointer-events-none" style={{ left: `${(pos / last) * 100}%`, boxShadow: '0 1px 6px rgba(0,0,0,.55)', border: '3px solid var(--primary)' }} />
+        <input
+          type="range" min={0} max={last} step={1} value={pos}
+          aria-label={M.sliderCaption}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className={`absolute inset-0 w-full h-full m-0 appearance-none bg-transparent cursor-pointer ${thumbHidden}`}
+        />
       </div>
       <div className="flex mt-2.5">
         {labels.map((lab, i) => (
