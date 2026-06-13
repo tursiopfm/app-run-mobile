@@ -236,7 +236,7 @@ export const en: Dict = {
     heroRestName: 'Recovery',
     heroWhyTitle: 'Why this session',
     heroActionDone: 'I did it',
-    heroActionMove: 'Reschedule',
+    heroActionMove: 'Edit',
     heroActionOther: 'Other',
     heroTargetPrefix: 'Target',
     weekFeedTitle: 'My week',
@@ -259,7 +259,7 @@ export const en: Dict = {
     reasonChips: {
       'fresh-quality': 'quality',
       'fatigue-easy': 'easy',
-      'rest-recovery': 'recovery',
+      'rest-recovery': 'rest',
       'fill-volume-long': 'target',
       'fill-volume-easy': 'volume',
       'taper-light': 'taper',
