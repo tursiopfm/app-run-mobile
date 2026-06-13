@@ -375,7 +375,10 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
       {/* Modales (mêmes que le mode expert) */}
       <SessionAddSheet open={addOpen} dateISO={addDate} onClose={() => setAddOpen(false)} onPickTemplate={handlePickTemplate} onCreateBlank={handleCreateBlank} />
       <SessionEditorModal session={editorSession} initialDate={editorDate} open={editorOpen} prefillTemplate={editorPrefill} onClose={() => setEditorOpen(false)} onSaved={() => { setEditorOpen(false); bumpReload() }} />
-      <RaceEditorModal race={null} open={createRaceOpen} onClose={() => setCreateRaceOpen(false)} onSaved={() => { setCreateRaceOpen(false); bumpReload() }} />
+      {/* onSaved NE FERME PAS la modale : comme en expert, RaceEditorModal
+          enchaîne sur son écran « Course créée » (→ recherche du tableau de
+          course). La fermeture se fait via son propre onClose. */}
+      <RaceEditorModal race={null} open={createRaceOpen} onClose={() => setCreateRaceOpen(false)} onSaved={bumpReload} />
     </div>
   )
 }
