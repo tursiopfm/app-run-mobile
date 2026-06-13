@@ -1,6 +1,8 @@
 # Onglet Plan (Mode Mission) — refonte « feuille de route tournée vers l'avant »
 
-> **Status: Spec** · 2026-06-13 · Maquettes : `Prompts/plan-tab-mission-final-mockup.html` (mix retenu) + `Prompts/plan-tab-mission-redesign-mockups.html` (3 directions explorées)
+> **Status: Implémenté** · 2026-06-13 · Code : `web/components/mission/MissionPlan.tsx`, `web/components/mission/{PlanHeroCard,RythmeCard}.tsx`, `web/lib/mission/{session-advisor,week-feed,rhythm}.ts`, `web/app/(main)/plan/page.tsx`, `web/components/plan/ObjectifCourseBlock.tsx` (branche `feat/plan-tab-mission`). Reste : vérif visuelle réelle sur trailcockpit.run après déploiement.
+>
+> Maquettes : `Prompts/plan-tab-mission-final-mockup.html` (mix retenu) + `Prompts/plan-tab-mission-redesign-mockups.html` (3 directions explorées)
 
 ## Problème
 
