@@ -15,8 +15,8 @@ import { SessionAddSheet } from '@/components/plan/SessionAddSheet'
 import { SessionEditorModal } from '@/components/plan/SessionEditorModal'
 import { RaceEditorModal } from '@/components/plan/RaceEditorModal'
 import {
-  getAllMacrocycles, getMainRace, getPlannedSessions, isRaceMirrorSession,
-  pickActiveMacrocycle,
+  deletePlannedSession, getAllMacrocycles, getMainRace, getPlannedSessions,
+  isRaceMirrorSession, pickActiveMacrocycle,
 } from '@/lib/plan/storage'
 import { adviseWeek, applySlider, type SliderBase, type SliderOutcome, type ReasonCode } from '@/lib/mission/session-advisor'
 import { buildWeekFeed, sessionCategory, type FeedEntry } from '@/lib/mission/week-feed'
@@ -114,6 +114,9 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
   const [editorPrefill, setEditorPrefill] = useState<SessionTemplate | null>(null)
   const [editorDate, setEditorDate] = useState(todayISO())
   const [createRaceOpen, setCreateRaceOpen] = useState(false)
+  // En Mission, le jour n'a QU'UNE séance : enregistrer une séance du jour
+  // remplace celle(s) en place (ids à supprimer après save). Évite l'empilement.
+  const [replaceIds, setReplaceIds] = useState<string[]>([])
 
   // Curseur « forme du jour » (2 = Prévu). Persisté localStorage par date.
   const [sliderPos, setSliderPosState] = useState(2)
@@ -224,12 +227,20 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
     : feedRaw
 
   // ─── Actions ──────────────────────────────────────────────────────────────
-  function openAdd(date: string) { setAddDate(date); setAddOpen(true) }
-  function openEditSession(s: PlannedSession) { setEditorSession(s); setEditorPrefill(null); setEditorDate(s.date); setEditorOpen(true) }
+  const todaySessionIds = () => planned.filter(s => s.date === today).map(s => s.id)
+  // Ajout/biblio pour AUJOURD'HUI → remplace la séance du jour (pas d'empilement).
+  function openAdd(date: string) { setReplaceIds(date === today ? todaySessionIds() : []); setAddDate(date); setAddOpen(true) }
+  function openEditSession(s: PlannedSession) { setReplaceIds([]); setEditorSession(s); setEditorPrefill(null); setEditorDate(s.date); setEditorOpen(true) }
   // Clic sur le titre → ouvre l'éditeur sur la séance du jour (planifiée ou issue du curseur).
   function openTodayEditor() {
-    if (todayPlanned) { openEditSession(todayPlanned); return }
+    if (todayPlanned) {
+      // édite la séance du jour ; supprime d'éventuels doublons du même jour.
+      setReplaceIds(todaySessionIds().filter(id => id !== todayPlanned.id))
+      setEditorSession(todayPlanned); setEditorPrefill(null); setEditorDate(today); setEditorOpen(true)
+      return
+    }
     if (outcome.kind !== 'session') { openAdd(today); return }
+    setReplaceIds(todaySessionIds())
     setEditorSession({
       id: makeId(), planId: '', date: today, type: outcome.type, title: outcomeTitle(outcome),
       duration: outcome.durationMin, distance: outcome.distanceKm, intensity: outcome.intensity,
@@ -237,9 +248,22 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
     })
     setEditorPrefill(null); setEditorDate(today); setEditorOpen(true)
   }
+  // (replaceIds déjà posé par openAdd : on le conserve pour le save.)
   function handlePickTemplate(t: SessionTemplate) { setAddOpen(false); setEditorSession(null); setEditorPrefill(t); setEditorDate(addDate); setEditorOpen(true) }
   function handleCreateBlank() { setAddOpen(false); setEditorSession(null); setEditorPrefill(null); setEditorDate(addDate); setEditorOpen(true) }
   const goToCreateRace = () => setCreateRaceOpen(true)
+
+  // Après save d'une séance : supprime les séances remplacées (jour Mission = 1 séance),
+  // remet le curseur sur « Prévu » si c'était aujourd'hui, puis recharge.
+  async function handleSessionSaved() {
+    setEditorOpen(false)
+    if (replaceIds.length > 0) {
+      await Promise.all(replaceIds.map(id => deletePlannedSession(id)))
+      setReplaceIds([])
+    }
+    if (editorDate === today) setSliderPos(2)
+    bumpReload()
+  }
 
   if (!loaded) return null
 
@@ -259,12 +283,12 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
         state="active" title={outcomeTitle(outcome)} sessionType={outcome.type}
         durationMin={outcome.durationMin} distanceKm={outcome.distanceKm} intensity={outcome.intensity}
         whyText={whyText} targetLabel={hrTargetLabel(outcome.intensity)} accentColor={accentForType(outcome.type)}
-        onOpen={openTodayEditor} sliderPos={sliderPos} onSliderChange={setSliderPos} onOpenLibrary={() => openAdd(today)}
+        onOpen={openTodayEditor} sliderPos={sliderPos} onSliderChange={setSliderPos} onOpenLibrary={() => { setSliderPos(2); openAdd(today) }}
       />
     )
   } else {
     const text = !atDefault ? M.heroSliderAdjusted : (rec.kind === 'rest' ? M.reasonWhy[rec.reasonCode] : M.reasonWhy['rest-recovery'])
-    hero = <PlanHeroCard state="rest" text={text} sliderPos={sliderPos} onSliderChange={setSliderPos} onOpenLibrary={() => openAdd(today)} />
+    hero = <PlanHeroCard state="rest" text={text} sliderPos={sliderPos} onSliderChange={setSliderPos} onOpenLibrary={() => { setSliderPos(2); openAdd(today) }} />
   }
 
   const week = plan ? weekOfPlan(plan, today) : null
@@ -414,7 +438,7 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
 
       {/* Modales (mêmes que le mode expert) */}
       <SessionAddSheet open={addOpen} dateISO={addDate} onClose={() => setAddOpen(false)} onPickTemplate={handlePickTemplate} onCreateBlank={handleCreateBlank} />
-      <SessionEditorModal session={editorSession} initialDate={editorDate} open={editorOpen} prefillTemplate={editorPrefill} onClose={() => setEditorOpen(false)} onSaved={() => { setEditorOpen(false); bumpReload() }} />
+      <SessionEditorModal session={editorSession} initialDate={editorDate} open={editorOpen} prefillTemplate={editorPrefill} onClose={() => setEditorOpen(false)} onSaved={handleSessionSaved} />
       {/* onSaved NE FERME PAS la modale : comme en expert, RaceEditorModal
           enchaîne sur son écran « Course créée » (→ recherche du tableau de
           course). La fermeture se fait via son propre onClose. */}
