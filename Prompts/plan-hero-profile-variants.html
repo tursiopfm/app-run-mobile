@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#FF7900;--primary-text:#FF8A33;--primary-dim:#CC6100;--ink-900:#0B0F14;--ink-600:#25303E;--ink-500:#34414F;--ink-800:#121821;--trail-card:#18202B;--trail-text:#E2ECE9;--text-secondary:#B7C6C1;--text-muted:#8BA8A3;--status-success:#4ADE80;--status-info:#38BDF8;}
+body{background:#06090D;font-family:Inter,system-ui;padding:22px;color:var(--trail-text)}
+h1{font-family:'Space Grotesk';font-size:20px;margin:0 0 4px}
+.sub{font-size:13px;color:var(--text-secondary);margin:0 0 18px;max-width:760px;line-height:1.45}
+.row{display:flex;flex-wrap:wrap;gap:20px}
+.col{width:390px}
+.vlabel{font-size:12px;font-weight:700;color:var(--primary-text);text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px}
+.vdesc{font-size:11px;color:var(--text-muted);margin:0 0 10px;min-height:28px}
+.disp{font-family:'Space Grotesk'}
+.card{border-radius:16px;border:1px solid var(--primary);padding:20px;background:linear-gradient(150deg,#FF790022 0%,var(--trail-card) 58%)}
+.legend{display:flex;gap:12px;font-size:9px;color:var(--text-muted);margin-top:6px;align-items:center}
+.dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:3px;vertical-align:middle}
+</style></head>
+<body>
+<h1>Profil de séance — <span style="color:var(--primary)">barres allure (orange) + trait dénivelé (bleu)</span></h1>
+<p class="sub">5 variantes du même profil (séance « Seuil 2×15' » vallonnée), placées à droite du héros comme validé. Barres orange = allure/effort par tronçon · trait bleu = dénivelé (D+). Choisis-en une (ou un mix).</p>
+<div class="row" id="root"></div>
+
+<script>
+// allure par tronçon (0..1) — motif "seuil" : 2 blocs soutenus
+const PACE = [0.35,0.5,0.9,0.88,0.45,0.9,0.88,0.45,0.6,0.4];
+// dénivelé (0..1) — profil vallonné : montée puis descente
+const ELEV = [0.15,0.3,0.45,0.62,0.8,0.78,0.6,0.66,0.78,0.5];
+
+const W=120,H=62,PAD=5;
+function bx(i,n){return PAD + i*((W-2*PAD)/n);}
+function barSlot(n){return (W-2*PAD)/n;}
+function elevPts(){const n=ELEV.length,step=(W-2*PAD)/(n-1);
+  return ELEV.map((v,i)=>[PAD+i*step, H-PAD-v*(H-2*PAD)]);}
+function elevLine(){return elevPts().map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');}
+function elevArea(){return `${elevLine()} L ${W-PAD},${H-PAD} L ${PAD},${H-PAD} Z`;}
+
+// ── 5 variantes de rendu ──────────────────────────────────────────────────
+function v1(){ // barres pleines + trait bleu par-dessus
+  const n=PACE.length,slot=barSlot(n),bw=slot*0.62;let s='';
+  PACE.forEach((v,i)=>{const h=v*(H-2*PAD),x=bx(i,n)+(slot-bw)/2;s+=`<rect x="${x.toFixed(1)}" y="${(H-PAD-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="1" fill="var(--primary)"/>`;});
+  s+=`<path d="${elevLine()}" fill="none" stroke="var(--status-info)" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+  return s;
+}
+function v2(){ // aire dénivelé bleue derrière + barres orange devant
+  let s=`<path d="${elevArea()}" fill="rgba(56,189,248,0.16)" stroke="none"/><path d="${elevLine()}" fill="none" stroke="var(--status-info)" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`;
+  const n=PACE.length,slot=barSlot(n),bw=slot*0.55;
+  PACE.forEach((v,i)=>{const h=v*(H-2*PAD),x=bx(i,n)+(slot-bw)/2;s+=`<rect x="${x.toFixed(1)}" y="${(H-PAD-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="1" fill="var(--primary)" opacity="0.92"/>`;});
+  return s;
+}
+function v3(){ // bâtons fins + trait bleu + points
+  const n=PACE.length,slot=barSlot(n),bw=slot*0.3;let s='';
+  PACE.forEach((v,i)=>{const h=v*(H-2*PAD),x=bx(i,n)+(slot-bw)/2;s+=`<rect x="${x.toFixed(1)}" y="${(H-PAD-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="${(bw/2).toFixed(1)}" fill="var(--primary)"/>`;});
+  s+=`<path d="${elevLine()}" fill="none" stroke="var(--status-info)" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`;
+  elevPts().forEach(p=>{s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="1.6" fill="var(--status-info)"/>`;});
+  return s;
+}
+function v4(){ // barres dégradé orange + trait bleu épais
+  const n=PACE.length,slot=barSlot(n),bw=slot*0.62;let s='<defs><linearGradient id="og" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF8A33"/><stop offset="1" stop-color="#CC6100"/></linearGradient></defs>';
+  PACE.forEach((v,i)=>{const h=v*(H-2*PAD),x=bx(i,n)+(slot-bw)/2;s+=`<rect x="${x.toFixed(1)}" y="${(H-PAD-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="1.5" fill="url(#og)"/>`;});
+  s+=`<path d="${elevLine()}" fill="none" stroke="var(--status-info)" stroke-width="2.4" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+  return s;
+}
+function v5(){ // profil montagne : silhouette dénivelé pleine + barres fines devant + ligne de base
+  let s=`<path d="${elevArea()}" fill="rgba(56,189,248,0.22)"/><path d="${elevLine()}" fill="none" stroke="var(--status-info)" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+  const n=PACE.length,slot=barSlot(n),bw=slot*0.4;
+  PACE.forEach((v,i)=>{const h=v*(H-2*PAD)*0.9,x=bx(i,n)+(slot-bw)/2;s+=`<rect x="${x.toFixed(1)}" y="${(H-PAD-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="0.8" fill="var(--primary)" opacity="0.95"/>`;});
+  s+=`<line x1="${PAD}" y1="${H-PAD}" x2="${W-PAD}" y2="${H-PAD}" stroke="var(--ink-500)" stroke-width="0.8"/>`;
+  return s;
+}
+function chart(fn){return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:64px">${fn()}</svg>`;}
+
+function hero(label,desc,fn){return `<div class="col">
+  <p class="vlabel">${label}</p><p class="vdesc">${desc}</p>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:10px;text-transform:uppercase;letter-spacing:.15em;font-weight:700;color:var(--primary-text)">Ta prochaine séance</span><span style="font-size:10px;font-weight:700;padding:4px 8px;border-radius:999px;background:var(--ink-800);color:var(--text-secondary)">Aujourd'hui</span></div>
+    <div style="display:flex;align-items:stretch;gap:12px">
+      <div style="flex:1;min-width:0">
+        <p class="disp" style="font-size:26px;font-weight:700;line-height:1">Seuil 2×15'</p>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:12px">
+          <span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--primary);color:var(--ink-900)">1h05 · 13 km</span>
+          <span style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--ink-600);color:var(--text-secondary)">●●●●○</span>
+        </div>
+      </div>
+      <div style="width:40%;flex-shrink:0;display:flex;flex-direction:column;justify-content:center">
+        ${chart(fn)}
+        <div class="legend"><span><span class="dot" style="background:var(--primary)"></span>allure</span><span><span class="dot" style="background:var(--status-info)"></span>D+</span></div>
+      </div>
+    </div>
+    <p style="font-size:12px;margin-top:10px;color:var(--text-secondary)"><b style="color:var(--primary-text)">Cible</b> · Seuil · 158–168 bpm</p>
+  </div></div>`;}
+
+document.getElementById('root').innerHTML =
+  hero('Variante 1 · Classique','Barres orange pleines + trait bleu (dénivelé) par-dessus.',v1)+
+  hero('Variante 2 · Aire dénivelé','Dénivelé en aire bleue translucide derrière les barres.',v2)+
+  hero('Variante 3 · Bâtons fins','Fins bâtons arrondis + trait bleu ponctué de points.',v3)+
+  hero('Variante 4 · Dégradé','Barres dégradé orange + trait bleu épais.',v4)+
+  hero('Variante 5 · Profil montagne','Silhouette de dénivelé pleine (trail) + bâtons fins devant + ligne de base.',v5);
+</script></body></html>

@@ -20,48 +20,74 @@ function fmtDurSec(sec: number): string {
   return h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m} min`
 }
 
-// Résumé graphique : silhouette stylisée de la séance (hauteurs 0..1) selon sa
-// nature — fractionné/côtes = pics, seuil/course = blocs soutenus, le reste =
-// plateau régulier. Donne d'un coup d'œil le « caractère » de la séance.
-function profileShape(sessionType: string): number[] {
-  const INTERVAL = new Set(['fractionne', 'cotes'])
-  const THRESHOLD = new Set(['seuil_tempo', 'course'])
-  if (INTERVAL.has(sessionType)) return [0.2, 0.3, 0.95, 0.3, 0.95, 0.3, 0.95, 0.3, 0.9, 0.25, 0.2]
-  if (THRESHOLD.has(sessionType)) return [0.2, 0.4, 0.85, 0.85, 0.5, 0.85, 0.85, 0.5, 0.4, 0.2]
-  return [0.25, 0.45, 0.6, 0.62, 0.6, 0.62, 0.6, 0.58, 0.45, 0.25] // plateau régulier
+// ── Profil de séance : barres « allure » + trait « dénivelé » ────────────────
+// Adapté au TYPE de séance. Barres : échauffement / retour au calme = vert,
+// efforts = orange, récup entre efforts = gris. Trait D+ : aucun (séance plate),
+// vagues (vallonné : sortie longue/course), triangles (côtes : montées-descentes).
+type BarRole = 'easy' | 'effort' | 'recovery'
+const BAR_COLOR: Record<BarRole, string> = { easy: '#4ADE80', effort: '#FF7900', recovery: '#6B7785' }
+
+function sessionBars(type: string): { h: number; role: BarRole }[] {
+  const e = (h: number) => ({ h, role: 'easy' as BarRole })
+  const x = (h: number) => ({ h, role: 'effort' as BarRole })
+  const r = (h: number) => ({ h, role: 'recovery' as BarRole })
+  switch (type) {
+    case 'fractionne':  return [e(0.3), e(0.4), x(0.92), r(0.35), x(0.92), r(0.35), x(0.92), r(0.35), e(0.3)]
+    case 'cotes':       return [e(0.3), e(0.45), x(0.85), r(0.4), x(0.9), r(0.4), x(0.85), r(0.4), e(0.3)]
+    case 'seuil_tempo': return [e(0.3), e(0.45), x(0.8), x(0.8), r(0.4), x(0.8), x(0.8), e(0.35)]
+    case 'course':      return [e(0.35), x(0.72), x(0.76), x(0.73), x(0.78), x(0.74), x(0.76), e(0.4)]
+    default:            return [e(0.4), e(0.5), e(0.55), e(0.52), e(0.55), e(0.5), e(0.52), e(0.45)]
+  }
 }
 
-// Courbe lissée (spline Catmull-Rom → Bézier) à partir de la silhouette.
-function smoothPath(values: number[], W: number, H: number, pad: number): { line: string; area: string } {
-  const n = values.length
-  const step = W / (n - 1)
-  const P = values.map((v, i) => [i * step, H - pad - v * (H - 2 * pad)] as const)
-  let line = `M ${P[0][0].toFixed(1)},${P[0][1].toFixed(1)}`
-  for (let i = 0; i < n - 1; i++) {
+type ElevKind = 'none' | 'waves' | 'triangles'
+function elevKind(type: string): ElevKind {
+  if (type === 'cotes') return 'triangles'
+  if (type === 'sortie_longue' || type === 'course') return 'waves'
+  return 'none'
+}
+function elevValues(kind: ElevKind): number[] {
+  if (kind === 'waves') return [0.3, 0.5, 0.38, 0.6, 0.45, 0.62, 0.4, 0.55, 0.42, 0.5]
+  if (kind === 'triangles') return [0.15, 0.8, 0.25, 0.85, 0.3, 0.82, 0.22, 0.7, 0.2]
+  return []
+}
+
+// Lissage spline pour les « vagues » du dénivelé vallonné.
+function smoothLineFromPts(P: readonly (readonly [number, number])[]): string {
+  if (P.length < 2) return ''
+  let d = `M ${P[0][0].toFixed(1)},${P[0][1].toFixed(1)}`
+  for (let i = 0; i < P.length - 1; i++) {
     const p0 = P[i - 1] ?? P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] ?? P[i + 1]
     const c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6
     const c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6
-    line += ` C ${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`
+    d += ` C ${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`
   }
-  return { line, area: `${line} L ${W},${H} L 0,${H} Z` }
+  return d
 }
 
-// Profil de séance « course à pied » : aire lissée avec dégradé vertical
-// vert (facile) → blond (modéré) → orange (intense), façon courbe d'effort.
 function SessionProfile({ sessionType }: { sessionType: string }) {
-  const W = 100, H = 56, pad = 5
-  const { line, area } = smoothPath(profileShape(sessionType), W, H, pad)
+  const W = 120, H = 60, PAD = 5
+  const bars = sessionBars(sessionType)
+  const n = bars.length
+  const slot = (W - 2 * PAD) / n
+  const barW = slot * 0.6
+  const kind = elevKind(sessionType)
+  const ev = elevValues(kind)
+  const step = ev.length > 1 ? (W - 2 * PAD) / (ev.length - 1) : 0
+  const pts = ev.map((v, i) => [PAD + i * step, PAD + (1 - v) * (H - 2 * PAD)] as const)
+  const elevPath = kind === 'triangles'
+    ? pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ')
+    : kind === 'waves' ? smoothLineFromPts(pts) : ''
   return (
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-full" aria-hidden>
-      <defs>
-        <linearGradient id="sessionProfileGrad" x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0" stopColor="#27A971" stopOpacity="0.75" />
-          <stop offset="0.55" stopColor="#FBBF24" stopOpacity="0.85" />
-          <stop offset="1" stopColor="#FF7900" stopOpacity="0.95" />
-        </linearGradient>
-      </defs>
-      <path d={area} fill="url(#sessionProfileGrad)" />
-      <path d={line} fill="none" stroke="#FF8A33" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      {bars.map((b, i) => {
+        const h = b.h * (H - 2 * PAD)
+        const x = PAD + i * slot + (slot - barW) / 2
+        return <rect key={i} x={x.toFixed(1)} y={(H - PAD - h).toFixed(1)} width={barW.toFixed(1)} height={h.toFixed(1)} rx="1" fill={BAR_COLOR[b.role]} />
+      })}
+      {elevPath && (
+        <path d={elevPath} fill="none" stroke="var(--status-info)" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      )}
     </svg>
   )
 }
