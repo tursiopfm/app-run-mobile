@@ -134,6 +134,7 @@ export type Dict = {
     heroActionOther: string
     weekFeedTitle: string
     weekFeedSubtitle: string
+    weekMultiSessions: (n: number) => string
     weekAddSession: string
     rythmeTitle: string
     rythmeAvg: (km: number) => string
@@ -1392,6 +1393,7 @@ export const fr: Dict = {
     heroActionOther: 'Autre',
     weekFeedTitle: 'Ma semaine',
     weekFeedSubtitle: 'réalisé + suggéré',
+    weekMultiSessions: (n: number) => `${n} séances`,
     weekAddSession: '＋ Ajouter une séance',
     rythmeTitle: 'Ton rythme · 4 dernières semaines',
     rythmeAvg: (km: number) => `≈ ${km} km/sem sur 1 mois.`,

@@ -4,7 +4,7 @@
 // Aucune chaîne UI ici : les raisons sont des CODES traduits par l'i18n.
 
 import type { FreshnessZone } from '@/lib/analytics/charge-insights.types'
-import type { IntensityLevel, SessionType } from '@/types/plan'
+import type { IntensityLevel, PhaseType, SessionType } from '@/types/plan'
 
 export type ReasonCode =
   | 'fresh-quality'      // frais → place à la qualité
@@ -38,7 +38,7 @@ export type AdviceContext = {
   weekDoneKm: number
   recentHardCount: number      // nb séances qualité (intensité ≥ 4) déjà faites cette semaine
   targetKm: number | null      // cible hebdo (plan) ou rythme habituel
-  phaseLabel: string | null    // 'Base' | 'Spécifique' | 'Affûtage' | … | null
+  phaseType: PhaseType | null  // type stable de la phase active (null = pas de prépa)
   daysToRace: number | null
   plannedDates: string[]       // jours déjà planifiés (on ne remplit pas)
 }
@@ -47,7 +47,9 @@ export type WeekAdvice = { today: DayAdvice; byDate: Record<string, DayAdvice> }
 
 const dowUTC = (iso: string): number => new Date(`${iso}T00:00:00Z`).getUTCDay()
 const isTaper = (ctx: AdviceContext): boolean =>
-  ctx.phaseLabel === 'Affûtage' || (ctx.daysToRace != null && ctx.daysToRace <= 10)
+  ctx.phaseType === 'affutage' || (ctx.daysToRace != null && ctx.daysToRace <= 10)
+// Seule la fatigue MARQUÉE (high-fatigue) déclenche easy/repos — aligné avec
+// formeVerdict() : la fatigue « normale » fait partie de l'entraînement.
 const isFatigued = (z: FreshnessZone | null): boolean => z === 'high-fatigue'
 
 // Séance « qualité » du jour selon la fraîcheur / phase.
@@ -82,11 +84,11 @@ function adviseDay(iso: string, ctx: AdviceContext, remainingKm: number): DayAdv
     return { kind: 'suggested', session: longSession(remainingKm) }
   }
   // Qualité : aujourd'hui, si pas déjà faite cette semaine ET qu'on a une prépa.
-  if (iso === ctx.todayISO && ctx.recentHardCount === 0 && ctx.phaseLabel !== null) {
+  if (iso === ctx.todayISO && ctx.recentHardCount === 0 && ctx.phaseType !== null) {
     return { kind: 'suggested', session: qualitySession(ctx) }
   }
   // Sinon : facile / aérobie / rythme.
-  const reason: ReasonCode = ctx.phaseLabel === null ? 'maintain-rhythm'
+  const reason: ReasonCode = ctx.phaseType === null ? 'maintain-rhythm'
     : remainingKm > 5 ? 'fill-volume-easy' : 'aerobic-base'
   return { kind: 'suggested', session: easySession(reason) }
 }

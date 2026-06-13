@@ -240,6 +240,7 @@ export const en: Dict = {
     heroActionOther: 'Other',
     weekFeedTitle: 'My week',
     weekFeedSubtitle: 'done + suggested',
+    weekMultiSessions: (n: number) => `${n} sessions`,
     weekAddSession: '＋ Add a session',
     rythmeTitle: 'Your rhythm · last 4 weeks',
     rythmeAvg: (km: number) => `≈ ${km} km/week over a month.`,

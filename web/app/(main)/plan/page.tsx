@@ -20,12 +20,12 @@ export default async function PlanPage({
     const user = await getServerUser()
     let freshnessPayload: ChargeSportPayload | null = null
     let recentActivities: ActivityRow[] = []
-    let discipline: string | null = null
     if (user) {
       const supabase = await createClient()
       const since = new Date()
       since.setDate(since.getDate() - 28)
-      const [{ data: rows }, { data: profile }] = await Promise.all([
+      // Activités (28 j, pour le réalisé + le rythme) et charge (fraîcheur) en parallèle.
+      const [{ data: rows }, charge] = await Promise.all([
         supabase
           .from('activities')
           .select(ACTIVITY_CARD_FIELDS)
@@ -33,17 +33,15 @@ export default async function PlanPage({
           .is('deleted_at', null)
           .gte('start_time', since.toISOString())
           .order('start_time', { ascending: false }),
-        supabase.from('profiles').select('onboarding_discipline').eq('id', user.id).maybeSingle(),
+        getChargePageData(user.id).catch(() => null),
       ])
       recentActivities = (rows ?? []) as ActivityRow[]
-      discipline = profile?.onboarding_discipline ?? null
       // Fraîcheur basée sur la course ; repli sur le global si pas d'historique running.
-      try {
-        const charge = await getChargePageData(user.id)
+      if (charge) {
         freshnessPayload = charge.perSport.run.historyDays > 0 ? charge.perSport.run : charge.perSport.all
-      } catch { freshnessPayload = null }
+      }
     }
-    return <MissionPlan freshnessPayload={freshnessPayload} recentActivities={recentActivities} discipline={discipline} />
+    return <MissionPlan freshnessPayload={freshnessPayload} recentActivities={recentActivities} />
   }
 
   // Plan expert (inchangé). onboarding_mission pilote la curation de la

@@ -18,7 +18,7 @@ const TYPE_CATEGORY: Record<string, SessionCategory> = {
 function sessionCategory(type: string): SessionCategory { return TYPE_CATEGORY[type] ?? 'run' }
 
 export type FeedEntry =
-  | { date: string; isToday: boolean; kind: 'done'; category: SessionCategory; title: string; km: number; dPlus: number; durationSec: number; activityId: string; multiple: boolean }
+  | { date: string; isToday: boolean; kind: 'done'; category: SessionCategory; title: string; count: number; km: number; dPlus: number; durationSec: number; activityId: string; multiple: boolean }
   | { date: string; isToday: boolean; kind: 'planned'; category: SessionCategory; session: PlannedSession; completed: boolean }
   | { date: string; isToday: boolean; kind: 'suggested'; category: SessionCategory; session: SuggestedSession }
   | { date: string; isToday: boolean; kind: 'rest'; reasonCode: ReasonCode }
@@ -52,10 +52,12 @@ export function buildWeekFeed({ weekDates, todayISO, activities, planned, advice
       const totDp = acts.reduce((s, a) => s + dplus(a), 0)
       const totSec = acts.reduce((s, a) => s + durSec(a), 0)
       const main = acts[0]
+      // Pas de chaîne UI ici (module pur) : on renvoie le nom + le nombre,
+      // l'UI formate « N séances » via i18n quand multiple.
       return {
         date, isToday, kind: 'done',
         category: activityCategory(effSport(main)),
-        title: acts.length > 1 ? `${acts.length} séances` : main.name,
+        title: main.name, count: acts.length,
         km: Math.round(totKm * 10) / 10, dPlus: totDp, durationSec: totSec,
         activityId: main.id, multiple: acts.length > 1,
       }

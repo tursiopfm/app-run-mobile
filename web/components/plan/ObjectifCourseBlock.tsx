@@ -43,6 +43,7 @@ function formatShortDate(iso: string, months: readonly string[]): string {
 
 export function ObjectifCourseBlock({ onChange }: Props) {
   const L = useT().plan
+  const router = useRouter()
   const initial = peekRaces()
   const [races, setRaces] = useState<Race[]>(initial ?? [])
   const [loaded, setLoaded] = useState(initial !== null)
@@ -64,14 +65,16 @@ export function ObjectifCourseBlock({ onChange }: Props) {
   }, [])
 
   // Deep-link depuis le Mode Mission (CTA « Ajouter une course » → /plan?full=1&new=1)
-  // : ouvre directement le formulaire de création de course.
+  // : ouvre directement le formulaire de création de course, puis retire le flag
+  // de l'URL (sinon un remount sur cette URL rouvrirait la modale).
   const searchParams = useSearchParams()
   useEffect(() => {
     if (searchParams.get('new') === '1') {
       setEditing(null)
       setModalOpen(true)
+      router.replace('/plan?full=1')
     }
-  }, [searchParams])
+  }, [searchParams, router])
 
   function handleSaved() {
     void reload()
@@ -83,7 +86,6 @@ export function ObjectifCourseBlock({ onChange }: Props) {
     setModalOpen(true)
   }
 
-  const router = useRouter()
   function openCourseDetail(race: Race) {
     router.push(`/plan/courses/${race.id}`)
   }

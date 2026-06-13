@@ -33,7 +33,6 @@ import { useT } from '@/lib/i18n/I18nProvider'
 type Props = {
   freshnessPayload: ChargeSportPayload | null
   recentActivities: ActivityRow[]   // 28 derniers jours
-  discipline: string | null
 }
 
 const DAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
@@ -138,11 +137,11 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
     const freshnessZone = freshnessPayload ? computeFreshness(freshnessPayload.dailyMetrics).zone : null
     const planTarget = resolveMissionWeeklyTarget(macros, today)
     const targetKm = planTarget?.km ?? (habitualWeekly(recentActivities, today).km || null)
-    const segments = plan ? computePhaseSegments(plan, today) : []
-    const phaseLabel = segments.find(s => s.active)?.label ?? null
+    // Type stable de la phase active (enum), pas le libellé d'affichage.
+    const phaseType = plan?.phases.find(p => p.startDate <= today && today <= p.endDate)?.type ?? null
     return adviseWeek({
       todayISO: today, weekDates, freshnessZone, weekDoneKm, recentHardCount,
-      targetKm, phaseLabel, daysToRace: race ? daysUntil(race.date) : null,
+      targetKm, phaseType, daysToRace: race ? daysUntil(race.date) : null,
       plannedDates: planned.map(s => s.date),
     })
   }, [weekActivities, planned, freshnessPayload, macros, plan, race, today, weekDates, recentActivities])
@@ -211,7 +210,8 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
   const todayEntry = feed.find(f => f.date === today)
   let hero: ReactNode = null
   if (todayEntry?.kind === 'done') {
-    hero = <PlanHeroCard state="done" title={todayEntry.title} km={todayEntry.km} dPlus={todayEntry.dPlus} durationSec={todayEntry.durationSec} />
+    const heroTitle = todayEntry.multiple ? M.weekMultiSessions(todayEntry.count) : todayEntry.title
+    hero = <PlanHeroCard state="done" title={heroTitle} km={todayEntry.km} dPlus={todayEntry.dPlus} durationSec={todayEntry.durationSec} />
   } else if (todayEntry?.kind === 'planned') {
     const s = todayEntry.session
     hero = (
@@ -268,7 +268,7 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
               const inner = (
                 <>
                   {dayLabel}{tick}
-                  <span className="flex-1 text-[13px] truncate text-trail-text">{entry.title}</span>
+                  <span className="flex-1 text-[13px] truncate text-trail-text">{entry.multiple ? M.weekMultiSessions(entry.count) : entry.title}</span>
                   <span className="text-[11.5px] tabular-nums whitespace-nowrap text-trail-muted">{fmtKmDp(entry.km, entry.dPlus, entry.durationSec)}</span>
                   <span className="text-[12px] font-bold" style={{ color: 'var(--status-success)' }}>✓</span>
                 </>

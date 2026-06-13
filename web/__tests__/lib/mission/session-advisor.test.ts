@@ -7,7 +7,7 @@ const base: AdviceContext = {
   weekDoneKm: 28,
   recentHardCount: 0,
   targetKm: 50,
-  phaseLabel: 'Spécifique',
+  phaseType: 'specifique',
   daysToRace: 42,
   plannedDates: [],
 }
@@ -36,11 +36,16 @@ it('jour déjà planifié → kind=planned (on ne remplit pas)', () => {
 })
 
 it('sans course (phase nulle) → conseille quand même, reason rythme', () => {
-  const w = adviseWeek({ ...base, phaseLabel: null, daysToRace: null, targetKm: 40 })
+  const w = adviseWeek({ ...base, phaseType: null, daysToRace: null, targetKm: 40 })
   expect(w.today.kind === 'suggested' || w.today.kind === 'rest').toBe(true)
 })
 
-it('affûtage J-7 → volume réduit (intensité basse, durée courte)', () => {
-  const w = adviseWeek({ ...base, phaseLabel: 'Affûtage', daysToRace: 5, freshnessZone: 'fresh' })
-  if (w.today.kind === 'suggested') expect(w.today.session.durationMin).toBeLessThanOrEqual(60)
+it('affûtage détecté par le TYPE de phase (pas le libellé) → séance allégée', () => {
+  // daysToRace volontairement > 10 : seul phaseType='affutage' doit déclencher le taper.
+  const w = adviseWeek({ ...base, phaseType: 'affutage', daysToRace: 21, freshnessZone: 'fresh' })
+  expect(w.today.kind).toBe('suggested')
+  if (w.today.kind === 'suggested') {
+    expect(w.today.session.durationMin).toBeLessThanOrEqual(60)
+    expect(w.today.session.reasonCode).toBe('taper-light')
+  }
 })
