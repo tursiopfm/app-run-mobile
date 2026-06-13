@@ -8,12 +8,12 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { MissionCard, MissionCardLabel } from './cards'
 import { PlanHeroCard } from './PlanHeroCard'
 import { RythmeCard } from './RythmeCard'
 import { SessionAddSheet } from '@/components/plan/SessionAddSheet'
 import { SessionEditorModal } from '@/components/plan/SessionEditorModal'
+import { RaceEditorModal } from '@/components/plan/RaceEditorModal'
 import {
   getAllMacrocycles, getMainRace, getPlannedSessions, isRaceMirrorSession,
   pickActiveMacrocycle, savePlannedSession,
@@ -78,7 +78,6 @@ function fmtKmDp(km: number, dPlus: number, sec: number): string {
 
 export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
   const M = useT().mission
-  const router = useRouter()
 
   const [macros, setMacros] = useState<TrainingPlan[]>([])
   const [plan, setPlan] = useState<TrainingPlan | null>(null)
@@ -95,6 +94,7 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
   const [editorSession, setEditorSession] = useState<PlannedSession | null>(null)
   const [editorPrefill, setEditorPrefill] = useState<SessionTemplate | null>(null)
   const [editorDate, setEditorDate] = useState(todayISO())
+  const [createRaceOpen, setCreateRaceOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -202,7 +202,9 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
     setAddOpen(false); setEditorSession(null); setEditorPrefill(null); setEditorDate(addDate); setEditorOpen(true)
   }
 
-  const goToCreateRace = () => router.push('/plan?full=1&new=1')
+  // Création de course IN-PLACE (le fond reste le Plan Mission) ; au save on
+  // rafraîchit → la course apparaît en Destination, sans bascule vers l'expert.
+  const goToCreateRace = () => setCreateRaceOpen(true)
 
   if (!loaded) return null
 
@@ -373,6 +375,7 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
       {/* Modales (mêmes que le mode expert) */}
       <SessionAddSheet open={addOpen} dateISO={addDate} onClose={() => setAddOpen(false)} onPickTemplate={handlePickTemplate} onCreateBlank={handleCreateBlank} />
       <SessionEditorModal session={editorSession} initialDate={editorDate} open={editorOpen} prefillTemplate={editorPrefill} onClose={() => setEditorOpen(false)} onSaved={() => { setEditorOpen(false); bumpReload() }} />
+      <RaceEditorModal race={null} open={createRaceOpen} onClose={() => setCreateRaceOpen(false)} onSaved={() => { setCreateRaceOpen(false); bumpReload() }} />
     </div>
   )
 }

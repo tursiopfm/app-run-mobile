@@ -137,3 +137,7 @@ Nouvelles clés sous `mission` (dictionnaire `fr.ts`) : titres/labels du héros,
 - **Module Coach IA** (le bouton reste `Bientôt`).
 - Refonte du Plan **expert** (inchangé).
 - Édition avancée des phases de prépa depuis le Mode Mission.
+
+## Drift notes
+
+- **Création de course en in-place (2026-06-13)** — la spec retenait un deep-link `/plan?full=1&new=1` qui auto-ouvrait `RaceEditorModal` dans `ObjectifCourseBlock`. **Abandonné** : ça affichait le Plan **expert** derrière la modale et y laissait l'athlète après création (bug remonté par Franck). À la place, `MissionPlan` monte **lui-même** `RaceEditorModal` (état `createRaceOpen`) ; au `onSaved` il `bumpReload()` → la course apparaît en Destination, sans jamais quitter le Plan Mission. Le param `?new=1` n'est plus utilisé.

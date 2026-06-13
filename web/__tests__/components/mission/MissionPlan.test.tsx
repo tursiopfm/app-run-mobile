@@ -19,6 +19,7 @@ jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }))
 // Les modales (hooks/portails) ne sont pas le sujet de ces tests.
 jest.mock('@/components/plan/SessionAddSheet', () => ({ SessionAddSheet: () => null }))
 jest.mock('@/components/plan/SessionEditorModal', () => ({ SessionEditorModal: () => null }))
+jest.mock('@/components/plan/RaceEditorModal', () => ({ RaceEditorModal: () => null }))
 
 const mockGetMacros = getAllMacrocycles as jest.Mock
 const mockGetPlanned = getPlannedSessions as jest.Mock
