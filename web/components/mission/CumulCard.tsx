@@ -12,7 +12,7 @@ import { useT } from '@/lib/i18n/I18nProvider'
 export function CumulCard({ overview }: { overview: SportOverview }) {
   const M = useT().mission
   const [period, setPeriod] = useState<'month' | 'year'>('month')
-  const months = period === 'month' ? overview.cumulMonths : overview.cumulYears
+  const months = period === 'month' ? overview.cumulMonths : overview.cumulYears.slice(-3)
   if (!months || months.length === 0) return null
   return (
     <MissionCard>
