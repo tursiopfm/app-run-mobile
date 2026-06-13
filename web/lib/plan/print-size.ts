@@ -13,18 +13,18 @@ export interface PrintSizeDef {
 }
 
 // Échelle = largeur imprimable ÷ 120 mm (largeur de design de la carte), marges 8 mm :
-//   A5 paysage : (210 − 16) / 120 = 1.617
+//   A5 : carte agrandie en haut d'une A4 portrait — largeur (210 − 16) / 120 = 1.617
 //   A4 paysage : (297 − 16) / 120 = 2.342
 export const PRINT_SIZE_DEFS: Record<PrintSize, PrintSizeDef> = {
   iphone: {
     key: 'iphone', label: 'Format iPhone',
-    hint: 'Petite carte à découper, en haut d\'une feuille A4 (poche de veste).',
+    hint: 'Petite carte à découper, à coller au dos de son téléphone.',
     pageRule: 'size:A4 portrait;margin:8mm;', scale: 1,
   },
   a5: {
     key: 'a5', label: 'Format A5',
-    hint: 'La carte remplit une feuille A5 en paysage.',
-    pageRule: 'size:A5 landscape;margin:8mm;', scale: 1.617,
+    hint: 'Carte agrandie, en haut d\'une feuille A4 portrait.',
+    pageRule: 'size:A4 portrait;margin:8mm;', scale: 1.617,
   },
   a4: {
     key: 'a4', label: 'Format A4',

@@ -26,14 +26,15 @@ La carte reste **en paysage** (plus large que haute). Le format choisit à la
 fois la taille du papier (`@page size`), son orientation, et l'échelle de la
 carte :
 
-| Choix  | `@page`         | Échelle | Rendu                                                       |
-|--------|-----------------|---------|-------------------------------------------------------------|
-| iPhone | A4 portrait     | ×1      | petite carte (~120 mm) calée en haut, à découper (actuel)   |
-| A5     | A5 paysage      | ×1.617  | la carte remplit une feuille A5 paysage                     |
-| A4     | A4 paysage      | ×2.342  | la carte remplit une feuille A4 paysage                     |
+| Choix  | `@page`         | Échelle | Rendu                                                          |
+|--------|-----------------|---------|----------------------------------------------------------------|
+| iPhone | A4 portrait     | ×1      | petite carte (~120 mm) calée en haut, à découper (actuel)      |
+| A5     | A4 portrait     | ×1.617  | carte agrandie (~194 mm de large) calée en haut d'une A4 portrait |
+| A4     | A4 paysage      | ×2.342  | la carte remplit une feuille A4 paysage                        |
 
 Échelle = largeur imprimable ÷ 120 mm, avec marges 8 mm :
-- A5 paysage : (210 − 16) / 120 = 1.617
+- A5 : largeur imprimable d'une A4 portrait (210 − 16) / 120 = 1.617 — la carte
+  remplit la largeur, calée en haut de la feuille portrait
 - A4 paysage : (297 − 16) / 120 = 2.342
 
 La mise à l'échelle se fait via `transform: scale(F)` + `transform-origin: top

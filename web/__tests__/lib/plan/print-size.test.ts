@@ -23,7 +23,7 @@ describe('print-size', () => {
   it('exposes coherent specs (scale ÷ 120mm width, 8mm margins)', () => {
     expect(PRINT_SIZE_DEFS.iphone.scale).toBe(1)
     expect(PRINT_SIZE_DEFS.iphone.pageRule).toContain('A4 portrait')
-    expect(PRINT_SIZE_DEFS.a5.pageRule).toContain('A5 landscape')
+    expect(PRINT_SIZE_DEFS.a5.pageRule).toContain('A4 portrait')
     expect(PRINT_SIZE_DEFS.a4.pageRule).toContain('A4 landscape')
     expect(PRINT_SIZE_DEFS.a5.scale).toBeCloseTo(1.617, 2)
     expect(PRINT_SIZE_DEFS.a4.scale).toBeCloseTo(2.342, 2)
