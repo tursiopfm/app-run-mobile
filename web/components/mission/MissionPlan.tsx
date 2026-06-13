@@ -1,17 +1,50 @@
 'use client'
 
-// Écran Plan du Mode Mission v2 — « ma feuille de route, jusqu'à la course » :
-// Séance du jour → Semaine → Destination (course) → Ma prépa → Coach IA.
+// Écran Plan du Mode Mission v2 — « feuille de route tournée vers l'avant » :
+// Héros « Ta prochaine séance » → Ma semaine (réalisé + suggéré + ajout) →
+// Destination compacte (ou bloc générique « Ton rythme » sans course) → Coach.
+// Spec : docs/superpowers/specs/2026-06-13-onglet-plan-mode-mission-design.md
+// Maquette : Prompts/plan-tab-mission-final-mockup.html
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { MissionCard, MissionCardLabel } from './cards'
+import { PlanHeroCard } from './PlanHeroCard'
+import { RythmeCard } from './RythmeCard'
+import { SessionAddSheet } from '@/components/plan/SessionAddSheet'
+import { SessionEditorModal } from '@/components/plan/SessionEditorModal'
 import {
-  getAllMacrocycles, getMainRace, getPlannedSessions, isRaceMirrorSession, pickActiveMacrocycle,
+  getAllMacrocycles, getMainRace, getPlannedSessions, isRaceMirrorSession,
+  pickActiveMacrocycle, savePlannedSession,
 } from '@/lib/plan/storage'
-import { computePrepaProgress, computePhaseSegments, weekOfPlan } from '@/lib/mission/prepa'
-import type { PlannedSession, Race, RaceWaypoint, TrainingPlan } from '@/types/plan'
+import { adviseWeek } from '@/lib/mission/session-advisor'
+import { buildWeekFeed } from '@/lib/mission/week-feed'
+import { weeklyVolumes, habitualWeekly } from '@/lib/mission/rhythm'
+import { resolveMissionWeeklyTarget } from '@/lib/mission/weekly-target'
+import { computePhaseSegments, weekOfPlan } from '@/lib/mission/prepa'
+import { computeFreshness } from '@/lib/analytics/charge-insights'
+import { estimateCharge } from '@/lib/training/charge'
+import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
+import type { ActivityRow } from '@/components/ui/ActivityCard'
+import type { PlannedSession, Race, SessionTemplate, TrainingPlan } from '@/types/plan'
 import { useT } from '@/lib/i18n/I18nProvider'
+
+type Props = {
+  freshnessPayload: ChargeSportPayload | null
+  recentActivities: ActivityRow[]   // 28 derniers jours
+  discipline: string | null
+}
+
+const DAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+
+const CAT_COLOR: Record<string, string> = {
+  run: 'var(--primary)', bike: 'var(--data-bike)', swim: 'var(--data-swim)', other: 'var(--ink-500)',
+}
+const TYPE_ACCENT: Record<string, string> = {
+  velo: 'var(--data-bike)', velotaf: 'var(--data-bike)', natation: 'var(--data-swim)',
+}
+const accentForType = (type: string): string => TYPE_ACCENT[type] ?? 'var(--primary)'
 
 function todayISO(): string {
   const d = new Date()
@@ -26,264 +59,320 @@ function isoOfWeekDay(idx: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-const DAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
-
-function formatTarget(min: number | undefined): string | null {
-  if (!min || min <= 0) return null
-  const h = Math.floor(min / 60), m = Math.round(min % 60)
-  return m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, '0')}`
-}
-
 function daysUntil(dateISO: string): number {
   const today = new Date(`${todayISO()}T00:00:00`)
   const race = new Date(`${dateISO}T00:00:00`)
   return Math.max(0, Math.round((race.getTime() - today.getTime()) / 86_400_000))
 }
 
-// Teinte du héros « séance du jour » selon la discipline (spec : la séance
-// porte sa discipline — vélo vert, natation bleu, défaut orange).
-function sessionAccent(type: string | undefined): { color: string; glow: string } {
-  if (type === 'velo' || type === 'velotaf') return { color: 'var(--data-bike)', glow: 'rgba(39,169,113,0.14)' }
-  if (type === 'natation') return { color: 'var(--data-swim)', glow: 'rgba(75,180,230,0.14)' }
-  return { color: 'var(--primary)', glow: 'var(--primary-glow)' }
+function makeId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+  return `session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
-export function MissionPlan() {
+function actKm(a: ActivityRow): number { return (a.manual_distance_m ?? a.distance_m ?? 0) / 1000 }
+function fmtKmDp(km: number, dPlus: number, sec: number): string {
+  const h = Math.floor(sec / 3600), m = Math.round((sec % 3600) / 60)
+  const dur = h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m}'`
+  return `${km.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} km · ${dPlus} · ${dur}`
+}
+
+export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
   const M = useT().mission
-  const [planned, setPlanned] = useState<PlannedSession[]>([])
-  const [prepaSessions, setPrepaSessions] = useState<PlannedSession[]>([])
-  const [race, setRace] = useState<Race | null>(null)
+  const router = useRouter()
+
+  const [macros, setMacros] = useState<TrainingPlan[]>([])
   const [plan, setPlan] = useState<TrainingPlan | null>(null)
-  const [waypoints, setWaypoints] = useState<RaceWaypoint[]>([])
+  const [planned, setPlanned] = useState<PlannedSession[]>([])
+  const [race, setRace] = useState<Race | null>(null)
   const [loaded, setLoaded] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
+  const bumpReload = useCallback(() => setReloadKey(k => k + 1), [])
+
+  // Modales (mêmes composants que le mode expert).
+  const [addOpen, setAddOpen] = useState(false)
+  const [addDate, setAddDate] = useState(todayISO())
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [editorSession, setEditorSession] = useState<PlannedSession | null>(null)
+  const [editorPrefill, setEditorPrefill] = useState<SessionTemplate | null>(null)
+  const [editorDate, setEditorDate] = useState(todayISO())
 
   useEffect(() => {
     let cancelled = false
     void (async () => {
       try {
         const today = todayISO()
-        const [macros, week, mainRace] = await Promise.all([
+        const [allMacros, week, mainRace] = await Promise.all([
           getAllMacrocycles(),
           getPlannedSessions(isoOfWeekDay(0), isoOfWeekDay(6)),
           getMainRace(),
         ])
         if (cancelled) return
-        const active = pickActiveMacrocycle(macros, today)
-        setPlan(active)
+        setMacros(allMacros)
+        setPlan(pickActiveMacrocycle(allMacros, today))
         setPlanned(week.filter(s => !isRaceMirrorSession(s)))
         setRace(mainRace)
-        if (active) {
-          const all = await getPlannedSessions(active.startDate, active.endDate)
-          if (cancelled) return
-          setPrepaSessions(all)
-        }
-        if (mainRace) {
-          try {
-            const res = await fetch(`/api/races/${mainRace.id}/waypoints`)
-            if (res.ok && !cancelled) {
-              const json = (await res.json()) as { waypoints: RaceWaypoint[] }
-              setWaypoints(json.waypoints ?? [])
-            }
-          } catch { /* profil optionnel */ }
-        }
-      } catch { /* états restent vides : écran dégrade proprement */ }
+      } catch { /* états vides : l'écran dégrade proprement */ }
       if (!cancelled) setLoaded(true)
     })()
     return () => { cancelled = true }
-  }, [])
+  }, [reloadKey])
 
   const today = todayISO()
-  const todaySession = planned.find(s => s.date === today) ?? null
-  const prepa = computePrepaProgress(prepaSessions)
-  const segments = plan ? computePhaseSegments(plan, today) : []
-  const week = plan ? weekOfPlan(plan, today) : null
+  // Dates de la semaine : dérivées de la date du jour (pas réactives) → calcul au mount.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const weekDates = useMemo(() => Array.from({ length: 7 }, (_, i) => isoOfWeekDay(i)), [])
 
-  // Mini profil : altitude nette cumulée (dPlus - dMoins) par waypoint.
-  const profile = waypoints.filter(w => w.dPlus != null).map(w => ({
-    km: w.km, alt: (w.dPlus ?? 0) - (w.dMoins ?? 0), ravito: w.type === 'ravito',
-  }))
-  const maxAlt = Math.max(1, ...profile.map(p => p.alt))
-  const maxKm = race?.distance ?? Math.max(1, ...profile.map(p => p.km))
-  const pathD = profile.length >= 2
-    ? `M0,62 ${profile.map(p => `L${(p.km / maxKm) * 340},${62 - (p.alt / maxAlt) * 50}`).join(' ')} L340,62 Z`
-    : null
+  // Activités réalisées de la semaine courante (filtre des 28 jours reçus).
+  const weekActivities = useMemo(
+    () => recentActivities.filter(a => {
+      const d = a.start_time.slice(0, 10)
+      return d >= weekDates[0] && d <= weekDates[6]
+    }),
+    [recentActivities, weekDates],
+  )
+
+  const advice = useMemo(() => {
+    const weekDoneKm = weekActivities.reduce((s, a) => s + actKm(a), 0)
+    const recentHardCount = planned.filter(s => s.status === 'completed' && s.intensity >= 4).length
+    const freshnessZone = freshnessPayload ? computeFreshness(freshnessPayload.dailyMetrics).zone : null
+    const planTarget = resolveMissionWeeklyTarget(macros, today)
+    const targetKm = planTarget?.km ?? (habitualWeekly(recentActivities, today).km || null)
+    const segments = plan ? computePhaseSegments(plan, today) : []
+    const phaseLabel = segments.find(s => s.active)?.label ?? null
+    return adviseWeek({
+      todayISO: today, weekDates, freshnessZone, weekDoneKm, recentHardCount,
+      targetKm, phaseLabel, daysToRace: race ? daysUntil(race.date) : null,
+      plannedDates: planned.map(s => s.date),
+    })
+  }, [weekActivities, planned, freshnessPayload, macros, plan, race, today, weekDates, recentActivities])
+
+  const feed = useMemo(
+    () => buildWeekFeed({ weekDates, todayISO: today, activities: weekActivities, planned, advice }),
+    [weekDates, today, weekActivities, planned, advice],
+  )
+
+  // ─── Handlers héros ──────────────────────────────────────────────────────
+  const handleHeroDone = useCallback(async () => {
+    const todays = planned.find(s => s.date === today)
+    if (todays) {
+      await savePlannedSession({ ...todays, status: 'completed' })
+    } else {
+      const s = advice.today.kind === 'suggested' ? advice.today.session : null
+      const duration = s?.durationMin ?? 45
+      const intensity = s?.intensity ?? 2
+      await savePlannedSession({
+        id: makeId(), planId: '', date: today,
+        type: s?.type ?? 'footing',
+        title: s ? (M.sessionTitles[s.titleKey] ?? s.titleKey) : M.heroRestName,
+        duration, distance: s?.distanceKm, intensity,
+        estimatedCharge: estimateCharge(duration, intensity, undefined),
+        status: 'completed',
+      })
+    }
+    bumpReload()
+  }, [planned, today, advice, M, bumpReload])
+
+  function openAdd(date: string) { setAddDate(date); setAddOpen(true) }
+
+  function openEditSession(s: PlannedSession) {
+    setEditorSession(s); setEditorPrefill(null); setEditorDate(s.date); setEditorOpen(true)
+  }
+
+  // « Décaler » : ouvre l'éditeur sur la séance (planifiée, ou créée à la volée
+  // depuis la suggestion) pour que l'athlète change le jour avant d'enregistrer.
+  function handleHeroMove() {
+    const todays = planned.find(s => s.date === today)
+    if (todays) { openEditSession(todays); return }
+    const s = advice.today.kind === 'suggested' ? advice.today.session : null
+    if (!s) { openAdd(today); return }
+    setEditorSession({
+      id: makeId(), planId: '', date: today, type: s.type,
+      title: M.sessionTitles[s.titleKey] ?? s.titleKey,
+      duration: s.durationMin, distance: s.distanceKm, intensity: s.intensity,
+      estimatedCharge: estimateCharge(s.durationMin, s.intensity, undefined),
+      status: 'planned',
+    })
+    setEditorPrefill(null); setEditorDate(today); setEditorOpen(true)
+  }
+
+  function handlePickTemplate(t: SessionTemplate) {
+    setAddOpen(false); setEditorSession(null); setEditorPrefill(t); setEditorDate(addDate); setEditorOpen(true)
+  }
+  function handleCreateBlank() {
+    setAddOpen(false); setEditorSession(null); setEditorPrefill(null); setEditorDate(addDate); setEditorOpen(true)
+  }
+
+  const goToCreateRace = () => router.push('/plan?full=1&new=1')
 
   if (!loaded) return null
 
-  const accent = sessionAccent(todaySession?.type)
+  // ─── Héros ─────────────────────────────────────────────────────────────────
+  const todayEntry = feed.find(f => f.date === today)
+  let hero: ReactNode = null
+  if (todayEntry?.kind === 'done') {
+    hero = <PlanHeroCard state="done" title={todayEntry.title} km={todayEntry.km} dPlus={todayEntry.dPlus} durationSec={todayEntry.durationSec} />
+  } else if (todayEntry?.kind === 'planned') {
+    const s = todayEntry.session
+    hero = (
+      <PlanHeroCard
+        state="active" title={s.title} durationMin={s.duration} distanceKm={s.distance}
+        intensity={s.intensity} whyText={null} accentColor={accentForType(s.type)}
+        onDone={handleHeroDone} onMove={handleHeroMove} onOther={() => openAdd(today)}
+      />
+    )
+  } else if (todayEntry?.kind === 'suggested') {
+    const s = todayEntry.session
+    hero = (
+      <PlanHeroCard
+        state="active" title={M.sessionTitles[s.titleKey] ?? s.titleKey} durationMin={s.durationMin}
+        distanceKm={s.distanceKm} intensity={s.intensity} whyText={M.reasonWhy[s.reasonCode]}
+        accentColor={accentForType(s.type)}
+        onDone={handleHeroDone} onMove={handleHeroMove} onOther={() => openAdd(today)}
+      />
+    )
+  } else {
+    const code = todayEntry?.kind === 'rest' ? todayEntry.reasonCode : 'rest-recovery'
+    hero = <PlanHeroCard state="rest" text={M.reasonWhy[code]} />
+  }
+
+  const week = plan ? weekOfPlan(plan, today) : null
+  const segments = plan ? computePhaseSegments(plan, today) : []
 
   return (
     <div className="px-3 py-3 max-w-lg mx-auto space-y-3">
-      {/* 1 · Séance du jour — teintée par la discipline de la séance */}
-      <div
-        className="rounded-[16px] border p-5"
-        style={{
-          background: `linear-gradient(150deg, ${accent.glow} 0%, var(--trail-card) 55%)`,
-          borderColor: accent.color,
-        }}
-      >
-        <p className="text-[10px] uppercase tracking-[0.15em] font-bold mb-3" style={{ color: accent.color }}>
-          {M.todayTitle}
-        </p>
-        {todaySession ? (
-          <>
-            <p className="font-display text-[32px] font-bold leading-none text-trail-text">{todaySession.title}</p>
-            <div className="flex items-center gap-2 mt-3">
-              <span className="text-[12px] font-bold px-2.5 py-1 rounded-full" style={{ background: 'var(--primary)', color: 'var(--ink-900)' }}>
-                {formatTarget(todaySession.duration) ?? `${todaySession.duration} min`}
-              </span>
-              <span className="text-[12px] font-semibold px-2.5 py-1 rounded-full bg-trail-border text-trail-muted">
-                {M.intensityLabel} {'●'.repeat(todaySession.intensity)}{'○'.repeat(5 - todaySession.intensity)}
-              </span>
-            </div>
-            {todaySession.notes && (
-              <p className="text-[13px] mt-3.5 leading-relaxed text-trail-muted">{todaySession.notes}</p>
-            )}
-          </>
-        ) : (
-          <p className="font-display text-[32px] font-bold leading-none text-trail-muted">{M.restDay}</p>
-        )}
-      </div>
+      {/* ① Héros : ta prochaine séance */}
+      {hero}
 
-      {/* 2 · Ma semaine d'entraînement */}
+      {/* ② Ma semaine : fil réalisé + suggéré + ajout */}
       <MissionCard>
-        <div className="mb-3"><MissionCardLabel>{M.weekPlanTitle}</MissionCardLabel></div>
-        <div className="space-y-1 text-[13px]">
-          {DAY_SHORT.map((label, i) => {
-            const iso = isoOfWeekDay(i)
-            const s = planned.find(x => x.date === iso) ?? null
-            const isToday = iso === today
+        <div className="flex items-center justify-between mb-2">
+          <MissionCardLabel>{M.weekFeedTitle}</MissionCardLabel>
+          <span className="text-[10px] font-semibold text-trail-muted">{M.weekFeedSubtitle}</span>
+        </div>
+        <div>
+          {feed.map((entry, i) => {
+            const tick = <span className="w-2 h-2 rounded-full shrink-0" style={{ background: entry.kind === 'rest' ? 'var(--ink-500)' : CAT_COLOR[entry.category] }} />
+            const rowStyle = entry.isToday
+              ? { background: 'var(--primary-glow)', borderRadius: 10, paddingLeft: 8, paddingRight: 8, marginLeft: -8, marginRight: -8 }
+              : undefined
+            const dayLabel = (
+              <span className="w-[30px] text-[11px] font-bold uppercase tracking-[0.04em]"
+                    style={{ color: entry.isToday ? 'var(--primary-text)' : 'var(--trail-muted)' }}>
+                {DAY_SHORT[i]}
+              </span>
+            )
+            const sep = i < feed.length - 1 && !entry.isToday ? 'border-b border-trail-border' : ''
+
+            if (entry.kind === 'done') {
+              const inner = (
+                <>
+                  {dayLabel}{tick}
+                  <span className="flex-1 text-[13px] truncate text-trail-text">{entry.title}</span>
+                  <span className="text-[11.5px] tabular-nums whitespace-nowrap text-trail-muted">{fmtKmDp(entry.km, entry.dPlus, entry.durationSec)}</span>
+                  <span className="text-[12px] font-bold" style={{ color: 'var(--status-success)' }}>✓</span>
+                </>
+              )
+              const href = entry.multiple ? `/activities?full=1&date=${entry.date}` : `/activities/${entry.activityId}`
+              return (
+                <Link key={entry.date} href={href} className={`flex items-center gap-2.5 py-[9px] ${sep}`} style={rowStyle}>{inner}</Link>
+              )
+            }
+
+            if (entry.kind === 'planned') {
+              const s = entry.session
+              const status = s.status === 'completed' ? M.statusDone : entry.isToday ? M.statusToday : M.statusUpcoming
+              return (
+                <button key={entry.date} type="button" onClick={() => openEditSession(s)} className={`flex w-full items-center gap-2.5 py-[9px] text-left ${sep}`} style={rowStyle}>
+                  {dayLabel}{tick}
+                  <span className={`flex-1 text-[13px] truncate ${entry.isToday ? 'font-bold text-trail-text' : 'text-trail-text'}`}>{s.title}</span>
+                  <span className="text-[11px] font-semibold whitespace-nowrap" style={{ color: s.status === 'completed' ? 'var(--status-success)' : entry.isToday ? 'var(--primary-text)' : 'var(--trail-muted)' }}>{status}</span>
+                </button>
+              )
+            }
+
+            if (entry.kind === 'suggested') {
+              const s = entry.session
+              const chip = s.reasonCode === 'fill-volume-long' && s.reasonParam
+                ? `+${s.reasonParam} km`
+                : M.reasonChips[s.reasonCode]
+              return (
+                <div key={entry.date} className={`flex items-center gap-2.5 py-[9px] ${sep}`} style={rowStyle}>
+                  {dayLabel}{tick}
+                  <span className="flex-1 text-[13px] truncate text-trail-text">{M.sessionTitles[s.titleKey] ?? s.titleKey}</span>
+                  <span className="text-[9.5px] font-semibold px-2 py-[2px] rounded-full" style={{ background: 'var(--primary-glow)', color: 'var(--primary-text)', border: '1px solid rgba(255,121,0,0.30)' }}>{chip}</span>
+                </div>
+              )
+            }
+
+            // rest
             return (
-              <div
-                key={label}
-                className={`flex items-center justify-between py-1 ${isToday ? 'px-2 -mx-2 rounded-[10px]' : ''}`}
-                style={isToday ? { background: 'var(--primary-glow)' } : undefined}
-              >
-                <span className={`w-9 ${isToday ? 'font-bold' : ''}`} style={{ color: isToday ? 'var(--primary-text)' : 'var(--trail-muted)' }}>
-                  {label}
-                </span>
-                <span className={`flex-1 ${isToday ? 'font-bold text-trail-text' : s ? 'text-trail-muted' : ''}`}
-                      style={!s ? { color: 'var(--text-disabled)' } : undefined}>
-                  {s ? s.title : M.restDay}
-                </span>
-                <span className="font-bold" style={{
-                  color: s?.status === 'completed' ? 'var(--status-success)'
-                    : isToday ? 'var(--primary-text)' : 'var(--trail-muted)',
-                }}>
-                  {s?.status === 'completed' ? M.statusDone : isToday ? M.statusToday : s ? M.statusUpcoming : M.statusRest}
-                </span>
+              <div key={entry.date} className={`flex items-center gap-2.5 py-[9px] ${sep}`} style={rowStyle}>
+                {dayLabel}{tick}
+                <span className="flex-1 text-[13px] text-trail-muted">{M.restDay}</span>
+                <span className="text-[9.5px] font-semibold px-2 py-[2px] rounded-full" style={{ background: 'rgba(74,222,128,0.12)', color: 'var(--status-success)', border: '1px solid rgba(74,222,128,0.30)' }}>{M.reasonChips[entry.reasonCode]}</span>
               </div>
             )
           })}
+          <button type="button" onClick={() => openAdd(today)}
+                  className="flex w-full items-center gap-2 mt-2 px-2.5 py-[9px] rounded-[10px] border border-dashed border-trail-border text-trail-muted text-[12px] font-semibold">
+            {M.weekAddSession}
+          </button>
         </div>
       </MissionCard>
 
-      {/* 3 · Destination */}
+      {/* ③ Destination compacte + frise (ou bloc générique « Ton rythme ») */}
       {race ? (
         <Link href={`/plan/courses/${race.id}`} className="block">
           <MissionCard>
-            <div className="flex items-center justify-between mb-1">
-              <MissionCardLabel>{M.destinationTitle}</MissionCardLabel>
-              <p className="text-[11px] font-semibold" style={{ color: 'var(--primary-text)' }}>{M.destinationTableLink}</p>
+            <div className="flex items-center justify-between mb-2">
+              <MissionCardLabel>{week ? `${M.destinationTitle} · ${M.prepaWeekOf(week.week, week.total)}` : M.destinationTitle}</MissionCardLabel>
+              <span className="text-[11px] font-semibold" style={{ color: 'var(--primary-text)' }}>{M.destinationTableLink}</span>
             </div>
-            <div className="flex items-start justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="font-display text-[36px] font-bold leading-none" style={{ color: 'var(--primary)' }}>
-                  J-{daysUntil(race.date)}
-                </p>
-                <p className="text-[14px] font-bold mt-1.5 text-trail-text">{race.name}</p>
-                <p className="text-[11px] mt-0.5 text-trail-muted">
-                  {new Date(`${race.date}T00:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                  {' · '}{race.distance} km · <span style={{ color: 'var(--status-info)' }}>+{race.elevation.toLocaleString('fr-FR')} m</span>
-                  {formatTarget(race.targetDurationMin) && <> · {M.destinationTargetPrefix} {formatTarget(race.targetDurationMin)}</>}
-                </p>
+                <p className="font-display text-[30px] font-bold leading-none" style={{ color: 'var(--primary)' }}>J-{daysUntil(race.date)}</p>
+                <p className="text-[13px] font-bold mt-1 text-trail-text">{race.name}</p>
               </div>
-              {pathD && (
-                <svg viewBox="0 0 340 70" className="w-[120px] mt-1 shrink-0">
-                  <path d={pathD} fill="rgba(56,189,248,0.16)" stroke="var(--status-info)" strokeWidth="2" />
-                  {profile.filter(p => p.ravito).map((p, i) => (
-                    <circle key={i} cx={(p.km / maxKm) * 340} cy={62 - (p.alt / maxAlt) * 50} r="5" fill="var(--primary)" />
-                  ))}
-                </svg>
+              {segments.length > 0 && (
+                <div className="flex-1">
+                  <div className="flex gap-1 mb-1.5">
+                    {segments.map((seg, i) => (
+                      <div key={i} className={`h-[7px] relative ${i === 0 ? 'rounded-l-full' : ''} ${i === segments.length - 1 ? 'rounded-r-full' : ''}`}
+                           style={{ width: `${seg.widthPct}%`, background: seg.active ? 'var(--primary)' : 'var(--ink-500)' }}>
+                        {seg.cursorPct != null && <span className="absolute -top-[3px] w-[3px] h-[13px] rounded bg-white" style={{ left: `${seg.cursorPct}%` }} />}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex text-[9px] text-trail-muted">
+                    {segments.map((seg, i) => (
+                      <span key={i} style={{ width: `${seg.widthPct}%`, ...(seg.active ? { color: 'var(--primary-text)', fontWeight: 700 } : {}) }}>{seg.label}</span>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </MissionCard>
         </Link>
       ) : (
-        <MissionCard className="text-center">
-          <p className="text-[24px]">🏁</p>
-          <p className="text-[14px] font-semibold mt-1.5 text-trail-text">{M.destinationEmptyTitle}</p>
-          <p className="text-[12px] mt-1 text-trail-muted">{M.destinationEmptyBody}</p>
-          {/* ?full=1 : ouvre la vue Plan complète (gestion des courses) — /plan nu re-rendrait cet écran */}
-          <Link
-            href="/plan?full=1"
-            className="inline-block mt-3.5 px-5 py-2.5 rounded-full text-[13px] font-bold"
-            style={{ background: 'var(--primary)', color: 'var(--ink-900)' }}
-          >
-            {M.destinationEmptyCta}
-          </Link>
-        </MissionCard>
+        <RythmeCard
+          weeks={weeklyVolumes(recentActivities, today, 4)}
+          avgKm={habitualWeekly(recentActivities, today).km}
+          onAddRace={goToCreateRace}
+        />
       )}
 
-      {/* 4 · Ma prépa */}
-      {plan && week && (
-        <MissionCard>
-          <div className="flex items-center justify-between mb-3">
-            <MissionCardLabel>{M.prepaTitle}</MissionCardLabel>
-            <p className="text-[11px] font-bold" style={{ color: 'var(--primary-text)' }}>{M.prepaWeekOf(week.week, week.total)}</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="relative w-[72px] h-[72px] shrink-0">
-              <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
-                <circle cx="60" cy="60" r="52" fill="none" stroke="var(--trail-border)" strokeWidth="11" />
-                <circle
-                  cx="60" cy="60" r="52" fill="none" stroke="var(--status-success)" strokeWidth="11"
-                  strokeLinecap="round" strokeDasharray={`${(prepa.pct / 100) * 326.7} 326.7`}
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <p className="font-display text-[18px] font-bold text-trail-text">{prepa.pct}<span className="text-[10px]">%</span></p>
-              </div>
-            </div>
-            <div className="flex-1">
-              <p className="text-[13px] font-semibold mb-2 text-trail-text">{M.prepaSessions(prepa.done, prepa.total)}</p>
-              <div className="flex gap-1 mb-1.5">
-                {segments.map((seg, i) => (
-                  <div
-                    key={i}
-                    className={`h-[7px] relative ${i === 0 ? 'rounded-l-full' : ''} ${i === segments.length - 1 ? 'rounded-r-full' : ''}`}
-                    style={{ width: `${seg.widthPct}%`, background: seg.active ? 'var(--primary)' : 'var(--ink-500)' }}
-                  >
-                    {seg.cursorPct != null && (
-                      <span className="absolute -top-[3px] w-[3px] h-[13px] rounded bg-white" style={{ left: `${seg.cursorPct}%` }} />
-                    )}
-                  </div>
-                ))}
-              </div>
-              <div className="flex text-[9px] text-trail-muted">
-                {segments.map((seg, i) => (
-                  <span key={i} style={{ width: `${seg.widthPct}%`, ...(seg.active ? { color: 'var(--primary-text)', fontWeight: 700 } : {}) }}>
-                    {seg.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </MissionCard>
-      )}
-
-      {/* 5 · Coach IA (placeholder — le module n'existe pas encore) */}
-      <button
-        type="button"
-        disabled
-        className="w-full p-3.5 rounded-2xl flex items-center justify-center gap-2 text-[14px] font-bold opacity-80"
-        style={{ border: '1.5px solid var(--primary)', color: 'var(--primary-text)', background: 'transparent' }}
-      >
-        {M.coachButton}
-        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-trail-border text-trail-muted">
-          {M.coachBadge}
-        </span>
+      {/* ④ Affiner avec le coach (placeholder — module IA à venir) */}
+      <button type="button" disabled
+              className="w-full p-3 rounded-2xl flex items-center justify-center gap-2 text-[13px] font-bold opacity-80"
+              style={{ border: '1.5px solid var(--primary)', color: 'var(--primary-text)', background: 'transparent' }}>
+        {M.coachRefine}
+        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-trail-border text-trail-muted">{M.coachSoon}</span>
       </button>
+
+      {/* Modales (mêmes que le mode expert) */}
+      <SessionAddSheet open={addOpen} dateISO={addDate} onClose={() => setAddOpen(false)} onPickTemplate={handlePickTemplate} onCreateBlank={handleCreateBlank} />
+      <SessionEditorModal session={editorSession} initialDate={editorDate} open={editorOpen} prefillTemplate={editorPrefill} onClose={() => setEditorOpen(false)} onSaved={() => { setEditorOpen(false); bumpReload() }} />
     </div>
   )
 }

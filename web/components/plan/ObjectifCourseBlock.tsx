@@ -6,7 +6,7 @@
 // La data vient de getRaces() (Supabase ou localStorage selon contexte).
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Flag, SquarePen, Trophy } from 'lucide-react'
 import type { Race, RaceType } from '@/types/plan'
 import { getRaces, getRacesWithPendingDiff, peekRaces } from '@/lib/plan/storage'
@@ -62,6 +62,16 @@ export function ObjectifCourseBlock({ onChange }: Props) {
   useEffect(() => {
     getRacesWithPendingDiff().then(setPendingDiffIds).catch(() => {/* silencieux */})
   }, [])
+
+  // Deep-link depuis le Mode Mission (CTA « Ajouter une course » → /plan?full=1&new=1)
+  // : ouvre directement le formulaire de création de course.
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setEditing(null)
+      setModalOpen(true)
+    }
+  }, [searchParams])
 
   function handleSaved() {
     void reload()

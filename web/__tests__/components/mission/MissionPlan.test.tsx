@@ -8,17 +8,29 @@ jest.mock('@/lib/plan/storage', () => ({
   getMainRace: jest.fn().mockResolvedValue(null),
   pickActiveMacrocycle: () => null,
   isRaceMirrorSession: () => false,
+  savePlannedSession: jest.fn().mockResolvedValue(undefined),
 }))
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }))
+// Les modales (lourdes, hooks/portails) ne sont pas le sujet de ce test.
+jest.mock('@/components/plan/SessionAddSheet', () => ({ SessionAddSheet: () => null }))
+jest.mock('@/components/plan/SessionEditorModal', () => ({ SessionEditorModal: () => null }))
 
-it('sans plan ni course → Repos + état vide Destination', async () => {
-  render(
+function renderPlan() {
+  return render(
     <I18nProvider initialLang="fr">
-      <MissionPlan />
+      <MissionPlan freshnessPayload={null} recentActivities={[]} discipline={null} />
     </I18nProvider>,
   )
-  const repos = await screen.findAllByText('Repos')
-  expect(repos.length).toBeGreaterThan(0)
-  expect(screen.getByText('Aucune course prévue')).toBeInTheDocument()
-  expect(screen.getByText(/Ajouter une course/)).toBeInTheDocument()
-  expect(screen.getByText(/Ajuster mon plan/)).toBeInTheDocument()
+}
+
+it('sans course : affiche le bloc Ton rythme + le CTA création', async () => {
+  renderPlan()
+  expect(await screen.findByText(/Ton rythme/)).toBeInTheDocument()
+  expect(screen.getByText(/Choisir une course objectif/)).toBeInTheDocument()
+})
+
+it('affiche le titre Ma semaine et le bouton Ajouter une séance', async () => {
+  renderPlan()
+  expect(await screen.findByText('Ma semaine')).toBeInTheDocument()
+  expect(screen.getByText(/Ajouter une séance/)).toBeInTheDocument()
 })

@@ -4,7 +4,7 @@
 // Maquette de référence : Prompts/plan-tab-mission-final-mockup.html (bloc ①).
 
 import { useT } from '@/lib/i18n/I18nProvider'
-import type { SuggestedSession, ReasonCode } from '@/lib/mission/session-advisor'
+import type { IntensityLevel } from '@/types/plan'
 
 // ─── helpers durée ───────────────────────────────────────────────────────────
 
@@ -22,30 +22,37 @@ function fmtDurSec(sec: number): string {
 
 // ─── types ───────────────────────────────────────────────────────────────────
 
+// `active` couvre AUSSI bien une séance suggérée par le moteur qu'une séance
+// déjà planifiée par l'athlète : MissionPlan résout `title` (libellé i18n ou
+// titre libre) et `whyText` (raison du moteur, ou null si séance planifiée).
 type Props =
   | {
-      state: 'suggested'
-      session: SuggestedSession
+      state: 'active'
+      title: string
+      durationMin: number
+      distanceKm?: number
+      intensity: IntensityLevel
+      whyText?: string | null
       accentColor: string
       onDone: () => void
       onMove: () => void
       onOther: () => void
     }
   | { state: 'done'; title: string; km: number; dPlus: number; durationSec: number }
-  | { state: 'rest'; reasonCode: ReasonCode }
+  | { state: 'rest'; text: string }
 
 // ─── composant ───────────────────────────────────────────────────────────────
 
 export function PlanHeroCard(props: Props) {
   const M = useT().mission
 
-  // ── état : séance suggérée ──────────────────────────────────────────────
-  if (props.state === 'suggested') {
-    const { session, accentColor, onDone, onMove, onOther } = props
-    const intensityDots = '●'.repeat(session.intensity) + '○'.repeat(5 - session.intensity)
-    const durationLabel = session.distanceKm
-      ? `${formatDur(session.durationMin)} · ${session.distanceKm} km`
-      : formatDur(session.durationMin)
+  // ── état : séance du jour (suggérée OU planifiée) ───────────────────────
+  if (props.state === 'active') {
+    const { title, durationMin, distanceKm, intensity, whyText, accentColor, onDone, onMove, onOther } = props
+    const intensityDots = '●'.repeat(intensity) + '○'.repeat(5 - intensity)
+    const durationLabel = distanceKm
+      ? `${formatDur(durationMin)} · ${distanceKm} km`
+      : formatDur(durationMin)
 
     return (
       <div
@@ -73,7 +80,7 @@ export function PlanHeroCard(props: Props) {
 
         {/* titre de la séance */}
         <p className="font-display text-[30px] font-bold leading-none text-trail-text">
-          {M.sessionTitles[session.titleKey] ?? session.titleKey}
+          {title}
         </p>
 
         {/* pills durée + intensité */}
@@ -92,21 +99,23 @@ export function PlanHeroCard(props: Props) {
           </span>
         </div>
 
-        {/* boîte « pourquoi » */}
-        <div
-          className="mt-3.5 rounded-[12px] p-3"
-          style={{ background: 'var(--ink-800)' }}
-        >
-          <p
-            className="text-[10px] uppercase tracking-wider font-bold mb-1.5"
-            style={{ color: 'var(--text-muted)' }}
+        {/* boîte « pourquoi » — uniquement pour une séance suggérée (whyText) */}
+        {whyText && (
+          <div
+            className="mt-3.5 rounded-[12px] p-3"
+            style={{ background: 'var(--ink-800)' }}
           >
-            {M.heroWhyTitle}
-          </p>
-          <p className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>
-            {M.reasonWhy[session.reasonCode]}
-          </p>
-        </div>
+            <p
+              className="text-[10px] uppercase tracking-wider font-bold mb-1.5"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              {M.heroWhyTitle}
+            </p>
+            <p className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>
+              {whyText}
+            </p>
+          </div>
+        )}
 
         {/* actions */}
         <div className="flex gap-2 mt-3">
@@ -190,7 +199,7 @@ export function PlanHeroCard(props: Props) {
         {M.heroRestName}
       </p>
       <p className="text-[12px] mt-3" style={{ color: 'var(--text-secondary)' }}>
-        {M.reasonWhy[props.reasonCode]}
+        {props.text}
       </p>
     </div>
   )

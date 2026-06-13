@@ -3,14 +3,51 @@ import { MissionPlan } from '@/components/mission/MissionPlan'
 import { getServerAppMode } from '@/lib/preferences/server'
 import { getServerUser } from '@/lib/database/get-user'
 import { createClient } from '@/lib/database/supabase-server'
+import { getChargePageData } from '@/lib/data/charge'
+import type { ActivityRow } from '@/components/ui/ActivityCard'
+import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
+
+const ACTIVITY_CARD_FIELDS =
+  'id, name, sport_type, start_time, ces, avg_hr, max_hr, distance_m, elevation_gain_m, moving_time_sec, manual_sport_type, manual_intensity, manual_workout_type, manual_distance_m, manual_moving_time_sec, manual_elevation_gain_m'
 
 export default async function PlanPage({
   searchParams,
-}: { searchParams?: { full?: string } }) {
+}: { searchParams?: { full?: string; new?: string } }) {
   const mode = await getServerAppMode()
-  if (mode === 'mission' && searchParams?.full !== '1') return <MissionPlan />
-  // onboarding_mission pilote la curation de la bibliothèque de séances
-  // (BibliothequeSeancesBlock), dans TOUS les modes qui rendent PlanClient.
+
+  // Mode Mission (vue par défaut) : héros + semaine + suggestions.
+  if (mode === 'mission' && searchParams?.full !== '1') {
+    const user = await getServerUser()
+    let freshnessPayload: ChargeSportPayload | null = null
+    let recentActivities: ActivityRow[] = []
+    let discipline: string | null = null
+    if (user) {
+      const supabase = await createClient()
+      const since = new Date()
+      since.setDate(since.getDate() - 28)
+      const [{ data: rows }, { data: profile }] = await Promise.all([
+        supabase
+          .from('activities')
+          .select(ACTIVITY_CARD_FIELDS)
+          .eq('user_id', user.id)
+          .is('deleted_at', null)
+          .gte('start_time', since.toISOString())
+          .order('start_time', { ascending: false }),
+        supabase.from('profiles').select('onboarding_discipline').eq('id', user.id).maybeSingle(),
+      ])
+      recentActivities = (rows ?? []) as ActivityRow[]
+      discipline = profile?.onboarding_discipline ?? null
+      // Fraîcheur basée sur la course ; repli sur le global si pas d'historique running.
+      try {
+        const charge = await getChargePageData(user.id)
+        freshnessPayload = charge.perSport.run.historyDays > 0 ? charge.perSport.run : charge.perSport.all
+      } catch { freshnessPayload = null }
+    }
+    return <MissionPlan freshnessPayload={freshnessPayload} recentActivities={recentActivities} discipline={discipline} />
+  }
+
+  // Plan expert (inchangé). onboarding_mission pilote la curation de la
+  // bibliothèque de séances (BibliothequeSeancesBlock).
   const user = await getServerUser()
   let mission: string | null = null
   if (user) {
