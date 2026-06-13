@@ -95,8 +95,11 @@ export function RaceImportSheet({ raceId, race, autoSearch, open, onClose, onSav
   function importCandidate(c: RaceCandidate) {
     setDraft(c.waypoints)
     setDetected({
-      editionYear: c.editionYear ?? null,
-      editionDate: c.editionDate ?? null,
+      // Année toujours calée sur l'année en cours (une course créée concerne l'édition
+      // courante). On vide editionDate comme le fait l'édition manuelle du champ Année,
+      // pour que le badge de fraîcheur reste cohérent avec la valeur affichée.
+      editionYear: new Date().getFullYear(),
+      editionDate: null,
       dateExplicit: c.dateExplicit ?? false,
       startDayOfMonth: c.startDayOfMonth ?? null,
       sourceUrl: c.url,
