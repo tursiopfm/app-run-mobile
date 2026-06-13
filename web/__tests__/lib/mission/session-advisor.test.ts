@@ -63,8 +63,8 @@ it('sans course (phase nulle) → conseille quand même, reason rythme', () => {
 })
 
 describe('applySlider', () => {
-  const longRun: SliderBase = { type: 'sortie_longue', titleKey: 'sessionLong', durationMin: 120, distanceKm: 24, intensity: 2 }
-  const quality: SliderBase = { type: 'seuil_tempo', titleKey: 'sessionSeuil', durationMin: 60, distanceKm: 13, intensity: 4 }
+  const longRun: SliderBase = { type: 'sortie_longue', title: 'Sortie longue', durationMin: 120, distanceKm: 24, elevationM: 500, intensity: 2 }
+  const fractio: SliderBase = { type: 'fractionne', title: '10×400m VMA', durationMin: 65, distanceKm: 9, intensity: 5 }
 
   it('pos 0 → repos ; pos 2 → la séance prévue inchangée', () => {
     expect(applySlider(longRun, 0).kind).toBe('rest')
@@ -73,26 +73,22 @@ describe('applySlider', () => {
     if (prevu.kind === 'session') expect(prevu.durationMin).toBe(120)
   })
 
-  it('endurance : allégé raccourcit, renforcé/max rallongent', () => {
-    const a = applySlider(longRun, 1), r = applySlider(longRun, 3), m = applySlider(longRun, 4)
-    if (a.kind === 'session' && r.kind === 'session' && m.kind === 'session') {
-      expect(a.durationMin).toBeLessThan(120)
-      expect(r.durationMin).toBeGreaterThan(120)
-      expect(m.durationMin).toBeGreaterThan(r.durationMin)
-      expect(a.type).toBe('sortie_longue') // même type, durée différente
-    }
+  it('fractionné : on adapte le NB de répétitions (10 → 8 / 12 / 15)', () => {
+    const a = applySlider(fractio, 1), r = applySlider(fractio, 3), m = applySlider(fractio, 4)
+    if (a.kind === 'session') expect(a.title).toBe('8×400m VMA')
+    if (r.kind === 'session') expect(r.title).toBe('12×400m VMA')
+    if (m.kind === 'session') expect(m.title).toBe('15×400m VMA')
   })
 
-  it('qualité : allégé → footing facile ; renforcé → plus de volume', () => {
-    const a = applySlider(quality, 1), r = applySlider(quality, 3)
-    if (a.kind === 'session') { expect(a.type).toBe('footing'); expect(a.intensity).toBeLessThanOrEqual(2) }
-    if (r.kind === 'session') { expect(r.type).toBe('seuil_tempo'); expect(r.durationMin).toBeGreaterThan(60) }
+  it('endurance + D+ : allégé raccourcit (et baisse le D+), renforcé rallonge', () => {
+    const a = applySlider(longRun, 1), r = applySlider(longRun, 4)
+    if (a.kind === 'session') { expect(a.distanceKm!).toBeLessThan(24); expect(a.elevationM!).toBeLessThan(500) }
+    if (r.kind === 'session') { expect(r.distanceKm!).toBeGreaterThan(24); expect(r.elevationM!).toBeGreaterThan(500) }
   })
 
-  it('recommandation repos : séance seulement en poussant à droite', () => {
-    expect(applySlider(null, 0).kind).toBe('rest')
-    expect(applySlider(null, 2).kind).toBe('rest')
-    expect(applySlider(null, 3).kind).toBe('session')
+  it('recommandation repos (centerIsRest) : séance seulement en poussant à droite', () => {
+    expect(applySlider(longRun, 2, true).kind).toBe('rest')
+    expect(applySlider(longRun, 3, true).kind).toBe('session')
   })
 })
 

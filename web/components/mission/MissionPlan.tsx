@@ -80,11 +80,11 @@ function fmtKmDp(km: number, dPlus: number, sec: number): string {
   const dur = h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m}'`
   return `${km.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} km · ${dPlus} · ${dur}`
 }
-// Métrique compacte d'une séance planifiée/suggérée (durée · distance).
-function fmtMeta(min: number, km?: number): string {
+// Métrique compacte d'une séance planifiée/suggérée (durée · distance · D+).
+function fmtMeta(min: number, km?: number, elev?: number): string {
   const h = Math.floor(min / 60), m = Math.round(min % 60)
   const dur = h > 0 ? (m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, '0')}`) : `${m}'`
-  return km ? `${dur} · ${km} km` : dur
+  return [dur, km ? `${km} km` : null, elev ? `+${elev} m` : null].filter(Boolean).join(' · ')
 }
 
 export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Props) {
@@ -197,18 +197,17 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
   // Recommandation du jour (curseur au centre = « Prévu »).
   const rec = adviseWeek({ ...ctx, ...plannedInputs(weekPlanned) }).today
   const todayPlanned = weekPlanned.find(s => s.date === today && s.status !== 'completed') ?? null
-  const sliderBase: SliderBase | null = todayPlanned
-    ? { type: todayPlanned.type, title: todayPlanned.title, durationMin: todayPlanned.duration, distanceKm: todayPlanned.distance, intensity: todayPlanned.intensity }
+  const centerIsRest = !todayPlanned && rec.kind === 'rest'
+  const sliderBase: SliderBase = todayPlanned
+    ? { type: todayPlanned.type, title: todayPlanned.title, durationMin: todayPlanned.duration, distanceKm: todayPlanned.distance, elevationM: todayPlanned.elevation, intensity: todayPlanned.intensity }
     : rec.kind === 'suggested'
-      ? { type: rec.session.type, titleKey: rec.session.titleKey, durationMin: rec.session.durationMin, distanceKm: rec.session.distanceKm, intensity: rec.session.intensity }
-      : null
-  const outcome = applySlider(sliderBase, sliderPos)
+      ? { type: rec.session.type, title: M.sessionTitles[rec.session.titleKey] ?? rec.session.titleKey, durationMin: rec.session.durationMin, distanceKm: rec.session.distanceKm, elevationM: rec.session.elevationM, intensity: rec.session.intensity }
+      : { type: 'footing', title: M.sessionTitles.sessionFooting, durationMin: 45, distanceKm: 8, intensity: 2 } // base par défaut des jours « repos » (si on pousse à droite)
+  const outcome = applySlider(sliderBase, sliderPos, centerIsRest)
 
-  const outcomeTitle = (o: Extract<SliderOutcome, { kind: 'session' }>): string =>
-    o.title ?? (o.titleKey ? (M.sessionTitles[o.titleKey] ?? o.titleKey) : o.type)
   const outcomeToPlanned = (o: SliderOutcome): PlannedSession | null => {
     if (o.kind !== 'session') return null
-    return { id: 'slider-today', planId: '', date: today, type: o.type, title: outcomeTitle(o), duration: o.durationMin, distance: o.distanceKm, intensity: o.intensity, estimatedCharge: estimateCharge(o.durationMin, o.intensity, undefined), status: 'planned' }
+    return { id: 'slider-today', planId: '', date: today, type: o.type, title: o.title, duration: o.durationMin, distance: o.distanceKm, elevation: o.elevationM, intensity: o.intensity, estimatedCharge: estimateCharge(o.durationMin, o.intensity, o.elevationM), status: 'planned' }
   }
 
   // Réadaptation : la séance choisie au curseur devient une séance « planifiée »
@@ -242,9 +241,9 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
     if (outcome.kind !== 'session') { openAdd(today); return }
     setReplaceIds(todaySessionIds())
     setEditorSession({
-      id: makeId(), planId: '', date: today, type: outcome.type, title: outcomeTitle(outcome),
-      duration: outcome.durationMin, distance: outcome.distanceKm, intensity: outcome.intensity,
-      estimatedCharge: estimateCharge(outcome.durationMin, outcome.intensity, undefined), status: 'planned',
+      id: makeId(), planId: '', date: today, type: outcome.type, title: outcome.title,
+      duration: outcome.durationMin, distance: outcome.distanceKm, elevation: outcome.elevationM, intensity: outcome.intensity,
+      estimatedCharge: estimateCharge(outcome.durationMin, outcome.intensity, outcome.elevationM), status: 'planned',
     })
     setEditorPrefill(null); setEditorDate(today); setEditorOpen(true)
   }
@@ -280,8 +279,8 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
       : M.heroSliderAdjusted
     hero = (
       <PlanHeroCard
-        state="active" title={outcomeTitle(outcome)} sessionType={outcome.type}
-        durationMin={outcome.durationMin} distanceKm={outcome.distanceKm} intensity={outcome.intensity}
+        state="active" title={outcome.title} sessionType={outcome.type}
+        durationMin={outcome.durationMin} distanceKm={outcome.distanceKm} elevationM={outcome.elevationM} intensity={outcome.intensity}
         whyText={whyText} targetLabel={hrTargetLabel(outcome.intensity)} accentColor={accentForType(outcome.type)}
         onOpen={openTodayEditor} sliderPos={sliderPos} onSliderChange={setSliderPos} onOpenLibrary={() => { setSliderPos(2); openAdd(today) }}
       />
@@ -350,7 +349,7 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
                 <button key={entry.date} type="button" onClick={() => openEditSession(s)} className={`flex w-full items-center gap-2.5 py-[9px] text-left ${sep}`} style={rowStyle}>
                   {dayLabel}{tick}
                   <span className={`flex-1 text-[13px] truncate ${entry.isToday ? 'font-bold text-trail-text' : missed ? 'text-trail-muted' : 'text-trail-text'}`}>{s.title}</span>
-                  {!missed && <span className="text-[11px] tabular-nums whitespace-nowrap text-trail-muted">{fmtMeta(s.duration, s.distance)}</span>}
+                  {!missed && <span className="text-[11px] tabular-nums whitespace-nowrap text-trail-muted">{fmtMeta(s.duration, s.distance, s.elevation)}</span>}
                   <span className="text-[11px] font-semibold whitespace-nowrap" style={{ color: statusColor }}>
                     {missed ? '✗ ' : ''}{status}
                   </span>
@@ -365,7 +364,7 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
                 <div key={entry.date} className={`flex items-center gap-2.5 py-[9px] ${sep}`} style={rowStyle}>
                   {dayLabel}{tick}
                   <span className="flex-1 text-[13px] truncate text-trail-text">{M.sessionTitles[s.titleKey] ?? s.titleKey}</span>
-                  <span className="text-[11px] tabular-nums whitespace-nowrap text-trail-muted">{fmtMeta(s.durationMin, s.distanceKm)}</span>
+                  <span className="text-[11px] tabular-nums whitespace-nowrap text-trail-muted">{fmtMeta(s.durationMin, s.distanceKm, s.elevationM)}</span>
                   <span className="text-[9.5px] font-semibold px-2 py-[2px] rounded-full" style={{ background: 'var(--primary-glow)', color: 'var(--primary-text)', border: '1px solid rgba(255,121,0,0.30)' }}>{chip}</span>
                 </div>
               )

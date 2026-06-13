@@ -23,6 +23,7 @@ export type SuggestedSession = {
   distanceKm?: number
   intensity: IntensityLevel
   reasonCode: ReasonCode
+  elevationM?: number
 }
 
 export type DayAdvice =
@@ -77,7 +78,7 @@ function easySession(reason: ReasonCode): SuggestedSession {
 function longSession(targetKm: number | null): SuggestedSession {
   const km = Math.min(32, Math.max(16, Math.round((targetKm ?? 0) * 0.3)))
   const durationMin = Math.round(km * PACE_MIN_PER_KM[2])
-  return { type: 'sortie_longue', titleKey: 'sessionLong', durationMin, distanceKm: km, intensity: 2, reasonCode: 'fill-volume-long' }
+  return { type: 'sortie_longue', titleKey: 'sessionLong', durationMin, distanceKm: km, intensity: 2, reasonCode: 'fill-volume-long', elevationM: Math.round(km * 20) }
 }
 
 // Conseil pour UN jour donné (hors jours planifiés, gérés par l'appelant).
@@ -120,38 +121,73 @@ export function adviseWeek(ctx: AdviceContext): WeekAdvice {
 }
 
 // ── Curseur « forme du jour » ───────────────────────────────────────────────
-// Ajuste la séance du jour autour de la recommandation (pos 2 = « Prévu »).
-// 0 Repos · 1 Allégé · 2 Prévu · 3 Renforcé · 4 Max. Type-aware : pour une séance
-// d'endurance on joue sur la DURÉE (rallonger/raccourcir) ; pour une séance de
-// qualité, « allégé » = footing facile, « renforcé/max » = plus de volume.
+// Ajuste la séance du jour autour de la recommandation (niveau 2 = « Prévu »).
+// 0 Repos · 1 Allégé · 2 Prévu · 3 Renforcé · 4 Max.
+// On agit sur le BON levier selon la séance :
+//   • intervalles « N×… » (fractionné, côtes) → on change le NB DE RÉPÉTITIONS
+//     (ex. 10×400 → 8 / 12 / 15) ; durée, distance et D+ suivent au prorata.
+//   • endurance (footing, sortie longue) → distance + durée, et D+ si présent.
 export type SliderBase = {
-  type: SessionType; titleKey?: string; title?: string
-  durationMin: number; distanceKm?: number; intensity: IntensityLevel
+  type: SessionType
+  title: string          // titre résolu (sert aussi à lire « N×… »)
+  durationMin: number
+  distanceKm?: number
+  elevationM?: number
+  intensity: IntensityLevel
 }
 export type SliderOutcome =
   | { kind: 'rest' }
-  | { kind: 'session'; type: SessionType; titleKey?: string; title?: string; durationMin: number; distanceKm?: number; intensity: IntensityLevel }
+  | { kind: 'session'; type: SessionType; title: string; durationMin: number; distanceKm?: number; elevationM?: number; intensity: IntensityLevel }
 
+// Détecte un motif « N×unité » dans le titre (préfixe, N, unité).
+const REP_RE = /^(.*?)(\d+)\s*[x×*]\s*(.+)$/
 const scaleKm = (km: number | undefined, f: number): number | undefined => km != null ? Math.round(km * f) : undefined
+const scaleM = (m: number | undefined, f: number): number | undefined => m != null ? Math.round(m * f) : undefined
 
-export function applySlider(base: SliderBase | null, pos: number): SliderOutcome {
-  if (pos <= 0) return { kind: 'rest' }
-  // Recommandation = repos : on ne propose une séance qu'en poussant à droite.
-  if (!base) {
-    if (pos <= 2) return { kind: 'rest' }
-    if (pos === 3) return { kind: 'session', type: 'footing', titleKey: 'sessionFooting', durationMin: 45, distanceKm: 8, intensity: 2 }
-    return { kind: 'session', type: 'footing', titleKey: 'sessionFooting', durationMin: 60, distanceKm: 11, intensity: 3 }
-  }
-  if (pos === 2) return { kind: 'session', ...base }
-  const isQuality = base.intensity >= 4
-  if (isQuality) {
-    if (pos === 1) {
-      return { kind: 'session', type: 'footing', titleKey: 'sessionFooting', durationMin: Math.round(base.durationMin * 0.7), distanceKm: scaleKm(base.distanceKm, 0.7), intensity: 2 }
+// Nombre de répétitions cible pour un niveau (garantit un écart ≥ 1).
+function repsForLevel(reps: number, level: number): number {
+  const step = Math.max(1, Math.round(reps * 0.2))
+  if (level === 1) return Math.max(1, reps - step)           // allégé : 10 → 8
+  if (level === 3) return reps + step                         // renforcé : 10 → 12
+  return reps + Math.max(2, Math.round(reps * 0.5))           // max : 10 → 15
+}
+
+const ENDU_FACTOR: Record<number, number> = { 1: 0.8, 3: 1.2, 4: 1.5 }
+
+// level : 1 allégé · 2 prévu (inchangé) · 3 renforcé · 4 max.
+function scaleSession(base: SliderBase, level: number): SliderOutcome {
+  if (level === 2) return { kind: 'session', ...base }
+  const m = REP_RE.exec(base.title)
+  if (m) {
+    const reps = parseInt(m[2], 10)
+    const newReps = repsForLevel(reps, level)
+    const r = newReps / reps
+    return {
+      kind: 'session', type: base.type,
+      title: `${m[1]}${newReps}×${m[3]}`,
+      durationMin: Math.round(base.durationMin * r),
+      distanceKm: scaleKm(base.distanceKm, r),
+      elevationM: scaleM(base.elevationM, r),
+      intensity: base.intensity,
     }
-    const f = pos === 3 ? 1.15 : 1.3
-    return { kind: 'session', ...base, durationMin: Math.round(base.durationMin * f), distanceKm: scaleKm(base.distanceKm, f) }
   }
-  // Endurance : on étire/raccourcit la durée (et la distance).
-  const f = pos === 1 ? 0.7 : pos === 3 ? 1.3 : 1.6
-  return { kind: 'session', ...base, durationMin: Math.round(base.durationMin * f), distanceKm: scaleKm(base.distanceKm, f) }
+  const f = ENDU_FACTOR[level]
+  return {
+    kind: 'session', type: base.type, title: base.title,
+    durationMin: Math.round(base.durationMin * f),
+    distanceKm: scaleKm(base.distanceKm, f),
+    elevationM: scaleM(base.elevationM, f),
+    intensity: base.intensity,
+  }
+}
+
+// `centerIsRest` = la recommandation du jour est le REPOS : les positions ≤ 2
+// valent repos, et on n'ajoute une séance qu'en poussant à droite (3 = base, 4 = renforcé).
+export function applySlider(base: SliderBase, pos: number, centerIsRest = false): SliderOutcome {
+  if (centerIsRest) {
+    if (pos <= 2) return { kind: 'rest' }
+    return scaleSession(base, pos === 3 ? 2 : 3)
+  }
+  if (pos <= 0) return { kind: 'rest' }
+  return scaleSession(base, pos)
 }

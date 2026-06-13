@@ -160,6 +160,7 @@ type Props =
       sessionType: string
       durationMin: number
       distanceKm?: number
+      elevationM?: number
       intensity: IntensityLevel
       whyText?: string | null
       targetLabel?: string | null   // ex : « Seuil · 158–168 bpm »
@@ -179,11 +180,13 @@ export function PlanHeroCard(props: Props) {
 
   // ── état : séance du jour (suggérée OU planifiée) ───────────────────────
   if (props.state === 'active') {
-    const { title, sessionType, durationMin, distanceKm, intensity, whyText, targetLabel, accentColor, onOpen, sliderPos, onSliderChange, onOpenLibrary } = props
+    const { title, sessionType, durationMin, distanceKm, elevationM, intensity, whyText, targetLabel, accentColor, onOpen, sliderPos, onSliderChange, onOpenLibrary } = props
     const intensityDots = '●'.repeat(intensity) + '○'.repeat(5 - intensity)
-    const durationLabel = distanceKm
-      ? `${formatDur(durationMin)} · ${distanceKm} km`
-      : formatDur(durationMin)
+    const durationLabel = [
+      formatDur(durationMin),
+      distanceKm ? `${distanceKm} km` : null,
+      elevationM ? `+${elevationM} m` : null,
+    ].filter(Boolean).join(' · ')
 
     return (
       <div
