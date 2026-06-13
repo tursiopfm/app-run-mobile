@@ -20,20 +20,26 @@ function percentile(sorted: number[], p: number): number | null {
   return sorted[idx]
 }
 
+// FC max physiologiquement plausible : écarte les artefacts capteur (ex. 251 bpm).
+const isPlausibleMaxHr = (v: number | null | undefined): v is number =>
+  v != null && v > 0 && v <= 230
+
 export function deduceFromActivities(
   activities: ActivityForDeduce[],
   athleteData: StravaAthleteData,
+  restingHrFromHistory: number | null = null,
 ): DeducedHrValues {
   const maxHrs = activities
     .map(a => a.max_hr)
-    .filter((v): v is number => v != null && v > 0)
+    .filter(isPlausibleMaxHr)
 
   const maxHrObserved = maxHrs.length > 0 ? Math.max(...maxHrs) : null
 
-  const restingHrEstimated = athleteData?.resting_heart_rate ?? null
+  // Champ Strava (rarement renseigné) en priorité, sinon déduit de l'historique.
+  const restingHrEstimated = athleteData?.resting_heart_rate ?? restingHrFromHistory ?? null
 
   const longRunsMaxHr = activities
-    .filter(a => a.moving_time_sec >= 1800 && a.max_hr != null && a.max_hr > 0)
+    .filter(a => a.moving_time_sec >= 1800 && isPlausibleMaxHr(a.max_hr))
     .map(a => a.max_hr as number)
     .sort((a, b) => a - b)
 

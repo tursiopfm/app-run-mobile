@@ -41,8 +41,11 @@ export function HrCalibrationCard({
   async function recomputeDeduced() {
     const res = await fetch('/api/activities/list-for-deduce')
     if (!res.ok) return
-    const acts: ActivityForDeduce[] = await res.json()
-    const next = deduceFromActivities(acts, athleteData)
+    const payload = await res.json() as {
+      activities: ActivityForDeduce[]
+      restingHrFromHistory: number | null
+    }
+    const next = deduceFromActivities(payload.activities, athleteData, payload.restingHrFromHistory)
     setDeduced(next)
     try { localStorage.setItem(DEDUCED_KEY, JSON.stringify(next)) } catch {}
   }

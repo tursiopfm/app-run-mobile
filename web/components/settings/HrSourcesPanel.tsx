@@ -58,7 +58,7 @@ export function HrSourcesPanel({
     { activeKey: 'aerobic_threshold_hr', label: L.hrSourceRowAerobic, value: profile.aerobic_threshold_hr, source: tagEntered,  date: methodUpdatedAt },
     { activeKey: 'threshold_hr',         label: L.hrSourceRowLthr,    value: profile.threshold_hr,         source: tagEntered,  date: methodUpdatedAt },
     { activeKey: 'deduced_max',          label: L.hrSourceRowMaxObs,  value: deduced.maxHrObserved,        source: tagStrava,   date: deduced.computedAt },
-    { activeKey: 'deduced_rest',         label: L.hrSourceRowRestEst, value: deduced.restingHrEstimated,   source: tagStrava,   date: deduced.computedAt },
+    { activeKey: 'deduced_rest',         label: L.hrSourceRowRestEst, value: deduced.restingHrEstimated,   source: tagComputed, date: deduced.computedAt },
     { activeKey: 'deduced_lthr',         label: L.hrSourceRowLthrEst, value: deduced.lthrEstimated,        source: tagComputed, date: deduced.computedAt },
     { activeKey: 'estimated_max',        label: L.hrSourceRowMaxEst,  value: estimatedAge,                 source: tagAge,      date: null },
   ]

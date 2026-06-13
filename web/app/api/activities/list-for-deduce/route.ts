@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/database/supabase-server'
+import { unpackStreams } from '@/lib/providers/strava/streams'
+import { estimateRestingHrFromHrStreams } from '@/lib/health/resting-hr'
 
 export async function GET() {
   const supabase = await createClient()
@@ -18,5 +20,23 @@ export async function GET() {
     .limit(2000)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data ?? [])
+
+  // FC repos déduite de l'historique : bas de la distribution HR des streams récents.
+  const { data: streamRows } = await supabase
+    .from('activity_streams')
+    .select('streams_gz')
+    .eq('user_id', user.id)
+    .order('fetched_at', { ascending: false })
+    .limit(60)
+
+  const hrStreams = (streamRows ?? []).map((r) => {
+    try {
+      return unpackStreams(String((r as { streams_gz: string }).streams_gz)).heartrate ?? []
+    } catch {
+      return []
+    }
+  })
+  const restingHrFromHistory = estimateRestingHrFromHrStreams(hrStreams)
+
+  return NextResponse.json({ activities: data ?? [], restingHrFromHistory })
 }

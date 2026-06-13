@@ -150,7 +150,7 @@ describe('computeZoneTimesFromStream', () => {
 })
 
 describe('méthode deduced', () => {
-  it('utilise les valeurs déduites pour calculer les zones (Karvonen-like)', () => {
+  it('utilise la FC repos déduite → réserve FC (Karvonen)', () => {
     const result = calculateHrZones({
       method: 'deduced',
       maxHr: 192,
@@ -161,10 +161,25 @@ describe('méthode deduced', () => {
     expect(result.maxHrUsed).toBe(192)
   })
 
-  it('signale les valeurs manquantes', () => {
+  it('sans FC repos mais avec LTHR déduite → ancrage LTHR', () => {
+    // max 199, lthr 162 → maxes [138,144,152,160,199]
+    const result = calculateHrZones({ method: 'deduced', maxHr: 199, thresholdHr: 162 })
+    expect(result.zones.length).toBe(5)
+    expect(result.zones[0].max).toBe(138)
+    expect(result.zones[4].max).toBe(199)
+    expect(result.missing).toHaveLength(0)
+  })
+
+  it('avec seulement la FC max → repli % FC max', () => {
+    const result = calculateHrZones({ method: 'deduced', maxHr: 199 })
+    expect(result.zones.length).toBe(5)
+    expect(result.zones[4].max).toBe(199)
+    expect(result.missing).toHaveLength(0)
+  })
+
+  it('signale uniquement la FC max manquante quand rien n\'est déduit', () => {
     const result = calculateHrZones({ method: 'deduced' })
     expect(result.zones.length).toBe(0)
     expect(result.missing).toContain('FC max observée')
-    expect(result.missing).toContain('FC repos estimée')
   })
 })

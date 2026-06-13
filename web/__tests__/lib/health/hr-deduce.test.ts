@@ -20,12 +20,22 @@ describe('deduceFromActivities', () => {
     expect(result.maxHrObserved).toBe(185)
   })
 
-  it('utilise restingHr depuis athlete_data si présent', () => {
-    const result = deduceFromActivities([mkAct(180)], { resting_heart_rate: 52 })
+  it('ignore les max_hr artefactuels (> 230)', () => {
+    const result = deduceFromActivities([mkAct(251), mkAct(199), mkAct(185)], null)
+    expect(result.maxHrObserved).toBe(199)
+  })
+
+  it('utilise restingHr depuis athlete_data si présent (prioritaire)', () => {
+    const result = deduceFromActivities([mkAct(180)], { resting_heart_rate: 52 }, 64)
     expect(result.restingHrEstimated).toBe(52)
   })
 
-  it('retourne null pour restingHr si athlete_data ne le contient pas', () => {
+  it('utilise la FC repos déduite de l\'historique si Strava ne la fournit pas', () => {
+    const result = deduceFromActivities([mkAct(180)], {}, 64)
+    expect(result.restingHrEstimated).toBe(64)
+  })
+
+  it('retourne null pour restingHr si ni Strava ni historique ne la fournit', () => {
     const result = deduceFromActivities([mkAct(180)], {})
     expect(result.restingHrEstimated).toBeNull()
   })

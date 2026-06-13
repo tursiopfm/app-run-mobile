@@ -111,11 +111,24 @@ export function calculateHrZones(params: {
       return { zones: makeZones(pctRanges(maxes)), method, confidence: 'Approximative', maxHrUsed: estMax, missing }
     }
     case 'deduced': {
-      const max  = need(maxHr, 'FC max observée')
-      const rest = need(restingHr, 'FC repos estimée')
-      if (!max || !rest) return { zones: [], method, confidence: 'Adaptative', maxHrUsed: max ?? null, missing }
-      const reserve = max - rest
-      const maxes = [0.60, 0.70, 0.80, 0.90].map(p => Math.round(rest + p * reserve)).concat([max])
+      // FC max observée requise ; ensuite repli progressif selon ce que l'historique fournit.
+      const max = need(maxHr, 'FC max observée')
+      if (!max) return { zones: [], method, confidence: 'Adaptative', maxHrUsed: null, missing }
+      const rest = restingHr ?? null
+      const lthr = thresholdHr ?? null
+      // 1) FC repos déduite dispo → réserve FC (Karvonen)
+      if (rest) {
+        const reserve = max - rest
+        const maxes = [0.60, 0.70, 0.80, 0.90].map(p => Math.round(rest + p * reserve)).concat([max])
+        return { zones: makeZones(pctRanges(maxes)), method, confidence: 'Adaptative', maxHrUsed: max, missing }
+      }
+      // 2) sinon ancrage sur la LTHR déduite
+      if (lthr) {
+        const maxes = [0.85, 0.89, 0.94, 0.99].map(p => Math.round(lthr * p)).concat([max])
+        return { zones: makeZones(pctRanges(maxes)), method, confidence: 'Adaptative', maxHrUsed: max, missing }
+      }
+      // 3) sinon % FC max
+      const maxes = [0.72, 0.78, 0.85, 0.92].map(p => Math.round(max * p)).concat([max])
       return { zones: makeZones(pctRanges(maxes)), method, confidence: 'Adaptative', maxHrUsed: max, missing }
     }
     case 'custom': {
