@@ -15,7 +15,7 @@ const TYPE_CATEGORY: Record<string, SessionCategory> = {
   cotes: 'run', footing: 'run', runtaf: 'run',
   velo: 'bike', velotaf: 'bike', natation: 'swim', renfo: 'other', musculation: 'other',
 }
-function sessionCategory(type: string): SessionCategory { return TYPE_CATEGORY[type] ?? 'run' }
+export function sessionCategory(type: string): SessionCategory { return TYPE_CATEGORY[type] ?? 'run' }
 
 export type FeedEntry =
   | { date: string; isToday: boolean; kind: 'done'; category: SessionCategory; title: string; count: number; km: number; dPlus: number; durationSec: number; activityId: string; multiple: boolean }

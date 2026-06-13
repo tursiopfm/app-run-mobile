@@ -20,6 +20,34 @@ function fmtDurSec(sec: number): string {
   return h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m} min`
 }
 
+// Résumé graphique : silhouette stylisée de la séance (hauteurs 0..1) selon sa
+// nature — fractionné/côtes = pics, seuil/course = blocs soutenus, le reste =
+// plateau régulier. Donne d'un coup d'œil le « caractère » de la séance.
+function profileShape(sessionType: string): number[] {
+  const INTERVAL = new Set(['fractionne', 'cotes'])
+  const THRESHOLD = new Set(['seuil_tempo', 'course'])
+  if (INTERVAL.has(sessionType)) return [0.2, 0.3, 0.95, 0.3, 0.95, 0.3, 0.95, 0.3, 0.9, 0.25, 0.2]
+  if (THRESHOLD.has(sessionType)) return [0.2, 0.4, 0.85, 0.85, 0.5, 0.85, 0.85, 0.5, 0.4, 0.2]
+  return [0.25, 0.45, 0.6, 0.62, 0.6, 0.62, 0.6, 0.58, 0.45, 0.25] // plateau régulier
+}
+
+// Construit le path SVG d'aire à partir de la silhouette (viewBox 100×24).
+function profilePath(shape: number[]): string {
+  const w = 100, h = 24, pad = 2
+  const step = w / (shape.length - 1)
+  const pts = shape.map((v, i) => `${(i * step).toFixed(1)},${(h - pad - v * (h - pad * 2)).toFixed(1)}`)
+  return `M0,${h} L${pts.join(' L')} L${w},${h} Z`
+}
+
+function SessionProfile({ sessionType, color }: { sessionType: string; color: string }) {
+  const d = profilePath(profileShape(sessionType))
+  return (
+    <svg viewBox="0 0 100 24" preserveAspectRatio="none" className="w-full h-[22px]" aria-hidden>
+      <path d={d} fill={`${color}22`} stroke={color} strokeWidth="1.2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+    </svg>
+  )
+}
+
 // ─── types ───────────────────────────────────────────────────────────────────
 
 // `active` couvre AUSSI bien une séance suggérée par le moteur qu'une séance
@@ -29,11 +57,13 @@ type Props =
   | {
       state: 'active'
       title: string
+      sessionType: string
       durationMin: number
       distanceKm?: number
       intensity: IntensityLevel
       whyText?: string | null
       accentColor: string
+      onOpen: () => void
       onDone: () => void
       onMove: () => void
       onOther: () => void
@@ -48,7 +78,7 @@ export function PlanHeroCard(props: Props) {
 
   // ── état : séance du jour (suggérée OU planifiée) ───────────────────────
   if (props.state === 'active') {
-    const { title, durationMin, distanceKm, intensity, whyText, accentColor, onDone, onMove, onOther } = props
+    const { title, sessionType, durationMin, distanceKm, intensity, whyText, accentColor, onOpen, onDone, onMove, onOther } = props
     const intensityDots = '●'.repeat(intensity) + '○'.repeat(5 - intensity)
     const durationLabel = distanceKm
       ? `${formatDur(durationMin)} · ${distanceKm} km`
@@ -78,26 +108,32 @@ export function PlanHeroCard(props: Props) {
           </span>
         </div>
 
-        {/* titre de la séance */}
-        <p className="font-display text-[30px] font-bold leading-none text-trail-text">
-          {title}
-        </p>
+        {/* résumé graphique : silhouette de la séance */}
+        <SessionProfile sessionType={sessionType} color={accentColor} />
 
-        {/* pills durée + intensité */}
-        <div className="flex items-center gap-2 mt-3">
-          <span
-            className="text-[12px] font-bold px-2.5 py-1 rounded-full"
-            style={{ background: 'var(--primary)', color: 'var(--ink-900)' }}
-          >
-            {durationLabel}
-          </span>
-          <span
-            className="text-[12px] font-semibold px-2.5 py-1 rounded-full"
-            style={{ background: 'var(--ink-600)', color: 'var(--text-secondary)' }}
-          >
-            {intensityDots}
-          </span>
-        </div>
+        {/* titre + pills = zone cliquable pour accéder au détail de la séance */}
+        <button type="button" onClick={onOpen} className="w-full text-left mt-2" aria-label={title}>
+          <p className="font-display text-[30px] font-bold leading-none text-trail-text">
+            {title}
+          </p>
+          <div className="flex items-center gap-2 mt-3">
+            <span
+              className="text-[12px] font-bold px-2.5 py-1 rounded-full"
+              style={{ background: 'var(--primary)', color: 'var(--ink-900)' }}
+            >
+              {durationLabel}
+            </span>
+            <span
+              className="text-[12px] font-semibold px-2.5 py-1 rounded-full"
+              style={{ background: 'var(--ink-600)', color: 'var(--text-secondary)' }}
+            >
+              {intensityDots}
+            </span>
+            <span className="text-[15px] font-bold ml-auto leading-none" style={{ color: 'var(--primary-text)' }} aria-hidden>
+              ›
+            </span>
+          </div>
+        </button>
 
         {/* boîte « pourquoi » — uniquement pour une séance suggérée (whyText) */}
         {whyText && (

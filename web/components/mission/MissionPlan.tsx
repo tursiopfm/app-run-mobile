@@ -19,7 +19,8 @@ import {
   pickActiveMacrocycle, savePlannedSession,
 } from '@/lib/plan/storage'
 import { adviseWeek } from '@/lib/mission/session-advisor'
-import { buildWeekFeed } from '@/lib/mission/week-feed'
+import { buildWeekFeed, sessionCategory } from '@/lib/mission/week-feed'
+import { activityCategory } from '@/lib/plan/session-matching'
 import { weeklyVolumes, habitualWeekly } from '@/lib/mission/rhythm'
 import { resolveMissionWeeklyTarget } from '@/lib/mission/weekly-target'
 import { computePhaseSegments, weekOfPlan } from '@/lib/mission/prepa'
@@ -40,6 +41,8 @@ const DAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const CAT_COLOR: Record<string, string> = {
   run: 'var(--primary)', bike: 'var(--data-bike)', swim: 'var(--data-swim)', other: 'var(--ink-500)',
 }
+// « Ma semaine » ne montre que les séances course / vélo / natation.
+const DISCIPLINES = new Set(['run', 'bike', 'swim'])
 const TYPE_ACCENT: Record<string, string> = {
   velo: 'var(--data-bike)', velotaf: 'var(--data-bike)', natation: 'var(--data-swim)',
 }
@@ -122,18 +125,25 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const weekDates = useMemo(() => Array.from({ length: 7 }, (_, i) => isoOfWeekDay(i)), [])
 
-  // Activités réalisées de la semaine courante (filtre des 28 jours reçus).
+  // Activités réalisées de la semaine courante (filtre des 28 jours reçus),
+  // restreintes aux disciplines course/vélo/natation (cf. DISCIPLINES).
   const weekActivities = useMemo(
     () => recentActivities.filter(a => {
       const d = a.start_time.slice(0, 10)
       return d >= weekDates[0] && d <= weekDates[6]
+        && DISCIPLINES.has(activityCategory(a.manual_sport_type ?? a.sport_type))
     }),
     [recentActivities, weekDates],
+  )
+  // Séances planifiées de la semaine, restreintes aux mêmes disciplines.
+  const weekPlanned = useMemo(
+    () => planned.filter(s => DISCIPLINES.has(sessionCategory(s.type))),
+    [planned],
   )
 
   const advice = useMemo(() => {
     const weekDoneKm = weekActivities.reduce((s, a) => s + actKm(a), 0)
-    const recentHardCount = planned.filter(s => s.status === 'completed' && s.intensity >= 4).length
+    const recentHardCount = weekPlanned.filter(s => s.status === 'completed' && s.intensity >= 4).length
     const freshnessZone = freshnessPayload ? computeFreshness(freshnessPayload.dailyMetrics).zone : null
     const planTarget = resolveMissionWeeklyTarget(macros, today)
     const targetKm = planTarget?.km ?? (habitualWeekly(recentActivities, today).km || null)
@@ -142,18 +152,18 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
     return adviseWeek({
       todayISO: today, weekDates, freshnessZone, weekDoneKm, recentHardCount,
       targetKm, phaseType, daysToRace: race ? daysUntil(race.date) : null,
-      plannedDates: planned.map(s => s.date),
+      plannedDates: weekPlanned.map(s => s.date),
     })
-  }, [weekActivities, planned, freshnessPayload, macros, plan, race, today, weekDates, recentActivities])
+  }, [weekActivities, weekPlanned, freshnessPayload, macros, plan, race, today, weekDates, recentActivities])
 
   const feed = useMemo(
-    () => buildWeekFeed({ weekDates, todayISO: today, activities: weekActivities, planned, advice }),
-    [weekDates, today, weekActivities, planned, advice],
+    () => buildWeekFeed({ weekDates, todayISO: today, activities: weekActivities, planned: weekPlanned, advice }),
+    [weekDates, today, weekActivities, weekPlanned, advice],
   )
 
   // ─── Handlers héros ──────────────────────────────────────────────────────
   const handleHeroDone = useCallback(async () => {
-    const todays = planned.find(s => s.date === today)
+    const todays = weekPlanned.find(s => s.date === today)
     if (todays) {
       await savePlannedSession({ ...todays, status: 'completed' })
     } else {
@@ -170,7 +180,7 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
       })
     }
     bumpReload()
-  }, [planned, today, advice, M, bumpReload])
+  }, [weekPlanned, today, advice, M, bumpReload])
 
   function openAdd(date: string) { setAddDate(date); setAddOpen(true) }
 
@@ -181,7 +191,7 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
   // « Décaler » : ouvre l'éditeur sur la séance (planifiée, ou créée à la volée
   // depuis la suggestion) pour que l'athlète change le jour avant d'enregistrer.
   function handleHeroMove() {
-    const todays = planned.find(s => s.date === today)
+    const todays = weekPlanned.find(s => s.date === today)
     if (todays) { openEditSession(todays); return }
     const s = advice.today.kind === 'suggested' ? advice.today.session : null
     if (!s) { openAdd(today); return }
@@ -218,19 +228,19 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
     const s = todayEntry.session
     hero = (
       <PlanHeroCard
-        state="active" title={s.title} durationMin={s.duration} distanceKm={s.distance}
+        state="active" title={s.title} sessionType={s.type} durationMin={s.duration} distanceKm={s.distance}
         intensity={s.intensity} whyText={null} accentColor={accentForType(s.type)}
-        onDone={handleHeroDone} onMove={handleHeroMove} onOther={() => openAdd(today)}
+        onOpen={handleHeroMove} onDone={handleHeroDone} onMove={handleHeroMove} onOther={() => openAdd(today)}
       />
     )
   } else if (todayEntry?.kind === 'suggested') {
     const s = todayEntry.session
     hero = (
       <PlanHeroCard
-        state="active" title={M.sessionTitles[s.titleKey] ?? s.titleKey} durationMin={s.durationMin}
+        state="active" title={M.sessionTitles[s.titleKey] ?? s.titleKey} sessionType={s.type} durationMin={s.durationMin}
         distanceKm={s.distanceKm} intensity={s.intensity} whyText={M.reasonWhy[s.reasonCode]}
         accentColor={accentForType(s.type)}
-        onDone={handleHeroDone} onMove={handleHeroMove} onOther={() => openAdd(today)}
+        onOpen={handleHeroMove} onDone={handleHeroDone} onMove={handleHeroMove} onOther={() => openAdd(today)}
       />
     )
   } else {
