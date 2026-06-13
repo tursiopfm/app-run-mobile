@@ -122,6 +122,28 @@ export type Dict = {
     goalsProjectionNote: string; goalsDefine: string
     projArrow: (ytd: string, proj: string) => string
     volumeDetailTitle: string
+    // Plan v2 (Mode Mission)
+    heroNextTitle: string
+    heroTodayBadge: string
+    heroDoneTitle: string
+    heroRestTitle: string
+    heroRestName: string
+    heroWhyTitle: string
+    heroActionDone: string
+    heroActionMove: string
+    heroActionOther: string
+    weekFeedTitle: string
+    weekFeedSubtitle: string
+    weekAddSession: string
+    rythmeTitle: string
+    rythmeAvg: (km: number) => string
+    rythmeHint: string
+    rythmeCta: string
+    coachSoon: string
+    coachRefine: string
+    sessionTitles: Record<string, string>
+    reasonChips: Record<string, string>
+    reasonWhy: Record<string, string>
   }
   charge: {
     weeklyTitle: string; fatigueFitnessTitle: string; freshnessTitle: string; intensityTitle: string
@@ -1358,6 +1380,51 @@ export const fr: Dict = {
     prepaWeekOf: (w: number, total: number) => `Semaine ${w} / ${total}`,
     prepaSessions: (done: number, total: number) => `${done} séances faites sur ${total}`,
     coachButton: '✨ Ajuster mon plan', coachBadge: 'Coach IA',
+    // Plan v2 (Mode Mission) — aucun jargon « TSB » côté athlète.
+    heroNextTitle: 'Ta prochaine séance',
+    heroTodayBadge: 'Aujourd’hui',
+    heroDoneTitle: 'Séance du jour · faite ✓',
+    heroRestTitle: 'Aujourd’hui · repos',
+    heroRestName: 'Récupération',
+    heroWhyTitle: 'Pourquoi cette séance',
+    heroActionDone: 'Je l’ai faite',
+    heroActionMove: 'Décaler',
+    heroActionOther: 'Autre',
+    weekFeedTitle: 'Ma semaine',
+    weekFeedSubtitle: 'réalisé + suggéré',
+    weekAddSession: '＋ Ajouter une séance',
+    rythmeTitle: 'Ton rythme · 4 dernières semaines',
+    rythmeAvg: (km: number) => `≈ ${km} km/sem sur 1 mois.`,
+    rythmeHint: 'Continue sur ce rythme — ou fixe un objectif pour structurer ta prépa.',
+    rythmeCta: '🎯 Choisir une course objectif',
+    coachSoon: 'Bientôt',
+    coachRefine: '✨ Affiner avec le coach',
+    sessionTitles: {
+      sessionSeuil: 'Seuil 2×15′',
+      sessionTempoCourt: 'Tempo court',
+      sessionFooting: 'Footing souple',
+      sessionLong: 'Sortie longue',
+    },
+    reasonChips: {
+      'fresh-quality': 'qualité',
+      'fatigue-easy': 'easy',
+      'rest-recovery': 'récup',
+      'fill-volume-long': 'cible',
+      'fill-volume-easy': 'volume',
+      'taper-light': 'affûtage',
+      'maintain-rhythm': 'rythme',
+      'aerobic-base': 'aérobie',
+    },
+    reasonWhy: {
+      'fresh-quality': 'Fraîcheur OK — fatigue normale, place à de la qualité.',
+      'fatigue-easy': 'Fatigue présente — on reste facile aujourd’hui.',
+      'rest-recovery': 'Récupération : ça consolide les gains de la semaine.',
+      'fill-volume-long': 'Sortie longue pour caler ta cible de la semaine.',
+      'fill-volume-easy': 'Footing pour compléter le volume sans se cramer.',
+      'taper-light': 'Affûtage : on allège pour arriver frais le jour J.',
+      'maintain-rhythm': 'On entretient ton rythme habituel.',
+      'aerobic-base': 'Travail aérobie : la base de la performance en endurance.',
+    },
     lastActivityTitle: 'Dernière sortie', monthTitle: 'Ce mois-ci',
     allHistory: 'Tout mon historique →',
     volumeLabel: 'Volume', dplusLabel: 'Dénivelé', sessionsLabel: 'Sorties',
