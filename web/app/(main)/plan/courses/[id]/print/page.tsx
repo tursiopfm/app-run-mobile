@@ -14,7 +14,9 @@ import {
 } from '@/lib/plan/print-columns'
 import { PrintColumnsDialog } from '@/components/plan/PrintColumnsDialog'
 import { toJpeg } from 'html-to-image'
-import { FileText, Image as ImageIcon, Share2, Settings2 } from 'lucide-react'
+import { FileText, Image as ImageIcon, Share2, Settings2, Ruler } from 'lucide-react'
+import { loadPrintSize, savePrintSize, PRINT_SIZE_DEFS, DEFAULT_PRINT_SIZE, type PrintSize } from '@/lib/plan/print-size'
+import { PrintSizeDialog } from '@/components/plan/PrintSizeDialog'
 
 const fmt = (n: number) => String(n).replace('.', ',')
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -38,8 +40,11 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
   const [ready, setReady] = useState(false)
   const [cfg, setCfg] = useState<PrintColConfig>(DEFAULT_PRINT_CONFIG)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [size, setSize] = useState<PrintSize>(DEFAULT_PRINT_SIZE)
+  const [sizeDialogOpen, setSizeDialogOpen] = useState(false)
 
   useEffect(() => { setCfg(loadPrintColConfig()) }, [])
+  useEffect(() => { setSize(loadPrintSize()) }, [])
 
   useEffect(() => {
     void (async () => {
@@ -55,6 +60,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
   // « Imprimer / PDF » quand il est prêt.
 
   const updateCfg = (next: PrintColConfig) => { setCfg(next); savePrintColConfig(next) }
+  const updateSize = (next: PrintSize) => { setSize(next); savePrintSize(next) }
 
   const cardRef = useRef<HTMLDivElement>(null)
   const jpegBtnRef = useRef<HTMLButtonElement>(null)
@@ -240,6 +246,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .toolbar{display:flex;flex-direction:column;gap:8px;color:var(--trail-text);font-size:13px;margin-bottom:8px;width:120mm;max-width:100%;}
         .pdfroot .toolbar .ttl{font-family:var(--d);font-weight:600;font-size:14px;}
         .pdfroot .toolbar .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+        .pdfroot .toolbar .actions2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
         .pdfroot .btn{font-family:var(--d);font-weight:600;font-size:13px;padding:10px 8px;border-radius:10px;border:0;background:var(--trail-primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
         /* Liseré sur le bouton ciblé par ?export= (focus) — contrasté sur les 2 thèmes. */
         .pdfroot .btn:focus{outline:2px solid var(--trail-text);outline-offset:2px;}
@@ -311,7 +318,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .zoomview{width:calc(65mm * var(--zoom,1));height:calc(120mm * var(--zoom,1));margin:0 auto;}
         .pdfroot .zoomview .cardwrap{transform:scale(var(--zoom,1));transform-origin:top left;}
 
-        @page{size:A4 portrait;margin:8mm;}
+        @page{${PRINT_SIZE_DEFS[size].pageRule}}
         @media print{
           /* UNE page : on annule les min-height de la coquille app (2× min-h-screen,
              sidebar, bottom-nav) qui forceraient une 2e page même en visibility:hidden. */
@@ -327,7 +334,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           .pdfroot .zoomview .cardwrap{transform:none !important;}
           .pdfroot .cut{border:none;background:none;padding:0;margin:0;width:auto;}
           .pdfroot .cardwrap{position:static !important;width:auto !important;height:auto !important;}
-          .pdfroot .card{position:static !important;transform:none !important;top:auto;left:auto;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
+          .pdfroot .card{position:static !important;transform:scale(${PRINT_SIZE_DEFS[size].scale}) !important;transform-origin:top center !important;top:auto;left:auto;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
           .pdfroot tbody tr:nth-child(even){background:var(--zebra) !important;}
           .pdfroot tr.is-base td{background:#D5E3DD !important;}
           *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -341,9 +348,12 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           <button className="btn" ref={jpegBtnRef} onClick={() => void exportJpeg()} disabled={busy}><ImageIcon size={16} /> Image</button>
           <button className="btn" ref={shareBtnRef} onClick={() => void shareJpeg()} disabled={busy}><Share2 size={16} /> Partager</button>
         </div>
-        <button className="btn ghost" onClick={() => setDialogOpen(true)}><Settings2 size={16} /> Personnaliser les colonnes</button>
+        <div className="actions2">
+          <button className="btn ghost" onClick={() => setDialogOpen(true)}><Settings2 size={16} /> Colonnes</button>
+          <button className="btn ghost" onClick={() => setSizeDialogOpen(true)}><Ruler size={16} /> Taille</button>
+        </div>
       </div>
-      <p className="caption">{"Les colonnes choisies s'appliquent aux trois formats (PDF, image, partage). Pince à deux doigts pour zoomer l'aperçu. À l'impression : carte à l'horizontale, en haut de la feuille A4. Découpe, plastifie — tient dans une poche de veste."}</p>
+      <p className="caption">{"Les colonnes choisies s'appliquent aux trois formats (PDF, image, partage) ; la taille ne change que le PDF. Pince à deux doigts pour zoomer l'aperçu. À l'impression : carte à l'horizontale, calée en haut de la feuille. Découpe, plastifie."}</p>
 
       <div className="previewscroll" ref={previewRef}>
       <div className="cut">
@@ -413,6 +423,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
       </div>
 
       <PrintColumnsDialog open={dialogOpen} config={cfg} onChange={updateCfg} onClose={() => setDialogOpen(false)} />
+      <PrintSizeDialog open={sizeDialogOpen} value={size} onChange={updateSize} onClose={() => setSizeDialogOpen(false)} />
     </div>
   )
 }
