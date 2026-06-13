@@ -130,7 +130,9 @@ export function RaceImportSheet({ raceId, race, autoSearch, open, onClose, onSav
       const d = body.data as ExtractedRaceData
       setDraft(d.waypoints)
       setDetected({
-        editionYear: d.editionYear,
+        // Pas d'année détectée (ex. URL LiveTrail parcours.php sans /AAAA/ dans le path) →
+        // défaut sur l'année de la fiche, comme l'onglet Auto. Modifiable par l'utilisateur.
+        editionYear: d.editionYear ?? Number(race.date.slice(0, 4)),
         editionDate: d.editionDate,
         dateExplicit: d.dateExplicit,
         startDayOfMonth: d.startDayOfMonth,
