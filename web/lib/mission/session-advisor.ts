@@ -118,3 +118,40 @@ export function adviseWeek(ctx: AdviceContext): WeekAdvice {
   }
   return { today: byDate[ctx.todayISO] ?? { kind: 'rest', reasonCode: 'rest-recovery' }, byDate }
 }
+
+// ── Curseur « forme du jour » ───────────────────────────────────────────────
+// Ajuste la séance du jour autour de la recommandation (pos 2 = « Prévu »).
+// 0 Repos · 1 Allégé · 2 Prévu · 3 Renforcé · 4 Max. Type-aware : pour une séance
+// d'endurance on joue sur la DURÉE (rallonger/raccourcir) ; pour une séance de
+// qualité, « allégé » = footing facile, « renforcé/max » = plus de volume.
+export type SliderBase = {
+  type: SessionType; titleKey?: string; title?: string
+  durationMin: number; distanceKm?: number; intensity: IntensityLevel
+}
+export type SliderOutcome =
+  | { kind: 'rest' }
+  | { kind: 'session'; type: SessionType; titleKey?: string; title?: string; durationMin: number; distanceKm?: number; intensity: IntensityLevel }
+
+const scaleKm = (km: number | undefined, f: number): number | undefined => km != null ? Math.round(km * f) : undefined
+
+export function applySlider(base: SliderBase | null, pos: number): SliderOutcome {
+  if (pos <= 0) return { kind: 'rest' }
+  // Recommandation = repos : on ne propose une séance qu'en poussant à droite.
+  if (!base) {
+    if (pos <= 2) return { kind: 'rest' }
+    if (pos === 3) return { kind: 'session', type: 'footing', titleKey: 'sessionFooting', durationMin: 45, distanceKm: 8, intensity: 2 }
+    return { kind: 'session', type: 'footing', titleKey: 'sessionFooting', durationMin: 60, distanceKm: 11, intensity: 3 }
+  }
+  if (pos === 2) return { kind: 'session', ...base }
+  const isQuality = base.intensity >= 4
+  if (isQuality) {
+    if (pos === 1) {
+      return { kind: 'session', type: 'footing', titleKey: 'sessionFooting', durationMin: Math.round(base.durationMin * 0.7), distanceKm: scaleKm(base.distanceKm, 0.7), intensity: 2 }
+    }
+    const f = pos === 3 ? 1.15 : 1.3
+    return { kind: 'session', ...base, durationMin: Math.round(base.durationMin * f), distanceKm: scaleKm(base.distanceKm, f) }
+  }
+  // Endurance : on étire/raccourcit la durée (et la distance).
+  const f = pos === 1 ? 0.7 : pos === 3 ? 1.3 : 1.6
+  return { kind: 'session', ...base, durationMin: Math.round(base.durationMin * f), distanceKm: scaleKm(base.distanceKm, f) }
+}

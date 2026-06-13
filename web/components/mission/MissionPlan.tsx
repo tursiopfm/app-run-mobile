@@ -16,9 +16,9 @@ import { SessionEditorModal } from '@/components/plan/SessionEditorModal'
 import { RaceEditorModal } from '@/components/plan/RaceEditorModal'
 import {
   getAllMacrocycles, getMainRace, getPlannedSessions, isRaceMirrorSession,
-  pickActiveMacrocycle, savePlannedSession,
+  pickActiveMacrocycle,
 } from '@/lib/plan/storage'
-import { adviseWeek } from '@/lib/mission/session-advisor'
+import { adviseWeek, applySlider, type SliderBase, type SliderOutcome } from '@/lib/mission/session-advisor'
 import { buildWeekFeed, sessionCategory } from '@/lib/mission/week-feed'
 import { activityCategory } from '@/lib/plan/session-matching'
 import { weeklyVolumes, habitualWeekly } from '@/lib/mission/rhythm'
@@ -109,6 +109,19 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
   const [editorDate, setEditorDate] = useState(todayISO())
   const [createRaceOpen, setCreateRaceOpen] = useState(false)
 
+  // Curseur « forme du jour » (2 = Prévu). Persisté localStorage par date.
+  const [sliderPos, setSliderPosState] = useState(2)
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(`tc_form_slider_${todayISO()}`)
+      if (v != null) setSliderPosState(Number(v))
+    } catch { /* ignore */ }
+  }, [])
+  const setSliderPos = useCallback((p: number) => {
+    setSliderPosState(p)
+    try { localStorage.setItem(`tc_form_slider_${todayISO()}`, String(p)) } catch { /* ignore */ }
+  }, [])
+
   useEffect(() => {
     let cancelled = false
     void (async () => {
@@ -151,116 +164,96 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
     [planned],
   )
 
-  const advice = useMemo(() => {
+  // ── Contexte du moteur (indépendant du curseur) ──
+  const ctx = useMemo(() => {
     const weekDoneKm = weekActivities.reduce((s, a) => s + actKm(a), 0)
     const recentHardCount = weekPlanned.filter(s => s.status === 'completed' && s.intensity >= 4).length
     const freshnessZone = freshnessPayload ? computeFreshness(freshnessPayload.dailyMetrics).zone : null
     const planTarget = resolveMissionWeeklyTarget(macros, today)
     const targetKm = planTarget?.km ?? (habitualWeekly(recentActivities, today).km || null)
-    // Type stable de la phase active (enum), pas le libellé d'affichage.
     const phaseType = plan?.phases.find(p => p.startDate <= today && today <= p.endDate)?.type ?? null
-    // Séances planifiées encore à venir (non réalisées) : leur volume compte
-    // déjà pour la cible, et on n'ajoute pas une 2e sortie longue si une est prévue.
-    const futurePlanned = weekPlanned.filter(s => s.date >= today && s.status !== 'completed')
-    const plannedRemainingKm = futurePlanned.reduce((sum, s) => sum + (s.distance ?? 0), 0)
-    const hasPlannedLongRun = futurePlanned.some(s => s.type === 'sortie_longue' || s.type === 'course')
-    return adviseWeek({
-      todayISO: today, weekDates, freshnessZone, weekDoneKm, recentHardCount,
-      targetKm, phaseType, daysToRace: race ? daysUntil(race.date) : null,
-      plannedDates: weekPlanned.map(s => s.date), plannedRemainingKm, hasPlannedLongRun,
-    })
+    return { todayISO: today, weekDates, freshnessZone, weekDoneKm, recentHardCount, targetKm, phaseType, daysToRace: race ? daysUntil(race.date) : null }
   }, [weekActivities, weekPlanned, freshnessPayload, macros, plan, race, today, weekDates, recentActivities])
 
-  const feed = useMemo(
-    () => buildWeekFeed({ weekDates, todayISO: today, activities: weekActivities, planned: weekPlanned, advice }),
-    [weekDates, today, weekActivities, weekPlanned, advice],
-  )
-
-  // ─── Handlers héros ──────────────────────────────────────────────────────
-  const handleHeroDone = useCallback(async () => {
-    const todays = weekPlanned.find(s => s.date === today)
-    if (todays) {
-      await savePlannedSession({ ...todays, status: 'completed' })
-    } else {
-      const s = advice.today.kind === 'suggested' ? advice.today.session : null
-      const duration = s?.durationMin ?? 45
-      const intensity = s?.intensity ?? 2
-      await savePlannedSession({
-        id: makeId(), planId: '', date: today,
-        type: s?.type ?? 'footing',
-        title: s ? (M.sessionTitles[s.titleKey] ?? s.titleKey) : M.heroRestName,
-        duration, distance: s?.distanceKm, intensity,
-        estimatedCharge: estimateCharge(duration, intensity, undefined),
-        status: 'completed',
-      })
+  // Inputs « planifié » dérivés d'une liste (réutilisé avec/sans la séance du curseur).
+  const plannedInputs = (list: PlannedSession[]) => {
+    const future = list.filter(s => s.date >= today && s.status !== 'completed')
+    return {
+      plannedDates: list.map(s => s.date),
+      plannedRemainingKm: future.reduce((sum, s) => sum + (s.distance ?? 0), 0),
+      hasPlannedLongRun: future.some(s => s.type === 'sortie_longue' || s.type === 'course'),
     }
-    bumpReload()
-  }, [weekPlanned, today, advice, M, bumpReload])
-
-  function openAdd(date: string) { setAddDate(date); setAddOpen(true) }
-
-  function openEditSession(s: PlannedSession) {
-    setEditorSession(s); setEditorPrefill(null); setEditorDate(s.date); setEditorOpen(true)
   }
 
-  // « Décaler » : ouvre l'éditeur sur la séance (planifiée, ou créée à la volée
-  // depuis la suggestion) pour que l'athlète change le jour avant d'enregistrer.
-  function handleHeroMove() {
-    const todays = weekPlanned.find(s => s.date === today)
-    if (todays) { openEditSession(todays); return }
-    const s = advice.today.kind === 'suggested' ? advice.today.session : null
-    if (!s) { openAdd(today); return }
+  // Recommandation du jour (curseur au centre = « Prévu »).
+  const rec = adviseWeek({ ...ctx, ...plannedInputs(weekPlanned) }).today
+  const todayPlanned = weekPlanned.find(s => s.date === today && s.status !== 'completed') ?? null
+  const sliderBase: SliderBase | null = todayPlanned
+    ? { type: todayPlanned.type, title: todayPlanned.title, durationMin: todayPlanned.duration, distanceKm: todayPlanned.distance, intensity: todayPlanned.intensity }
+    : rec.kind === 'suggested'
+      ? { type: rec.session.type, titleKey: rec.session.titleKey, durationMin: rec.session.durationMin, distanceKm: rec.session.distanceKm, intensity: rec.session.intensity }
+      : null
+  const outcome = applySlider(sliderBase, sliderPos)
+
+  const outcomeTitle = (o: Extract<SliderOutcome, { kind: 'session' }>): string =>
+    o.title ?? (o.titleKey ? (M.sessionTitles[o.titleKey] ?? o.titleKey) : o.type)
+  const outcomeToPlanned = (o: SliderOutcome): PlannedSession | null => {
+    if (o.kind !== 'session') return null
+    return { id: 'slider-today', planId: '', date: today, type: o.type, title: outcomeTitle(o), duration: o.durationMin, distance: o.distanceKm, intensity: o.intensity, estimatedCharge: estimateCharge(o.durationMin, o.intensity, undefined), status: 'planned' }
+  }
+
+  // Réadaptation : la séance choisie au curseur devient une séance « planifiée »
+  // virtuelle du jour → le moteur recalcule le reste de la semaine en conséquence.
+  const todayDone = weekActivities.some(a => a.start_time.slice(0, 10) === today)
+  const virtualToday = (!todayDone && outcome.kind === 'session') ? outcomeToPlanned(outcome) : null
+  const effectivePlanned = todayDone
+    ? weekPlanned
+    : [...weekPlanned.filter(s => s.date !== today), ...(virtualToday ? [virtualToday] : [])]
+  const finalAdvice = adviseWeek({ ...ctx, ...plannedInputs(effectivePlanned) })
+  const feed = buildWeekFeed({ weekDates, todayISO: today, activities: weekActivities, planned: effectivePlanned, advice: finalAdvice })
+
+  // ─── Actions ──────────────────────────────────────────────────────────────
+  function openAdd(date: string) { setAddDate(date); setAddOpen(true) }
+  function openEditSession(s: PlannedSession) { setEditorSession(s); setEditorPrefill(null); setEditorDate(s.date); setEditorOpen(true) }
+  // Clic sur le titre → ouvre l'éditeur sur la séance du jour (planifiée ou issue du curseur).
+  function openTodayEditor() {
+    if (todayPlanned) { openEditSession(todayPlanned); return }
+    if (outcome.kind !== 'session') { openAdd(today); return }
     setEditorSession({
-      id: makeId(), planId: '', date: today, type: s.type,
-      title: M.sessionTitles[s.titleKey] ?? s.titleKey,
-      duration: s.durationMin, distance: s.distanceKm, intensity: s.intensity,
-      estimatedCharge: estimateCharge(s.durationMin, s.intensity, undefined),
-      status: 'planned',
+      id: makeId(), planId: '', date: today, type: outcome.type, title: outcomeTitle(outcome),
+      duration: outcome.durationMin, distance: outcome.distanceKm, intensity: outcome.intensity,
+      estimatedCharge: estimateCharge(outcome.durationMin, outcome.intensity, undefined), status: 'planned',
     })
     setEditorPrefill(null); setEditorDate(today); setEditorOpen(true)
   }
-
-  function handlePickTemplate(t: SessionTemplate) {
-    setAddOpen(false); setEditorSession(null); setEditorPrefill(t); setEditorDate(addDate); setEditorOpen(true)
-  }
-  function handleCreateBlank() {
-    setAddOpen(false); setEditorSession(null); setEditorPrefill(null); setEditorDate(addDate); setEditorOpen(true)
-  }
-
-  // Création de course IN-PLACE (le fond reste le Plan Mission) ; au save on
-  // rafraîchit → la course apparaît en Destination, sans bascule vers l'expert.
+  function handlePickTemplate(t: SessionTemplate) { setAddOpen(false); setEditorSession(null); setEditorPrefill(t); setEditorDate(addDate); setEditorOpen(true) }
+  function handleCreateBlank() { setAddOpen(false); setEditorSession(null); setEditorPrefill(null); setEditorDate(addDate); setEditorOpen(true) }
   const goToCreateRace = () => setCreateRaceOpen(true)
 
   if (!loaded) return null
 
-  // ─── Héros ─────────────────────────────────────────────────────────────────
-  const todayEntry = feed.find(f => f.date === today)
-  let hero: ReactNode = null
-  if (todayEntry?.kind === 'done') {
-    const heroTitle = todayEntry.multiple ? M.weekMultiSessions(todayEntry.count) : todayEntry.title
-    hero = <PlanHeroCard state="done" title={heroTitle} km={todayEntry.km} dPlus={todayEntry.dPlus} durationSec={todayEntry.durationSec} />
-  } else if (todayEntry?.kind === 'planned') {
-    const s = todayEntry.session
+  // ─── Héros (piloté par le curseur, ou « faite » si l'activité du jour est là) ──
+  const atDefault = sliderPos === 2
+  const doneEntry = feed.find(f => f.date === today)
+  let hero: ReactNode
+  if (todayDone && doneEntry?.kind === 'done') {
+    const t = doneEntry.multiple ? M.weekMultiSessions(doneEntry.count) : doneEntry.title
+    hero = <PlanHeroCard state="done" title={t} km={doneEntry.km} dPlus={doneEntry.dPlus} durationSec={doneEntry.durationSec} />
+  } else if (outcome.kind === 'session') {
+    const whyText = atDefault
+      ? (todayPlanned ? null : (rec.kind === 'suggested' ? M.reasonWhy[rec.session.reasonCode] : null))
+      : M.heroSliderAdjusted
     hero = (
       <PlanHeroCard
-        state="active" title={s.title} sessionType={s.type} durationMin={s.duration} distanceKm={s.distance}
-        intensity={s.intensity} whyText={null} targetLabel={hrTargetLabel(s.intensity)} accentColor={accentForType(s.type)}
-        onOpen={handleHeroMove} onDone={handleHeroDone} onMove={handleHeroMove} onOther={() => openAdd(today)}
-      />
-    )
-  } else if (todayEntry?.kind === 'suggested') {
-    const s = todayEntry.session
-    hero = (
-      <PlanHeroCard
-        state="active" title={M.sessionTitles[s.titleKey] ?? s.titleKey} sessionType={s.type} durationMin={s.durationMin}
-        distanceKm={s.distanceKm} intensity={s.intensity} whyText={M.reasonWhy[s.reasonCode]}
-        targetLabel={hrTargetLabel(s.intensity)} accentColor={accentForType(s.type)}
-        onOpen={handleHeroMove} onDone={handleHeroDone} onMove={handleHeroMove} onOther={() => openAdd(today)}
+        state="active" title={outcomeTitle(outcome)} sessionType={outcome.type}
+        durationMin={outcome.durationMin} distanceKm={outcome.distanceKm} intensity={outcome.intensity}
+        whyText={whyText} targetLabel={hrTargetLabel(outcome.intensity)} accentColor={accentForType(outcome.type)}
+        onOpen={openTodayEditor} sliderPos={sliderPos} onSliderChange={setSliderPos}
       />
     )
   } else {
-    const code = todayEntry?.kind === 'rest' ? todayEntry.reasonCode : 'rest-recovery'
-    hero = <PlanHeroCard state="rest" text={M.reasonWhy[code]} />
+    const text = !atDefault ? M.heroSliderAdjusted : (rec.kind === 'rest' ? M.reasonWhy[rec.reasonCode] : M.reasonWhy['rest-recovery'])
+    hero = <PlanHeroCard state="rest" text={text} sliderPos={sliderPos} onSliderChange={setSliderPos} />
   }
 
   const week = plan ? weekOfPlan(plan, today) : null

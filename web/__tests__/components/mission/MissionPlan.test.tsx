@@ -1,8 +1,8 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { MissionPlan } from '@/components/mission/MissionPlan'
 import { I18nProvider } from '@/lib/i18n/I18nProvider'
 import {
-  getAllMacrocycles, getPlannedSessions, getMainRace, savePlannedSession,
+  getAllMacrocycles, getPlannedSessions, getMainRace,
 } from '@/lib/plan/storage'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
 import type { PlannedSession } from '@/types/plan'
@@ -24,7 +24,6 @@ jest.mock('@/components/plan/RaceEditorModal', () => ({ RaceEditorModal: () => n
 const mockGetMacros = getAllMacrocycles as jest.Mock
 const mockGetPlanned = getPlannedSessions as jest.Mock
 const mockGetRace = getMainRace as jest.Mock
-const mockSave = savePlannedSession as jest.Mock
 
 function todayISO(): string {
   const d = new Date()
@@ -36,7 +35,6 @@ beforeEach(() => {
   mockGetMacros.mockResolvedValue([])
   mockGetPlanned.mockResolvedValue([])
   mockGetRace.mockResolvedValue(null)
-  mockSave.mockResolvedValue(undefined)
 })
 
 function renderPlan(recentActivities: ActivityRow[] = []) {
@@ -76,15 +74,14 @@ it('activité réalisée aujourd’hui → héros « faite » + ligne semaine li
   expect(links.length).toBeGreaterThan(0)
 })
 
-it('séance planifiée aujourd’hui → « Je l’ai faite » marque la séance completed', async () => {
+it('séance planifiée aujourd’hui → héros affiche la séance + le curseur « forme du jour »', async () => {
   const planned: PlannedSession[] = [{
     id: 'p1', planId: '', date: todayISO(), type: 'seuil_tempo', title: 'Ma séance test',
     duration: 60, intensity: 4, estimatedCharge: 0, status: 'planned',
   }]
   mockGetPlanned.mockResolvedValue(planned)
   renderPlan()
-  const btn = await screen.findByText(/Je l’ai faite/)
-  fireEvent.click(btn)
-  await waitFor(() => expect(mockSave).toHaveBeenCalled())
-  expect(mockSave.mock.calls[0][0]).toMatchObject({ id: 'p1', status: 'completed' })
+  // La séance apparaît dans le héros ET dans la ligne « Ma semaine » du jour.
+  expect((await screen.findAllByText('Ma séance test')).length).toBeGreaterThan(0)
+  expect(screen.getByText(/Selon ta forme/)).toBeInTheDocument()
 })

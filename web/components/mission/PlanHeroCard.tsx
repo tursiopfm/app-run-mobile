@@ -92,6 +92,38 @@ function SessionProfile({ sessionType }: { sessionType: string }) {
   )
 }
 
+// Curseur « forme du jour » : Repos · Allégé · Prévu · Renforcé · Max.
+// Piste dégradée gris→vert→orange ; libellés tappables (mobile-friendly).
+function FormSlider({ pos, onChange }: { pos: number; onChange: (p: number) => void }) {
+  const M = useT().mission
+  const labels = M.sliderLabels
+  const last = Math.max(1, labels.length - 1)
+  return (
+    <div className="mt-4">
+      <p className="text-[10px] uppercase tracking-[0.12em] font-bold mb-2.5" style={{ color: 'var(--text-muted)' }}>{M.sliderCaption}</p>
+      <div className="relative h-2 rounded-full" style={{ background: 'linear-gradient(90deg,#6B7785 0%,#4ADE80 45%,#FBBF24 72%,#FF7900 100%)' }}>
+        {labels.map((_, i) => (
+          <span key={i} className="absolute top-1/2 w-[5px] h-[5px] rounded-full -translate-x-1/2 -translate-y-1/2" style={{ left: `${(i / last) * 100}%`, background: 'rgba(11,15,20,0.55)' }} />
+        ))}
+        <span className="absolute top-1/2 w-5 h-5 rounded-full bg-white -translate-x-1/2 -translate-y-1/2" style={{ left: `${(pos / last) * 100}%`, boxShadow: '0 1px 6px rgba(0,0,0,.55)', border: '3px solid var(--primary)' }} />
+      </div>
+      <div className="flex mt-2.5">
+        {labels.map((lab, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => onChange(i)}
+            className={`flex-1 text-[9.5px] ${i === 0 ? 'text-left' : i === last ? 'text-right' : 'text-center'}`}
+            style={{ color: i === pos ? 'var(--trail-text)' : 'var(--text-disabled)', fontWeight: i === pos ? 700 : 600 }}
+          >
+            {lab}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── types ───────────────────────────────────────────────────────────────────
 
 // `active` couvre AUSSI bien une séance suggérée par le moteur qu'une séance
@@ -109,12 +141,11 @@ type Props =
       targetLabel?: string | null   // ex : « Seuil · 158–168 bpm »
       accentColor: string
       onOpen: () => void
-      onDone: () => void
-      onMove: () => void
-      onOther: () => void
+      sliderPos: number
+      onSliderChange: (pos: number) => void
     }
   | { state: 'done'; title: string; km: number; dPlus: number; durationSec: number }
-  | { state: 'rest'; text: string }
+  | { state: 'rest'; text: string; sliderPos: number; onSliderChange: (pos: number) => void }
 
 // ─── composant ───────────────────────────────────────────────────────────────
 
@@ -123,7 +154,7 @@ export function PlanHeroCard(props: Props) {
 
   // ── état : séance du jour (suggérée OU planifiée) ───────────────────────
   if (props.state === 'active') {
-    const { title, sessionType, durationMin, distanceKm, intensity, whyText, targetLabel, accentColor, onOpen, onDone, onMove, onOther } = props
+    const { title, sessionType, durationMin, distanceKm, intensity, whyText, targetLabel, accentColor, onOpen, sliderPos, onSliderChange } = props
     const intensityDots = '●'.repeat(intensity) + '○'.repeat(5 - intensity)
     const durationLabel = distanceKm
       ? `${formatDur(durationMin)} · ${distanceKm} km`
@@ -207,34 +238,8 @@ export function PlanHeroCard(props: Props) {
           </div>
         )}
 
-        {/* actions */}
-        <div className="flex gap-2 mt-3">
-          <button
-            type="button"
-            className="flex-1 py-2 rounded-full text-[12px] font-bold inline-flex items-center justify-center gap-1.5"
-            style={{ background: 'var(--primary)', color: 'var(--ink-900)' }}
-            onClick={onDone}
-          >
-            <span style={{ color: 'var(--status-success)' }} aria-hidden>✓</span>
-            {M.heroActionDone}
-          </button>
-          <button
-            type="button"
-            className="px-3 py-2 rounded-full text-[12px] font-semibold"
-            style={{ background: 'var(--ink-600)', color: 'var(--text-secondary)' }}
-            onClick={onMove}
-          >
-            {M.heroActionMove}
-          </button>
-          <button
-            type="button"
-            className="px-3 py-2 rounded-full text-[12px] font-semibold"
-            style={{ background: 'var(--ink-600)', color: 'var(--text-secondary)' }}
-            onClick={onOther}
-          >
-            {M.heroActionOther}
-          </button>
-        </div>
+        {/* curseur « forme du jour » (remplace les anciens boutons) */}
+        <FormSlider pos={sliderPos} onChange={onSliderChange} />
       </div>
     )
   }
@@ -268,7 +273,7 @@ export function PlanHeroCard(props: Props) {
     )
   }
 
-  // ── état : repos suggéré ────────────────────────────────────────────────
+  // ── état : repos (recommandé) — le curseur permet quand même d'ajouter ──
   return (
     <div
       className="rounded-[16px] border p-5"
@@ -292,6 +297,7 @@ export function PlanHeroCard(props: Props) {
       <p className="text-[12px] mt-3" style={{ color: 'var(--text-secondary)' }}>
         {props.text}
       </p>
+      <FormSlider pos={props.sliderPos} onChange={props.onSliderChange} />
     </div>
   )
 }

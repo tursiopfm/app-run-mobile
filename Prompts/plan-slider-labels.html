@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#FF7900;--primary-text:#FF8A33;--ink-900:#0B0F14;--ink-600:#25303E;--ink-800:#121821;--trail-card:#18202B;--trail-text:#E2ECE9;--text-secondary:#B7C6C1;--text-muted:#8BA8A3;--text-disabled:#5A6E69;}
+body{background:#06090D;font-family:Inter,system-ui;padding:24px;color:var(--trail-text);max-width:640px}
+h1{font-family:'Space Grotesk';font-size:20px;margin:0 0 4px}
+.sub{font-size:13px;color:var(--text-secondary);margin:0 0 22px;line-height:1.45}
+.block{background:var(--trail-card);border:1px solid var(--ink-600);border-radius:16px;padding:20px;margin-bottom:18px}
+.vlabel{font-size:12px;font-weight:700;color:var(--primary-text);text-transform:uppercase;letter-spacing:.08em;margin:0 0 4px}
+.note{font-size:11.5px;color:var(--text-muted);margin:0 0 16px;line-height:1.4}
+.slabel{font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:var(--text-muted);margin-bottom:9px}
+.track{position:relative;height:8px;border-radius:999px;background:linear-gradient(90deg,#6B7785 0%, #4ADE80 45%, #FBBF24 72%, #FF7900 100%)}
+.notch{position:absolute;top:50%;transform:translate(-50%,-50%);width:5px;height:5px;border-radius:999px;background:rgba(11,15,20,0.55)}
+.thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:999px;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.55);border:3px solid var(--primary)}
+.ticks{display:flex;justify-content:space-between;margin-top:9px}
+.tick{font-size:10px;color:var(--text-disabled);font-weight:600;flex:1;text-align:center}
+.tick.on{color:var(--trail-text);font-weight:700}
+.tick:first-child{text-align:left}.tick:last-child{text-align:right}
+</style></head>
+<body>
+<h1>Curseur « forme du jour » — <span style="color:var(--primary)">libellés</span></h1>
+<p class="sub">Le curseur règle la <b>dose globale du jour</b> (durée ET intensité selon le type) : à gauche on allège / raccourcit, à droite on charge / rallonge. Doit convenir à un footing, une sortie longue (plus ou moins longue) comme à des côtes. 3 propositions de mots — curseur posé au milieu.</p>
+<div id="root"></div>
+
+<script>
+function block(label,note,steps,pos){
+  const notches=steps.map((_,i)=>`<span class="notch" style="left:${(i/(steps.length-1))*100}%"></span>`).join('');
+  const pct=(pos/(steps.length-1))*100;
+  const ticks=steps.map((s,i)=>`<span class="tick ${i===pos?'on':''}">${s}</span>`).join('');
+  return `<div class="block"><p class="vlabel">${label}</p><p class="note">${note}</p>
+    <p class="slabel">Selon ta forme du jour</p>
+    <div class="track">${notches}<span class="thumb" style="left:${pct}%"></span></div>
+    <div class="ticks">${ticks}</div></div>`;
+}
+document.getElementById('root').innerHTML=
+ block('Proposition A · échelle d’effort','Générique, neutre. « Soutenu » = plus long OU plus dur selon la séance.',['Repos','Léger','Modéré','Soutenu','Maximal'],2)+
+ block('Proposition B · relatif au plan','Le milieu = la séance prévue ; on allège ou on renforce autour. Très parlant pour rallonger/raccourcir une sortie longue.',['Repos','Allégé','Prévu','Renforcé','Max'],2)+
+ block('Proposition C · dose du jour','Court et imagé : la « quantité » de séance qu’on s’accorde aujourd’hui.',['Repos','Petit','Moyen','Gros','Max'],2);
+</script></body></html>

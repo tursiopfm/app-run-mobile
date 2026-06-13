@@ -1,4 +1,4 @@
-import { adviseWeek, type AdviceContext } from '@/lib/mission/session-advisor'
+import { adviseWeek, applySlider, type AdviceContext, type SliderBase } from '@/lib/mission/session-advisor'
 
 const base: AdviceContext = {
   todayISO: '2026-06-11',           // jeudi
@@ -60,6 +60,40 @@ it('jour déjà planifié → kind=planned (on ne remplit pas)', () => {
 it('sans course (phase nulle) → conseille quand même, reason rythme', () => {
   const w = adviseWeek({ ...base, phaseType: null, daysToRace: null, targetKm: 40 })
   expect(w.today.kind === 'suggested' || w.today.kind === 'rest').toBe(true)
+})
+
+describe('applySlider', () => {
+  const longRun: SliderBase = { type: 'sortie_longue', titleKey: 'sessionLong', durationMin: 120, distanceKm: 24, intensity: 2 }
+  const quality: SliderBase = { type: 'seuil_tempo', titleKey: 'sessionSeuil', durationMin: 60, distanceKm: 13, intensity: 4 }
+
+  it('pos 0 → repos ; pos 2 → la séance prévue inchangée', () => {
+    expect(applySlider(longRun, 0).kind).toBe('rest')
+    const prevu = applySlider(longRun, 2)
+    expect(prevu.kind).toBe('session')
+    if (prevu.kind === 'session') expect(prevu.durationMin).toBe(120)
+  })
+
+  it('endurance : allégé raccourcit, renforcé/max rallongent', () => {
+    const a = applySlider(longRun, 1), r = applySlider(longRun, 3), m = applySlider(longRun, 4)
+    if (a.kind === 'session' && r.kind === 'session' && m.kind === 'session') {
+      expect(a.durationMin).toBeLessThan(120)
+      expect(r.durationMin).toBeGreaterThan(120)
+      expect(m.durationMin).toBeGreaterThan(r.durationMin)
+      expect(a.type).toBe('sortie_longue') // même type, durée différente
+    }
+  })
+
+  it('qualité : allégé → footing facile ; renforcé → plus de volume', () => {
+    const a = applySlider(quality, 1), r = applySlider(quality, 3)
+    if (a.kind === 'session') { expect(a.type).toBe('footing'); expect(a.intensity).toBeLessThanOrEqual(2) }
+    if (r.kind === 'session') { expect(r.type).toBe('seuil_tempo'); expect(r.durationMin).toBeGreaterThan(60) }
+  })
+
+  it('recommandation repos : séance seulement en poussant à droite', () => {
+    expect(applySlider(null, 0).kind).toBe('rest')
+    expect(applySlider(null, 2).kind).toBe('rest')
+    expect(applySlider(null, 3).kind).toBe('session')
+  })
 })
 
 it('affûtage détecté par le TYPE de phase (pas le libellé) → séance allégée', () => {

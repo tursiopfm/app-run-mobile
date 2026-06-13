@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#FF7900;--primary-text:#FF8A33;--ink-900:#0B0F14;--ink-600:#25303E;--ink-500:#34414F;--ink-800:#121821;--trail-card:#18202B;--trail-text:#E2ECE9;--text-secondary:#B7C6C1;--text-muted:#8BA8A3;--status-success:#4ADE80;--status-info:#38BDF8;}
+body{background:#06090D;font-family:Inter,system-ui;padding:22px;color:var(--trail-text)}
+h1{font-family:'Space Grotesk';font-size:20px;margin:0 0 4px}
+.sub{font-size:13px;color:var(--text-secondary);margin:0 0 18px;max-width:820px;line-height:1.45}
+.row{display:flex;flex-wrap:wrap;gap:22px}
+.col{width:390px}
+.vlabel{font-size:12px;font-weight:700;color:var(--primary-text);text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px}
+.disp{font-family:'Space Grotesk'}
+.card{border-radius:16px;border:1px solid var(--primary);padding:20px;background:linear-gradient(150deg,#FF790022 0%,var(--trail-card) 58%)}
+/* curseur */
+.slider{margin-top:16px}
+.slabel{font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:var(--text-muted);margin-bottom:9px}
+.track{position:relative;height:8px;border-radius:999px;background:linear-gradient(90deg,#6B7785 0%, #4ADE80 45%, #FBBF24 72%, #FF7900 100%)}
+.notch{position:absolute;top:50%;transform:translate(-50%,-50%);width:5px;height:5px;border-radius:999px;background:rgba(11,15,20,0.55)}
+.thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:999px;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.55);border:3px solid var(--primary)}
+.ticks{display:flex;justify-content:space-between;margin-top:9px}
+.tick{font-size:9.5px;color:var(--text-disabled,#5A6E69);font-weight:600;flex:1;text-align:center}
+.tick.on{color:var(--trail-text);font-weight:700}
+.tick:first-child{text-align:left}.tick:last-child{text-align:right}
+</style></head>
+<body>
+<h1>Héros — <span style="color:var(--primary)">curseur « forme du jour »</span></h1>
+<p class="sub">Plus de bouton « Je l'ai faite » (la coche vient du matching activité↔séance, comme l'Expert). À la place, un curseur : <b>bas = Repos</b> → <b>haut = Qualité</b>. L'athlète ajuste selon sa forme ressentie ; la séance du jour change, et le reste de la semaine se réadapte (fatigue + ce qui a été / reste à faire). 3 positions illustrées.</p>
+<div class="row" id="root"></div>
+
+<script>
+const BC={easy:'#4ADE80',effort:'#FF7900',recovery:'#6B7785'};
+function bars(t){const e=h=>({h,r:'easy'}),x=h=>({h,r:'effort'}),r=h=>({h,r:'recovery'});
+switch(t){
+case 'fractionne':return [e(.3),e(.4),x(.92),r(.35),x(.92),r(.35),x(.92),r(.35),e(.3)];
+case 'cotes':return [e(.3),e(.45),x(.85),r(.4),x(.9),r(.4),x(.85),r(.4),e(.3)];
+case 'seuil_tempo':return [e(.3),e(.45),x(.8),x(.8),r(.4),x(.8),x(.8),e(.35)];
+case 'repos':return [e(.12),e(.14),e(.12),e(.15),e(.13),e(.12),e(.14),e(.12)];
+default:return [e(.4),e(.5),e(.55),e(.52),e(.55),e(.5),e(.52),e(.45)];}}
+function svg(t){const W=120,H=60,PAD=5,B=bars(t),n=B.length,slot=(W-2*PAD)/n,bw=slot*0.6;
+let s='';B.forEach((b,i)=>{const h=b.h*(H-2*PAD),x=PAD+i*slot+(slot-bw)/2;s+=`<rect x="${x.toFixed(1)}" y="${(H-PAD-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="1" fill="${BC[b.r]}" ${t==='repos'?'opacity="0.5"':''}/>`;});
+return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:60px">${s}</svg>`;}
+
+const STEPS=['Repos','Récup','Endurance','Tempo','Qualité'];
+function slider(pos){ // pos 0..4
+  const pct=(pos/(STEPS.length-1))*100;
+  const notches=STEPS.map((_,i)=>`<span class="notch" style="left:${(i/(STEPS.length-1))*100}%"></span>`).join('');
+  const ticks=STEPS.map((s,i)=>`<span class="tick ${i===pos?'on':''}">${s}</span>`).join('');
+  return `<div class="slider"><p class="slabel">Selon ta forme du jour</p>
+    <div class="track">${notches}<span class="thumb" style="left:${pct}%"></span></div>
+    <div class="ticks">${ticks}</div></div>`;
+}
+
+function hero(label,opts){const {title,dur,dots,type,cible,why,pos,target}=opts;
+  const dotsStr='●'.repeat(dots)+'○'.repeat(5-dots);
+  return `<div class="col"><p class="vlabel">${label}</p><div class="card">
+   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:10px;text-transform:uppercase;letter-spacing:.15em;font-weight:700;color:var(--primary-text)">Ta prochaine séance</span><span style="font-size:10px;font-weight:700;padding:4px 8px;border-radius:999px;background:var(--ink-800);color:var(--text-secondary)">Aujourd'hui</span></div>
+   <div style="display:flex;align-items:stretch;gap:12px"><div style="flex:1;min-width:0">
+     <p class="disp" style="font-size:26px;font-weight:700;line-height:1">${title}</p>
+     <div style="display:flex;align-items:center;gap:8px;margin-top:12px">
+       ${dur?`<span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--primary);color:var(--ink-900)">${dur}</span>`:''}
+       ${dots?`<span style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--ink-600);color:var(--text-secondary)">${dotsStr}</span>`:''}
+       <span style="font-size:15px;font-weight:700;margin-left:auto;color:var(--primary-text)">›</span>
+     </div></div>
+     <div style="width:40%;flex-shrink:0;display:flex;align-items:center">${svg(type)}</div></div>
+   ${cible?`<p style="font-size:12px;margin-top:10px;color:var(--text-secondary)"><b style="color:var(--primary-text)">Cible</b> · ${cible}</p>`:''}
+   <div style="margin-top:12px;border-radius:12px;padding:11px;background:var(--ink-800)"><p style="font-size:12px;color:var(--text-secondary)">${why}</p></div>
+   ${slider(pos)}
+  </div></div>`;}
+
+document.getElementById('root').innerHTML=
+ hero('Curseur en bas · REPOS',{title:'Récupération',dur:'',dots:0,type:'repos',cible:'',why:'Tu te sens entamé ? Repos complet — la semaine se réajuste autour.',pos:0})+
+ hero('Curseur au milieu · ENDURANCE',{title:'Footing souple',dur:'45 min · 8 km',dots:2,type:'footing',cible:'Endurance fondamentale · 138–150 bpm',why:'Forme correcte : footing facile pour entretenir sans creuser la fatigue.',pos:2})+
+ hero('Curseur en haut · QUALITÉ',{title:'Seuil 2×15\'',dur:'1h05 · 13 km',dots:4,type:'seuil_tempo',cible:'Seuil · 158–168 bpm',why:'En forme : on place la séance de qualité prévue cette semaine.',pos:4});
+</script></body></html>

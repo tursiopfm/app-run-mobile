@@ -133,6 +133,9 @@ export type Dict = {
     heroActionMove: string
     heroActionOther: string
     heroTargetPrefix: string
+    sliderCaption: string
+    sliderLabels: string[]
+    heroSliderAdjusted: string
     weekFeedTitle: string
     weekFeedSubtitle: string
     weekMultiSessions: (n: number) => string
@@ -1394,6 +1397,9 @@ export const fr: Dict = {
     heroActionMove: 'Modifier',
     heroActionOther: 'Autre',
     heroTargetPrefix: 'Cible',
+    sliderCaption: 'Selon ta forme du jour',
+    sliderLabels: ['Repos', 'Allégé', 'Prévu', 'Renforcé', 'Max'],
+    heroSliderAdjusted: 'Ajusté à ta forme — le reste de la semaine s’adapte.',
     weekFeedTitle: 'Ma semaine',
     weekFeedSubtitle: 'réalisé + suggéré',
     weekMultiSessions: (n: number) => `${n} séances`,
