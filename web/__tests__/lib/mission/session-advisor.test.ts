@@ -1,4 +1,15 @@
 import { adviseWeek, applySlider, type AdviceContext, type SliderBase } from '@/lib/mission/session-advisor'
+import type { RaceProfile } from '@/lib/mission/race-profile'
+
+const NEUTRAL_PROFILE: RaceProfile = {
+  relief: 'flat', distanceClass: 'mid', dPlusPerKm: 20, goalPaceMinPerKm: null,
+  qualityKinds: ['seuil_tempo'], longRunMaxMin: 120,
+}
+function weekFrom(iso: string): string[] {
+  const d = new Date(`${iso}T00:00:00Z`); const dow = d.getUTCDay() || 7
+  const mon = new Date(d); mon.setUTCDate(d.getUTCDate() - (dow - 1))
+  return Array.from({ length: 7 }, (_, i) => { const x = new Date(mon); x.setUTCDate(mon.getUTCDate() + i); return x.toISOString().slice(0, 10) })
+}
 
 const base: AdviceContext = {
   todayISO: '2026-06-11',           // jeudi
@@ -12,6 +23,7 @@ const base: AdviceContext = {
   plannedDates: [],
   plannedRemainingKm: 0,
   hasPlannedLongRun: false,
+  raceProfile: NEUTRAL_PROFILE,
 }
 
 it('fatigue élevée → repos/easy aujourd’hui', () => {
@@ -100,4 +112,37 @@ it('affûtage détecté par le TYPE de phase (pas le libellé) → séance allé
     expect(w.today.session.durationMin).toBeLessThanOrEqual(60)
     expect(w.today.session.reasonCode).toBe('taper-light')
   }
+})
+
+describe('spécificité course', () => {
+  const mountain: RaceProfile = { relief: 'mountain', distanceClass: 'ultra', dPlusPerKm: 55, goalPaceMinPerKm: null, qualityKinds: ['cotes', 'seuil_tempo'], longRunMaxMin: 240 }
+  const flatShort: RaceProfile = { relief: 'flat', distanceClass: 'short', dPlusPerKm: 5, goalPaceMinPerKm: null, qualityKinds: ['fractionne', 'seuil_tempo'], longRunMaxMin: 90 }
+
+  it('course montagne → la qualité du jour privilégie les côtes', () => {
+    const w = adviseWeek({ ...base, raceProfile: mountain })
+    if (w.today.kind === 'suggested') expect(['cotes', 'seuil_tempo']).toContain(w.today.session.type)
+  })
+
+  it('10 km plat → la qualité peut être de la VMA (fractionné) selon la semaine', () => {
+    const days = ['2026-06-09', '2026-06-16', '2026-06-23']
+    const types = days.map(d => {
+      const w = adviseWeek({ ...base, todayISO: d, weekDates: weekFrom(d), raceProfile: flatShort })
+      return w.today.kind === 'suggested' ? w.today.session.type : 'rest'
+    })
+    expect(types).toContain('fractionne')
+  })
+
+  it('sortie longue : le D+ suit le relief de la course', () => {
+    const w = adviseWeek({ ...base, raceProfile: mountain })
+    const sat = w.byDate['2026-06-13']
+    if (sat.kind === 'suggested' && sat.session.type === 'sortie_longue') {
+      expect(sat.session.elevationM!).toBeGreaterThan((sat.session.distanceKm ?? 0) * 30)
+    }
+  })
+
+  it('phase spécifique + allure cible connue → séance allure course', () => {
+    const profile: RaceProfile = { ...flatShort, distanceClass: 'mid', goalPaceMinPerKm: 5, qualityKinds: ['seuil_tempo', 'fractionne'] }
+    const w = adviseWeek({ ...base, phaseType: 'specifique', daysToRace: 30, raceProfile: profile })
+    if (w.today.kind === 'suggested') expect(w.today.session.reasonCode).toBe('race-pace')
+  })
 })

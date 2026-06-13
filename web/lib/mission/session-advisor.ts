@@ -5,6 +5,7 @@
 
 import type { FreshnessZone } from '@/lib/analytics/charge-insights.types'
 import type { IntensityLevel, PhaseType, SessionType } from '@/types/plan'
+import type { RaceProfile } from '@/lib/mission/race-profile'
 
 export type ReasonCode =
   | 'fresh-quality'      // frais → place à la qualité
@@ -15,6 +16,9 @@ export type ReasonCode =
   | 'taper-light'        // affûtage : on allège
   | 'maintain-rhythm'    // sans course : on entretient le rythme
   | 'aerobic-base'       // travail aérobie
+  | 'vma-speed'          // travail VMA (fractionné)
+  | 'hill-work'          // travail en côtes
+  | 'race-pace'          // allure course
 
 export type SuggestedSession = {
   type: SessionType
@@ -43,6 +47,7 @@ export type AdviceContext = {
   plannedDates: string[]       // jours déjà planifiés (on ne remplit pas)
   plannedRemainingKm: number   // km des séances planifiées encore à venir cette semaine
   hasPlannedLongRun: boolean   // une sortie longue / course est déjà planifiée cette semaine
+  raceProfile: RaceProfile
 }
 
 export type WeekAdvice = { today: DayAdvice; byDate: Record<string, DayAdvice> }
@@ -75,10 +80,36 @@ function easySession(reason: ReasonCode): SuggestedSession {
 
 // Sortie longue dimensionnée sur la cible hebdo (≈ 30 % du volume), bornée à
 // une taille réaliste [16, 32] km, durée DÉRIVÉE de la distance (allure facile).
-function longSession(targetKm: number | null): SuggestedSession {
-  const km = Math.min(32, Math.max(16, Math.round((targetKm ?? 0) * 0.3)))
-  const durationMin = Math.round(km * PACE_MIN_PER_KM[2])
-  return { type: 'sortie_longue', titleKey: 'sessionLong', durationMin, distanceKm: km, intensity: 2, reasonCode: 'fill-volume-long', elevationM: Math.round(km * 20) }
+// D+ et durée max calés sur le profil course.
+function longSession(ctx: AdviceContext): SuggestedSession {
+  const km = Math.min(32, Math.max(16, Math.round((ctx.targetKm ?? 0) * 0.3)))
+  const durationMin = Math.min(Math.round(km * PACE_MIN_PER_KM[2]), ctx.raceProfile.longRunMaxMin)
+  return { type: 'sortie_longue', titleKey: 'sessionLong', durationMin, distanceKm: km, intensity: 2, reasonCode: 'fill-volume-long', elevationM: Math.round(km * ctx.raceProfile.dPlusPerKm) }
+}
+
+function vmaSession(): SuggestedSession {
+  return { type: 'fractionne', titleKey: 'sessionVMA', durationMin: 60, distanceKm: 11, intensity: 5, reasonCode: 'vma-speed' }
+}
+function cotesSession(): SuggestedSession {
+  return { type: 'cotes', titleKey: 'sessionCotes', durationMin: 60, distanceKm: 10, intensity: 4, reasonCode: 'hill-work', elevationM: 350 }
+}
+function racePaceSession(p: RaceProfile): SuggestedSession {
+  const distanceKm = Math.round(55 / ((p.goalPaceMinPerKm ?? 5.5) + 0.5))
+  return { type: 'course', titleKey: 'sessionRacePace', durationMin: 55, distanceKm, intensity: 3, reasonCode: 'race-pace' }
+}
+
+const weekIndex = (iso: string): number => Math.floor(new Date(`${iso}T00:00:00Z`).getTime() / (7 * 86_400_000))
+
+// Sélection de la séance de qualité du jour selon le profil course + la phase.
+function selectQuality(ctx: AdviceContext): SuggestedSession {
+  if (isTaper(ctx)) return qualitySession(ctx)
+  const p = ctx.raceProfile
+  if (ctx.phaseType === 'specifique' && p.goalPaceMinPerKm != null) return racePaceSession(p)
+  const kinds = p.qualityKinds.length ? p.qualityKinds : ['seuil_tempo']
+  const kind = kinds[weekIndex(ctx.todayISO) % kinds.length]
+  if (kind === 'fractionne') return vmaSession()
+  if (kind === 'cotes') return cotesSession()
+  return qualitySession(ctx)
 }
 
 // Conseil pour UN jour donné (hors jours planifiés, gérés par l'appelant).
@@ -95,11 +126,11 @@ function adviseDay(iso: string, ctx: AdviceContext, remainingKm: number): DayAdv
   // cette semaine (on ne double pas le plan), hors affûtage, et si le volume
   // restant le justifie.
   if (dow === 6 && !ctx.hasPlannedLongRun && !isTaper(ctx) && remainingKm > 12) {
-    return { kind: 'suggested', session: longSession(ctx.targetKm) }
+    return { kind: 'suggested', session: longSession(ctx) }
   }
   // Qualité : en SEMAINE (pas le week-end), aujourd'hui, si pas déjà faite et qu'on a une prépa.
   if (iso === ctx.todayISO && !weekend && ctx.recentHardCount === 0 && ctx.phaseType !== null) {
-    return { kind: 'suggested', session: qualitySession(ctx) }
+    return { kind: 'suggested', session: selectQuality(ctx) }
   }
   // Sinon : facile / aérobie / rythme.
   const reason: ReasonCode = ctx.phaseType === null ? 'maintain-rhythm'
