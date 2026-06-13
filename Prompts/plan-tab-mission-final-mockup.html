@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trail Cockpit — Onglet Plan (Mode Mission) · mix final</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink-900:#0B0F14; --ink-800:#121821; --ink-700:#18202B; --ink-600:#25303E; --ink-500:#34414F;
+      --primary:#FF7900; --primary-dim:#CC6100; --primary-glow:rgba(255,121,0,0.18); --primary-text:#FF8A33;
+      --text-primary:#E2ECE9; --text-secondary:#B7C6C1; --text-muted:#8BA8A3; --text-disabled:#5A6E69;
+      --status-success:#4ADE80; --status-warning:#FBBF24; --status-info:#38BDF8;
+      --data-bike:#27A971; --data-swim:#4BB4E6;
+    }
+    html,body { background:#06090D; color:var(--text-primary); font-family:'Inter',ui-sans-serif,system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+    .display { font-family:'Space Grotesk',sans-serif; }
+    .phone { width:390px; background:var(--ink-900); border:1px solid var(--ink-600); border-radius:28px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 18px 50px rgba(0,0,0,0.55); }
+    .card { background:var(--ink-700); border:1px solid var(--ink-600); border-radius:16px; }
+    .card-label { font-size:10px; text-transform:uppercase; letter-spacing:0.12em; font-weight:600; color:var(--text-muted); }
+    .navbar { margin-top:auto; border-top:1px solid var(--ink-600); background:var(--ink-800); display:flex; align-items:stretch; }
+    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 0 14px; font-size:10px; font-weight:600; letter-spacing:0.02em; color:var(--text-muted); }
+    .nav-item.active { color:var(--primary); }
+    .nav-svg { width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+    .frame-label { font-size:11px; text-transform:uppercase; letter-spacing:0.18em; color:var(--text-muted); margin-bottom:10px; }
+    .why { display:inline-flex; align-items:center; gap:4px; font-size:9.5px; font-weight:600; padding:2px 7px; border-radius:999px; background:var(--primary-glow); color:var(--primary-text); border:1px solid rgba(255,121,0,0.30); }
+    .why.calm { background:rgba(74,222,128,0.12); color:var(--status-success); border-color:rgba(74,222,128,0.30); }
+    .feed-row { display:flex; align-items:center; gap:11px; padding:9px 0; }
+    .feed-row + .feed-row { border-top:1px solid var(--ink-600); }
+    .feed-day { width:30px; font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; }
+    .sport-tick { width:8px; height:8px; border-radius:999px; flex:0 0 auto; }
+    .ghost-row { display:flex; align-items:center; gap:8px; margin-top:8px; padding:9px 10px; border:1px dashed var(--ink-500); border-radius:10px; color:var(--text-muted); font-size:12px; font-weight:600; }
+  </style>
+</head>
+<body class="p-6">
+
+  <header class="max-w-[860px] mx-auto mb-6">
+    <h1 class="display text-[24px] font-700 leading-tight">Onglet <span style="color:var(--primary)">Plan</span> — Mode Mission · mix final</h1>
+    <p class="text-[13px] mt-2" style="color:var(--text-secondary)">
+      Ordre validé : ① Héros « Ta prochaine séance » (raisonnement + actions) · ② « Ma semaine » fil réalisé+suggéré + ＋ Ajouter une séance · ③ Destination compacte + frise de phases · ④ Affiner avec le coach (bientôt).
+      <strong>Aucune mention de « TSB »</strong> — langage athlète (« Fraîcheur OK », « fatigue normale »). Le « ＋ Ajouter une séance » réutilise le flux du mode expert (SessionAddSheet → SessionEditorModal).
+    </p>
+  </header>
+
+  <div class="flex flex-wrap gap-8 max-w-[860px] mx-auto items-start">
+
+    <div>
+      <p class="frame-label">Écran principal (avec course)</p>
+      <div class="phone">
+        <div class="px-5 pt-7 pb-4 flex items-end justify-between">
+          <div>
+            <h2 class="display text-[24px] font-700">Plan</h2>
+            <p class="text-[12px] mt-0.5" style="color:var(--text-muted)">Jeudi 12 juin</p>
+          </div>
+          <p class="text-[11px] font-600 pb-1" style="color:var(--primary-text)">Phase spécifique</p>
+        </div>
+
+        <div class="px-4 pb-5 space-y-3">
+
+          <!-- ① Héros : ta prochaine séance -->
+          <div class="card p-5" style="background:linear-gradient(150deg, var(--primary-glow) 0%, var(--ink-700) 58%); border-color:rgba(255,121,0,0.45)">
+            <div class="flex items-center justify-between mb-2.5">
+              <p class="text-[10px] uppercase tracking-[0.15em] font-700" style="color:var(--primary-text)">Ta prochaine séance</p>
+              <span class="text-[10px] font-700 px-2 py-1 rounded-full" style="background:var(--ink-800);color:var(--text-secondary)">Aujourd'hui</span>
+            </div>
+            <p class="display text-[30px] font-700 leading-none">Seuil 2×15'</p>
+            <div class="flex items-center gap-2 mt-3">
+              <span class="text-[12px] font-700 px-2.5 py-1 rounded-full" style="background:var(--primary);color:var(--ink-900)">1h05 · 13 km</span>
+              <span class="text-[12px] font-600 px-2.5 py-1 rounded-full" style="background:var(--ink-600);color:var(--text-secondary)">●●●○</span>
+            </div>
+            <div class="mt-3.5 rounded-[12px] p-3" style="background:var(--ink-800)">
+              <p class="text-[10px] uppercase tracking-wider font-700 mb-1.5" style="color:var(--text-muted)">Pourquoi cette séance</p>
+              <ul class="text-[12px] space-y-1" style="color:var(--text-secondary)">
+                <li>• <span class="font-600">Fraîcheur OK</span> — fatigue normale</li>
+                <li>• <span class="font-600">2 footings faciles</span> déjà faits → besoin de qualité</li>
+                <li>• Phase <span class="font-600">spécifique</span>, J-42 EcoTrail</li>
+              </ul>
+            </div>
+            <div class="flex gap-2 mt-3">
+              <button class="flex-1 py-2 rounded-full text-[12px] font-700" style="background:var(--primary);color:var(--ink-900)">Je l'ai faite</button>
+              <button class="px-3 py-2 rounded-full text-[12px] font-600" style="background:var(--ink-600);color:var(--text-secondary)">Décaler</button>
+              <button class="px-3 py-2 rounded-full text-[12px] font-600" style="background:var(--ink-600);color:var(--text-secondary)">Autre</button>
+            </div>
+          </div>
+
+          <!-- ② Ma semaine : fil réalisé + suggéré + ajout -->
+          <div class="card p-4">
+            <div class="flex items-center justify-between mb-2">
+              <p class="card-label">Ma semaine</p>
+              <span class="text-[10px] font-600" style="color:var(--text-muted)">réalisé + suggéré</span>
+            </div>
+            <div class="feed-row">
+              <span class="feed-day">Lun</span><span class="sport-tick" style="background:var(--primary)"></span>
+              <span class="flex-1 text-[13px]">Footing</span>
+              <span class="text-[11.5px] tabular-nums" style="color:var(--text-secondary)">9,1 km · <span style="color:var(--status-info)">+120</span> · 50'</span>
+              <span class="text-[12px] font-700" style="color:var(--status-success)">✓</span>
+            </div>
+            <div class="feed-row">
+              <span class="feed-day">Mar</span><span class="sport-tick" style="background:var(--data-bike)"></span>
+              <span class="flex-1 text-[13px]">Vélotaf</span>
+              <span class="text-[11.5px] tabular-nums" style="color:var(--text-secondary)">22 km · <span style="color:var(--status-info)">+150</span> · 1h05</span>
+              <span class="text-[12px] font-700" style="color:var(--status-success)">✓</span>
+            </div>
+            <div class="feed-row">
+              <span class="feed-day">Mer</span><span class="sport-tick" style="background:var(--primary)"></span>
+              <span class="flex-1 text-[13px]">Côtes 8×45"</span>
+              <span class="text-[11.5px] tabular-nums" style="color:var(--text-secondary)">8,4 km · <span style="color:var(--status-info)">+340</span> · 52'</span>
+              <span class="text-[12px] font-700" style="color:var(--status-success)">✓</span>
+            </div>
+            <div class="feed-row" style="background:var(--primary-glow); border-radius:10px; padding-left:8px; padding-right:8px; margin-left:-8px; margin-right:-8px;">
+              <span class="feed-day" style="color:var(--primary-text)">Jeu</span><span class="sport-tick" style="background:var(--primary)"></span>
+              <span class="flex-1 text-[13px] font-700">Seuil 2×15'</span>
+              <span class="text-[11px] font-700" style="color:var(--primary-text)">● auj.</span>
+            </div>
+            <div class="feed-row">
+              <span class="feed-day">Ven</span><span class="sport-tick" style="background:var(--ink-500)"></span>
+              <span class="flex-1 text-[13px]" style="color:var(--text-muted)">Repos conseillé</span>
+              <span class="why calm">récup</span>
+            </div>
+            <div class="feed-row">
+              <span class="feed-day">Sam</span><span class="sport-tick" style="background:var(--primary)"></span>
+              <span class="flex-1 text-[13px]">Sortie longue 1h45</span>
+              <span class="why">+18 km cible</span>
+            </div>
+            <div class="feed-row">
+              <span class="feed-day">Dim</span><span class="sport-tick" style="background:var(--primary)"></span>
+              <span class="flex-1 text-[13px]">Footing souple 45'</span>
+              <span class="why calm">aérobie</span>
+            </div>
+            <div class="ghost-row">＋ Ajouter une séance</div>
+          </div>
+
+          <!-- ③ Destination compacte + frise -->
+          <button class="card w-full p-4 text-left">
+            <div class="flex items-center justify-between mb-2">
+              <p class="card-label">Destination · Semaine 14/21</p>
+              <p class="text-[11px] font-600" style="color:var(--primary-text)">Mon tableau ›</p>
+            </div>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="display text-[30px] font-700 leading-none" style="color:var(--primary)">J-42</p>
+                <p class="text-[13px] font-700 mt-1">EcoTrail Paris 45K</p>
+              </div>
+              <div class="flex-1 ml-4">
+                <div class="flex gap-1 mb-1.5">
+                  <div class="h-[7px] rounded-l-full" style="width:38%;background:var(--ink-500)"></div>
+                  <div class="h-[7px] relative" style="width:43%;background:var(--primary)"><span class="absolute -top-[3px] w-[3px] h-[13px] rounded bg-white" style="left:62%"></span></div>
+                  <div class="h-[7px] rounded-r-full" style="width:19%;background:var(--ink-500)"></div>
+                </div>
+                <div class="flex text-[9px]" style="color:var(--text-muted)"><span style="width:38%">Base</span><span style="width:43%;color:var(--primary-text);font-weight:700">Spécifique</span><span style="width:19%">Affût.</span></div>
+              </div>
+            </div>
+          </button>
+
+          <!-- ④ Affiner avec le coach -->
+          <button class="w-full p-3 rounded-2xl flex items-center justify-center gap-2 text-[13px] font-700" style="border:1.5px solid var(--primary); color:var(--primary-text); background:transparent">
+            ✨ Affiner avec le coach
+            <span class="text-[9px] font-700 uppercase tracking-wider px-1.5 py-0.5 rounded" style="background:var(--ink-600);color:var(--text-muted)">Bientôt</span>
+          </button>
+        </div>
+
+        <nav class="navbar">
+          <div class="nav-item"><svg class="nav-svg" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>Cockpit</div>
+          <div class="nav-item active"><svg class="nav-svg" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>Plan</div>
+          <div class="nav-item"><svg class="nav-svg" viewBox="0 0 24 24"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></svg>Activités</div>
+          <div class="nav-item"><svg class="nav-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>Réglages</div>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Variantes du héros (états) -->
+    <div style="width:390px">
+      <p class="frame-label">Héros · autres états du jour</p>
+
+      <p class="text-[12px] font-700 mb-2" style="color:var(--text-secondary)">Séance du jour déjà réalisée</p>
+      <div class="card p-5 mb-5" style="background:linear-gradient(150deg, rgba(74,222,128,0.10) 0%, var(--ink-700) 58%); border-color:rgba(74,222,128,0.40)">
+        <div class="flex items-center justify-between mb-2.5">
+          <p class="text-[10px] uppercase tracking-[0.15em] font-700" style="color:var(--status-success)">Séance du jour · faite ✓</p>
+          <span class="text-[10px] font-700 px-2 py-1 rounded-full" style="background:var(--ink-800);color:var(--text-secondary)">Aujourd'hui</span>
+        </div>
+        <p class="display text-[30px] font-700 leading-none">Seuil 2×15'</p>
+        <p class="text-[12px] mt-3" style="color:var(--text-secondary)">13,1 km · <span style="color:var(--status-info)">+180 m</span> · 1h07 — beau boulot, récup ce soir.</p>
+      </div>
+
+      <p class="text-[12px] font-700 mb-2" style="color:var(--text-secondary)">Jour de repos suggéré</p>
+      <div class="card p-5 mb-5" style="background:linear-gradient(150deg, rgba(56,189,248,0.08) 0%, var(--ink-700) 58%); border-color:var(--ink-600)">
+        <p class="text-[10px] uppercase tracking-[0.15em] font-700 mb-3" style="color:var(--status-info)">Aujourd'hui · repos</p>
+        <p class="display text-[28px] font-700 leading-none" style="color:var(--text-secondary)">Récupération</p>
+        <p class="text-[12px] mt-3" style="color:var(--text-secondary)">2 grosses séances cette semaine — souffle aujourd'hui, ça consolide les gains.</p>
+      </div>
+
+      <p class="frame-label" style="margin-top:6px">États secondaires (validés)</p>
+      <p class="text-[12px]" style="color:var(--text-muted)">Bloc générique « Ton rythme » sans course + modal de création de course = inchangés (voir <em>plan-tab-mission-redesign-mockups.html</em>).</p>
+    </div>
+
+  </div>
+</body>
+</html>
