@@ -94,44 +94,55 @@ function SessionProfile({ sessionType }: { sessionType: string }) {
 
 // Curseur « forme du jour » : Repos · Allégé · Prévu · Renforcé · Max.
 // Piste dégradée gris→vert→orange ; libellés tappables (mobile-friendly).
-function FormSlider({ pos, onChange }: { pos: number; onChange: (p: number) => void }) {
+function FormSlider({ pos, onChange, onOpenLibrary }: { pos: number; onChange: (p: number) => void; onOpenLibrary: () => void }) {
   const M = useT().mission
-  const labels = M.sliderLabels
-  const last = Math.max(1, labels.length - 1)
+  const labels = M.sliderLabels          // 5 crans de charge (Repos…Max)
+  const libIdx = labels.length           // dernier cran « Bibliothèque » (index 5)
+  const gradPct = ((libIdx - 1) / libIdx) * 100  // la piste dégradée s'arrête à Max (80 %)
+  const allLabels = [...labels, M.sliderLibrary]
   const thumbHidden =
     '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:opacity-0 ' +
     '[&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:opacity-0 [&::-moz-range-thumb]:border-0'
+  // pos === libIdx = action « ouvrir la bibliothèque » (ne se persiste pas).
+  const handle = (v: number) => (v === libIdx ? onOpenLibrary() : onChange(v))
   return (
     <div className="mt-4">
       <p className="text-[10px] uppercase tracking-[0.12em] font-bold mb-2.5" style={{ color: 'var(--text-muted)' }}>{M.sliderCaption}</p>
-      {/* zone tactile h-6 : la piste, les crans et la pastille sont décoratifs
-          (pointer-events-none) ; l'input range transparent par-dessus capte le
-          tap n'importe où + le glissement (souris/doigt). */}
       <div className="relative h-6">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2 rounded-full pointer-events-none" style={{ background: 'linear-gradient(90deg,#6B7785 0%,#4ADE80 45%,#FBBF24 72%,#FF7900 100%)' }} />
+        {/* piste dégradée Repos → Max */}
+        <div className="absolute top-1/2 -translate-y-1/2 h-2 rounded-full pointer-events-none" style={{ left: 0, width: `${gradPct}%`, background: 'linear-gradient(90deg,#6B7785 0%,#4ADE80 45%,#FBBF24 72%,#FF7900 100%)' }} />
+        {/* pointillés Max → Bibliothèque */}
+        <div className="absolute top-1/2 -translate-y-1/2 border-t-2 border-dotted pointer-events-none" style={{ left: `${gradPct}%`, right: 0, borderColor: 'var(--text-disabled)' }} />
+        {/* crans de charge */}
         {labels.map((_, i) => (
-          <span key={i} className="absolute top-1/2 w-[5px] h-[5px] rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none" style={{ left: `${(i / last) * 100}%`, background: 'rgba(11,15,20,0.55)' }} />
+          <span key={i} className="absolute top-1/2 w-[5px] h-[5px] rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none" style={{ left: `${(i / libIdx) * 100}%`, background: 'rgba(11,15,20,0.55)' }} />
         ))}
-        <span className="absolute top-1/2 w-5 h-5 rounded-full bg-white -translate-x-1/2 -translate-y-1/2 pointer-events-none" style={{ left: `${(pos / last) * 100}%`, boxShadow: '0 1px 6px rgba(0,0,0,.55)', border: '3px solid var(--primary)' }} />
+        {/* nœud Bibliothèque (au bout des pointillés) */}
+        <span className="absolute top-1/2 w-3.5 h-3.5 rounded-[4px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" style={{ left: '100%', background: 'var(--ink-600)', border: '1px solid var(--primary)' }} />
+        {/* pastille (toujours sur la partie charge) */}
+        <span className="absolute top-1/2 w-5 h-5 rounded-full bg-white -translate-x-1/2 -translate-y-1/2 pointer-events-none" style={{ left: `${(pos / libIdx) * 100}%`, boxShadow: '0 1px 6px rgba(0,0,0,.55)', border: '3px solid var(--primary)' }} />
         <input
-          type="range" min={0} max={last} step={1} value={pos}
+          type="range" min={0} max={libIdx} step={1} value={pos}
           aria-label={M.sliderCaption}
-          onChange={(e) => onChange(Number(e.target.value))}
+          onChange={(e) => handle(Number(e.target.value))}
           className={`absolute inset-0 w-full h-full m-0 appearance-none bg-transparent cursor-pointer ${thumbHidden}`}
         />
       </div>
       <div className="flex mt-2.5">
-        {labels.map((lab, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => onChange(i)}
-            className={`flex-1 text-[9.5px] ${i === 0 ? 'text-left' : i === last ? 'text-right' : 'text-center'}`}
-            style={{ color: i === pos ? 'var(--trail-text)' : 'var(--text-disabled)', fontWeight: i === pos ? 700 : 600 }}
-          >
-            {lab}
-          </button>
-        ))}
+        {allLabels.map((lab, i) => {
+          const isLib = i === libIdx
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => handle(i)}
+              className={`flex-1 text-[9.5px] ${i === 0 ? 'text-left' : isLib ? 'text-right' : 'text-center'}`}
+              style={{ color: isLib ? 'var(--primary-text)' : i === pos ? 'var(--trail-text)' : 'var(--text-disabled)', fontWeight: i === pos || isLib ? 700 : 600 }}
+            >
+              {lab}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
@@ -156,9 +167,10 @@ type Props =
       onOpen: () => void
       sliderPos: number
       onSliderChange: (pos: number) => void
+      onOpenLibrary: () => void
     }
   | { state: 'done'; title: string; km: number; dPlus: number; durationSec: number }
-  | { state: 'rest'; text: string; sliderPos: number; onSliderChange: (pos: number) => void }
+  | { state: 'rest'; text: string; sliderPos: number; onSliderChange: (pos: number) => void; onOpenLibrary: () => void }
 
 // ─── composant ───────────────────────────────────────────────────────────────
 
@@ -167,7 +179,7 @@ export function PlanHeroCard(props: Props) {
 
   // ── état : séance du jour (suggérée OU planifiée) ───────────────────────
   if (props.state === 'active') {
-    const { title, sessionType, durationMin, distanceKm, intensity, whyText, targetLabel, accentColor, onOpen, sliderPos, onSliderChange } = props
+    const { title, sessionType, durationMin, distanceKm, intensity, whyText, targetLabel, accentColor, onOpen, sliderPos, onSliderChange, onOpenLibrary } = props
     const intensityDots = '●'.repeat(intensity) + '○'.repeat(5 - intensity)
     const durationLabel = distanceKm
       ? `${formatDur(durationMin)} · ${distanceKm} km`
@@ -252,7 +264,7 @@ export function PlanHeroCard(props: Props) {
         )}
 
         {/* curseur « forme du jour » (remplace les anciens boutons) */}
-        <FormSlider pos={sliderPos} onChange={onSliderChange} />
+        <FormSlider pos={sliderPos} onChange={onSliderChange} onOpenLibrary={onOpenLibrary} />
       </div>
     )
   }
@@ -310,7 +322,7 @@ export function PlanHeroCard(props: Props) {
       <p className="text-[12px] mt-3" style={{ color: 'var(--text-secondary)' }}>
         {props.text}
       </p>
-      <FormSlider pos={props.sliderPos} onChange={props.onSliderChange} />
+      <FormSlider pos={props.sliderPos} onChange={props.onSliderChange} onOpenLibrary={props.onOpenLibrary} />
     </div>
   )
 }

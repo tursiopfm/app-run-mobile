@@ -135,6 +135,7 @@ export type Dict = {
     heroTargetPrefix: string
     sliderCaption: string
     sliderLabels: string[]
+    sliderLibrary: string
     heroSliderAdjusted: string
     weekFeedTitle: string
     weekFeedSubtitle: string
@@ -1399,6 +1400,7 @@ export const fr: Dict = {
     heroTargetPrefix: 'Cible',
     sliderCaption: 'Selon ta forme du jour',
     sliderLabels: ['Repos', 'Allégé', 'Prévu', 'Renforcé', 'Max'],
+    sliderLibrary: 'Bibliothèque',
     heroSliderAdjusted: 'Ajusté à ta forme — le reste de la semaine s’adapte.',
     weekFeedTitle: 'Ma semaine',
     weekFeedSubtitle: 'réalisé + suggéré',

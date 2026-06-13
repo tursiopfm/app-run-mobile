@@ -241,6 +241,7 @@ export const en: Dict = {
     heroTargetPrefix: 'Target',
     sliderCaption: 'Based on how you feel today',
     sliderLabels: ['Rest', 'Lighter', 'Planned', 'Harder', 'Max'],
+    sliderLibrary: 'Library',
     heroSliderAdjusted: 'Tuned to how you feel — the rest of the week adapts.',
     weekFeedTitle: 'My week',
     weekFeedSubtitle: 'done + suggested',

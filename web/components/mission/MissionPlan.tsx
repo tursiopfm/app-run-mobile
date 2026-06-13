@@ -259,12 +259,12 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
         state="active" title={outcomeTitle(outcome)} sessionType={outcome.type}
         durationMin={outcome.durationMin} distanceKm={outcome.distanceKm} intensity={outcome.intensity}
         whyText={whyText} targetLabel={hrTargetLabel(outcome.intensity)} accentColor={accentForType(outcome.type)}
-        onOpen={openTodayEditor} sliderPos={sliderPos} onSliderChange={setSliderPos}
+        onOpen={openTodayEditor} sliderPos={sliderPos} onSliderChange={setSliderPos} onOpenLibrary={() => openAdd(today)}
       />
     )
   } else {
     const text = !atDefault ? M.heroSliderAdjusted : (rec.kind === 'rest' ? M.reasonWhy[rec.reasonCode] : M.reasonWhy['rest-recovery'])
-    hero = <PlanHeroCard state="rest" text={text} sliderPos={sliderPos} onSliderChange={setSliderPos} />
+    hero = <PlanHeroCard state="rest" text={text} sliderPos={sliderPos} onSliderChange={setSliderPos} onOpenLibrary={() => openAdd(today)} />
   }
 
   const week = plan ? weekOfPlan(plan, today) : null
