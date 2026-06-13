@@ -1,12 +1,14 @@
 'use client'
 
 // Cumul km par mois/année (Mission). Reprend la présentation du bloc Expert
-// (en-tête + sport coloré + onglets Mois/Année + chart + légende), mono-sport :
-// pas de carousel, pas de sélecteur de sport (points), pas de réglages (⋮).
+// (en-tête + sport coloré + onglets Mois/Année + chart + légende + sélecteur
+// d'années en mode Année), mono-sport : pas de carousel, pas de bascule sport
+// (points), pas de réglages (⋮).
 
 import { useState } from 'react'
 import { MissionCard } from './cards'
 import { CockpitCumulChart } from '@/components/charts/CockpitCumulChart'
+import { YearRangeSelector } from '@/components/cockpit/YearRangeSelector'
 import type { SportOverview } from '@/lib/data/dashboard'
 import { SPORT_CONFIG, type SportKey } from '@/lib/design/sports'
 import { sportLabel } from '@/lib/design/sports-i18n'
@@ -15,12 +17,29 @@ import { useT } from '@/lib/i18n/I18nProvider'
 
 type Period = 'month' | 'year'
 
+const YEAR_WINDOW_KEY = 'mission_cumul_year_window'
+
+function readYearWindow(): number {
+  if (typeof window === 'undefined') return 5
+  const v = Number(localStorage.getItem(YEAR_WINDOW_KEY))
+  return Number.isFinite(v) && v > 0 ? v : 5
+}
+
 export function CumulCard({ overview, sport }: { overview: SportOverview; sport: SportKey }) {
   const t = useT()
   const L = t.cockpit
   const [period, setPeriod] = useState<Period>('month')
+  const [yearWindow, setYearWindow] = useState<number>(readYearWindow)
   const cfg = SPORT_CONFIG[sport]
-  const months = period === 'month' ? overview.cumulMonths : overview.cumulYears.slice(-3)
+  const months = period === 'month'
+    ? overview.cumulMonths
+    : overview.cumulYears.slice(-Math.max(1, yearWindow))
+
+  function changeYearWindow(n: number) {
+    setYearWindow(n)
+    try { localStorage.setItem(YEAR_WINDOW_KEY, String(n)) } catch { /* stockage indispo */ }
+  }
+
   if (!months || months.length === 0) return null
 
   return (
@@ -60,6 +79,15 @@ export function CumulCard({ overview, sport }: { overview: SportOverview; sport:
           </span>
         ))}
       </div>
+
+      {/* Sélecteur d'années (mode Année) — identique à l'Expert */}
+      {period === 'year' && overview.cumulYears.length > 1 && (
+        <YearRangeSelector
+          value={yearWindow}
+          max={overview.cumulYears.length}
+          onChange={changeYearWindow}
+        />
+      )}
     </MissionCard>
   )
 }
