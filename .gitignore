@@ -18,3 +18,35 @@ node_modules
 .vercel
 node_modules
 node_modules
+
+# =====================================================================
+# Bruit local — ajouté le 2026-06-08 (ne supprime rien, masque juste
+# ces fichiers de `git status`). Voir catégories A + B.
+# =====================================================================
+
+# --- A. Logs & sorties de build (local) ---
+*.log
+build-*.txt
+test-next-load*.txt
+
+# --- A. Captures d'écran & scratch à la racine du dépôt uniquement ---
+/*.png
+
+# --- A. Caches & artefacts générés ---
+.expo/
+.playwright-mcp/
+web/coverage/
+web/supabase/.temp/
+web/.env.vercel-check
+
+# --- B. Outillage local agents/skills (hors application) ---
+.claude/
+.claudeignore
+.agents/
+.superpowers/
+agent-skills/
+skills-lock.json
+tools/
+.android-user/
+.gradle-user/
+.user-home/

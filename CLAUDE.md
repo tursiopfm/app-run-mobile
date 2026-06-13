@@ -114,6 +114,16 @@ Implementation lives in `web/lib/analytics/`:
 - Only read files explicitly relevant to the task — don't pre-scan the codebase.
 - When executing a written plan, use the Subagent-driven execution mode, not inline.
 
+## Engineering discipline
+
+**1. Think before coding.** State assumptions explicitly; if uncertain, ask. If multiple interpretations exist, surface them — don't pick silently. If a simpler approach exists, say so and push back. If something is unclear, stop and name what's confusing.
+
+**2. Simplicity first.** Minimum code that solves the problem, nothing speculative. No features beyond what was asked, no abstractions for single-use code, no unrequested "flexibility", no error handling for impossible scenarios. If 200 lines could be 50, rewrite it. Test: would a senior engineer call this overcomplicated?
+
+**3. Surgical changes.** Touch only what the request requires. Don't "improve" adjacent code, comments, or formatting; don't refactor what isn't broken; match existing style even if you'd do it differently. Remove only the imports/variables/functions YOUR changes orphaned — flag pre-existing dead code, don't delete it. Every changed line must trace to the user's request.
+
+**4. Goal-driven execution.** Turn tasks into verifiable goals before coding ("fix the bug" → "write a failing test that reproduces it, then make it pass"). For multi-step work, state a brief plan with a verification check per step, then loop until each check passes.
+
 ## Self-learning loop
 
 - Read `tasks/lessons.md` at the start of each session before touching code; apply each rule listed.
