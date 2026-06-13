@@ -48,7 +48,7 @@ Fonction pure, **déterministe**, testable isolément. Pas d'appel réseau.
 **Entrées :**
 - `freshness` : `computeFreshness(payload.dailyMetrics)` → `zone` (+ `formeVerdict(zone)` pour le verdict humain). **On n'expose jamais le nombre TSB dans l'UI Plan.**
 - `weekDone` : volume / D+ / nb séances déjà réalisés cette semaine (depuis `weekActivities`), et types des séances récentes (facile vs qualité).
-- `target` : cible hebdo km/D+ (`resolveMissionWeeklyTarget`) — si pas de plan, cible = **rythme habituel** dérivé de la série de charge déjà chargée (`freshnessPayload.dailyMetrics` / `DailyLoad` de `lib/analytics/load.ts`), agrégée par semaine. Pas de nouveau fetch.
+- `target` : cible hebdo km/D+ (`resolveMissionWeeklyTarget`) — si pas de plan, cible = **rythme habituel** = moyenne km/D+ des semaines des **28 derniers jours** d'activités (la série de charge `DailyLoad` ne porte que le CES, pas les km → on agrège depuis les lignes d'activité).
 - `phase` : phase courante + `J-X` (`computePhaseSegments` / `weekOfPlan`) — `null` si pas de course.
 - `plannedWeek` : `PlannedSession[]` de la semaine (un plan explicite **prime** sur la suggestion).
 
@@ -91,7 +91,7 @@ Option retenue : **deep-link `/plan?full=1&new=1`** + `ObjectifCourseBlock` auto
 ## Bloc générique sans course (remplace « Ma prépa »)
 
 Quand aucune course à venir : la carte Destination passe en **état vide** (« Aucune course prévue » + CTA création) et le bloc « Ma prépa » est remplacé par **« Ton rythme · 4 dernières semaines »** :
-- mini-barres du volume hebdo (4 dernières semaines, dernière en primaire), agrégées depuis la série de charge déjà disponible (`dailyMetrics` / `DailyLoad`) — pas de nouveau fetch ;
+- mini-barres du volume hebdo km (4 dernières semaines, dernière en primaire), agrégées depuis les **lignes d'activité des 28 derniers jours** ;
 - libellé « ≈ X km/sem sur 1 mois. Continue — ou fixe un objectif pour structurer ta prépa. » ;
 - CTA « 🎯 Choisir une course objectif » → même deep-link de création.
 
@@ -101,7 +101,7 @@ Le moteur de règles **fonctionne quand même** dans ce mode (cible = rythme hab
 
 `MissionPlan` est aujourd'hui un composant client autonome. Il lui manque `weekActivities` (réalisé) et `freshnessPayload` (fraîcheur), tous deux **déjà calculés côté serveur** pour le Cockpit ([web/app/(main)/dashboard/page.tsx](../../../app/(main)/dashboard/page.tsx)).
 
-Décision : **`web/app/(main)/plan/page.tsx`** (server) récupère `weekActivities` + `freshnessPayload` (mêmes fetchers que le dashboard) et les passe en props à `MissionPlan`. Les `PlannedSession` / macrocycle restent chargés côté client comme aujourd'hui (storage). Cohérent avec le pattern du Cockpit.
+Décision : **`web/app/(main)/plan/page.tsx`** (server, mode Mission) récupère `freshnessPayload` (`getChargePageData`, repli run→all comme le dashboard) + **les lignes d'activité des 28 derniers jours** (`recentActivities`, mêmes champs `ACTIVITY_CARD_FIELDS`) + `discipline`, et les passe en props à `MissionPlan`. La semaine courante est un **filtre** de `recentActivities` (pas de 2e requête). Les `PlannedSession` / macrocycle restent chargés côté client (storage). Cohérent avec le coût du Cockpit en mode Mission (qui charge déjà `getChargePageData`).
 
 ## i18n
 
