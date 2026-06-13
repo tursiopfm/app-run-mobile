@@ -216,7 +216,7 @@ export function MissionCockpit({ sportOverviews, freshnessPayload, discipline, w
 
       <SessionsSemaineCard activities={weekActivities} />
 
-      {o && <CumulCard overview={o} />}
+      {o && <CumulCard overview={o} sport={sport} />}
 
       {showVolume && (
         <MissionDetailSheet title={M.volumeDetailTitle} onClose={() => setShowVolume(false)}>
