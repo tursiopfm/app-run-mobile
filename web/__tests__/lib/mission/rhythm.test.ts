@@ -35,18 +35,21 @@ describe('weeklyVolumes', () => {
 })
 
 describe('habitualWeekly', () => {
-  it('moyenne les semaines complètes hors semaine courante', () => {
+  // today = ven 2026-06-12 → semaine courante = lundi 2026-06-08.
+  // Les 4 semaines ANTÉRIEURES (exclut la courante) : lundis 05-11, 05-18, 05-25, 06-01.
+  it('moyenne les 4 semaines ISO antérieures (zéros inclus), exclut la semaine courante', () => {
     const acts = [
-      act('a', '2026-05-25T08:00:00Z', 40), // sem -3 (complète)
-      act('b', '2026-06-01T08:00:00Z', 50), // sem -2 (complète)
-      act('c', '2026-06-08T08:00:00Z', 30), // sem -1 (complète)
-      act('d', '2026-06-11T08:00:00Z', 20), // sem courante (exclue)
+      act('a', '2026-05-11T08:00:00Z', 20), // sem -4
+      act('b', '2026-05-18T08:00:00Z', 30), // sem -3
+      act('c', '2026-05-25T08:00:00Z', 40), // sem -2
+      act('d', '2026-06-01T08:00:00Z', 50), // sem -1
+      act('e', '2026-06-11T08:00:00Z', 999), // semaine courante → EXCLUE
     ]
     const h = habitualWeekly(acts, '2026-06-12')
-    expect(h.km).toBe(40) // (40+50+30)/3
+    expect(h.km).toBe(35) // (20+30+40+50)/4
   })
 
-  it('renvoie 0 si aucune semaine antérieure', () => {
+  it('renvoie 0 si aucune activité antérieure (zéros moyennés)', () => {
     expect(habitualWeekly([], '2026-06-12').km).toBe(0)
   })
 })

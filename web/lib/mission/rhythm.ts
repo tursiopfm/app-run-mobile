@@ -43,25 +43,15 @@ export function weeklyVolumes(activities: ActivityRow[], todayISO: string, count
   return weeks.map(w => ({ ...w, km: Math.round(w.km), dPlus: Math.round(w.dPlus) }))
 }
 
-// Rythme habituel = moyenne des semaines ANTÉRIEURES (hors semaine courante)
-// sur 4 semaines glissantes. Sert de cible quand l'athlète n'a pas de plan.
+// Rythme habituel = moyenne des 4 semaines ISO ANTÉRIEURES (hors semaine
+// courante, zéros inclus). Sert de cible quand l'athlète n'a pas de plan.
+// On inclut les semaines à 0 volontairement : pour une CIBLE de séances, mieux
+// vaut sous-estimer (athlète qui s'entraîne par à-coups) que gonfler la charge.
 export function habitualWeekly(activities: ActivityRow[], todayISO: string): { km: number; dPlus: number } {
-  // Exclure les activités des 3 derniers jours
-  const currentDayBoundary = new Date(`${todayISO}T00:00:00Z`)
-  currentDayBoundary.setUTCDate(currentDayBoundary.getUTCDate() - 3)
-  const boundaryISO = currentDayBoundary.toISOString()
-
-  const prevActivities = activities.filter(a => a.start_time < boundaryISO)
-
-  if (prevActivities.length === 0) return { km: 0, dPlus: 0 }
-
-  // Obtenir 4 semaines de données
-  const allWeeks = weeklyVolumes(prevActivities, todayISO, 4)
-  // Exclure les semaines sans activité
-  const nonZeroWeeks = allWeeks.filter(w => w.km > 0 || w.dPlus > 0)
-
-  if (nonZeroWeeks.length === 0) return { km: 0, dPlus: 0 }
-
-  const sum = nonZeroWeeks.reduce((s, w) => ({ km: s.km + w.km, dPlus: s.dPlus + w.dPlus }), { km: 0, dPlus: 0 })
-  return { km: Math.round(sum.km / nonZeroWeeks.length), dPlus: Math.round(sum.dPlus / nonZeroWeeks.length) }
+  // weeklyVolumes(…, 5) = 4 semaines antérieures + la courante ; slice(0,4)
+  // retire la semaine courante (dernière du tableau, ordre ancien→récent).
+  const priorWeeks = weeklyVolumes(activities, todayISO, 5).slice(0, 4)
+  const n = priorWeeks.length || 1
+  const sum = priorWeeks.reduce((s, w) => ({ km: s.km + w.km, dPlus: s.dPlus + w.dPlus }), { km: 0, dPlus: 0 })
+  return { km: Math.round(sum.km / n), dPlus: Math.round(sum.dPlus / n) }
 }
