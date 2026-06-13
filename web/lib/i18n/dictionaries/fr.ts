@@ -132,6 +132,7 @@ export type Dict = {
     heroActionDone: string
     heroActionMove: string
     heroActionOther: string
+    heroTargetPrefix: string
     weekFeedTitle: string
     weekFeedSubtitle: string
     weekMultiSessions: (n: number) => string
@@ -1392,6 +1393,7 @@ export const fr: Dict = {
     heroActionDone: 'Je l’ai faite',
     heroActionMove: 'Décaler',
     heroActionOther: 'Autre',
+    heroTargetPrefix: 'Cible',
     weekFeedTitle: 'Ma semaine',
     weekFeedSubtitle: 'réalisé + suggéré',
     weekMultiSessions: (n: number) => `${n} séances`,

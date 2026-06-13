@@ -28,12 +28,14 @@ import { computeFreshness } from '@/lib/analytics/charge-insights'
 import { estimateCharge } from '@/lib/training/charge'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
-import type { PlannedSession, Race, SessionTemplate, TrainingPlan } from '@/types/plan'
+import type { HrZone } from '@/lib/health/hr-zones'
+import type { IntensityLevel, PlannedSession, Race, SessionTemplate, TrainingPlan } from '@/types/plan'
 import { useT } from '@/lib/i18n/I18nProvider'
 
 type Props = {
   freshnessPayload: ChargeSportPayload | null
   recentActivities: ActivityRow[]   // 28 derniers jours
+  hrZones: HrZone[]                  // zones FC de l'athlète (cible des séances)
 }
 
 const DAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
@@ -79,8 +81,16 @@ function fmtKmDp(km: number, dPlus: number, sec: number): string {
   return `${km.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} km · ${dPlus} · ${dur}`
 }
 
-export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
+export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Props) {
   const M = useT().mission
+
+  // Cible FC personnalisée pour une intensité de séance (1..5 → zone Z1..Z5).
+  const hrTargetLabel = (intensity: IntensityLevel): string | null => {
+    const z = hrZones[intensity - 1]
+    if (!z) return null
+    const range = z.min != null ? `${z.min}–${z.max}` : `< ${z.max}`
+    return `${z.name} · ${range} bpm`
+  }
 
   const [macros, setMacros] = useState<TrainingPlan[]>([])
   const [plan, setPlan] = useState<TrainingPlan | null>(null)
@@ -234,7 +244,7 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
     hero = (
       <PlanHeroCard
         state="active" title={s.title} sessionType={s.type} durationMin={s.duration} distanceKm={s.distance}
-        intensity={s.intensity} whyText={null} accentColor={accentForType(s.type)}
+        intensity={s.intensity} whyText={null} targetLabel={hrTargetLabel(s.intensity)} accentColor={accentForType(s.type)}
         onOpen={handleHeroMove} onDone={handleHeroDone} onMove={handleHeroMove} onOther={() => openAdd(today)}
       />
     )
@@ -244,7 +254,7 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
       <PlanHeroCard
         state="active" title={M.sessionTitles[s.titleKey] ?? s.titleKey} sessionType={s.type} durationMin={s.durationMin}
         distanceKm={s.distanceKm} intensity={s.intensity} whyText={M.reasonWhy[s.reasonCode]}
-        accentColor={accentForType(s.type)}
+        targetLabel={hrTargetLabel(s.intensity)} accentColor={accentForType(s.type)}
         onOpen={handleHeroMove} onDone={handleHeroDone} onMove={handleHeroMove} onOther={() => openAdd(today)}
       />
     )

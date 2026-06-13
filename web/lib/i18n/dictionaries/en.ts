@@ -238,6 +238,7 @@ export const en: Dict = {
     heroActionDone: 'I did it',
     heroActionMove: 'Reschedule',
     heroActionOther: 'Other',
+    heroTargetPrefix: 'Target',
     weekFeedTitle: 'My week',
     weekFeedSubtitle: 'done + suggested',
     weekMultiSessions: (n: number) => `${n} sessions`,

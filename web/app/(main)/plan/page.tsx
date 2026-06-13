@@ -4,6 +4,7 @@ import { getServerAppMode } from '@/lib/preferences/server'
 import { getServerUser } from '@/lib/database/get-user'
 import { createClient } from '@/lib/database/supabase-server'
 import { getChargePageData } from '@/lib/data/charge'
+import { calculateHrZones, getRecommendedHeartRateZoneMode, type HrZone, type HrZoneMethod, type CustomZoneInput } from '@/lib/health/hr-zones'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 
@@ -20,12 +21,13 @@ export default async function PlanPage({
     const user = await getServerUser()
     let freshnessPayload: ChargeSportPayload | null = null
     let recentActivities: ActivityRow[] = []
+    let hrZones: HrZone[] = []
     if (user) {
       const supabase = await createClient()
       const since = new Date()
       since.setDate(since.getDate() - 28)
-      // Activités (28 j, pour le réalisé + le rythme) et charge (fraîcheur) en parallèle.
-      const [{ data: rows }, charge] = await Promise.all([
+      // Activités (28 j), charge (fraîcheur) et profil FC (zones cibles) en parallèle.
+      const [{ data: rows }, charge, { data: profile }] = await Promise.all([
         supabase
           .from('activities')
           .select(ACTIVITY_CARD_FIELDS)
@@ -34,14 +36,30 @@ export default async function PlanPage({
           .gte('start_time', since.toISOString())
           .order('start_time', { ascending: false }),
         getChargePageData(user.id).catch(() => null),
+        supabase
+          .from('profiles')
+          .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year, hr_zone_method, hr_zones_custom')
+          .eq('id', user.id)
+          .maybeSingle(),
       ])
       recentActivities = (rows ?? []) as ActivityRow[]
       // Fraîcheur basée sur la course ; repli sur le global si pas d'historique running.
       if (charge) {
         freshnessPayload = charge.perSport.run.historyDays > 0 ? charge.perSport.run : charge.perSport.all
       }
+      // Zones FC pour personnaliser la cible des séances (méthode choisie, sinon recommandée).
+      if (profile) {
+        const method = (profile.hr_zone_method as HrZoneMethod | null) ?? getRecommendedHeartRateZoneMode(profile).mode
+        hrZones = calculateHrZones({
+          method,
+          maxHr: profile.max_hr, restingHr: profile.resting_hr,
+          aerobicThresholdHr: profile.aerobic_threshold_hr, thresholdHr: profile.threshold_hr,
+          birthYear: profile.birth_year,
+          customZones: (profile.hr_zones_custom as CustomZoneInput[] | null) ?? null,
+        }).zones
+      }
     }
-    return <MissionPlan freshnessPayload={freshnessPayload} recentActivities={recentActivities} />
+    return <MissionPlan freshnessPayload={freshnessPayload} recentActivities={recentActivities} hrZones={hrZones} />
   }
 
   // Plan expert (inchangé). onboarding_mission pilote la curation de la

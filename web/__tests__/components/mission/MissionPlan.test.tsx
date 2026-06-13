@@ -42,7 +42,7 @@ beforeEach(() => {
 function renderPlan(recentActivities: ActivityRow[] = []) {
   return render(
     <I18nProvider initialLang="fr">
-      <MissionPlan freshnessPayload={null} recentActivities={recentActivities} />
+      <MissionPlan freshnessPayload={null} recentActivities={recentActivities} hrZones={[]} />
     </I18nProvider>,
   )
 }

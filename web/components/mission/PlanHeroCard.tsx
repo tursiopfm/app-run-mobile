@@ -31,19 +31,25 @@ function profileShape(sessionType: string): number[] {
   return [0.25, 0.45, 0.6, 0.62, 0.6, 0.62, 0.6, 0.58, 0.45, 0.25] // plateau régulier
 }
 
-// Construit le path SVG d'aire à partir de la silhouette (viewBox 100×24).
-function profilePath(shape: number[]): string {
-  const w = 100, h = 24, pad = 2
-  const step = w / (shape.length - 1)
-  const pts = shape.map((v, i) => `${(i * step).toFixed(1)},${(h - pad - v * (h - pad * 2)).toFixed(1)}`)
-  return `M0,${h} L${pts.join(' L')} L${w},${h} Z`
-}
-
+// Rendu : bâtons (histogramme) + courbe reliant les sommets, aux couleurs de la
+// discipline (brand). Occupe la largeur qu'on lui donne (moitié droite du héros).
 function SessionProfile({ sessionType, color }: { sessionType: string; color: string }) {
-  const d = profilePath(profileShape(sessionType))
+  const shape = profileShape(sessionType)
+  const n = shape.length
+  const W = 100, H = 28, pad = 2
+  const slot = W / n
+  const barW = slot * 0.52
+  const bars = shape.map((v, i) => {
+    const h = Math.max(2, v * (H - pad * 2))
+    return { x: i * slot + (slot - barW) / 2, y: H - pad - h, h, cx: i * slot + slot / 2, cy: H - pad - h }
+  })
+  const curve = bars.map(b => `${b.cx.toFixed(1)},${b.cy.toFixed(1)}`).join(' ')
   return (
-    <svg viewBox="0 0 100 24" preserveAspectRatio="none" className="w-full h-[22px]" aria-hidden>
-      <path d={d} fill={`${color}22`} stroke={color} strokeWidth="1.2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-[28px]" aria-hidden>
+      {bars.map((b, i) => (
+        <rect key={i} x={b.x} y={b.y} width={barW} height={b.h} rx="0.6" fill={color} opacity="0.45" />
+      ))}
+      <polyline points={curve} fill="none" stroke={color} strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
     </svg>
   )
 }
@@ -62,6 +68,7 @@ type Props =
       distanceKm?: number
       intensity: IntensityLevel
       whyText?: string | null
+      targetLabel?: string | null   // ex : « Seuil · 158–168 bpm »
       accentColor: string
       onOpen: () => void
       onDone: () => void
@@ -78,7 +85,7 @@ export function PlanHeroCard(props: Props) {
 
   // ── état : séance du jour (suggérée OU planifiée) ───────────────────────
   if (props.state === 'active') {
-    const { title, sessionType, durationMin, distanceKm, intensity, whyText, accentColor, onOpen, onDone, onMove, onOther } = props
+    const { title, sessionType, durationMin, distanceKm, intensity, whyText, targetLabel, accentColor, onOpen, onDone, onMove, onOther } = props
     const intensityDots = '●'.repeat(intensity) + '○'.repeat(5 - intensity)
     const durationLabel = distanceKm
       ? `${formatDur(durationMin)} · ${distanceKm} km`
@@ -92,27 +99,29 @@ export function PlanHeroCard(props: Props) {
           borderColor: accentColor,
         }}
       >
-        {/* en-tête : label + badge */}
-        <div className="flex items-center justify-between mb-2.5">
+        {/* en-tête : label (gauche) · badge + résumé graphique (moitié droite) */}
+        <div className="flex items-start justify-between gap-3 mb-1">
           <p
-            className="text-[10px] uppercase tracking-[0.15em] font-bold"
+            className="text-[10px] uppercase tracking-[0.15em] font-bold mt-1"
             style={{ color: 'var(--primary-text)' }}
           >
             {M.heroNextTitle}
           </p>
-          <span
-            className="text-[10px] font-bold px-2 py-1 rounded-full"
-            style={{ background: 'var(--ink-800)', color: 'var(--text-secondary)' }}
-          >
-            {M.heroTodayBadge}
-          </span>
+          <div className="w-[46%] flex flex-col items-end">
+            <span
+              className="text-[10px] font-bold px-2 py-1 rounded-full mb-1.5"
+              style={{ background: 'var(--ink-800)', color: 'var(--text-secondary)' }}
+            >
+              {M.heroTodayBadge}
+            </span>
+            <div className="w-full">
+              <SessionProfile sessionType={sessionType} color={accentColor} />
+            </div>
+          </div>
         </div>
 
-        {/* résumé graphique : silhouette de la séance */}
-        <SessionProfile sessionType={sessionType} color={accentColor} />
-
         {/* titre + pills = zone cliquable pour accéder au détail de la séance */}
-        <button type="button" onClick={onOpen} className="w-full text-left mt-2" aria-label={title}>
+        <button type="button" onClick={onOpen} className="w-full text-left mt-1" aria-label={title}>
           <p className="font-display text-[30px] font-bold leading-none text-trail-text">
             {title}
           </p>
@@ -134,6 +143,13 @@ export function PlanHeroCard(props: Props) {
             </span>
           </div>
         </button>
+
+        {/* cible personnalisée (zone FC de l'athlète) */}
+        {targetLabel && (
+          <p className="text-[12px] mt-2.5" style={{ color: 'var(--text-secondary)' }}>
+            <span className="font-bold" style={{ color: 'var(--primary-text)' }}>{M.heroTargetPrefix}</span> · {targetLabel}
+          </p>
+        )}
 
         {/* boîte « pourquoi » — uniquement pour une séance suggérée (whyText) */}
         {whyText && (
