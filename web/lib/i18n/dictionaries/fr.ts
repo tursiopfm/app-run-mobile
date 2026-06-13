@@ -136,6 +136,7 @@ export type Dict = {
     weekFeedSubtitle: string
     weekMultiSessions: (n: number) => string
     weekAddSession: string
+    weekStatusMissed: string
     rythmeTitle: string
     rythmeAvg: (km: number) => string
     rythmeHint: string
@@ -1395,6 +1396,7 @@ export const fr: Dict = {
     weekFeedSubtitle: 'réalisé + suggéré',
     weekMultiSessions: (n: number) => `${n} séances`,
     weekAddSession: '＋ Ajouter une séance',
+    weekStatusMissed: 'non réalisé',
     rythmeTitle: 'Ton rythme · 4 dernières semaines',
     rythmeAvg: (km: number) => `≈ ${km} km/sem sur 1 mois.`,
     rythmeHint: 'Continue sur ce rythme — ou fixe un objectif pour structurer ta prépa.',

@@ -10,6 +10,8 @@ const base: AdviceContext = {
   phaseType: 'specifique',
   daysToRace: 42,
   plannedDates: [],
+  plannedRemainingKm: 0,
+  hasPlannedLongRun: false,
 }
 
 it('fatigue élevée → repos/easy aujourd’hui', () => {
@@ -23,11 +25,31 @@ it('qualité déjà faite cette semaine → pas une 2e qualité aujourd’hui', 
   if (w.today.kind === 'suggested') expect(w.today.session.intensity).toBeLessThanOrEqual(3)
 })
 
-it('cible non atteinte → sortie longue le week-end', () => {
+it('cible non atteinte → sortie longue le week-end, durée/distance cohérentes', () => {
   const w = adviseWeek(base)
   const sat = w.byDate['2026-06-13']
   expect(sat.kind).toBe('suggested')
-  if (sat.kind === 'suggested') expect(sat.session.type).toBe('sortie_longue')
+  if (sat.kind === 'suggested') {
+    expect(sat.session.type).toBe('sortie_longue')
+    const { durationMin, distanceKm } = sat.session
+    expect(distanceKm).toBeLessThanOrEqual(32)        // jamais 73 km
+    // cohérence allure : ~5 à 7 min/km
+    expect(durationMin).toBeGreaterThanOrEqual((distanceKm ?? 0) * 5)
+    expect(durationMin).toBeLessThanOrEqual((distanceKm ?? 0) * 7)
+  }
+})
+
+it('sortie longue déjà planifiée → pas de 2e sortie longue suggérée le samedi', () => {
+  const w = adviseWeek({ ...base, hasPlannedLongRun: true })
+  const sat = w.byDate['2026-06-13']
+  if (sat.kind === 'suggested') expect(sat.session.type).not.toBe('sortie_longue')
+})
+
+it('volume déjà couvert par le plan → reste faible → pas de sortie longue injectée', () => {
+  // cible 50, réalisé 28, planifié à venir 20 → reste 2 (<12)
+  const w = adviseWeek({ ...base, plannedRemainingKm: 20 })
+  const sat = w.byDate['2026-06-13']
+  if (sat.kind === 'suggested') expect(sat.session.type).not.toBe('sortie_longue')
 })
 
 it('jour déjà planifié → kind=planned (on ne remplit pas)', () => {

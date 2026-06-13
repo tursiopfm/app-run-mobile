@@ -23,7 +23,6 @@ export type SuggestedSession = {
   distanceKm?: number
   intensity: IntensityLevel
   reasonCode: ReasonCode
-  reasonParam?: number        // ex : km restants pour 'fill-volume-long'
 }
 
 export type DayAdvice =
@@ -41,6 +40,8 @@ export type AdviceContext = {
   phaseType: PhaseType | null  // type stable de la phase active (null = pas de prépa)
   daysToRace: number | null
   plannedDates: string[]       // jours déjà planifiés (on ne remplit pas)
+  plannedRemainingKm: number   // km des séances planifiées encore à venir cette semaine
+  hasPlannedLongRun: boolean   // une sortie longue / course est déjà planifiée cette semaine
 }
 
 export type WeekAdvice = { today: DayAdvice; byDate: Record<string, DayAdvice> }
@@ -52,26 +53,36 @@ const isTaper = (ctx: AdviceContext): boolean =>
 // formeVerdict() : la fatigue « normale » fait partie de l'entraînement.
 const isFatigued = (z: FreshnessZone | null): boolean => z === 'high-fatigue'
 
+// Durée/distance TOUJOURS cohérentes : on dérive la distance de la durée via
+// une allure (min/km) par intensité. Évite les absurdités type « 1h45 · 73 km ».
+const PACE_MIN_PER_KM: Record<number, number> = { 1: 6.6, 2: 6.0, 3: 5.4, 4: 5.0, 5: 4.6 }
+function distanceFor(durationMin: number, intensity: IntensityLevel): number {
+  return Math.round(durationMin / (PACE_MIN_PER_KM[intensity] ?? 6))
+}
+
 // Séance « qualité » du jour selon la fraîcheur / phase.
 function qualitySession(ctx: AdviceContext): SuggestedSession {
   if (isTaper(ctx)) {
-    return { type: 'seuil_tempo', titleKey: 'sessionTempoCourt', durationMin: 50, distanceKm: 9, intensity: 4, reasonCode: 'taper-light' }
+    return { type: 'seuil_tempo', titleKey: 'sessionTempoCourt', durationMin: 45, distanceKm: distanceFor(45, 4), intensity: 4, reasonCode: 'taper-light' }
   }
-  return { type: 'seuil_tempo', titleKey: 'sessionSeuil', durationMin: 65, distanceKm: 13, intensity: 4, reasonCode: 'fresh-quality' }
+  return { type: 'seuil_tempo', titleKey: 'sessionSeuil', durationMin: 60, distanceKm: distanceFor(60, 4), intensity: 4, reasonCode: 'fresh-quality' }
 }
 
 function easySession(reason: ReasonCode): SuggestedSession {
-  return { type: 'footing', titleKey: 'sessionFooting', durationMin: 45, distanceKm: 8, intensity: 2, reasonCode: reason }
+  return { type: 'footing', titleKey: 'sessionFooting', durationMin: 45, distanceKm: distanceFor(45, 2), intensity: 2, reasonCode: reason }
 }
 
-function longSession(remainingKm: number): SuggestedSession {
-  return { type: 'sortie_longue', titleKey: 'sessionLong', durationMin: 105, distanceKm: Math.max(15, Math.round(remainingKm)), intensity: 2, reasonCode: 'fill-volume-long', reasonParam: Math.round(remainingKm) }
+// Sortie longue dimensionnée sur la cible hebdo (≈ 30 % du volume), bornée à
+// une taille réaliste [16, 32] km, durée DÉRIVÉE de la distance (allure facile).
+function longSession(targetKm: number | null): SuggestedSession {
+  const km = Math.min(32, Math.max(16, Math.round((targetKm ?? 0) * 0.3)))
+  const durationMin = Math.round(km * PACE_MIN_PER_KM[2])
+  return { type: 'sortie_longue', titleKey: 'sessionLong', durationMin, distanceKm: km, intensity: 2, reasonCode: 'fill-volume-long' }
 }
 
 // Conseil pour UN jour donné (hors jours planifiés, gérés par l'appelant).
-// `remainingKm` = reste-à-faire de la SEMAINE (constant, calculé une fois) — on
-// ne le décrémente pas jour par jour, sinon les footings de début de semaine
-// « mangeraient » le budget avant le samedi et tueraient la sortie longue.
+// `remainingKm` = reste-à-faire de la semaine APRÈS le réalisé ET les séances
+// déjà planifiées → on ne re-suggère pas du volume déjà couvert par le plan.
 function adviseDay(iso: string, ctx: AdviceContext, remainingKm: number): DayAdvice {
   const dow = dowUTC(iso)
   const weekend = dow === 0 || dow === 6
@@ -79,12 +90,14 @@ function adviseDay(iso: string, ctx: AdviceContext, remainingKm: number): DayAdv
     return weekend ? { kind: 'suggested', session: easySession('fatigue-easy') }
                    : { kind: 'rest', reasonCode: 'rest-recovery' }
   }
-  // Sortie longue le SAMEDI si la cible hebdo n'est pas atteinte (hors affûtage).
-  if (dow === 6 && remainingKm > 10 && !isTaper(ctx)) {
-    return { kind: 'suggested', session: longSession(remainingKm) }
+  // Sortie longue le SAMEDI — seulement s'il n'y en a pas DÉJÀ une planifiée
+  // cette semaine (on ne double pas le plan), hors affûtage, et si le volume
+  // restant le justifie.
+  if (dow === 6 && !ctx.hasPlannedLongRun && !isTaper(ctx) && remainingKm > 12) {
+    return { kind: 'suggested', session: longSession(ctx.targetKm) }
   }
-  // Qualité : aujourd'hui, si pas déjà faite cette semaine ET qu'on a une prépa.
-  if (iso === ctx.todayISO && ctx.recentHardCount === 0 && ctx.phaseType !== null) {
+  // Qualité : en SEMAINE (pas le week-end), aujourd'hui, si pas déjà faite et qu'on a une prépa.
+  if (iso === ctx.todayISO && !weekend && ctx.recentHardCount === 0 && ctx.phaseType !== null) {
     return { kind: 'suggested', session: qualitySession(ctx) }
   }
   // Sinon : facile / aérobie / rythme.
@@ -95,7 +108,8 @@ function adviseDay(iso: string, ctx: AdviceContext, remainingKm: number): DayAdv
 
 export function adviseWeek(ctx: AdviceContext): WeekAdvice {
   const planned = new Set(ctx.plannedDates)
-  const remaining = Math.max(0, (ctx.targetKm ?? 0) - ctx.weekDoneKm)
+  // Reste-à-faire = cible − réalisé − volume déjà planifié (à venir).
+  const remaining = Math.max(0, (ctx.targetKm ?? 0) - ctx.weekDoneKm - ctx.plannedRemainingKm)
   const byDate: Record<string, DayAdvice> = {}
   for (const iso of ctx.weekDates) {
     if (planned.has(iso)) { byDate[iso] = { kind: 'planned' }; continue }

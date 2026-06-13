@@ -149,10 +149,15 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
     const targetKm = planTarget?.km ?? (habitualWeekly(recentActivities, today).km || null)
     // Type stable de la phase active (enum), pas le libellé d'affichage.
     const phaseType = plan?.phases.find(p => p.startDate <= today && today <= p.endDate)?.type ?? null
+    // Séances planifiées encore à venir (non réalisées) : leur volume compte
+    // déjà pour la cible, et on n'ajoute pas une 2e sortie longue si une est prévue.
+    const futurePlanned = weekPlanned.filter(s => s.date >= today && s.status !== 'completed')
+    const plannedRemainingKm = futurePlanned.reduce((sum, s) => sum + (s.distance ?? 0), 0)
+    const hasPlannedLongRun = futurePlanned.some(s => s.type === 'sortie_longue' || s.type === 'course')
     return adviseWeek({
       todayISO: today, weekDates, freshnessZone, weekDoneKm, recentHardCount,
       targetKm, phaseType, daysToRace: race ? daysUntil(race.date) : null,
-      plannedDates: weekPlanned.map(s => s.date),
+      plannedDates: weekPlanned.map(s => s.date), plannedRemainingKm, hasPlannedLongRun,
     })
   }, [weekActivities, weekPlanned, freshnessPayload, macros, plan, race, today, weekDates, recentActivities])
 
@@ -293,21 +298,30 @@ export function MissionPlan({ freshnessPayload, recentActivities }: Props) {
 
             if (entry.kind === 'planned') {
               const s = entry.session
-              const status = s.status === 'completed' ? M.statusDone : entry.isToday ? M.statusToday : M.statusUpcoming
+              // Jour passé + séance non réalisée → « non réalisé » (croix rouge).
+              const missed = !entry.completed && !entry.isToday && entry.date < today
+              const status = entry.completed ? M.statusDone
+                : entry.isToday ? M.statusToday
+                  : missed ? M.weekStatusMissed
+                    : M.statusUpcoming
+              const statusColor = entry.completed ? 'var(--status-success)'
+                : entry.isToday ? 'var(--primary-text)'
+                  : missed ? 'var(--status-danger)'
+                    : 'var(--trail-muted)'
               return (
                 <button key={entry.date} type="button" onClick={() => openEditSession(s)} className={`flex w-full items-center gap-2.5 py-[9px] text-left ${sep}`} style={rowStyle}>
                   {dayLabel}{tick}
-                  <span className={`flex-1 text-[13px] truncate ${entry.isToday ? 'font-bold text-trail-text' : 'text-trail-text'}`}>{s.title}</span>
-                  <span className="text-[11px] font-semibold whitespace-nowrap" style={{ color: s.status === 'completed' ? 'var(--status-success)' : entry.isToday ? 'var(--primary-text)' : 'var(--trail-muted)' }}>{status}</span>
+                  <span className={`flex-1 text-[13px] truncate ${entry.isToday ? 'font-bold text-trail-text' : missed ? 'text-trail-muted' : 'text-trail-text'}`}>{s.title}</span>
+                  <span className="text-[11px] font-semibold whitespace-nowrap" style={{ color: statusColor }}>
+                    {missed ? '✗ ' : ''}{status}
+                  </span>
                 </button>
               )
             }
 
             if (entry.kind === 'suggested') {
               const s = entry.session
-              const chip = s.reasonCode === 'fill-volume-long' && s.reasonParam
-                ? `+${s.reasonParam} km`
-                : M.reasonChips[s.reasonCode]
+              const chip = M.reasonChips[s.reasonCode]
               return (
                 <div key={entry.date} className={`flex items-center gap-2.5 py-[9px] ${sep}`} style={rowStyle}>
                   {dayLabel}{tick}

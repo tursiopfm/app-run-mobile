@@ -242,6 +242,7 @@ export const en: Dict = {
     weekFeedSubtitle: 'done + suggested',
     weekMultiSessions: (n: number) => `${n} sessions`,
     weekAddSession: '＋ Add a session',
+    weekStatusMissed: 'not done',
     rythmeTitle: 'Your rhythm · last 4 weeks',
     rythmeAvg: (km: number) => `≈ ${km} km/week over a month.`,
     rythmeHint: 'Keep up this rhythm — or set a goal to structure your training.',
