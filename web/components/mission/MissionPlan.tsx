@@ -18,8 +18,8 @@ import {
   getAllMacrocycles, getMainRace, getPlannedSessions, isRaceMirrorSession,
   pickActiveMacrocycle,
 } from '@/lib/plan/storage'
-import { adviseWeek, applySlider, type SliderBase, type SliderOutcome } from '@/lib/mission/session-advisor'
-import { buildWeekFeed, sessionCategory } from '@/lib/mission/week-feed'
+import { adviseWeek, applySlider, type SliderBase, type SliderOutcome, type ReasonCode } from '@/lib/mission/session-advisor'
+import { buildWeekFeed, sessionCategory, type FeedEntry } from '@/lib/mission/week-feed'
 import { activityCategory } from '@/lib/plan/session-matching'
 import { weeklyVolumes, habitualWeekly } from '@/lib/mission/rhythm'
 import { resolveMissionWeeklyTarget } from '@/lib/mission/weekly-target'
@@ -79,6 +79,12 @@ function fmtKmDp(km: number, dPlus: number, sec: number): string {
   const h = Math.floor(sec / 3600), m = Math.round((sec % 3600) / 60)
   const dur = h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m}'`
   return `${km.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} km · ${dPlus} · ${dur}`
+}
+// Métrique compacte d'une séance planifiée/suggérée (durée · distance).
+function fmtMeta(min: number, km?: number): string {
+  const h = Math.floor(min / 60), m = Math.round(min % 60)
+  const dur = h > 0 ? (m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, '0')}`) : `${m}'`
+  return km ? `${dur} · ${km} km` : dur
 }
 
 export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Props) {
@@ -210,7 +216,12 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
     ? weekPlanned
     : [...weekPlanned.filter(s => s.date !== today), ...(virtualToday ? [virtualToday] : [])]
   const finalAdvice = adviseWeek({ ...ctx, ...plannedInputs(effectivePlanned) })
-  const feed = buildWeekFeed({ weekDates, todayISO: today, activities: weekActivities, planned: effectivePlanned, advice: finalAdvice })
+  const feedRaw = buildWeekFeed({ weekDates, todayISO: today, activities: weekActivities, planned: effectivePlanned, advice: finalAdvice })
+  // Si le curseur impose le repos aujourd'hui, la ligne « Ma semaine » du jour
+  // doit montrer « repos » (sinon le moteur re-suggérerait une séance pour le trou).
+  const feed: FeedEntry[] = (!todayDone && outcome.kind === 'rest')
+    ? feedRaw.map(e => e.date === today ? { date: today, isToday: true, kind: 'rest', reasonCode: 'rest-recovery' as ReasonCode } : e)
+    : feedRaw
 
   // ─── Actions ──────────────────────────────────────────────────────────────
   function openAdd(date: string) { setAddDate(date); setAddOpen(true) }
@@ -315,6 +326,7 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
                 <button key={entry.date} type="button" onClick={() => openEditSession(s)} className={`flex w-full items-center gap-2.5 py-[9px] text-left ${sep}`} style={rowStyle}>
                   {dayLabel}{tick}
                   <span className={`flex-1 text-[13px] truncate ${entry.isToday ? 'font-bold text-trail-text' : missed ? 'text-trail-muted' : 'text-trail-text'}`}>{s.title}</span>
+                  {!missed && <span className="text-[11px] tabular-nums whitespace-nowrap text-trail-muted">{fmtMeta(s.duration, s.distance)}</span>}
                   <span className="text-[11px] font-semibold whitespace-nowrap" style={{ color: statusColor }}>
                     {missed ? '✗ ' : ''}{status}
                   </span>
@@ -329,6 +341,7 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
                 <div key={entry.date} className={`flex items-center gap-2.5 py-[9px] ${sep}`} style={rowStyle}>
                   {dayLabel}{tick}
                   <span className="flex-1 text-[13px] truncate text-trail-text">{M.sessionTitles[s.titleKey] ?? s.titleKey}</span>
+                  <span className="text-[11px] tabular-nums whitespace-nowrap text-trail-muted">{fmtMeta(s.durationMin, s.distanceKm)}</span>
                   <span className="text-[9.5px] font-semibold px-2 py-[2px] rounded-full" style={{ background: 'var(--primary-glow)', color: 'var(--primary-text)', border: '1px solid rgba(255,121,0,0.30)' }}>{chip}</span>
                 </div>
               )
