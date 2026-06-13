@@ -237,15 +237,6 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
       <Section
         title="Tableau de course"
         titleClassName="text-h2 font-semibold text-trail-text font-display"
-        action={waypoints.length > 0 ? (
-          <TableActionsMenu
-            showEditRace={false}
-            label="Actions du tableau"
-            onEditLines={() => setEditLines((v) => !v)}
-            onReimport={() => setImportOpen(true)}
-            onExport={handleExport}
-          />
-        ) : undefined}
       >
         {waypoints.length === 0 ? (
           <button type="button" onClick={() => setImportOpen(true)}

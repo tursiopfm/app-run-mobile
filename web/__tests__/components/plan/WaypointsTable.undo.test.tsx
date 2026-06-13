@@ -38,16 +38,30 @@ it('Annuler restaure l’état d’entrée du mode édition (suppression + cellu
   expect(screen.getByDisplayValue('Départ')).toBeInTheDocument()
   expect(screen.queryByDisplayValue('Départ modifié')).not.toBeInTheDocument()
   // …et on est sorti du mode édition.
-  expect(screen.queryByRole('button', { name: /Terminé/ })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /Valider/ })).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /Annuler/ })).not.toBeInTheDocument()
 })
 
-it('Terminé conserve les modifications', () => {
+it('Valider conserve les modifications', () => {
   render(<Harness />)
   fireEvent.click(screen.getAllByLabelText('Supprimer la ligne')[1])
 
-  fireEvent.click(screen.getByRole('button', { name: /Terminé/ }))
+  fireEvent.click(screen.getByRole('button', { name: /Valider/ }))
 
   expect(screen.queryByDisplayValue('Ravito B')).not.toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: /Terminé/ })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /Valider/ })).not.toBeInTheDocument()
+})
+
+it('le km d’une ligne ajoutée se valide au blur (pas de commit pendant la frappe)', () => {
+  render(<Harness />)
+  // Ajout : km = milieu (10+20)/2 = 15 → entre Ravito B et Arrivée.
+  fireEvent.click(screen.getByRole('button', { name: /Ajouter une ligne/ }))
+  const kmInput = screen.getByDisplayValue('15')
+  expect(screen.getByDisplayValue('Nouveau point')).toBeInTheDocument()
+
+  // Frappe sans blur : le champ change mais le km n'est pas encore commité.
+  fireEvent.change(kmInput, { target: { value: '5' } })
+  // Blur : commit + re-tri (la ligne se range entre Départ et Ravito B).
+  fireEvent.blur(kmInput)
+  expect(screen.getByDisplayValue('5')).toBeInTheDocument()
 })

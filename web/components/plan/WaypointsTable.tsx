@@ -244,22 +244,13 @@ export function WaypointsTable({
         .wtbl .row-wrap>.gA{flex:1;min-width:0;}
         .wtbl .del{flex:none;width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:none;border:0;border-radius:50%;color:var(--red);font-size:15px;line-height:1;cursor:pointer;padding:0;}
         .wtbl .del-spacer{flex:none;width:18px;}
-        .wtbl .wtbl-bar{display:flex;justify-content:flex-end;padding:0 3px 6px;}
-        .wtbl .btn-lines{font-family:var(--d);font-size:11px;font-weight:600;color:var(--orange);background:none;border:0;cursor:pointer;padding:2px 4px;}
         .wtbl .add-row{width:100%;margin-top:8px;padding:8px;font-family:var(--d);font-size:12px;font-weight:600;color:var(--orange);background:rgba(255,107,53,.08);border:1px dashed rgba(255,107,53,.4);border-radius:8px;cursor:pointer;}
-        .wtbl .btn-lines.undo{color:var(--muted);margin-right:10px;}
+        /* Barre d'édition en bas : Annuler (gris, gauche) · Ajouter (centre) · Valider (orange plein, droite) */
+        .wtbl .edit-foot{display:flex;align-items:stretch;gap:8px;margin-top:10px;}
+        .wtbl .edit-foot .add-row{flex:1;margin-top:0;}
+        .wtbl .btn-cancel{flex:none;display:inline-flex;align-items:center;gap:5px;font-family:var(--d);font-size:12px;font-weight:600;color:var(--muted);background:rgba(127,127,127,.10);border:1px solid var(--border);border-radius:8px;padding:8px 11px;cursor:pointer;white-space:nowrap;}
+        .wtbl .btn-validate{flex:none;display:inline-flex;align-items:center;gap:5px;font-family:var(--d);font-size:12px;font-weight:700;color:#fff;background:var(--orange);border:0;border-radius:8px;padding:8px 13px;cursor:pointer;white-space:nowrap;}
       `}</style>
-
-      {!readOnly && editLines && (
-        <div className="wtbl-bar">
-          <button type="button" className="btn-lines undo" onClick={cancelEdit}>
-            ↶ Annuler
-          </button>
-          <button type="button" className="btn-lines" onClick={() => onEditLinesChange?.(false)}>
-            ✓ Terminé
-          </button>
-        </div>
-      )}
 
       <div className="row-wrap">
         {editLines && !readOnly && <span className="del-spacer" />}
@@ -306,10 +297,17 @@ export function WaypointsTable({
               )}
             </div>
 
-            {/* Dist : km cumulé + inter */}
+            {/* Dist : km cumulé + inter — le km se valide au blur / Entrée (PAS à
+                chaque frappe), sinon le tri par km ferait sauter la ligne et l'input
+                perdrait le focus pendant la saisie. La ligne se range à la sortie du champ. */}
             <div className="num">
-              <input className="big" type="text" inputMode="decimal" value={fmtKm(w.km)} disabled={readOnly}
-                onChange={(e) => update(i, { km: parseFloat(e.target.value.replace(',', '.')) || 0 })} />
+              <input className="big" type="text" inputMode="decimal" disabled={readOnly}
+                key={`km-${w.km}`} defaultValue={fmtKm(w.km)}
+                onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+                onBlur={(e) => {
+                  const v = parseFloat(e.target.value.replace(',', '.')) || 0
+                  if (v !== w.km) update(i, { km: v })
+                }} />
               {seg.interKm != null && <span className="sub inter">+{fmtKm(seg.interKm)}</span>}
             </div>
 
@@ -397,9 +395,11 @@ export function WaypointsTable({
       })}
 
       {editLines && !readOnly && (
-        <button type="button" className="add-row" onClick={addRow}>
-          + Ajouter une ligne
-        </button>
+        <div className="edit-foot">
+          <button type="button" className="btn-cancel" onClick={cancelEdit}>↶ Annuler</button>
+          <button type="button" className="add-row" onClick={addRow}>+ Ajouter une ligne</button>
+          <button type="button" className="btn-validate" onClick={() => onEditLinesChange?.(false)}>✓ Valider</button>
+        </div>
       )}
 
       <div className="legend-mini">
