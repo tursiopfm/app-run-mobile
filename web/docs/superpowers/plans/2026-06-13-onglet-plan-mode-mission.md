@@ -309,10 +309,7 @@ export type AdviceContext = {
 
 export type WeekAdvice = { today: DayAdvice; byDate: Record<string, DayAdvice> }
 
-const isWeekend = (iso: string): boolean => {
-  const dow = new Date(`${iso}T00:00:00Z`).getUTCDay()
-  return dow === 0 || dow === 6
-}
+const dowUTC = (iso: string): number => new Date(`${iso}T00:00:00Z`).getUTCDay()
 const isTaper = (ctx: AdviceContext): boolean =>
   ctx.phaseLabel === 'Affûtage' || (ctx.daysToRace != null && ctx.daysToRace <= 10)
 const isFatigued = (z: FreshnessZone | null): boolean => z === 'high-fatigue'
@@ -334,20 +331,22 @@ function longSession(remainingKm: number): SuggestedSession {
 }
 
 // Conseil pour UN jour donné (hors jours planifiés, gérés par l'appelant).
+// `remainingKm` = reste-à-faire de la SEMAINE (constant, calculé une fois) — on
+// ne le décrémente pas jour par jour, sinon les footings de début de semaine
+// « mangeraient » le budget avant le samedi et tueraient la sortie longue.
 function adviseDay(iso: string, ctx: AdviceContext, remainingKm: number): DayAdvice {
-  const isToday = iso === ctx.todayISO
-  // Fatigue marquée → repos (ou easy si c'est le seul créneau qualité requis).
+  const dow = dowUTC(iso)
+  const weekend = dow === 0 || dow === 6
   if (isFatigued(ctx.freshnessZone)) {
-    return isWeekend(iso) ? { kind: 'suggested', session: easySession('fatigue-easy') }
-                          : { kind: 'rest', reasonCode: 'rest-recovery' }
+    return weekend ? { kind: 'suggested', session: easySession('fatigue-easy') }
+                   : { kind: 'rest', reasonCode: 'rest-recovery' }
   }
-  // Week-end : sortie longue si la cible n'est pas atteinte.
-  if (isWeekend(iso) && remainingKm > 10) {
+  // Sortie longue le SAMEDI si la cible hebdo n'est pas atteinte (hors affûtage).
+  if (dow === 6 && remainingKm > 10 && !isTaper(ctx)) {
     return { kind: 'suggested', session: longSession(remainingKm) }
   }
-  // Qualité : autorisée si pas déjà faite cette semaine ET pas en affûtage tardif.
-  const canQuality = ctx.recentHardCount === 0 && !isFatigued(ctx.freshnessZone)
-  if (isToday && canQuality && ctx.phaseLabel !== null) {
+  // Qualité : aujourd'hui, si pas déjà faite cette semaine ET qu'on a une prépa.
+  if (iso === ctx.todayISO && ctx.recentHardCount === 0 && ctx.phaseLabel !== null) {
     return { kind: 'suggested', session: qualitySession(ctx) }
   }
   // Sinon : facile / aérobie / rythme.
@@ -358,18 +357,12 @@ function adviseDay(iso: string, ctx: AdviceContext, remainingKm: number): DayAdv
 
 export function adviseWeek(ctx: AdviceContext): WeekAdvice {
   const planned = new Set(ctx.plannedDates)
-  const target = ctx.targetKm ?? 0
-  let remaining = Math.max(0, target - ctx.weekDoneKm)
-
+  const remaining = Math.max(0, (ctx.targetKm ?? 0) - ctx.weekDoneKm)
   const byDate: Record<string, DayAdvice> = {}
   for (const iso of ctx.weekDates) {
     if (planned.has(iso)) { byDate[iso] = { kind: 'planned' }; continue }
     if (iso < ctx.todayISO) { byDate[iso] = { kind: 'rest', reasonCode: 'rest-recovery' }; continue } // passé non réalisé → repos
-    const advice = adviseDay(iso, ctx, remaining)
-    if (advice.kind === 'suggested' && advice.session.distanceKm) {
-      remaining = Math.max(0, remaining - advice.session.distanceKm)
-    }
-    byDate[iso] = advice
+    byDate[iso] = adviseDay(iso, ctx, remaining)
   }
   return { today: byDate[ctx.todayISO] ?? { kind: 'rest', reasonCode: 'rest-recovery' }, byDate }
 }
