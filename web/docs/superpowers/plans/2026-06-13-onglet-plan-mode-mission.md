@@ -462,7 +462,16 @@ import type { ActivityRow } from '@/components/ui/ActivityCard'
 import type { PlannedSession } from '@/types/plan'
 import type { WeekAdvice, SuggestedSession, ReasonCode } from '@/lib/mission/session-advisor'
 import { activityCategory } from '@/lib/plan/session-matching'
-import { resolveSessionMeta, type SessionCategory } from '@/lib/plan/session-meta'
+import type { SessionCategory } from '@/lib/plan/session-meta'
+
+// Catégorie d'un type de séance — catalog-free (week-feed reste pur, pas de
+// fetch). Couvre les types BUILTIN ; custom/inconnu → 'run' (app trail-centrée).
+const TYPE_CATEGORY: Record<string, SessionCategory> = {
+  course: 'run', sortie_longue: 'run', fractionne: 'run', seuil_tempo: 'run',
+  cotes: 'run', footing: 'run', runtaf: 'run',
+  velo: 'bike', velotaf: 'bike', natation: 'swim', renfo: 'other', musculation: 'other',
+}
+function sessionCategory(type: string): SessionCategory { return TYPE_CATEGORY[type] ?? 'run' }
 
 export type FeedEntry =
   | { date: string; isToday: boolean; kind: 'done'; category: SessionCategory; title: string; km: number; dPlus: number; durationSec: number; activityId: string; multiple: boolean }
@@ -509,18 +518,16 @@ export function buildWeekFeed({ weekDates, todayISO, activities, planned, advice
     }
     const p = planByDay.get(date)
     if (p) {
-      return { date, isToday, kind: 'planned', category: resolveSessionMeta(p.type).category, session: p, completed: p.status === 'completed' }
+      return { date, isToday, kind: 'planned', category: sessionCategory(p.type), session: p, completed: p.status === 'completed' }
     }
     const a = advice.byDate[date] ?? { kind: 'rest', reasonCode: 'rest-recovery' as ReasonCode }
     if (a.kind === 'suggested') {
-      return { date, isToday, kind: 'suggested', category: resolveSessionMeta(a.session.type).category, session: a.session }
+      return { date, isToday, kind: 'suggested', category: sessionCategory(a.session.type), session: a.session }
     }
     return { date, isToday, kind: 'rest', reasonCode: a.kind === 'rest' ? a.reasonCode : 'rest-recovery' }
   })
 }
 ```
-
-> **Note d'implémentation :** vérifier la signature de `resolveSessionMeta` dans `web/lib/plan/session-meta.ts` — elle prend le `type` (string) et expose `.category`. Si elle exige un 2e argument (liste de types custom), passer `resolveSessionMeta(type)` reste valide pour les types BUILTIN ; sinon adapter l'appel et caster la catégorie. Confirmer avant d'écrire le code.
 
 - [ ] **Step 4 : Lancer le test (passe)**
 
