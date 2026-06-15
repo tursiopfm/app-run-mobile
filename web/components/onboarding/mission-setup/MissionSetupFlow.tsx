@@ -592,8 +592,8 @@ function CompletionScreen({ discipline, mission, mode, busy, error, onEnter }: {
       </p>
 
       {/* Mantra de l'app — mis en avant, sur une seule ligne */}
-      <p className="font-display whitespace-nowrap text-[clamp(16px,5vw,20px)] font-bold tracking-tight text-primary-text mt-3.5">
-        Préparer <span className="font-normal text-fg-muted/50">·</span> Piloter <span className="font-normal text-fg-muted/50">·</span> Accomplir
+      <p className="font-display whitespace-nowrap text-[clamp(16px,5vw,20px)] font-bold tracking-tight text-fg-primary mt-3.5">
+        Préparer <span className="font-normal text-fg-muted/50">·</span> <span className="text-primary-text">Piloter</span> <span className="font-normal text-fg-muted/50">·</span> Accomplir
       </p>
 
       <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
