@@ -3,7 +3,7 @@ import { createServiceClient } from '@/lib/database/supabase-server'
 import { fetchVercelDeployments } from '@/lib/admin/vercel'
 import { formatDateTime } from '@/lib/admin/format'
 import { envSummary } from '@/lib/admin/system-env'
-import { Users, Plug, Activity, Webhook, Rocket, Settings } from 'lucide-react'
+import { Users, Plug, Activity, Webhook, Rocket, Settings, Sparkles } from 'lucide-react'
 
 const DAY_MS = 86400000
 
@@ -147,6 +147,12 @@ export async function TabDashboard() {
         <p className="text-micro text-trail-muted mt-1">
           {process.env.NODE_ENV ?? '—'} {envOk ? '· tout OK' : `· ${s.env.missing} manquant${s.env.missing > 1 ? 's' : ''}`}
         </p>
+      </Card>
+
+      <Card href="/admin?tab=whats-new">
+        <Sparkles size={18} className="text-trail-primary mb-2" />
+        <p className="text-sm font-bold text-trail-text">Quoi de neuf</p>
+        <p className="text-xs text-trail-muted mt-0.5">Pop-ups de mise à jour</p>
       </Card>
     </div>
   )

@@ -9,8 +9,9 @@ import { TabDeployments } from './components/TabDeployments'
 import { TabWebhooks } from './components/TabWebhooks'
 import { TabSystem } from './components/TabSystem'
 import { TabSync } from './components/TabSync'
+import { TabWhatsNew } from './components/TabWhatsNew'
 
-const VALID_TABS = ['dashboard', 'users', 'deployments', 'webhooks', 'system', 'sync'] as const
+const VALID_TABS = ['dashboard', 'users', 'deployments', 'webhooks', 'system', 'sync', 'whats-new'] as const
 type Tab = typeof VALID_TABS[number]
 
 const TAB_TITLES: Record<Exclude<Tab, 'dashboard'>, string> = {
@@ -19,6 +20,7 @@ const TAB_TITLES: Record<Exclude<Tab, 'dashboard'>, string> = {
   webhooks: 'Webhooks',
   system: 'Système',
   sync: 'Sync',
+  'whats-new': 'Quoi de neuf',
 }
 
 export default async function AdminPage({
@@ -63,6 +65,7 @@ export default async function AdminPage({
         {activeTab === 'webhooks'    && <TabWebhooks />}
         {activeTab === 'system'      && <TabSystem />}
         {activeTab === 'sync'        && <TabSync />}
+        {activeTab === 'whats-new'   && <TabWhatsNew />}
       </div>
     </div>
   )
