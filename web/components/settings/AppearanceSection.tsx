@@ -30,22 +30,6 @@ function ActionChip({
   )
 }
 
-function SettingsRow({
-  title, value, accent, colors,
-}: {
-  title: string; value: string; accent: string; colors: TrailPalette
-}) {
-  return (
-    <div
-      className="flex items-center justify-between rounded-[12px]"
-      style={{ padding: '10px 12px', backgroundColor: colors.surface }}
-    >
-      <span className="text-body text-trail-muted">{title}</span>
-      <span className="text-body font-semibold" style={{ color: accent }}>{value}</span>
-    </div>
-  )
-}
-
 export function AppearanceSection() {
   const { theme, setTheme } = useTheme()
   const { choice, setLang } = useLang()
@@ -79,8 +63,6 @@ export function AppearanceSection() {
   }
 
   const activeOption = themeOptions.find(o => o.nextTheme === theme) ?? themeOptions[0]
-  const selectedLang = langOptions.find(l => l.value === choice) ?? langOptions[0]
-  const langRowTitle = t.settings.languageRow
 
   return (
     <>
@@ -100,25 +82,17 @@ export function AppearanceSection() {
         {themeDesc[activeOption.value]}
       </p>
 
-      {/* Language row + chips */}
-      <div className="mt-[14px] space-y-2">
-        <SettingsRow
-          title={langRowTitle}
-          value={selectedLang.label}
-          accent={colors.seriesBlue}
-          colors={colors}
-        />
-        <div className="flex gap-2 overflow-x-auto pb-0.5">
-          {langOptions.map(opt => (
-            <ActionChip
-              key={opt.value}
-              label={opt.label}
-              active={choice === opt.value}
-              onClick={() => handleLang(opt.value)}
-              colors={colors}
-            />
-          ))}
-        </div>
+      {/* Language chips */}
+      <div className="mt-[14px] flex gap-2 overflow-x-auto pb-0.5">
+        {langOptions.map(opt => (
+          <ActionChip
+            key={opt.value}
+            label={opt.label}
+            active={choice === opt.value}
+            onClick={() => handleLang(opt.value)}
+            colors={colors}
+          />
+        ))}
       </div>
     </>
   )

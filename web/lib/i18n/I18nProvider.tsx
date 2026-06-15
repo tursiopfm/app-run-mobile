@@ -15,9 +15,9 @@ type Ctx = {
 const I18nContext = createContext<Ctx | null>(null)
 
 function readChoiceCookie(): LangChoice {
-  if (typeof document === 'undefined') return 'fr'
+  if (typeof document === 'undefined') return 'system'
   const match = document.cookie.match(/(?:^|;\s*)tc_lang_choice=(fr|en|system)/)
-  return (match?.[1] as LangChoice | undefined) ?? 'fr'
+  return (match?.[1] as LangChoice | undefined) ?? 'system'
 }
 
 function resolveSystemLang(): Lang {
