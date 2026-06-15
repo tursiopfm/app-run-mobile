@@ -16,18 +16,24 @@ export function WhatsNewManager({ popups }: { popups: PopupRow[] }) {
 
   async function call(url: string, method: string, body?: unknown) {
     setBusy(true)
-    const res = await fetch(url, {
-      method,
-      headers: body ? { 'Content-Type': 'application/json' } : undefined,
-      body: body ? JSON.stringify(body) : undefined,
-    })
-    setBusy(false)
-    if (!res.ok) {
-      const j = await res.json().catch(() => ({}))
-      alert(j.error ?? 'Erreur')
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: body ? { 'Content-Type': 'application/json' } : undefined,
+        body: body ? JSON.stringify(body) : undefined,
+      })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        alert(j.error ?? 'Erreur')
+        return false
+      }
+      return true
+    } catch {
+      alert('Erreur réseau')
       return false
+    } finally {
+      setBusy(false)
     }
-    return true
   }
 
   async function save() {
