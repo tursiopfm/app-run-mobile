@@ -59,6 +59,51 @@ function ringStyle(accent: string, extra?: CSSProperties): CSSProperties {
   return { ['--tw-ring-color' as string]: accent, ...extra } as CSSProperties
 }
 
+// Vignette stylisée par mode (pas de vraie capture, ne se périme pas) :
+// « mission » = vue épurée (1 carte + 1 bouton) · « expert » = tableau de bord dense.
+function ModeThumb({ id }: { id: string }) {
+  return (
+    <div className="mt-3 h-[78px] w-full overflow-hidden rounded-[10px] border border-[#1b232e] bg-ink-900">
+      {id === 'mission' ? (
+        <svg viewBox="0 0 320 78" preserveAspectRatio="xMidYMid slice" className="block h-full w-full">
+          <rect x="14" y="12" width="292" height="38" rx="8" fill="#18202B" stroke="#2a3644" />
+          <circle cx="34" cy="31" r="9" fill="none" stroke="var(--primary)" strokeWidth="2.4" />
+          <rect x="52" y="22" width="120" height="6" rx="3" fill="#3a4754" />
+          <rect x="52" y="34" width="70" height="5" rx="2.5" fill="#2c3947" />
+          <rect x="120" y="58" width="80" height="11" rx="5.5" fill="var(--primary)" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 320 78" preserveAspectRatio="xMidYMid slice" className="block h-full w-full">
+          <rect x="12" y="10" width="58" height="22" rx="5" fill="#18202B" stroke="#2a3644" />
+          <rect x="76" y="10" width="58" height="22" rx="5" fill="#18202B" stroke="#2a3644" />
+          <rect x="140" y="10" width="58" height="22" rx="5" fill="#18202B" stroke="#2a3644" />
+          <rect x="18" y="15" width="20" height="4" rx="2" fill="var(--data-bike)" />
+          <rect x="18" y="23" width="34" height="4" rx="2" fill="#33414f" />
+          <rect x="82" y="15" width="20" height="4" rx="2" fill="#FF8A33" />
+          <rect x="82" y="23" width="34" height="4" rx="2" fill="#33414f" />
+          <rect x="146" y="15" width="20" height="4" rx="2" fill="#7aa8ff" />
+          <rect x="146" y="23" width="34" height="4" rx="2" fill="#33414f" />
+          <rect x="208" y="10" width="100" height="58" rx="6" fill="#18202B" stroke="#2a3644" />
+          <path d="M214 52 L226 44 L238 48 L250 34 L262 40 L274 26 L286 32 L300 20" fill="none" stroke="var(--data-bike)" strokeWidth="2" />
+          <path d="M214 52 L226 44 L238 48 L250 34 L262 40 L274 26 L286 32 L300 20 L300 62 L214 62 Z" fill="var(--data-bike)" opacity="0.14" />
+          <rect x="14" y="60" width="10" height="8" rx="2" fill="#33414f" />
+          <rect x="30" y="52" width="10" height="16" rx="2" fill="#3a4754" />
+          <rect x="46" y="46" width="10" height="22" rx="2" fill="var(--primary)" />
+          <rect x="62" y="55" width="10" height="13" rx="2" fill="#33414f" />
+          <rect x="78" y="48" width="10" height="20" rx="2" fill="#3a4754" />
+          <rect x="94" y="58" width="10" height="10" rx="2" fill="#33414f" />
+          <rect x="110" y="50" width="10" height="18" rx="2" fill="#3a4754" />
+          <rect x="126" y="44" width="10" height="24" rx="2" fill="var(--data-bike)" />
+          <rect x="142" y="56" width="10" height="12" rx="2" fill="#33414f" />
+          <rect x="158" y="52" width="10" height="16" rx="2" fill="#3a4754" />
+          <rect x="174" y="47" width="10" height="21" rx="2" fill="#3a4754" />
+          <rect x="190" y="58" width="10" height="10" rx="2" fill="#33414f" />
+        </svg>
+      )}
+    </div>
+  )
+}
+
 function SelectTile({
   selected, accent, icon: Icon, title, desc, onClick, compact,
 }: {
@@ -371,9 +416,10 @@ export function MissionSetupFlow({
                             </span>
                           )}
                         </div>
-                        <div className="mt-3 flex flex-wrap gap-1.5 pl-14">
+                        <ModeThumb id={m.id} />
+                        <div className="mt-3 flex flex-nowrap gap-1">
                           {m.points.map(p => (
-                            <span key={p} className="font-body text-micro text-fg-secondary rounded-full bg-ink-600/70 px-2 py-0.5">{p}</span>
+                            <span key={p} className="whitespace-nowrap font-body text-micro text-fg-secondary rounded-full bg-ink-600/70 px-1.5 py-0.5">{p}</span>
                           ))}
                         </div>
                       </button>
@@ -542,7 +588,12 @@ function CompletionScreen({ discipline, mission, mode, busy, error, onEnter }: {
       </span>
       <h2 className="font-display text-[24px] font-bold tracking-tight text-fg-primary mt-4">Mission prête</h2>
       <p className="font-body text-body text-fg-muted mt-1.5 max-w-xs">
-        Ton cockpit est configuré. Préparer. Piloter. Accomplir.
+        Ton cockpit est configuré.
+      </p>
+
+      {/* Mantra de l'app — mis en avant, sur une seule ligne */}
+      <p className="font-display whitespace-nowrap text-[clamp(16px,5vw,20px)] font-bold tracking-tight text-primary-text mt-3.5">
+        Préparer <span className="font-normal text-fg-muted/50">·</span> Piloter <span className="font-normal text-fg-muted/50">·</span> Accomplir
       </p>
 
       <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
