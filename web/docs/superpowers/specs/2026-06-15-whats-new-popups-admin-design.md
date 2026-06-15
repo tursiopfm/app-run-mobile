@@ -1,5 +1,8 @@
 # Module admin « Quoi de neuf » — pop-ups de mise à jour pilotées par la base
 
+> **Status: Implémenté** · 2026-06-15 · Code: `web/app/(main)/admin/components/TabWhatsNew.tsx`, `web/app/(main)/admin/components/WhatsNewManager.tsx`, `web/app/api/admin/whats-new/`, `web/components/ui/WhatsNewCard.tsx`, `web/components/ui/WhatsNewModal.tsx`, `web/lib/admin/whats-new.ts`, `web/supabase/migrations/042_whats_new_popups.sql`
+> ⚠️ Migration 042 à appliquer dans Supabase avant utilisation (voir § Déploiement).
+
 > Date : 2026-06-15 · Statut : Spec validée, à implémenter
 
 ## Contexte
