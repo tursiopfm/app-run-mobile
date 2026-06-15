@@ -216,7 +216,7 @@ export default async function SettingsPage({
         <SectionHeader
           icon={Compass}
           title="Mode d’affichage"
-          subtitle="Mission (allégé) ou Expert (cockpit complet)"
+          subtitle="Simplifié (allégé) ou Expert (cockpit complet)"
         />
         <SectionCard>
           <AppModeToggle variant="row" initialMode={appMode} />

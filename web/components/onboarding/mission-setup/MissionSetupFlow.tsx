@@ -49,7 +49,7 @@ const MISSIONS: Option[] = [
 ]
 
 const MODES: (Option & { points: string[] })[] = [
-  { id: 'mission', label: 'Mode Mission', desc: 'Simple, lisible, guidé.',  icon: Compass,   accent: 'var(--primary)',   points: ['Vue épurée', 'Une mission à la fois', 'Conseils guidés'] },
+  { id: 'mission', label: 'Mode Simplifié', desc: 'Simple, lisible, guidé.',  icon: Compass,   accent: 'var(--primary)',   points: ['Vue épurée', 'Une mission à la fois', 'Conseils guidés'] },
   { id: 'expert',  label: 'Mode Expert',  desc: 'Données complètes.',        icon: BarChart3, accent: 'var(--data-bike)', points: ['Charge & fatigue', 'Graphiques avancés', 'Cockpit complet'] },
 ]
 

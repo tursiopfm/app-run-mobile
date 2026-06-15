@@ -28,7 +28,7 @@ export function AppModeToggle({ variant = 'row', initialMode = 'expert' }: Props
   if (variant === 'compact') {
     const next: AppMode = mode === 'mission' ? 'expert' : 'mission'
     // Le bouton affiche la DESTINATION (en Mission, il affiche « Expert »).
-    const label = next === 'expert' ? 'Expert' : 'Mission'
+    const label = next === 'expert' ? 'Expert' : 'Simplifié'
     const Icon = next === 'expert' ? BarChart3 : Compass
     return (
       <button
@@ -51,7 +51,7 @@ export function AppModeToggle({ variant = 'row', initialMode = 'expert' }: Props
 
   // variant row
   const opts: { key: AppMode; label: string; desc: string; Icon: typeof Compass }[] = [
-    { key: 'mission', label: 'Mission', desc: 'Vue allégée, l’essentiel', Icon: Compass },
+    { key: 'mission', label: 'Simplifié', desc: 'Vue allégée, l’essentiel', Icon: Compass },
     { key: 'expert',  label: 'Expert',  desc: 'Cockpit complet, données avancées', Icon: BarChart3 },
   ]
   return (

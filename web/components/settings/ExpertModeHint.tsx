@@ -41,7 +41,7 @@ export function ExpertModeHint() {
         </div>
         <h2 className="font-display text-[17px] font-bold text-trail-text">Mode Expert activé</h2>
         <p className="mt-2 text-body-sm text-trail-muted leading-relaxed">
-          Tu as maintenant accès au cockpit complet. Pour revenir au Mode Mission,
+          Tu as maintenant accès au cockpit complet. Pour revenir au mode Simplifié,
           va dans <span className="font-semibold text-trail-text">Réglages → Mode d’affichage</span>.
         </p>
         <button
