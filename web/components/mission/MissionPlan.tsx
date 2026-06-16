@@ -6,32 +6,18 @@
 // Spec : docs/superpowers/specs/2026-06-13-onglet-plan-mode-mission-design.md
 // Maquette : Prompts/plan-tab-mission-final-mockup.html
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { MissionCard, MissionCardLabel } from './cards'
 import { PlanHeroCard } from './PlanHeroCard'
 import { RythmeCard } from './RythmeCard'
-import { SessionAddSheet } from '@/components/plan/SessionAddSheet'
-import { SessionEditorModal } from '@/components/plan/SessionEditorModal'
-import { RaceEditorModal } from '@/components/plan/RaceEditorModal'
-import {
-  deletePlannedSession, getAllMacrocycles, getMainRace, getPlannedSessions,
-  isRaceMirrorSession, pickActiveMacrocycle,
-} from '@/lib/plan/storage'
-import { adviseWeek, applySlider, type SliderBase, type SliderOutcome, type ReasonCode } from '@/lib/mission/session-advisor'
-import { buildWeekFeed, sessionCategory, type FeedEntry } from '@/lib/mission/week-feed'
-import { activityCategory } from '@/lib/plan/session-matching'
 import { weeklyVolumes, habitualWeekly } from '@/lib/mission/rhythm'
-import { raceProfile } from '@/lib/mission/race-profile'
-import { resolveMissionWeeklyTarget } from '@/lib/mission/weekly-target'
 import { computePhaseSegments, weekOfPlan } from '@/lib/mission/prepa'
-import { computeFreshness } from '@/lib/analytics/charge-insights'
-import { estimateCharge } from '@/lib/training/charge'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 import type { ActivityRow } from '@/components/ui/ActivityCard'
 import type { HrZone } from '@/lib/health/hr-zones'
-import type { IntensityLevel, PlannedSession, Race, SessionTemplate, TrainingPlan } from '@/types/plan'
 import { useT } from '@/lib/i18n/I18nProvider'
+import { useTodaySession } from './useTodaySession'
+import { NextSessionModals } from './NextSessionModals'
 
 type Props = {
   freshnessPayload: ChargeSportPayload | null
@@ -44,38 +30,15 @@ const DAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const CAT_COLOR: Record<string, string> = {
   run: 'var(--primary)', bike: 'var(--data-bike)', swim: 'var(--data-swim)', other: 'var(--ink-500)',
 }
-// « Ma semaine » ne montre que les séances course / vélo / natation.
-const DISCIPLINES = new Set(['run', 'bike', 'swim'])
-const TYPE_ACCENT: Record<string, string> = {
-  velo: 'var(--data-bike)', velotaf: 'var(--data-bike)', natation: 'var(--data-swim)',
-}
-const accentForType = (type: string): string => TYPE_ACCENT[type] ?? 'var(--primary)'
-
-function todayISO(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-function isoOfWeekDay(idx: number): string {
-  const now = new Date()
-  const dow = now.getDay() || 7
-  const d = new Date(now)
-  d.setDate(now.getDate() - (dow - 1) + idx)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 function daysUntil(dateISO: string): number {
-  const today = new Date(`${todayISO()}T00:00:00`)
+  const d = new Date()
+  const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const todayDate = new Date(`${today}T00:00:00`)
   const race = new Date(`${dateISO}T00:00:00`)
-  return Math.max(0, Math.round((race.getTime() - today.getTime()) / 86_400_000))
+  return Math.max(0, Math.round((race.getTime() - todayDate.getTime()) / 86_400_000))
 }
 
-function makeId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
-  return `session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-}
-
-function actKm(a: ActivityRow): number { return (a.manual_distance_m ?? a.distance_m ?? 0) / 1000 }
 function fmtKmDp(km: number, dPlus: number, sec: number): string {
   const h = Math.floor(sec / 3600), m = Math.round((sec % 3600) / 60)
   const dur = h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m}'`
@@ -90,206 +53,10 @@ function fmtMeta(min: number, km?: number, elev?: number): string {
 
 export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Props) {
   const M = useT().mission
-
-  // Cible FC personnalisée pour une intensité de séance (1..5 → zone Z1..Z5).
-  const hrTargetLabel = (intensity: IntensityLevel): string | null => {
-    const z = hrZones[intensity - 1]
-    if (!z) return null
-    const range = z.min != null ? `${z.min}–${z.max}` : `< ${z.max}`
-    return `${z.name} · ${range} bpm`
-  }
-
-  const [macros, setMacros] = useState<TrainingPlan[]>([])
-  const [plan, setPlan] = useState<TrainingPlan | null>(null)
-  const [planned, setPlanned] = useState<PlannedSession[]>([])
-  const [race, setRace] = useState<Race | null>(null)
-  const [loaded, setLoaded] = useState(false)
-  const [reloadKey, setReloadKey] = useState(0)
-  const bumpReload = useCallback(() => setReloadKey(k => k + 1), [])
-
-  // Modales (mêmes composants que le mode expert).
-  const [addOpen, setAddOpen] = useState(false)
-  const [addDate, setAddDate] = useState(todayISO())
-  const [editorOpen, setEditorOpen] = useState(false)
-  const [editorSession, setEditorSession] = useState<PlannedSession | null>(null)
-  const [editorPrefill, setEditorPrefill] = useState<SessionTemplate | null>(null)
-  const [editorDate, setEditorDate] = useState(todayISO())
-  const [createRaceOpen, setCreateRaceOpen] = useState(false)
-  // En Mission, le jour n'a QU'UNE séance : enregistrer une séance du jour
-  // remplace celle(s) en place (ids à supprimer après save). Évite l'empilement.
-  const [replaceIds, setReplaceIds] = useState<string[]>([])
-
-  // Curseur « forme du jour » (2 = Prévu). Persisté localStorage par date.
-  const [sliderPos, setSliderPosState] = useState(2)
-  useEffect(() => {
-    try {
-      const v = localStorage.getItem(`tc_form_slider_${todayISO()}`)
-      if (v != null) setSliderPosState(Number(v))
-    } catch { /* ignore */ }
-  }, [])
-  const setSliderPos = useCallback((p: number) => {
-    setSliderPosState(p)
-    try { localStorage.setItem(`tc_form_slider_${todayISO()}`, String(p)) } catch { /* ignore */ }
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      try {
-        const today = todayISO()
-        const [allMacros, week, mainRace] = await Promise.all([
-          getAllMacrocycles(),
-          getPlannedSessions(isoOfWeekDay(0), isoOfWeekDay(6)),
-          getMainRace(),
-        ])
-        if (cancelled) return
-        setMacros(allMacros)
-        setPlan(pickActiveMacrocycle(allMacros, today))
-        setPlanned(week.filter(s => !isRaceMirrorSession(s)))
-        setRace(mainRace)
-      } catch { /* états vides : l'écran dégrade proprement */ }
-      if (!cancelled) setLoaded(true)
-    })()
-    return () => { cancelled = true }
-  }, [reloadKey])
-
-  const today = todayISO()
-  // Dates de la semaine : dérivées de la date du jour (pas réactives) → calcul au mount.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const weekDates = useMemo(() => Array.from({ length: 7 }, (_, i) => isoOfWeekDay(i)), [])
-
-  // Activités réalisées de la semaine courante (filtre des 28 jours reçus),
-  // restreintes aux disciplines course/vélo/natation (cf. DISCIPLINES).
-  const weekActivities = useMemo(
-    () => recentActivities.filter(a => {
-      const d = a.start_time.slice(0, 10)
-      return d >= weekDates[0] && d <= weekDates[6]
-        && DISCIPLINES.has(activityCategory(a.manual_sport_type ?? a.sport_type))
-    }),
-    [recentActivities, weekDates],
-  )
-  // Séances planifiées de la semaine, restreintes aux mêmes disciplines.
-  const weekPlanned = useMemo(
-    () => planned.filter(s => DISCIPLINES.has(sessionCategory(s.type))),
-    [planned],
-  )
-
-  // ── Contexte du moteur (indépendant du curseur) ──
-  const ctx = useMemo(() => {
-    const weekDoneKm = weekActivities.reduce((s, a) => s + actKm(a), 0)
-    const recentHardCount = weekPlanned.filter(s => s.status === 'completed' && s.intensity >= 4).length
-    const freshnessZone = freshnessPayload ? computeFreshness(freshnessPayload.dailyMetrics).zone : null
-    const planTarget = resolveMissionWeeklyTarget(macros, today)
-    const targetKm = planTarget?.km ?? (habitualWeekly(recentActivities, today).km || null)
-    const phaseType = plan?.phases.find(p => p.startDate <= today && today <= p.endDate)?.type ?? null
-    return { todayISO: today, weekDates, freshnessZone, weekDoneKm, recentHardCount, targetKm, phaseType, daysToRace: race ? daysUntil(race.date) : null, raceProfile: raceProfile(race) }
-  }, [weekActivities, weekPlanned, freshnessPayload, macros, plan, race, today, weekDates, recentActivities])
-
-  // Inputs « planifié » dérivés d'une liste (réutilisé avec/sans la séance du curseur).
-  const plannedInputs = (list: PlannedSession[]) => {
-    const future = list.filter(s => s.date >= today && s.status !== 'completed')
-    return {
-      plannedDates: list.map(s => s.date),
-      plannedRemainingKm: future.reduce((sum, s) => sum + (s.distance ?? 0), 0),
-      hasPlannedLongRun: future.some(s => s.type === 'sortie_longue' || s.type === 'course'),
-    }
-  }
-
-  // Recommandation du jour (curseur au centre = « Prévu »).
-  const rec = adviseWeek({ ...ctx, ...plannedInputs(weekPlanned) }).today
-  const todayPlanned = weekPlanned.find(s => s.date === today && s.status !== 'completed') ?? null
-  const centerIsRest = !todayPlanned && rec.kind === 'rest'
-  const sliderBase: SliderBase = todayPlanned
-    ? { type: todayPlanned.type, title: todayPlanned.title, durationMin: todayPlanned.duration, distanceKm: todayPlanned.distance, elevationM: todayPlanned.elevation, intensity: todayPlanned.intensity }
-    : rec.kind === 'suggested'
-      ? { type: rec.session.type, title: M.sessionTitles[rec.session.titleKey] ?? rec.session.titleKey, durationMin: rec.session.durationMin, distanceKm: rec.session.distanceKm, elevationM: rec.session.elevationM, intensity: rec.session.intensity }
-      : { type: 'footing', title: M.sessionTitles.sessionFooting, durationMin: 45, distanceKm: 8, intensity: 2 } // base par défaut des jours « repos » (si on pousse à droite)
-  const outcome = applySlider(sliderBase, sliderPos, centerIsRest)
-
-  const outcomeToPlanned = (o: SliderOutcome): PlannedSession | null => {
-    if (o.kind !== 'session') return null
-    return { id: 'slider-today', planId: '', date: today, type: o.type, title: o.title, duration: o.durationMin, distance: o.distanceKm, elevation: o.elevationM, intensity: o.intensity, estimatedCharge: estimateCharge(o.durationMin, o.intensity, o.elevationM), status: 'planned' }
-  }
-
-  // Réadaptation : la séance choisie au curseur devient une séance « planifiée »
-  // virtuelle du jour → le moteur recalcule le reste de la semaine en conséquence.
-  const todayDone = weekActivities.some(a => a.start_time.slice(0, 10) === today)
-  const virtualToday = (!todayDone && outcome.kind === 'session') ? outcomeToPlanned(outcome) : null
-  const effectivePlanned = todayDone
-    ? weekPlanned
-    : [...weekPlanned.filter(s => s.date !== today), ...(virtualToday ? [virtualToday] : [])]
-  const finalAdvice = adviseWeek({ ...ctx, ...plannedInputs(effectivePlanned) })
-  const feedRaw = buildWeekFeed({ weekDates, todayISO: today, activities: weekActivities, planned: effectivePlanned, advice: finalAdvice })
-  // Si le curseur impose le repos aujourd'hui, la ligne « Ma semaine » du jour
-  // doit montrer « repos » (sinon le moteur re-suggérerait une séance pour le trou).
-  const feed: FeedEntry[] = (!todayDone && outcome.kind === 'rest')
-    ? feedRaw.map(e => e.date === today ? { date: today, isToday: true, kind: 'rest', reasonCode: 'rest-recovery' as ReasonCode } : e)
-    : feedRaw
-
-  // ─── Actions ──────────────────────────────────────────────────────────────
-  const todaySessionIds = () => planned.filter(s => s.date === today).map(s => s.id)
-  // Ajout/biblio pour AUJOURD'HUI → remplace la séance du jour (pas d'empilement).
-  function openAdd(date: string) { setReplaceIds(date === today ? todaySessionIds() : []); setAddDate(date); setAddOpen(true) }
-  function openEditSession(s: PlannedSession) { setReplaceIds([]); setEditorSession(s); setEditorPrefill(null); setEditorDate(s.date); setEditorOpen(true) }
-  // Clic sur le titre → ouvre l'éditeur sur la séance du jour (planifiée ou issue du curseur).
-  function openTodayEditor() {
-    if (todayPlanned) {
-      // édite la séance du jour ; supprime d'éventuels doublons du même jour.
-      setReplaceIds(todaySessionIds().filter(id => id !== todayPlanned.id))
-      setEditorSession(todayPlanned); setEditorPrefill(null); setEditorDate(today); setEditorOpen(true)
-      return
-    }
-    if (outcome.kind !== 'session') { openAdd(today); return }
-    setReplaceIds(todaySessionIds())
-    setEditorSession({
-      id: makeId(), planId: '', date: today, type: outcome.type, title: outcome.title,
-      duration: outcome.durationMin, distance: outcome.distanceKm, elevation: outcome.elevationM, intensity: outcome.intensity,
-      estimatedCharge: estimateCharge(outcome.durationMin, outcome.intensity, outcome.elevationM), status: 'planned',
-    })
-    setEditorPrefill(null); setEditorDate(today); setEditorOpen(true)
-  }
-  // (replaceIds déjà posé par openAdd : on le conserve pour le save.)
-  function handlePickTemplate(t: SessionTemplate) { setAddOpen(false); setEditorSession(null); setEditorPrefill(t); setEditorDate(addDate); setEditorOpen(true) }
-  function handleCreateBlank() { setAddOpen(false); setEditorSession(null); setEditorPrefill(null); setEditorDate(addDate); setEditorOpen(true) }
-  const goToCreateRace = () => setCreateRaceOpen(true)
-
-  // Après save d'une séance : supprime les séances remplacées (jour Mission = 1 séance),
-  // remet le curseur sur « Prévu » si c'était aujourd'hui, puis recharge.
-  async function handleSessionSaved() {
-    setEditorOpen(false)
-    if (replaceIds.length > 0) {
-      await Promise.all(replaceIds.map(id => deletePlannedSession(id)))
-      setReplaceIds([])
-    }
-    if (editorDate === today) setSliderPos(2)
-    bumpReload()
-  }
+  const { loaded, heroProps, modalsState, feed, today, plan, race, openAdd, openEditSession, openCreateRace } =
+    useTodaySession({ freshnessPayload, recentActivities, hrZones })
 
   if (!loaded) return null
-
-  // ─── Héros (piloté par le curseur, ou « faite » si l'activité du jour est là) ──
-  const atDefault = sliderPos === 2
-  const doneEntry = feed.find(f => f.date === today)
-  let hero: ReactNode
-  if (todayDone && doneEntry?.kind === 'done') {
-    const t = doneEntry.multiple ? M.weekMultiSessions(doneEntry.count) : doneEntry.title
-    hero = <PlanHeroCard state="done" title={t} km={doneEntry.km} dPlus={doneEntry.dPlus} durationSec={doneEntry.durationSec} />
-  } else if (outcome.kind === 'session') {
-    const whyText = atDefault
-      ? (todayPlanned ? null : (rec.kind === 'suggested' ? M.reasonWhy[rec.session.reasonCode] : null))
-      : M.heroSliderAdjusted
-    hero = (
-      <PlanHeroCard
-        state="active" title={outcome.title} sessionType={outcome.type}
-        durationMin={outcome.durationMin} distanceKm={outcome.distanceKm} elevationM={outcome.elevationM} intensity={outcome.intensity}
-        whyText={whyText} targetLabel={hrTargetLabel(outcome.intensity)} accentColor={accentForType(outcome.type)}
-        onOpen={openTodayEditor} sliderPos={sliderPos} onSliderChange={setSliderPos} onOpenLibrary={() => { setSliderPos(2); openAdd(today) }}
-      />
-    )
-  } else {
-    const text = !atDefault ? M.heroSliderAdjusted : (rec.kind === 'rest' ? M.reasonWhy[rec.reasonCode] : M.reasonWhy['rest-recovery'])
-    hero = <PlanHeroCard state="rest" text={text} sliderPos={sliderPos} onSliderChange={setSliderPos} onOpenLibrary={() => { setSliderPos(2); openAdd(today) }} />
-  }
 
   const week = plan ? weekOfPlan(plan, today) : null
   const segments = plan ? computePhaseSegments(plan, today) : []
@@ -297,7 +64,7 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
   return (
     <div className="px-3 py-3 max-w-lg mx-auto space-y-3">
       {/* ① Héros : ta prochaine séance */}
-      {hero}
+      <PlanHeroCard {...heroProps} />
 
       {/* ② Ma semaine : fil réalisé + suggéré + ajout */}
       <MissionCard>
@@ -424,7 +191,7 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
         <RythmeCard
           weeks={weeklyVolumes(recentActivities, today, 4)}
           avgKm={habitualWeekly(recentActivities, today).km}
-          onAddRace={goToCreateRace}
+          onAddRace={openCreateRace}
         />
       )}
 
@@ -437,12 +204,7 @@ export function MissionPlan({ freshnessPayload, recentActivities, hrZones }: Pro
       </button>
 
       {/* Modales (mêmes que le mode expert) */}
-      <SessionAddSheet open={addOpen} dateISO={addDate} onClose={() => setAddOpen(false)} onPickTemplate={handlePickTemplate} onCreateBlank={handleCreateBlank} />
-      <SessionEditorModal session={editorSession} initialDate={editorDate} open={editorOpen} prefillTemplate={editorPrefill} onClose={() => setEditorOpen(false)} onSaved={handleSessionSaved} />
-      {/* onSaved NE FERME PAS la modale : comme en expert, RaceEditorModal
-          enchaîne sur son écran « Course créée » (→ recherche du tableau de
-          course). La fermeture se fait via son propre onClose. */}
-      <RaceEditorModal race={null} open={createRaceOpen} onClose={() => setCreateRaceOpen(false)} onSaved={bumpReload} />
+      <NextSessionModals state={modalsState} />
     </div>
   )
 }
