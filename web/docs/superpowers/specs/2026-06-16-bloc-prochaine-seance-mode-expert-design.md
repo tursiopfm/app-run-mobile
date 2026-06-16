@@ -1,5 +1,6 @@
 # Bloc « Ta prochaine séance » dans le mode expert (onglet Plan)
 
+> **Status: Implémenté** · 2026-06-16 · Code: web/components/plan/ProchaineSeanceBlock.tsx, web/components/mission/useTodaySession.ts
 > Statut : design validé · 2026-06-16 · Auteur : Franck + Claude
 
 ## Contexte
