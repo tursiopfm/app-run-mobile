@@ -544,6 +544,7 @@ export type Dict = {
     structureTitle: string
     blockObjectif: string; blockResume: string; blockCycle: string
     blockCalendar: string; blockWeekLibrary: string; blockCharge: string
+    blockProchaineSeance: string
     addBlock: string
     modeManual: string; modeAiCoach: string; modeAiSoon: string
     modeAiToast: string
@@ -2428,6 +2429,7 @@ export const fr: Dict = {
   plan: {
     structureTitle: "Structure d'entraînement",
     blockObjectif:        'Objectif course',
+    blockProchaineSeance: 'Prochaine séance',
     blockResume:          'Résumé semaine',
     blockCycle:           'Cycle de préparation',
     blockCalendar:        'Calendrier mois',

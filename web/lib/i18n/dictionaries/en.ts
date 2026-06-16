@@ -1223,6 +1223,7 @@ export const en: Dict = {
   plan: {
     structureTitle: 'Training structure',
     blockObjectif:        'Race goal',
+    blockProchaineSeance: 'Next session',
     blockResume:          'Week summary',
     blockCycle:           'Preparation cycle',
     blockCalendar:        'Monthly calendar',
