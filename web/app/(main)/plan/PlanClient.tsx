@@ -32,6 +32,10 @@ import { ChargePlanifieeBlock } from '@/components/plan/ChargePlanifieeBlock'
 import { ResumeSemaineBlock } from '@/components/plan/ResumeSemaineBlock'
 import { CalendrierMoisBlock } from '@/components/plan/CalendrierMoisBlock'
 import { PlanSessionsDndProvider } from '@/components/plan/PlanSessionsDndProvider'
+import { ProchaineSeanceBlock } from '@/components/plan/ProchaineSeanceBlock'
+import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
+import type { ActivityRow } from '@/components/ui/ActivityCard'
+import type { HrZone } from '@/lib/health/hr-zones'
 import {
   deletePlannedSession,
   ensureRaceMirrors,
@@ -45,7 +49,7 @@ import type { PlannedSession, Race, SessionTemplate, TrainingPlan } from '@/type
 import { seedMockDataIfEmpty } from '@/lib/plan/mock-data'
 import { useT } from '@/lib/i18n/I18nProvider'
 
-const DEFAULT_ORDER = ['objectif', 'resume-semaine', 'structure', 'calendrier-mois', 'semaine-bibliotheque', 'charge']
+const DEFAULT_ORDER = ['prochaine-seance', 'objectif', 'resume-semaine', 'structure', 'calendrier-mois', 'semaine-bibliotheque', 'charge']
 
 function makeId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -54,7 +58,14 @@ function makeId(): string {
   return `session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
-export default function PlanClient({ mode = 'expert', mission = null }: { mode?: 'mission' | 'expert'; mission?: string | null } = {}) {
+export default function PlanClient({
+  mode = 'expert', mission = null, freshnessPayload = null, recentActivities = [], hrZones = [],
+}: {
+  mode?: 'mission' | 'expert'; mission?: string | null
+  freshnessPayload?: ChargeSportPayload | null
+  recentActivities?: ActivityRow[]
+  hrZones?: HrZone[]
+} = {}) {
   const L = useT().plan
   const [reloadKey, setReloadKey] = useState(0)
   const bumpReload = useCallback(() => setReloadKey(k => k + 1), [])
@@ -138,6 +149,20 @@ export default function PlanClient({ mode = 'expert', mission = null }: { mode?:
   }, [bumpReload])
 
   const blocks: BlockDef[] = [
+    {
+      id: 'prochaine-seance',
+      label: L.blockProchaineSeance,
+      emoji: '🏃',
+      render: () => (
+        <ProchaineSeanceBlock
+          freshnessPayload={freshnessPayload}
+          recentActivities={recentActivities}
+          hrZones={hrZones}
+          reloadKey={reloadKey}
+          onChange={bumpReload}
+        />
+      ),
+    },
     {
       id: 'objectif',
       label: L.blockObjectif,
