@@ -11,12 +11,14 @@ import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 const ACTIVITY_CARD_FIELDS =
   'id, name, sport_type, start_time, ces, avg_hr, max_hr, distance_m, elevation_gain_m, moving_time_sec, manual_sport_type, manual_intensity, manual_workout_type, manual_distance_m, manual_moving_time_sec, manual_elevation_gain_m'
 
-async function loadHeroData(userId: string): Promise<{
+async function loadHeroData(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<{
   freshnessPayload: ChargeSportPayload | null
   recentActivities: ActivityRow[]
   hrZones: HrZone[]
 }> {
-  const supabase = await createClient()
   const since = new Date()
   since.setDate(since.getDate() - 28)
   const [{ data: rows }, charge, { data: profile }] = await Promise.all([
@@ -52,9 +54,11 @@ export default async function PlanPage({
   // Mode Mission (vue par défaut) : héros + semaine + suggestions.
   if (mode === 'mission' && searchParams?.full !== '1') {
     const user = await getServerUser()
-    const data = user
-      ? await loadHeroData(user.id)
-      : { freshnessPayload: null, recentActivities: [] as ActivityRow[], hrZones: [] as HrZone[] }
+    let data = { freshnessPayload: null as ChargeSportPayload | null, recentActivities: [] as ActivityRow[], hrZones: [] as HrZone[] }
+    if (user) {
+      const supabase = await createClient()
+      data = await loadHeroData(supabase, user.id)
+    }
     return <MissionPlan {...data} />
   }
 
@@ -67,7 +71,7 @@ export default async function PlanPage({
     const supabase = await createClient()
     const { data: prof } = await supabase.from('profiles').select('onboarding_mission').eq('id', user.id).maybeSingle()
     mission = prof?.onboarding_mission ?? null
-    data = await loadHeroData(user.id)
+    data = await loadHeroData(supabase, user.id)
   }
   return <PlanClient mode="expert" mission={mission} {...data} />
 }

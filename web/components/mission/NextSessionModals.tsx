@@ -19,6 +19,9 @@ export function NextSessionModals({ state }: { state: NextSessionModalsState }) 
         session={state.editor.session} initialDate={state.editor.initialDate} open={state.editor.open}
         prefillTemplate={state.editor.prefillTemplate} onClose={state.editor.onClose} onSaved={state.editor.onSaved}
       />
+      {/* onSaved NE FERME PAS la modale : RaceEditorModal enchaîne sur son écran
+          « Course créée » (→ recherche du tableau de course) ; la fermeture se
+          fait via son propre onClose. */}
       <RaceEditorModal race={null} open={state.race.open} onClose={state.race.onClose} onSaved={state.race.onSaved} />
     </>
   )
