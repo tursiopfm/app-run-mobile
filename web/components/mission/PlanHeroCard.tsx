@@ -5,6 +5,7 @@
 
 import { useT } from '@/lib/i18n/I18nProvider'
 import type { IntensityLevel } from '@/types/plan'
+import { BlockMenu } from '@/components/blocks/BlockMenu'
 
 // ─── helpers durée ───────────────────────────────────────────────────────────
 
@@ -153,7 +154,7 @@ function FormSlider({ pos, onChange, onOpenLibrary }: { pos: number; onChange: (
 // `active` couvre AUSSI bien une séance suggérée par le moteur qu'une séance
 // déjà planifiée par l'athlète : MissionPlan résout `title` (libellé i18n ou
 // titre libre) et `whyText` (raison du moteur, ou null si séance planifiée).
-type Props =
+export type Props =
   | {
       state: 'active'
       title: string
@@ -175,7 +176,7 @@ type Props =
 
 // ─── composant ───────────────────────────────────────────────────────────────
 
-export function PlanHeroCard(props: Props) {
+export function PlanHeroCard(props: Props & { onHide?: () => void }) {
   const M = useT().mission
 
   // ── état : séance du jour (suggérée OU planifiée) ───────────────────────
@@ -196,7 +197,7 @@ export function PlanHeroCard(props: Props) {
           borderColor: accentColor,
         }}
       >
-        {/* en-tête : label + badge */}
+        {/* en-tête : label + badge (+ kebab en mode expert) */}
         <div className="flex items-center justify-between mb-2">
           <p
             className="text-[10px] uppercase tracking-[0.15em] font-bold"
@@ -204,12 +205,15 @@ export function PlanHeroCard(props: Props) {
           >
             {M.heroNextTitle}
           </p>
-          <span
-            className="text-[10px] font-bold px-2 py-1 rounded-full"
-            style={{ background: 'var(--ink-800)', color: 'var(--text-secondary)' }}
-          >
-            {M.heroTodayBadge}
-          </span>
+          <div className="flex items-center gap-1">
+            <span
+              className="text-[10px] font-bold px-2 py-1 rounded-full"
+              style={{ background: 'var(--ink-800)', color: 'var(--text-secondary)' }}
+            >
+              {M.heroTodayBadge}
+            </span>
+            {props.onHide && <BlockMenu onHide={props.onHide} className="-mr-1" />}
+          </div>
         </div>
 
         {/* gauche (cliquable) : titre + bulles · droite : profil graphique, même hauteur */}
@@ -277,12 +281,17 @@ export function PlanHeroCard(props: Props) {
     const { title, km, dPlus, durationSec } = props
     return (
       <div
-        className="rounded-[16px] border p-5"
+        className="relative rounded-[16px] border p-5"
         style={{
           background: 'linear-gradient(150deg, rgba(74,222,128,0.10) 0%, var(--trail-card) 58%)',
           borderColor: 'rgba(74,222,128,0.40)',
         }}
       >
+        {props.onHide && (
+          <div className="absolute top-3 right-3 z-10">
+            <BlockMenu onHide={props.onHide} />
+          </div>
+        )}
         <p
           className="text-[10px] uppercase tracking-[0.15em] font-bold mb-2.5"
           style={{ color: 'var(--status-success)' }}
@@ -304,12 +313,17 @@ export function PlanHeroCard(props: Props) {
   // ── état : repos (recommandé) — le curseur permet quand même d'ajouter ──
   return (
     <div
-      className="rounded-[16px] border p-5"
+      className="relative rounded-[16px] border p-5"
       style={{
         background: 'linear-gradient(150deg, rgba(56,189,248,0.08) 0%, var(--trail-card) 58%)',
         borderColor: 'var(--ink-600)',
       }}
     >
+      {props.onHide && (
+        <div className="absolute top-3 right-3 z-10">
+          <BlockMenu onHide={props.onHide} />
+        </div>
+      )}
       <p
         className="text-[10px] uppercase tracking-[0.15em] font-bold mb-3"
         style={{ color: 'var(--status-info)' }}
