@@ -28,7 +28,7 @@ type Props = {
   defaultHidden?: string[]
 }
 
-const BlockContext = createContext<{ hideSelf: () => void }>({ hideSelf: () => {} })
+export const BlockContext = createContext<{ hideSelf: () => void }>({ hideSelf: () => {} })
 export function useBlockContext() { return useContext(BlockContext) }
 
 // Lecture synchrone du localStorage pour le lazy init du useState. Retourne
