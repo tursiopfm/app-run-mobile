@@ -17,18 +17,19 @@ function todayISO(): string {
  * redirige automatiquement vers /rapport-matinal. Le rapport marque "vu" au
  * mount, donc une seule redirection par jour.
  *
- * Exception : le jour de l'inscription, l'utilisateur n'a pas encore de data,
- * on ne redirige donc pas — le rapport matinal ne s'auto-ouvre qu'à partir du
- * lendemain de la création du compte.
+ * Exception : le jour de la 1ère connexion (= jour où l'onboarding est complété,
+ * un nouvel utilisateur ne peut pas atteindre le dashboard avant), on ne
+ * redirige pas — l'utilisateur n'a pas encore de data. Le rapport matinal ne
+ * s'auto-ouvre donc qu'à partir du lendemain de la 1ère connexion.
  */
-export function MorningReportAutoOpen({ createdAt }: { createdAt?: string | null }) {
+export function MorningReportAutoOpen({ onboardingCompletedAt }: { onboardingCompletedAt?: string | null }) {
   const router = useRouter()
 
   useEffect(() => {
     try {
       const today = todayISO()
-      // Pas d'auto-ouverture le jour même de l'inscription.
-      if (createdAt && localDateISO(new Date(createdAt)) === today) {
+      // Pas d'auto-ouverture le jour de la 1ère connexion (onboarding complété).
+      if (onboardingCompletedAt && localDateISO(new Date(onboardingCompletedAt)) === today) {
         return
       }
       const key = `morning_report_seen_${today}`
@@ -39,7 +40,7 @@ export function MorningReportAutoOpen({ createdAt }: { createdAt?: string | null
     } catch {
       // localStorage inaccessible — on laisse l'utilisateur sur /dashboard
     }
-  }, [router, createdAt])
+  }, [router, onboardingCompletedAt])
 
   return null
 }

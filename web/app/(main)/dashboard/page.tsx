@@ -108,7 +108,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="px-2 py-2 max-w-lg mx-auto md:max-w-none md:px-6">
-      <MorningReportAutoOpen createdAt={user.created_at} />
+      <MorningReportAutoOpen onboardingCompletedAt={athleteProfile?.onboarding_completed_at ?? null} />
       {activityCount === 0 && <FirstActivityBanner />}
       {mode === 'mission' ? (
         <div className="max-w-lg mx-auto">
