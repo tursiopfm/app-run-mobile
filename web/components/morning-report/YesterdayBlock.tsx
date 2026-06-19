@@ -1,6 +1,7 @@
 'use client'
 
 import type { MorningLastActivity } from '@/lib/data/morning-report'
+import { ReportCard } from './ReportCard'
 
 function paceSecToString(secPerKm: number | null | undefined): string {
   if (!secPerKm || secPerKm <= 0 || !Number.isFinite(secPerKm)) return '—'
@@ -18,10 +19,9 @@ function formatDuration(sec: number | null | undefined): string {
 export function YesterdayBlock({ act }: { act: MorningLastActivity | null }) {
   if (!act) {
     return (
-      <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-        <h3 className="text-[15px] font-semibold text-trail-muted font-display">Hier</h3>
-        <p className="text-caption text-trail-muted mt-2">Aucune activité récente.</p>
-      </div>
+      <ReportCard label="Hier" accent="var(--text-muted)">
+        <p className="text-caption text-trail-muted">Aucune activité récente.</p>
+      </ReportCard>
     )
   }
   const dur  = formatDuration(act.movingTimeSec)
@@ -30,17 +30,18 @@ export function YesterdayBlock({ act }: { act: MorningLastActivity | null }) {
     : '—'
 
   return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-      <div className="flex items-center justify-between mb-[6px]">
-        <h3 className="text-[15px] font-semibold text-trail-muted truncate font-display">Hier · {act.name}</h3>
-      </div>
+    <ReportCard
+      label="Hier"
+      accent="var(--text-muted)"
+      right={<span className="text-caption text-trail-muted truncate max-w-[180px]">{act.name}</span>}
+    >
       <div className="grid grid-cols-4 gap-2">
         <Cell label="Durée"  value={dur} />
         <Cell label="Allure" value={pace} />
         <Cell label="FC moy" value={act.avgHr ? String(act.avgHr) : '—'} />
         <Cell label="D+"     value={act.elevationGainM != null ? `${act.elevationGainM}` : '—'} />
       </div>
-    </div>
+    </ReportCard>
   )
 }
 

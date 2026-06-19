@@ -2,6 +2,7 @@
 
 import type { WeatherResponse } from '@/lib/weather/open-meteo'
 import { computeBestWindow, scoreHour } from '@/lib/weather/best-window'
+import { ReportCard } from './ReportCard'
 
 type Props =
   | { status: 'loading' }
@@ -27,14 +28,11 @@ function colorForScore(score: number): string {
 export function BestWindowBlock(props: Props) {
   if (props.status !== 'ready') {
     return (
-      <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-        <div className="flex items-center justify-between mb-[6px]">
-          <h3 className="text-micro font-semibold text-trail-muted uppercase tracking-[0.08em]">Meilleur créneau aujourd&apos;hui</h3>
-        </div>
+      <ReportCard label="Meilleur créneau aujourd'hui" accent="var(--trail-primary)">
         <p className="text-micro text-trail-muted">
           {props.status === 'loading' ? 'Calcul du meilleur créneau…' : 'Indisponible.'}
         </p>
-      </div>
+      </ReportCard>
     )
   }
 
@@ -55,12 +53,7 @@ export function BestWindowBlock(props: Props) {
   }
 
   return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-      <div className="flex items-center justify-between mb-[6px]">
-        <h3 className="text-micro font-semibold text-trail-muted uppercase tracking-[0.08em]">
-          Meilleur créneau aujourd&apos;hui
-        </h3>
-      </div>
+    <ReportCard label="Meilleur créneau aujourd'hui" accent="var(--trail-primary)">
       <div className="flex gap-[3px] h-6 items-end">
         {bars.map(b => {
           const isBest = best != null && b.hour >= best.startHour && b.hour <= best.endHour
@@ -93,6 +86,6 @@ export function BestWindowBlock(props: Props) {
           <span className="text-trail-muted">Pas de créneau optimal aujourd&apos;hui — conditions difficiles.</span>
         )}
       </p>
-    </div>
+    </ReportCard>
   )
 }

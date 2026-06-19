@@ -21,8 +21,13 @@ def rect(x,y,w,h,r,fill,stroke=None,sw=1,op=1,dash=None):
 def t(x,y,s,size,fill,w=400,a="start",font=F,ls=0,op=1):
     extra=f' letter-spacing="{ls}"' if ls else ""
     return f'<text x="{x}" y="{y}" font-family="{font}" font-size="{size}" fill="{fill}" font-weight="{w}" text-anchor="{a}" opacity="{op}"{extra}>{esc(s)}</text>'
-def card(x,y,w,h,fill=CARD,stroke=BORDER):
-    e.append(rect(x,y,w,h,12,fill,stroke,1))
+def card(x,y,w,h,accent=PRIMARY):
+    # Carte "rapport" : surface dégradée + barre d'accent gauche (style ReportCard).
+    e.append(rect(x,y,w,h,14,"url(#rcard)",BORDER,1))
+    e.append(rect(x,y+6,3,h-12,1.5,accent))
+def clabel(x,y,s,accent=None):
+    # Libellé de section en CAPITALES espacées.
+    e.append(t(x,y,s.upper(),11,MUTED,700,ls=1.2))
 
 PAD=14; CW=W-2*PAD  # 362
 
@@ -39,6 +44,9 @@ e.append(f'''<defs>
     <stop offset="0" stop-color="#FFB066"/><stop offset="0.4" stop-color="#FF7900"/>
     <stop offset="1" stop-color="#FF7900" stop-opacity="0"/>
   </radialGradient>
+  <linearGradient id="rcard" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#1A2331"/><stop offset="1" stop-color="#141B26"/>
+  </linearGradient>
   <linearGradient id="coach" x1="0" y1="0" x2="1" y2="1">
     <stop offset="0" stop-color="#221A3A"/><stop offset="1" stop-color="#10222E"/>
   </linearGradient>
@@ -71,8 +79,8 @@ e.append(t(PAD+2,196,"Ta journée en un coup d'œil.",14,SECOND,400))
 y=214
 # ── 4. Séance du jour (carte teintée orange) ──
 ch=128
-e.append(rect(PAD,y,CW,ch,12,CARD,"#FF6B3559",1))
-e.append(t(PAD+14,y+24,"Séance du jour",15,MUTED,600,font=D))
+card(PAD,y,CW,ch,PRIMARY)
+clabel(PAD+14,y+22,"Séance du jour")
 e.append(t(PAD+14,y+52,"Sortie longue",26,TEXT,600,font=D))
 e.append(t(PAD+14,y+72,"Endurance",12,MUTED,400))
 e.append(f'<rect x="{PAD+14}" y="{y+82}" width="{CW-28}" height="1" fill="{BORDER}"/>')
@@ -87,9 +95,8 @@ y+=ch+12
 
 # ── 5. Forme (BlockCard + verdict + 3 KPI cells) ──
 ch=150
-card(PAD,y,CW,ch)
-e.append(t(PAD+14,y+24,"Forme",15,MUTED,600,font=D))
-e.append(t(W-PAD-14,y+24,"?",12,MUTED,600,"end"))
+card(PAD,y,CW,ch,ACCENT)
+clabel(PAD+14,y+22,"Forme")
 e.append(t(PAD+14,y+48,"Tu peux charger aujourd'hui",14,TEXT,700))
 e.append(t(PAD+14,y+66,"Forme et fatigue à l'équilibre.",12,MUTED,400))
 cells=[("Fatigue récente",ORANGE2,"Habituelle","Dans tes habitudes"),
@@ -111,8 +118,8 @@ y+=ch+12
 
 # ── 6. Fitness/Fatigue 10j (chart) ──
 ch=240
-card(PAD,y,CW,ch)
-e.append(t(PAD+14,y+24,"Forme & fatigue (10 j)",15,MUTED,600,font=D))
+card(PAD,y,CW,ch,ACCENT)
+clabel(PAD+14,y+22,"Forme & fatigue (10 j)")
 gx,gy,gw,gh=PAD+34,y+40,CW-48,150
 # grille
 for i in range(4):
@@ -150,8 +157,8 @@ y+=ch+12
 ch=150
 half=(CW-10)/2
 # Là-dehors
-card(PAD,y,half,ch)
-e.append(t(PAD+12,y+22,"Là-dehors",13,MUTED,600))
+card(PAD,y,half,ch,ACCENT)
+clabel(PAD+14,y+22,"Là-dehors")
 e.append(t(PAD+half-12,y+22,"☀",13,WARNING,400,"end"))
 e.append(t(PAD+12,y+50,"14°",28,TEXT,600,font=D))
 e.append(t(PAD+52,y+50,"/12°",11,MUTED,400))
@@ -166,8 +173,8 @@ e.append(rect(PAD+half/2+2,y+ch-26,half/2-14,16,8,GRN_TINT,SUCCESS,0.7))
 e.append(t(PAD+half/2+2+(half/2-14)/2,y+ch-15,"Air 18 · très bon",8,SUCCESS,600,"middle"))
 # Météo journée
 mx=PAD+half+10
-card(mx,y,half,ch)
-e.append(t(mx+12,y+22,"Météo journée",13,MUTED,600))
+card(mx,y,half,ch,ACCENT)
+clabel(mx+14,y+22,"Météo journée")
 slots=[("8h","11°",WARNING),("12h","18°",WARNING),("16h","17°",MUTED),("20h","13°",ACCENT)]
 sw=(half-24-3*6)/4
 for i,(hh,tp,col) in enumerate(slots):
@@ -180,8 +187,8 @@ y+=ch+12
 
 # ── 8. Meilleur creneau ──
 ch=96
-card(PAD,y,CW,ch)
-e.append(t(PAD+14,y+22,"MEILLEUR CRÉNEAU AUJOURD'HUI",11,MUTED,600,ls=0.8))
+card(PAD,y,CW,ch,PRIMARY)
+clabel(PAD+14,y+22,"Meilleur créneau aujourd'hui")
 bx=PAD+14; bw=CW-28; bars=17
 scores=[0.3,0.4,0.55,0.7,0.85,0.95,0.9,0.8,0.6,0.5,0.45,0.5,0.55,0.6,0.5,0.4,0.3]
 bwid=(bw-(bars-1)*3)/bars
@@ -197,8 +204,8 @@ y+=ch+12
 # ── 9. Volume semaine (2/3) + Ce mois (1/3) ──
 ch=120
 w2=CW*2/3-5
-card(PAD,y,w2,ch)
-e.append(t(PAD+12,y+22,"Volume semaine",13,MUTED,600))
+card(PAD,y,w2,ch,SUCCESS)
+clabel(PAD+14,y+22,"Volume semaine")
 e.append(t(PAD+12,y+50,"42 km",24,TEXT,600,font=D))
 e.append(t(PAD+92,y+50,"1250 m D+",10,MUTED,400))
 days=["L","M","M","J","V","S","D"]
@@ -214,8 +221,8 @@ for i,d in enumerate(days):
     e.append(t(dx+dw/2,y+102,d,9,PRIMARY if i==today else MUTED,400,"middle"))
 # Ce mois
 mx=PAD+w2+10; w3=CW/3-5
-card(mx,y,w3,ch)
-e.append(t(mx+12,y+22,"Ce mois",13,MUTED,600))
+card(mx,y,w3,ch,PRIMARY)
+clabel(mx+14,y+22,"Ce mois")
 e.append(t(mx+12,y+58,"168",22,PRIMARY,700,font=D))
 e.append(t(mx+54,y+58,"km",10,MUTED,400))
 e.append(t(mx+12,y+88,"4820",22,ACCENT,700,font=D))
@@ -224,10 +231,9 @@ y+=ch+12
 
 # ── 10. Mot du coach ──
 ch=78
-e.append(rect(PAD,y,CW,ch,12,"url(#coach)","#8B5CF64D",1))
-e.append(f'<circle cx="{PAD+22}" cy="{y+24}" r="9" fill="#2A2140"/>')
-e.append(t(PAD+22,y+28,"AI",9,"#C4B5FD",700,"middle"))
-e.append(t(PAD+40,y+28,"Mot du coach",15,MUTED,600,font=D))
+e.append(rect(PAD,y,CW,ch,14,"url(#coach)","#8B5CF64D",1))
+e.append(rect(PAD,y+6,3,ch-12,1.5,PURPLE))
+clabel(PAD+14,y+22,"Mot du coach")
 e.append(rect(W-PAD-86,y+14,72,18,9,"#2A2140",PURPLE,0.6))
 e.append(t(W-PAD-50,y+27,"IA · bientôt",10,"#C4B5FD",700,"middle"))
 e.append(t(PAD+14,y+54,"Bientôt — un mot personnalisé chaque matin selon ta",12,MUTED,400))
@@ -236,8 +242,9 @@ y+=ch+12
 
 # ── 11. Hier ──
 ch=96
-card(PAD,y,CW,ch)
-e.append(t(PAD+14,y+24,"Hier · Trail matinal",15,MUTED,600,font=D))
+card(PAD,y,CW,ch,MUTED)
+clabel(PAD+14,y+22,"Hier")
+e.append(t(W-PAD-14,y+22,"Trail matinal",11,MUTED,400,"end"))
 hc=[("Durée","1h12"),("Allure","5'45"),("FC moy","148"),("D+","420")]
 hw=(CW-28-3*8)/4
 for i,(lab,val) in enumerate(hc):

@@ -1,6 +1,7 @@
 'use client'
 
 import type { WeatherResponse, WeatherHourly } from '@/lib/weather/open-meteo'
+import { ReportCard } from './ReportCard'
 
 type Props =
   | { status: 'loading' }
@@ -44,11 +45,8 @@ export function WeatherDayBlock(props: Props) {
     : TARGET_HOURS.map(h => ({ h: `${h}h`, icon: '—', temp: '—°' }))
 
   return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px] flex flex-col">
-      <div className="flex items-center justify-between mb-[6px]">
-        <h3 className="text-body-sm font-semibold text-trail-muted">Météo journée</h3>
-      </div>
-      <div className="flex-1 grid grid-cols-4 gap-1.5 content-center">
+    <ReportCard label="Météo journée" accent="var(--trail-accent)" className="h-full">
+      <div className="grid grid-cols-4 gap-1.5 h-full content-center">
         {periods.map(p => (
           <div key={p.h} className="rounded-[8px] py-1.5 text-center bg-trail-surface">
             <p className="text-[10px] text-trail-muted">{p.h}</p>
@@ -57,6 +55,6 @@ export function WeatherDayBlock(props: Props) {
           </div>
         ))}
       </div>
-    </div>
+    </ReportCard>
   )
 }

@@ -1,14 +1,13 @@
 'use client'
 
+import { ReportCard } from './ReportCard'
+
 type Props = { km: number; dPlus: number }
 
 export function MonthlyVolumeBlock({ km, dPlus }: Props) {
   return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px] flex flex-col">
-      <div className="flex items-center justify-between mb-[6px]">
-        <h3 className="text-body-sm font-semibold text-trail-muted">Ce mois</h3>
-      </div>
-      <div className="flex-1 flex flex-col justify-center gap-1.5">
+    <ReportCard label="Ce mois" accent="var(--trail-primary)" className="h-full">
+      <div className="flex flex-col justify-center gap-1.5">
         <div className="flex items-baseline gap-1">
           <p className="text-h1 leading-none text-trail-primary" style={{ fontFamily: "var(--font-data)" }}>{Math.round(km)}</p>
           <p className="text-micro text-trail-muted">km</p>
@@ -18,6 +17,6 @@ export function MonthlyVolumeBlock({ km, dPlus }: Props) {
           <p className="text-micro text-trail-muted">m D+</p>
         </div>
       </div>
-    </div>
+    </ReportCard>
   )
 }

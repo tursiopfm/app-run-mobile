@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BlockCard } from '@/components/blocks/BlockCard'
+import { ReportCard } from './ReportCard'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 import { useT } from '@/lib/i18n/I18nProvider'
 import { colors } from '@/lib/design/colors'
@@ -55,7 +55,7 @@ export function FormStatusBlock({ payload }: { payload: ChargeSportPayload }) {
   const freshnessStatus = kpiStatusFreshness(tsb)
 
   return (
-    <BlockCard title={L.blocks.status} helpTitle={L.blocks.status} helpBody={L.help.status}>
+    <ReportCard label={L.blocks.status} accent="var(--trail-accent)">
       <div className="mb-1">
         <p className="text-body font-bold text-trail-text leading-[18px]">{verdict.action}</p>
         <p className="text-caption text-trail-muted mt-1 leading-[16px]">{verdict.reason}</p>
@@ -92,7 +92,7 @@ export function FormStatusBlock({ payload }: { payload: ChargeSportPayload }) {
       {openHelp === 'freshness' && (
         <FreshnessHelpSheet currentId={freshnessStatus.id} onClose={() => setOpenHelp(null)} />
       )}
-    </BlockCard>
+    </ReportCard>
   )
 }
 

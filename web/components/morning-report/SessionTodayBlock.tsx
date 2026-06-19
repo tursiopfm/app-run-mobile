@@ -2,6 +2,7 @@
 
 import type { MorningTodaySession } from '@/lib/data/morning-report'
 import { SESSION_TYPE_LABELS } from '@/lib/activities/indicators'
+import { ReportCard } from './ReportCard'
 
 const EXTRA_PLAN_LABELS: Record<string, string> = {
   recuperation: 'Récupération',
@@ -24,11 +25,11 @@ function formatDuration(min: number): string {
 export function SessionTodayBlock({ session }: { session: MorningTodaySession }) {
   if (session && session.type === 'repos') {
     return (
-      <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px]">
-        <div className="flex items-center justify-between mb-[6px]">
-          <h3 className="text-[15px] font-semibold text-trail-muted font-display">Séance du jour</h3>
-          <span className="text-micro text-trail-success">Repos</span>
-        </div>
+      <ReportCard
+        label="Séance du jour"
+        accent="var(--trail-success)"
+        right={<span className="text-micro text-trail-success">Repos</span>}
+      >
         <h2
           className="text-[26px] leading-none text-trail-text"
           style={{ fontFamily: "var(--font-data)", letterSpacing: '0.02em' }}
@@ -38,21 +39,12 @@ export function SessionTodayBlock({ session }: { session: MorningTodaySession })
         <p className="text-caption text-trail-muted mt-1">
           Coupure prévue. Récup active OK si tu veux bouger un peu.
         </p>
-      </div>
+      </ReportCard>
     )
   }
 
   return (
-    <div
-      className="rounded-[12px] border p-[10px]"
-      style={{
-        borderColor: 'rgba(255,107,53,0.35)',
-        background:  'radial-gradient(100% 100% at 100% 0%, rgba(255,107,53,0.10) 0%, transparent 60%), var(--trail-card)',
-      }}
-    >
-      <div className="flex items-center justify-between mb-[6px]">
-        <h3 className="text-[15px] font-semibold text-trail-muted font-display">Séance du jour</h3>
-      </div>
+    <ReportCard label="Séance du jour" accent="var(--trail-primary)">
       {!session && <p className="text-caption text-trail-muted">Pas de séance prévue aujourd&apos;hui.</p>}
       {session && (
         <>
@@ -70,7 +62,7 @@ export function SessionTodayBlock({ session }: { session: MorningTodaySession })
           </div>
         </>
       )}
-    </div>
+    </ReportCard>
   )
 }
 

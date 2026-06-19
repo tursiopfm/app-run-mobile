@@ -1,6 +1,7 @@
 'use client'
 
 import type { WeatherResponse } from '@/lib/weather/open-meteo'
+import { ReportCard } from './ReportCard'
 
 type Props =
   | { status: 'loading'; locationLabel?: string | null }
@@ -41,12 +42,12 @@ function formatHour(iso: string): string {
 
 export function WeatherCurrentBlock(props: Props) {
   return (
-    <div className="rounded-[12px] bg-trail-card border border-trail-border p-[10px] flex flex-col">
-      <div className="flex items-center justify-between mb-[6px]">
-        <h3 className="text-body-sm font-semibold text-trail-muted">Là-dehors</h3>
-        <span className="text-body">{props.status === 'ready' ? weatherEmoji(props.data.current.weatherCode) : '⛅'}</span>
-      </div>
-
+    <ReportCard
+      label="Là-dehors"
+      accent="var(--trail-accent)"
+      className="h-full"
+      right={<span className="text-body">{props.status === 'ready' ? weatherEmoji(props.data.current.weatherCode) : '⛅'}</span>}
+    >
       {props.status === 'loading' && (
         <p className="text-micro text-trail-muted">Chargement météo…</p>
       )}
@@ -93,6 +94,6 @@ export function WeatherCurrentBlock(props: Props) {
           </>
         )
       })()}
-    </div>
+    </ReportCard>
   )
 }
