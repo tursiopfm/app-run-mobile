@@ -9,6 +9,7 @@ import { useT } from '@/lib/i18n/I18nProvider'
 import {
   INTENSITY_OPTIONS,
   WORKOUT_TYPE_OPTIONS,
+  asIntensityKey,
   effectiveWorkoutType,
   guessIntensity,
   intensityWithWorkoutFloor,
@@ -752,7 +753,7 @@ export default function ActivitiesClient({
     if (filter.intensity !== 'Toutes') {
       list = list.filter(a => {
         if (a.manual_intensity) return a.manual_intensity === filter.intensity
-        const raw = guessIntensity(a.avg_hr, hrZones, {
+        const raw = asIntensityKey(a.computed_intensity) ?? guessIntensity(a.avg_hr, hrZones, {
           activityMaxHr: a.max_hr,
           movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
         })

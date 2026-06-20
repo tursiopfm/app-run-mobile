@@ -51,4 +51,13 @@ describe('recalculateUserEffortScores avec streams', () => {
     const keys = captured.activity_metrics.map(m => m.metric_key as string)
     expect(keys).toEqual(expect.arrayContaining(['grade_adjusted_pace_s', 'decoupling_pct', 'elevation_loss_m', 'cardio_load', 'muscle_load', 'intensity_factor']))
   })
+
+  it('persiste computed_intensity classée depuis le stream FC (pas la FC moyenne)', async () => {
+    // Stream : 650 s à 150 bpm (Z2) puis 650 s à 158 bpm (Z3) avec FC max 195 →
+    // pct_max Z3 = 153-166 → ≥ 20 % du temps en Z3+ → endurance_active (Tempo).
+    // La FC moyenne seule (154) sous-estimerait l'intensité : c'est tout l'enjeu.
+    await recalculateUserEffortScores('u1')
+    const last = captured.activityUpdate[captured.activityUpdate.length - 1]
+    expect(last.computed_intensity).toBe('endurance_active')
+  })
 })

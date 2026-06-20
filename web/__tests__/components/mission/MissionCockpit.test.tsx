@@ -27,6 +27,7 @@ function act(p: Partial<ActivityRow> = {}): ActivityRow {
     start_time: '2026-06-09T06:00:00.000Z',
     ces: 80, avg_hr: null, max_hr: null,
     distance_m: 14200, elevation_gain_m: 620, moving_time_sec: 5880,
+    computed_intensity: null,
     manual_intensity: null, manual_sport_type: null, manual_workout_type: null,
     manual_distance_m: null, manual_elevation_gain_m: null, manual_moving_time_sec: null,
     ...p,

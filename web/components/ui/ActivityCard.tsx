@@ -119,6 +119,7 @@ export type ActivityRow = {
   distance_m:              number | null
   elevation_gain_m:        number | null
   moving_time_sec:         number | null
+  computed_intensity:      string | null
   manual_sport_type:       string | null
   manual_intensity:        string | null
   manual_workout_type:     string | null
@@ -162,12 +163,17 @@ export function ActivityCard({
   })
 
   const workoutTypeKey = effectiveWorkoutType(a.manual_workout_type, a.name, effectiveSport)
-  const computedIntensity = mounted
-    ? guessIntensity(a.avg_hr, hrZones, {
-        activityMaxHr: a.max_hr,
-        movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
-      })
-    : null
+  // Intensité persistée (calculée serveur depuis le stream FC réel) → même valeur
+  // que la vue détail. Fallback estimation client pour les lignes pas encore
+  // recalculées (gated `mounted` : guessIntensity est client-only → anti-hydratation).
+  const computedIntensity =
+    asIntensityKey(a.computed_intensity) ??
+    (mounted
+      ? guessIntensity(a.avg_hr, hrZones, {
+          activityMaxHr: a.max_hr,
+          movingTimeSec: a.manual_moving_time_sec ?? a.moving_time_sec,
+        })
+      : null)
   const intensityKey = a.manual_intensity
     ? asIntensityKey(a.manual_intensity)
     : intensityWithWorkoutFloor(computedIntensity, workoutTypeKey)

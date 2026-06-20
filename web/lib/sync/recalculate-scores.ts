@@ -3,6 +3,8 @@ import { computeCesResult } from '@/lib/analytics/effort-score'
 import type { UserProfileForCes, ActivityInput, CesStreamMetrics } from '@/lib/analytics/types'
 import { unpackStreams } from '@/lib/providers/strava/streams'
 import { computeStreamMetrics } from '@/lib/activities/stream-metrics'
+import { calculateHrZones, computeZoneTimesFromStream, type HrZone, type CustomZoneInput, type HrZoneMethod } from '@/lib/health/hr-zones'
+import { classifyIntensityFromZoneTimes, guessIntensity, type IntensityKey } from '@/lib/activities/intensity'
 
 function toActivityInput(row: Record<string, unknown>): ActivityInput {
   return {
@@ -25,17 +27,36 @@ export async function recalculateUserEffortScores(userId: string): Promise<{ rec
 
   const { data: profileRow } = await supabase
     .from('profiles')
-    .select('max_hr, resting_hr, threshold_hr, aerobic_threshold_hr, ftp_watts, threshold_pace_run_sec_per_km, threshold_pace_trail_sec_per_km')
+    .select('max_hr, resting_hr, threshold_hr, aerobic_threshold_hr, ftp_watts, threshold_pace_run_sec_per_km, threshold_pace_trail_sec_per_km, birth_year, hr_zone_method, hr_zones_custom')
     .eq('id', userId)
     .single()
 
   const profile: UserProfileForCes = profileRow ?? {}
 
+  // Zones FC du profil → classification d'intensité depuis le stream (persistée
+  // sur `activities.computed_intensity`) pour que la liste affiche la même valeur
+  // que le détail sans charger les streams. Recalculée ici à chaque recalcul, donc
+  // re-fraîchie quand les zones du profil changent.
+  const p = (profileRow ?? {}) as Record<string, unknown>
+  let hrZones: HrZone[] = []
+  try {
+    hrZones = calculateHrZones({
+      method:             (p.hr_zone_method as HrZoneMethod) ?? 'pct_max',
+      maxHr:              p.max_hr as number | null,
+      restingHr:          p.resting_hr as number | null,
+      aerobicThresholdHr: p.aerobic_threshold_hr as number | null,
+      thresholdHr:        p.threshold_hr as number | null,
+      birthYear:          p.birth_year as number | null,
+      customZones:        p.hr_zones_custom as CustomZoneInput[] | null,
+    }).zones
+  } catch { hrZones = [] }
+  const restingHr = (p.resting_hr as number | null) ?? null
+
   // Plus récentes d'abord : la fenêtre couverte (cap ~1000 lignes Supabase) inclut
   // les activités récentes (celles qui ont des streams / qui nous intéressent pour SP-2).
   const { data: activities } = await supabase
     .from('activities')
-    .select('id, ces, sport_type, name, start_time, duration_sec, moving_time_sec, distance_m, elevation_gain_m, avg_hr, max_hr, avg_power')
+    .select('id, ces, sport_type, name, start_time, duration_sec, moving_time_sec, distance_m, elevation_gain_m, avg_hr, max_hr, avg_power, computed_intensity')
     .eq('user_id', userId)
     .order('start_time', { ascending: false })
 
@@ -48,20 +69,28 @@ export async function recalculateUserEffortScores(userId: string): Promise<{ rec
     .eq('user_id', userId)
 
   const smByActivity = new Map<string, CesStreamMetrics>()
+  const zoneTimesByActivity = new Map<string, number[]>()
   for (const sr of streamRows ?? []) {
     try {
       const row = sr as { activity_id: string; streams_gz: string }
-      const m = computeStreamMetrics(unpackStreams(String(row.streams_gz)))
+      const streams = unpackStreams(String(row.streams_gz))
+      const m = computeStreamMetrics(streams)
       smByActivity.set(String(row.activity_id), {
         gradeAdjustedPaceS: m.gradeAdjustedPaceS,
         decouplingPct:      m.decouplingPct,
         elevationLossM:     m.elevationLossM,
       })
+      if (hrZones.length === 5 && streams.heartrate?.length && streams.time?.length) {
+        zoneTimesByActivity.set(
+          String(row.activity_id),
+          computeZoneTimesFromStream(hrZones, streams.heartrate, streams.time),
+        )
+      }
     } catch { /* stream illisible → fallback (pas de sm) */ }
   }
 
   const now = new Date().toISOString()
-  const activityUpdates: Array<{ id: string; ces: number; effort_score_version: string; effort_score_updated_at: string }> = []
+  const activityUpdates: Array<{ id: string; vals: Record<string, unknown> }> = []
   const metricUpdates:   Array<{ activity_id: string; metric_key: string; metric_value: number; computed_at: string }> = []
 
   let errors = 0
@@ -70,13 +99,32 @@ export async function recalculateUserEffortScores(userId: string): Promise<{ rec
       const sm = smByActivity.get(String(act.id))
       const result = computeCesResult(toActivityInput(act), profile, sm)
       const changed = result.ces !== Number(act.ces ?? NaN)
+
+      // Intensité calculée : stream FC réel si dispo (le plus juste), sinon
+      // estimation depuis la FC moyenne. Même cascade que la vue détail.
+      const zoneTimes = zoneTimesByActivity.get(String(act.id)) ?? null
+      const computedIntensity: IntensityKey | null =
+        (zoneTimes ? classifyIntensityFromZoneTimes(zoneTimes) : null) ??
+        guessIntensity(
+          act.avg_hr != null ? Number(act.avg_hr) : null,
+          hrZones,
+          {
+            activityMaxHr: act.max_hr != null ? Number(act.max_hr) : null,
+            movingTimeSec: Number(act.moving_time_sec ?? act.duration_sec ?? 0) || null,
+            restingHr,
+          },
+        )
+      const ciChanged = computedIntensity !== ((act.computed_intensity as string | null) ?? null)
+
+      const vals: Record<string, unknown> = {}
       if (changed) {
-        activityUpdates.push({
-          id: String(act.id),
-          ces: result.ces,
-          effort_score_version: result.version,
-          effort_score_updated_at: now,
-        })
+        vals.ces = result.ces
+        vals.effort_score_version = result.version
+        vals.effort_score_updated_at = now
+      }
+      if (ciChanged) vals.computed_intensity = computedIntensity
+      if (Object.keys(vals).length > 0) {
+        activityUpdates.push({ id: String(act.id), vals })
       }
       // On (re)écrit les métriques pour les activités modifiées ou streamées.
       if (changed || sm) {
@@ -104,7 +152,7 @@ export async function recalculateUserEffortScores(userId: string): Promise<{ rec
       activityUpdates.slice(i, i + CHUNK).map(u =>
         supabase
           .from('activities')
-          .update({ ces: u.ces, effort_score_version: u.effort_score_version, effort_score_updated_at: u.effort_score_updated_at })
+          .update(u.vals)
           .eq('id', u.id),
       ),
     )
