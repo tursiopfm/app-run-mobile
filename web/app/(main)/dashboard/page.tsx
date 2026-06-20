@@ -13,7 +13,7 @@ import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 import { SPORT_TYPE_MAP, type SportKey } from '@/lib/design/sports'
 
 const ACTIVITY_CARD_FIELDS =
-  'id, name, sport_type, start_time, ces, avg_hr, max_hr, distance_m, elevation_gain_m, moving_time_sec, manual_sport_type, manual_intensity, manual_workout_type, manual_distance_m, manual_moving_time_sec, manual_elevation_gain_m'
+  'id, name, sport_type, start_time, ces, avg_hr, max_hr, distance_m, elevation_gain_m, moving_time_sec, computed_intensity, manual_sport_type, manual_intensity, manual_workout_type, manual_distance_m, manual_moving_time_sec, manual_elevation_gain_m'
 
 function mondayOfCurrentWeek(): Date {
   const now = new Date()

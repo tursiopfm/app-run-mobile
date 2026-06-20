@@ -9,7 +9,7 @@ import type { ActivityRow } from '@/components/ui/ActivityCard'
 import type { ChargeSportPayload } from '@/lib/analytics/charge-insights.types'
 
 const ACTIVITY_CARD_FIELDS =
-  'id, name, sport_type, start_time, ces, avg_hr, max_hr, distance_m, elevation_gain_m, moving_time_sec, manual_sport_type, manual_intensity, manual_workout_type, manual_distance_m, manual_moving_time_sec, manual_elevation_gain_m'
+  'id, name, sport_type, start_time, ces, avg_hr, max_hr, distance_m, elevation_gain_m, moving_time_sec, computed_intensity, manual_sport_type, manual_intensity, manual_workout_type, manual_distance_m, manual_moving_time_sec, manual_elevation_gain_m'
 
 async function loadHeroData(
   supabase: Awaited<ReturnType<typeof createClient>>,
