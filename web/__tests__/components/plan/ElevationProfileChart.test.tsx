@@ -69,4 +69,32 @@ describe('ElevationProfileChart', () => {
     )
     expect(screen.queryByText('Profil indisponible')).not.toBeInTheDocument()
   })
+
+  it('mode relatif → affiche le libellé "Altitude relative au départ"', () => {
+    render(
+      <ElevationProfileChart
+        waypoints={[
+          wp({ km: 0, name: 'Départ', altitude: null, dPlus: 0, dMoins: 0 }),
+          wp({ km: 5, name: 'R1', altitude: null, dPlus: 300, dMoins: 50 }),
+        ]}
+        hoveredIndex={null}
+        onHoverIndex={() => {}}
+      />,
+    )
+    expect(screen.getByText('Altitude relative au départ')).toBeInTheDocument()
+  })
+
+  it('mode absolu → n\'affiche PAS le libellé relatif', () => {
+    render(
+      <ElevationProfileChart
+        waypoints={[
+          wp({ km: 0, name: 'Départ', altitude: 1000, dPlus: 0, dMoins: 0 }),
+          wp({ km: 10, name: 'Col', altitude: 1500, dPlus: 600, dMoins: 100 }),
+        ]}
+        hoveredIndex={null}
+        onHoverIndex={() => {}}
+      />,
+    )
+    expect(screen.queryByText('Altitude relative au départ')).not.toBeInTheDocument()
+  })
 })

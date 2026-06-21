@@ -52,8 +52,6 @@ export function ElevationProfileChart({ waypoints, hoveredIndex, onHoverIndex }:
     )
   }
 
-  const yLabel = mode === 'relative' ? 'Altitude relative au départ (m)' : 'Altitude (m)'
-
   // Dot custom : visible uniquement sur l'index survolé (highlight venant du tableau).
   const renderDot = (p: { cx?: number; cy?: number; index?: number }) => {
     if (p.cx == null || p.cy == null || p.index !== hoveredIndex) return <g key={p.index} />
@@ -66,6 +64,9 @@ export function ElevationProfileChart({ waypoints, hoveredIndex, onHoverIndex }:
   return (
     <div style={{ width: '100%', height: 180 }}
       onMouseLeave={() => onHoverIndex(null)}>
+      {mode === 'relative' && (
+        <p className="text-micro text-trail-muted mb-1">Altitude relative au départ</p>
+      )}
       <ResponsiveContainer>
         <AreaChart
           data={points}
@@ -89,11 +90,11 @@ export function ElevationProfileChart({ waypoints, hoveredIndex, onHoverIndex }:
             labelStyle={{ color: colors.text }}
             labelFormatter={(v: number) => `km ${fmtKm(v)}`}
             formatter={(value: number, _n, item: { payload?: ProfilePoint }) =>
-              [`${Math.round(value)} m`, item?.payload?.name ?? yLabel]}
+              [`${Math.round(value)} m`, item?.payload?.name ?? '']}
           />
           <Area dataKey="alt" type="linear" connectNulls
             stroke={colors.seriesBlue} strokeWidth={2}
-            fill="url(#elevFill)" dot={renderDot} activeDot={{ r: 4 }} />
+            fill="url(#elevFill)" dot={renderDot} activeDot={false} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
