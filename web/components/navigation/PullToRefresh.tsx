@@ -29,6 +29,15 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
   const [syncing, setSyncing] = useState(false)
   const [msg, setMsg]       = useState<SyncMsg | null>(null)
 
+  // TEMP diagnostic — gated by ?haptic-debug=1 so it never shows for normal users.
+  // Reports what the device actually does when we try to vibrate, so we stop
+  // guessing. Remove once the haptic question is resolved.
+  const [debug, setDebug]   = useState(false)
+  const [hap, setHap]       = useState('')
+  useEffect(() => {
+    setDebug(new URLSearchParams(window.location.search).has('haptic-debug'))
+  }, [])
+
   // Auto-dismiss the result toast a couple seconds after the sync settles.
   useEffect(() => {
     if (!msg) return
@@ -62,7 +71,11 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
       // Light haptic tick once the pull arms the refresh (mobile only, best-effort).
       if (delta >= THRESHOLD && !armed.current) {
         armed.current = true
-        navigator.vibrate?.(HAPTIC_MS)
+        const ret = navigator.vibrate?.(HAPTIC_MS)
+        if (debug) {
+          const ua = (navigator as Navigator & { userActivation?: { isActive?: boolean } }).userActivation
+          setHap(`vibrate=${typeof navigator.vibrate} · ret=${String(ret)} · active=${String(ua?.isActive)}`)
+        }
       } else if (delta < THRESHOLD && armed.current) {
         armed.current = false
       }
@@ -70,7 +83,7 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
     } else if (pull !== 0) {
       setPull(0)
     }
-  }, [syncing, pull])
+  }, [syncing, pull, debug])
 
   const onTouchEnd = useCallback(async () => {
     if (pull >= THRESHOLD && !syncing) {
@@ -149,6 +162,11 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
           >
             {msg.text}
           </div>
+        </div>
+      )}
+      {debug && hap && (
+        <div className="fixed top-2 left-2 z-50 max-w-[90vw] rounded bg-black/85 px-2 py-1 text-[11px] font-mono text-white shadow">
+          {hap}
         </div>
       )}
       {children}
