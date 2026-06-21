@@ -7,7 +7,7 @@ export const runtime = 'nodejs'
 type WP = Omit<RaceWaypoint, 'id' | 'raceId'>
 const toRow = (raceId: string, w: WP) => ({
   race_id: raceId, order_index: w.orderIndex, name: w.name, km: w.km, km_inter: w.kmInter,
-  d_plus: w.dPlus, d_moins: w.dMoins, cutoff_raw: w.cutoffRaw,
+  d_plus: w.dPlus, d_moins: w.dMoins, altitude: w.altitude, cutoff_raw: w.cutoffRaw,
   cutoff_kind: w.cutoffRaw === null ? null : w.cutoffKind, type: w.type,
   supplies: w.supplies ?? [], target_override_sec: w.targetOverrideSec ?? null,
 })

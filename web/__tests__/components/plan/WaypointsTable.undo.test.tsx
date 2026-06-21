@@ -6,7 +6,7 @@ import type { RaceWaypoint } from '@/types/plan'
 type Draft = Omit<RaceWaypoint, 'id' | 'raceId'>
 
 const mk = (name: string, km: number, type: Draft['type']): Draft => ({
-  orderIndex: 0, name, km, kmInter: null, dPlus: null, dMoins: null,
+  orderIndex: 0, name, km, kmInter: null, dPlus: null, dMoins: null, altitude: null,
   cutoffRaw: null, cutoffKind: null, type, supplies: [], targetOverrideSec: null,
 })
 

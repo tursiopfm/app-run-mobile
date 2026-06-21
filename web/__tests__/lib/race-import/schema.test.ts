@@ -35,6 +35,7 @@ describe('rawToExtractedRaceData (snake → camel)', () => {
       kmInter: 0,
       dPlus: 0,
       dMoins: 0,
+      altitude: null,
       cutoffRaw: '09:00',
       cutoffKind: 'clock_time',
       type: 'depart',
@@ -74,6 +75,37 @@ describe('rawToExtractedRaceData (snake → camel)', () => {
     const out = rawToExtractedRaceData(raw as any)
     expect(out.waypoints[0].cutoffRaw).toBeNull()
     expect(out.waypoints[0].cutoffKind).toBeNull()
+  })
+})
+
+describe('altitude (champ ajouté)', () => {
+  it('rowToRaceWaypoint expose altitude (présente)', () => {
+    const wp = rowToRaceWaypoint({
+      id: 'w1', race_id: 'r1', order_index: 1, name: 'Col',
+      km: 10, km_inter: null, d_plus: 600, d_moins: 100,
+      cutoff_raw: null, cutoff_kind: null, type: 'ravito', altitude: 1850,
+    } as any)
+    expect(wp.altitude).toBe(1850)
+  })
+
+  it('rowToRaceWaypoint : altitude absente → null', () => {
+    const wp = rowToRaceWaypoint({
+      id: 'w2', race_id: 'r1', order_index: 0, name: 'Départ',
+      km: 0, km_inter: null, d_plus: 0, d_moins: 0,
+      cutoff_raw: null, cutoff_kind: null, type: 'depart',
+    } as any)
+    expect(wp.altitude).toBeNull()
+  })
+
+  it("rawToExtractedRaceData : altitude null (on ne demande pas l'altitude au LLM)", () => {
+    const out = rawToExtractedRaceData({
+      race_name: 'X', edition_year: null, edition_date: null, date_explicit: false,
+      waypoints: [{
+        order_index: 0, name: 'Départ', km: 0, km_inter: null, d_plus: 0, d_moins: 0,
+        cutoff_raw: null, cutoff_kind: 'unknown', type: 'depart',
+      }],
+    })
+    expect(out.waypoints[0].altitude).toBeNull()
   })
 })
 

@@ -89,6 +89,7 @@ export function mapUtmbPoint(p: UtmbPoint, idx: number) {
     kmInter: null,
     dPlus: p.gainElevation,
     dMoins: p.lossElevation,
+    altitude: null,
     cutoffRaw,
     cutoffKind: cutoffRaw === null ? null : ('clock_time' as const),
     type,

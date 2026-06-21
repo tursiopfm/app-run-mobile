@@ -181,6 +181,7 @@ function mapPointsBlock(block: RawPoints): ExtractedRaceData {
       kmInter: null,
       dPlus,
       dMoins,
+      altitude,
       cutoffRaw,
       cutoffKind: cutoffRaw === null ? null : ('clock_time' as const),
       type,

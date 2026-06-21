@@ -89,6 +89,7 @@ export function rawToExtractedRaceData(raw: RawExtraction): ExtractedRaceData {
       kmInter: w.km_inter,
       dPlus: w.d_plus,
       dMoins: w.d_moins,
+      altitude: null,
       cutoffRaw: w.cutoff_raw,
       // Si pas de cutoff brut, le kind n'a pas de sens — on nullifie.
       cutoffKind: w.cutoff_raw === null ? null : (w.cutoff_kind as CutoffKind),
@@ -163,6 +164,7 @@ type DbRow = {
   km_inter: number | string | null
   d_plus: number | null
   d_moins: number | null
+  altitude?: number | null
   cutoff_raw: string | null
   cutoff_kind: CutoffKind | null
   type: WaypointType
@@ -195,6 +197,7 @@ export function rowToRaceWaypoint(row: DbRow): RaceWaypoint {
     kmInter: row.km_inter === null ? null : Number(row.km_inter),
     dPlus: row.d_plus,
     dMoins: row.d_moins,
+    altitude: row.altitude ?? null,
     cutoffRaw: row.cutoff_raw,
     cutoffKind: row.cutoff_kind,
     type: row.type,

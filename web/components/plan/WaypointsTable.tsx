@@ -173,7 +173,7 @@ export function WaypointsTable({
     else if (n === 1) km = waypoints[0].km
     const row: Draft = {
       orderIndex: n, name: 'Nouveau point', km,
-      kmInter: null, dPlus: null, dMoins: null,
+      kmInter: null, dPlus: null, dMoins: null, altitude: null,
       cutoffRaw: null, cutoffKind: null,
       type: 'ravito', supplies: [], targetOverrideSec: null,
     }

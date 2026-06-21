@@ -132,6 +132,13 @@ describe('utmbParser.parse()', () => {
       utmbParser.parse('https://saint-jacques.utmb.world/fr/races/100M'),
     ).rejects.toThrow(UtmbError)
   })
+
+  it("altitude = null (UTMB n'expose pas d'altitude absolue par point)", async () => {
+    mockFetchOnce(FIXTURE_HTML)
+    const out = await utmbParser.parse('https://saint-jacques.utmb.world/fr/races/100M')
+    expect(out.waypoints[0].altitude).toBeNull()
+    expect(out.waypoints.every((w) => w.altitude === null)).toBe(true)
+  })
 })
 
 it('enregistre le parser dans le registre', () => {

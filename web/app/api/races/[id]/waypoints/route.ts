@@ -73,6 +73,7 @@ export async function PUT(
     km_inter: w.kmInter,
     d_plus: w.dPlus,
     d_moins: w.dMoins,
+    altitude: w.altitude,
     cutoff_raw: w.cutoffRaw,
     cutoff_kind: w.cutoffRaw === null ? null : w.cutoffKind,
     type: w.type,
