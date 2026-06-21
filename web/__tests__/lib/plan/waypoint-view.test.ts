@@ -1,6 +1,7 @@
 import {
   deriveSegment, formatElapsedToClock, parseClockToElapsed,
   formatElapsedShort, parseElapsedShort, marginToBarrier, formatMargin, formatBarrierClock,
+  resolveAltitudes, formatAltitudeCell,
 } from '@/lib/plan/waypoint-view'
 
 describe('deriveSegment', () => {
@@ -96,5 +97,61 @@ describe('formatBarrierClock', () => {
   })
   it('pas de barrière → null', () => {
     expect(formatBarrierClock('20:00', null, null, 0)).toBeNull()
+  })
+})
+
+describe('resolveAltitudes', () => {
+  it('départ avec altitude → mode absolu (valeurs absolues)', () => {
+    const out = resolveAltitudes([
+      { altitude: 1000, dPlus: 0, dMoins: 0 },
+      { altitude: 1200, dPlus: 300, dMoins: 100 },
+    ])
+    expect(out.mode).toBe('absolute')
+    expect(out.values).toEqual([1000, 1200])
+  })
+
+  it('mode absolu : point sans altitude reconstruit via départ + (d+ − d−)', () => {
+    const out = resolveAltitudes([
+      { altitude: 1000, dPlus: 0, dMoins: 0 },
+      { altitude: null, dPlus: 500, dMoins: 100 }, // 1000 + 500 − 100 = 1400
+    ])
+    expect(out.mode).toBe('absolute')
+    expect(out.values).toEqual([1000, 1400])
+  })
+
+  it('départ sans altitude → mode relatif (d+ − d−)', () => {
+    const out = resolveAltitudes([
+      { altitude: null, dPlus: 0, dMoins: 0 },
+      { altitude: null, dPlus: 500, dMoins: 100 },
+      { altitude: null, dPlus: 800, dMoins: 900 }, // descend sous le départ → −100
+    ])
+    expect(out.mode).toBe('relative')
+    expect(out.values).toEqual([0, 400, -100])
+  })
+
+  it('d+ ou d− manquant → value null', () => {
+    const out = resolveAltitudes([
+      { altitude: null, dPlus: null, dMoins: 0 },
+    ])
+    expect(out.values).toEqual([null])
+  })
+
+  it('liste vide → mode relatif, values vide', () => {
+    expect(resolveAltitudes([])).toEqual({ mode: 'relative', values: [] })
+  })
+})
+
+describe('formatAltitudeCell', () => {
+  it('absolu → mètres arrondis sans signe', () => {
+    expect(formatAltitudeCell(1850.4, 'absolute')).toBe('1850')
+  })
+  it('relatif positif → préfixe +', () => {
+    expect(formatAltitudeCell(1240, 'relative')).toBe('+1240')
+  })
+  it('relatif négatif → préfixe −', () => {
+    expect(formatAltitudeCell(-30, 'relative')).toBe('-30')
+  })
+  it('null → tiret', () => {
+    expect(formatAltitudeCell(null, 'absolute')).toBe('—')
   })
 })
