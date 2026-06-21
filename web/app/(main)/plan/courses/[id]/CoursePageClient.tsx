@@ -6,6 +6,7 @@ import type { Race, RaceTableauMeta, RaceWaypoint } from '@/types/plan'
 import { getRaces, deleteRace, peekRaces, saveRace } from '@/lib/plan/storage'
 import { RaceEditorModal } from '@/components/plan/RaceEditorModal'
 import { WaypointsTable } from '@/components/plan/WaypointsTable'
+import { ElevationProfileChart } from '@/components/plan/ElevationProfileChart'
 import { TableActionsMenu } from '@/components/plan/TableActionsMenu'
 import { PacingStrategyCard } from '@/components/plan/PacingStrategyCard'
 import { isBarrierLocked } from '@/lib/plan/barrier-lock'
@@ -50,6 +51,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   const [diffBusy, setDiffBusy] = useState(false)
   const [editLines, setEditLines] = useState(false)
   const [editField, setEditField] = useState<null | 'objective' | 'start'>(null)
+  const [hoveredWaypointIndex, setHoveredWaypointIndex] = useState<number | null>(null)
 
   // Arrivée depuis « Oui, chercher » à la création (RaceEditorModal) :
   // ?import=auto → on ouvre la feuille sur l'onglet Auto et on lance la recherche.
@@ -287,15 +289,25 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
               onStartTimeChange={handleStartTimeChange}
               editLines={editLines}
               onEditLinesChange={setEditLines}
+              hoveredIndex={hoveredWaypointIndex}
+              onHoverIndex={setHoveredWaypointIndex}
             />
           </>
         )}
       </Section>
 
       <Section title="Profil de la course">
-        <div className="h-[120px] rounded-[8px] bg-trail-surface border border-dashed border-trail-border flex items-center justify-center">
-          <p className="text-caption text-trail-muted">Profil dénivelé — bientôt</p>
-        </div>
+        {waypoints.length > 0 ? (
+          <ElevationProfileChart
+            waypoints={waypoints.map(({ km, name, altitude, dPlus, dMoins }) => ({ km, name, altitude, dPlus, dMoins }))}
+            hoveredIndex={hoveredWaypointIndex}
+            onHoverIndex={setHoveredWaypointIndex}
+          />
+        ) : (
+          <div className="h-[120px] rounded-[8px] bg-trail-surface border border-dashed border-trail-border flex items-center justify-center">
+            <p className="text-caption text-trail-muted">Importe le tableau pour voir le profil.</p>
+          </div>
+        )}
       </Section>
 
       <Section title="Site web">

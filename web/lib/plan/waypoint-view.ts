@@ -148,3 +148,51 @@ export function formatBarrierClock(
   if (barrierElapsed == null) return cutoffRaw
   return formatElapsedToClock(startTime, barrierElapsed)?.label ?? cutoffRaw
 }
+
+// === Altitude résolue (profil + colonne « Alt ») ===========================
+// Si le DÉPART a une altitude stockée → mode absolu pour toute la course
+// (points sans altitude reconstruits via départ + (d+ − d−), car
+// d+ − d− = altitude − altitudeDépart). Sinon → mode relatif (d+ − d−).
+export interface AltitudeInput {
+  altitude: number | null
+  dPlus: number | null
+  dMoins: number | null
+}
+export interface ResolvedAltitudes {
+  mode: 'absolute' | 'relative'
+  values: Array<number | null>
+}
+
+export function resolveAltitudes(wps: AltitudeInput[]): ResolvedAltitudes {
+  if (wps.length === 0) return { mode: 'relative', values: [] }
+  const departAlt = wps[0].altitude
+  if (departAlt != null) {
+    return {
+      mode: 'absolute',
+      values: wps.map((w) =>
+        w.altitude != null
+          ? w.altitude
+          : w.dPlus != null && w.dMoins != null
+            ? departAlt + w.dPlus - w.dMoins
+            : null,
+      ),
+    }
+  }
+  return {
+    mode: 'relative',
+    values: wps.map((w) =>
+      w.dPlus != null && w.dMoins != null ? w.dPlus - w.dMoins : null,
+    ),
+  }
+}
+
+// Format pour la colonne « Alt » du tableau.
+export function formatAltitudeCell(
+  value: number | null,
+  mode: 'absolute' | 'relative',
+): string {
+  if (value == null) return '—'
+  const r = Math.round(value)
+  if (mode === 'relative') return r >= 0 ? `+${r}` : String(r)
+  return String(r)
+}

@@ -215,6 +215,7 @@ export interface RaceWaypoint {
   kmInter: number | null
   dPlus: number | null    // CUMULÉ depuis le départ
   dMoins: number | null   // CUMULÉ depuis le départ
+  altitude: number | null // altitude absolue (m) au point ; NULL si inconnue
   cutoffRaw: string | null
   cutoffKind: CutoffKind | null
   type: WaypointType

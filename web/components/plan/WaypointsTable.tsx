@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { RaceWaypoint, WaypointSupply } from '@/types/plan'
 import {
   deriveSegment, formatElapsedShort, parseElapsedShort, formatMargin,
+  resolveAltitudes, formatAltitudeCell,
 } from '@/lib/plan/waypoint-view'
 import { resolveElapsed } from '@/lib/plan/barrier-lock'
 
@@ -29,6 +30,9 @@ type Props = {
   // Si fourni, la cellule BH de la ligne départ devient éditable et propage
   // l'heure de départ ('HH:MM' ou null) au parent (qui sauvegarde la Race).
   onStartTimeChange?: (hhmm: string | null) => void
+  // Highlight croisé avec le profil altimétrique (optionnel).
+  hoveredIndex?: number | null
+  onHoverIndex?: (i: number | null) => void
 }
 
 // Parse une saisie de barrière/heure 'HH:MM' (ou 'HhMM').
@@ -96,6 +100,7 @@ function reindex(rows: Draft[]): Draft[] {
 export function WaypointsTable({
   waypoints, onChange, readOnly, editLines = false, onEditLinesChange,
   startTime, targetDurationMin, pacingFade, onStartTimeChange,
+  hoveredIndex, onHoverIndex,
 }: Props) {
   const update = useCallback(
     (i: number, patch: Partial<Draft>) => {
@@ -136,6 +141,13 @@ export function WaypointsTable({
     [waypoints],
   )
 
+  const alt = useMemo(
+    () => resolveAltitudes(
+      waypoints.map((w) => ({ altitude: w.altitude, dPlus: w.dPlus, dMoins: w.dMoins })),
+    ),
+    [waypoints],
+  )
+
   const toggleSupply = (i: number, s: WaypointSupply) => {
     const cur = waypoints[i].supplies
     update(i, { supplies: cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s] })
@@ -173,7 +185,7 @@ export function WaypointsTable({
     else if (n === 1) km = waypoints[0].km
     const row: Draft = {
       orderIndex: n, name: 'Nouveau point', km,
-      kmInter: null, dPlus: null, dMoins: null,
+      kmInter: null, dPlus: null, dMoins: null, altitude: null,
       cutoffRaw: null, cutoffKind: null,
       type: 'ravito', supplies: [], targetOverrideSec: null,
     }
@@ -202,11 +214,12 @@ export function WaypointsTable({
         /* Colonnes numériques resserrées (un D+ tient dans 32px) + gap réduit pour
            laisser une largeur LISIBLE à POINT sur téléphone (~360px) — sinon le nom
            se casse caractère par caractère. */
-        .wtbl .gA{display:grid;grid-template-columns:minmax(0,1fr) 40px 32px 32px 34px 54px 48px;column-gap:4px;align-items:center;}
+        .wtbl .gA{display:grid;grid-template-columns:minmax(0,1fr) 40px 32px 32px 32px 34px 54px 48px;column-gap:3px;align-items:center;}
         .wtbl .gA.head{padding:2px 3px 7px;border-bottom:1px solid var(--border2);}
         .wtbl .gA.head span{font-family:var(--d);font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--faint);}
         .wtbl .gA.head .r{text-align:right;} .wtbl .gA.head .c{text-align:center;}
         .wtbl .gA.row{padding:7px 3px;border-bottom:1px solid var(--border);}
+        .wtbl .gA.row.hl{background:rgba(127,127,127,.10);border-radius:6px;}
         .wtbl .c-point{display:flex;align-items:center;gap:6px;min-width:0;}
         .wtbl .dot{width:7px;height:7px;border-radius:50%;flex:none;}
         .wtbl .ic{width:13px;height:13px;display:inline-block;flex:none;}
@@ -256,7 +269,7 @@ export function WaypointsTable({
         {editLines && !readOnly && <span className="del-spacer" />}
         <div className="gA head">
           <span>Point</span><span className="r">Dist</span><span className="r">D+</span>
-          <span className="r">D-</span>
+          <span className="r">D-</span><span className="r">Alt</span>
           <span className="r">BH</span><span className="c">Ravito</span><span className="c">Obj</span>
         </div>
       </div>
@@ -278,12 +291,14 @@ export function WaypointsTable({
         const segSec = elapsed && i > 0 ? elapsed[i] - elapsed[i - 1] : null
 
         return (
-          <div className="row-wrap" key={`${w.orderIndex}-${i}`}>
+          <div className="row-wrap" key={`${w.orderIndex}-${i}`}
+            onMouseEnter={() => onHoverIndex?.(i)}
+            onMouseLeave={() => onHoverIndex?.(null)}>
             {editLines && !readOnly && (
               <button type="button" className="del" aria-label="Supprimer la ligne"
                 onClick={() => removeRow(i)}>×</button>
             )}
-            <div className="gA row">
+            <div className={`gA row${hoveredIndex === i ? ' hl' : ''}`}>
             {/* Point */}
             <div className="c-point">
               <span className="dot" style={{ background: lead.dot }} />
@@ -323,6 +338,11 @@ export function WaypointsTable({
               <input className="big muted" type="text" inputMode="numeric" value={w.dMoins ?? ''} disabled={readOnly}
                 onChange={(e) => update(i, { dMoins: e.target.value === '' ? null : parseInt(e.target.value, 10) })} />
               {seg.dMoinsSeg != null && <span className="sub dp">+{seg.dMoinsSeg}</span>}
+            </div>
+
+            {/* Alt : altitude résolue (lecture seule ; absolue ou relative selon la source) */}
+            <div className="num">
+              <span className="big muted">{formatAltitudeCell(alt.values[i], alt.mode)}</span>
             </div>
 
             {/* Barrière — départ = heure de départ (éditable si onStartTimeChange) ;
