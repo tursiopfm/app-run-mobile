@@ -447,6 +447,7 @@ export type Dict = {
     syncImportedActivities: (n: number) => string
     syncErrorPrefix: (msg: string) => string
     syncErrorNetwork: string; syncErrorUnknown: string
+    syncErrorTimeout: string; syncErrorOffline: string
     stravaConnectMyAccount: string
     planAutoPushTitleLabel: string
     planAutoPushTitleHint: string
@@ -2191,6 +2192,8 @@ export const fr: Dict = {
     syncErrorPrefix:     (msg: string) => `Erreur : ${msg}`,
     syncErrorNetwork:    'Erreur réseau',
     syncErrorUnknown:    'inconnue',
+    syncErrorTimeout:    'Synchro trop longue',
+    syncErrorOffline:    'Hors ligne',
     stravaConnectMyAccount: 'Connecter mon compte Strava',
     planAutoPushTitleLabel: 'Pousser auto le titre de séance sur Strava',
     planAutoPushTitleHint:  'Quand une activité Strava matche une séance planifiée, son titre est remplacé par le titre de la séance',

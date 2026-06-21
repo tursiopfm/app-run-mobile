@@ -6,6 +6,7 @@ import { RefreshCw } from 'lucide-react'
 import { useT } from '@/lib/i18n/I18nProvider'
 
 const THRESHOLD = 72 // px to pull before triggering
+const SYNC_TIMEOUT_MS = 15000 // abort the sync if Strava hangs
 
 // The page body is the scroll container (not <main>). Using `overflow-y-auto`
 // on a `flex-1` child of a `min-h-screen` flex column produces inconsistent
@@ -22,6 +23,7 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
   const router   = useRouter()
   const L        = useT().settings
   const startY   = useRef<number | null>(null)
+  const armed    = useRef(false) // haptic fired once per gesture when threshold crossed
   const [pull, setPull]     = useState(0)
   const [syncing, setSyncing] = useState(false)
   const [msg, setMsg]       = useState<SyncMsg | null>(null)
@@ -42,6 +44,7 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
       startY.current = null
       return
     }
+    armed.current = false
     startY.current = isAtTop() ? e.touches[0].clientY : null
   }, [])
 
@@ -55,6 +58,13 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
     }
     const delta = e.touches[0].clientY - startY.current
     if (delta > 0) {
+      // Light haptic tick once the pull arms the refresh (mobile only, best-effort).
+      if (delta >= THRESHOLD && !armed.current) {
+        armed.current = true
+        navigator.vibrate?.(10)
+      } else if (delta < THRESHOLD && armed.current) {
+        armed.current = false
+      }
       setPull(Math.min(delta, THRESHOLD * 1.5))
     } else if (pull !== 0) {
       setPull(0)
@@ -63,12 +73,19 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
 
   const onTouchEnd = useCallback(async () => {
     if (pull >= THRESHOLD && !syncing) {
-      setSyncing(true)
       setPull(0)
       startY.current = null
+      // Don't even try the round-trip if the browser knows we're offline.
+      if (navigator.onLine === false) {
+        setMsg({ kind: 'error', text: L.syncErrorOffline })
+        return
+      }
+      setSyncing(true)
       setMsg(null)
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), SYNC_TIMEOUT_MS)
       try {
-        const res = await fetch('/api/strava/sync', { method: 'POST' })
+        const res = await fetch('/api/strava/sync', { method: 'POST', signal: controller.signal })
         const json = (await res.json().catch(() => ({}))) as { saved?: number; error?: string }
         if (res.ok) {
           setMsg({ kind: 'ok', text: L.syncImportedActivities(json.saved ?? 0) })
@@ -76,9 +93,11 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
         } else {
           setMsg({ kind: 'error', text: L.syncErrorPrefix(json.error ?? L.syncErrorUnknown) })
         }
-      } catch {
-        setMsg({ kind: 'error', text: L.syncErrorNetwork })
+      } catch (err) {
+        const timedOut = err instanceof DOMException && err.name === 'AbortError'
+        setMsg({ kind: 'error', text: timedOut ? L.syncErrorTimeout : L.syncErrorNetwork })
       } finally {
+        clearTimeout(timer)
         setSyncing(false)
       }
     } else {
