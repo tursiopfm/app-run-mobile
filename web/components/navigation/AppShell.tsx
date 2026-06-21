@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
+import Link from 'next/link'
 import { BottomNav } from './BottomNav'
 import { DesktopSidebar } from './DesktopSidebar'
 import { PullToRefresh } from './PullToRefresh'
 import { SyncOnFocus } from './SyncOnFocus'
-import { SettingsLink } from './SettingsLink'
+import { MoreVertical } from 'lucide-react'
 import { createClient } from '@/lib/database/supabase-server'
 import { getServerUser } from '@/lib/database/get-user'
 import { getIsAdmin } from '@/lib/database/get-admin'
@@ -56,7 +57,15 @@ export async function AppShell({ children }: { children: ReactNode }) {
               )}
               {/* En Mode Mission, l'accès Réglages se fait via la roue dentée
                   de la barre du bas → on masque le ⋮ ici. */}
-              {mode !== 'mission' && <SettingsLink ariaLabel={settingsAria} />}
+              {mode !== 'mission' && (
+                <Link
+                  href="/settings"
+                  className="text-trail-muted hover:text-trail-text p-1 -mr-1"
+                  aria-label={settingsAria}
+                >
+                  <MoreVertical size={18} />
+                </Link>
+              )}
             </div>
           </div>
         </header>
