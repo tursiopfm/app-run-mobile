@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutGrid, Dumbbell, Calendar, Footprints, Trophy, ShieldCheck, Settings } from 'lucide-react'
 import { useT } from '@/lib/i18n/I18nProvider'
+import { hapticTap } from '@/lib/haptics'
 
 // Fallback si le router Next.js est gelé (cas reproductible après visite de
 // /charge avec ordre de blocs custom — voir tasks/lessons). Si l'URL n'a pas
@@ -47,7 +48,7 @@ export function BottomNav({ isAdmin = false, mode = 'expert' }: { isAdmin?: bool
             <Link
               key={href}
               href={href}
-              onClick={() => navWithFallback(href)}
+              onClick={() => { hapticTap(); navWithFallback(href) }}
               className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] transition-colors ${
                 active ? 'text-trail-primary' : 'text-trail-muted hover:text-trail-text'
               }`}
