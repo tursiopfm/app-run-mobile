@@ -20,7 +20,7 @@ export function ReportCard({ label, accent = 'var(--trail-primary)', right, clas
     <section
       className={`relative overflow-hidden rounded-[14px] border px-3 py-[10px] ${className}`}
       style={{
-        background: `linear-gradient(180deg, color-mix(in srgb, ${accent} 18%, #141B26) 0%, color-mix(in srgb, ${accent} 9%, #121821) 100%)`,
+        background: `linear-gradient(180deg, color-mix(in srgb, ${accent} 18%, var(--ink-700)) 0%, color-mix(in srgb, ${accent} 9%, var(--ink-800)) 100%)`,
         borderColor: `color-mix(in srgb, ${accent} 38%, var(--trail-border))`,
       }}
     >

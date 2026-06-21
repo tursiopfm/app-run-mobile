@@ -50,10 +50,7 @@ export function MorningReportClient({ data }: { data: MorningReportData }) {
       <div className="absolute inset-x-0 top-0 h-[440px] pointer-events-none">
         <div
           className="absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(180deg,#0B0F14 0%,#101A2B 32%,#1E2336 55%,#3A2A24 72%,#0B0F14 94%)',
-          }}
+          style={{ background: 'var(--morning-hero)' }}
         />
         <div
           className="absolute right-2 top-[120px] w-72 h-72 rounded-full"
@@ -77,7 +74,7 @@ export function MorningReportClient({ data }: { data: MorningReportData }) {
           <Link
             href="/"
             className="w-9 h-9 rounded-full flex items-center justify-center text-body border border-trail-border text-trail-text hover:text-trail-primary"
-            style={{ background: 'rgba(11,15,20,0.4)' }}
+            style={{ background: 'color-mix(in srgb, var(--trail-bg) 40%, transparent)' }}
             aria-label="Fermer le rapport matinal"
           >
             ✕
@@ -123,7 +120,7 @@ export function MorningReportClient({ data }: { data: MorningReportData }) {
         className="fixed bottom-0 inset-x-0 z-[61] px-3 sm:px-5 pt-8"
         style={{
           paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)',
-          background: 'linear-gradient(180deg,rgba(11,15,20,0) 0%,#0B0F14 45%)',
+          background: 'linear-gradient(180deg, transparent 0%, var(--trail-bg) 45%)',
         }}
       >
         <div className="max-w-[420px] md:max-w-[860px] mx-auto">

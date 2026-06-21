@@ -43,6 +43,8 @@
   --trail-progress-run-bg:    #243530;
   --trail-progress-volume-bg: #13211E;
   --trail-progress-dplus-bg:  #11232A;
+  /* Rapport matinal — dégradé « aube » du takeover (hero) */
+  --morning-hero: linear-gradient(180deg,#0B0F14 0%,#101A2B 32%,#1E2336 55%,#3A2A24 72%,#0B0F14 94%);
   /* Indicator chip (Charge / Intensity / Type) */
   --ind-bg:     linear-gradient(180deg, #1a1f1a 0%, #141816 100%);
   --ind-border: #232826;
@@ -100,6 +102,8 @@
   --trail-progress-run-bg:    #FBE2D8;
   --trail-progress-volume-bg: #DFF5E8;
   --trail-progress-dplus-bg:  #DCF0F7;
+  /* Rapport matinal — dégradé « aube » clair (ciel doux → pêche → blanc) */
+  --morning-hero: linear-gradient(180deg,#F4F7F6 0%,#DCE8F5 32%,#E6E2F0 55%,#FBE6D6 72%,#F4F7F6 94%);
   /* Indicator chip (Charge / Intensity / Type) */
   --ind-bg:     linear-gradient(180deg, #FFFFFF 0%, #F1F5F4 100%);
   --ind-border: #D6E1DD;

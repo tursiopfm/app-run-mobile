@@ -36,7 +36,7 @@ export function MorningHeader({ date, firstName, raceName, daysToRace, weekIndex
       {raceName && daysToRace != null && (
         <div
           className="text-right rounded-[12px] border border-trail-border px-3 py-2 mt-1"
-          style={{ background: 'rgba(11,15,20,0.4)' }}
+          style={{ background: 'color-mix(in srgb, var(--trail-bg) 40%, transparent)' }}
         >
           <p className="text-[10px] uppercase tracking-[0.15em] text-trail-muted">{raceName}</p>
           <p
