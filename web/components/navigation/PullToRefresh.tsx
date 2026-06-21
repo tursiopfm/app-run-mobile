@@ -1,8 +1,9 @@
 'use client'
 
-import { type ReactNode, useRef, useState, useCallback } from 'react'
+import { type ReactNode, useRef, useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { RefreshCw } from 'lucide-react'
+import { useT } from '@/lib/i18n/I18nProvider'
 
 const THRESHOLD = 72 // px to pull before triggering
 
@@ -15,11 +16,22 @@ function isAtTop(): boolean {
   return window.scrollY <= 0
 }
 
+type SyncMsg = { kind: 'ok' | 'error'; text: string }
+
 export function PullToRefresh({ children }: { children: ReactNode }) {
   const router   = useRouter()
+  const L        = useT().settings
   const startY   = useRef<number | null>(null)
   const [pull, setPull]     = useState(0)
   const [syncing, setSyncing] = useState(false)
+  const [msg, setMsg]       = useState<SyncMsg | null>(null)
+
+  // Auto-dismiss the result toast a couple seconds after the sync settles.
+  useEffect(() => {
+    if (!msg) return
+    const t = setTimeout(() => setMsg(null), 2600)
+    return () => clearTimeout(t)
+  }, [msg])
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     // Ignore les touches qui démarrent sur une poignée de drag (dnd-kit).
@@ -54,17 +66,26 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
       setSyncing(true)
       setPull(0)
       startY.current = null
+      setMsg(null)
       try {
-        await fetch('/api/strava/sync', { method: 'POST' })
+        const res = await fetch('/api/strava/sync', { method: 'POST' })
+        const json = (await res.json().catch(() => ({}))) as { saved?: number; error?: string }
+        if (res.ok) {
+          setMsg({ kind: 'ok', text: L.syncImportedActivities(json.saved ?? 0) })
+          router.refresh()
+        } else {
+          setMsg({ kind: 'error', text: L.syncErrorPrefix(json.error ?? L.syncErrorUnknown) })
+        }
+      } catch {
+        setMsg({ kind: 'error', text: L.syncErrorNetwork })
       } finally {
-        router.refresh()
         setSyncing(false)
       }
     } else {
       setPull(0)
       startY.current = null
     }
-  }, [pull, syncing, router])
+  }, [pull, syncing, router, L])
 
   const progress = Math.min(pull / THRESHOLD, 1)
   const showPull = pull > 8 || syncing
@@ -90,6 +111,23 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
               className={`text-trail-primary ${syncing ? 'animate-spin' : ''}`}
               style={syncing ? undefined : { transform: `rotate(${progress * 270}deg)` }}
             />
+          </div>
+        </div>
+      )}
+      {msg && !syncing && (
+        <div
+          className="pointer-events-none fixed left-0 right-0 flex justify-center z-30 transition-opacity duration-150"
+          style={{ top: '56px' }}
+        >
+          <div
+            className={
+              'rounded-full px-3 py-1 shadow text-micro font-semibold ' +
+              (msg.kind === 'error'
+                ? 'bg-red-500/15 text-red-400 border border-red-500/30'
+                : 'bg-trail-header text-trail-text border border-trail-border')
+            }
+          >
+            {msg.text}
           </div>
         </div>
       )}
