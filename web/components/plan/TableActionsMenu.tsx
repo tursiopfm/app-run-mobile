@@ -38,7 +38,7 @@ export function TableActionsMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 rounded-[10px] border border-trail-border px-2.5 py-1.5 text-body-sm font-semibold text-trail-text hover:border-[var(--ink-500)] hover:bg-white/5"
+        className="inline-flex items-center gap-1.5 rounded-[10px] border border-trail-border px-2.5 py-1.5 text-body-sm font-semibold text-trail-text hover:border-[var(--ink-500)] hover:bg-trail-border/40"
       >
         <Settings2 size={15} className="text-[var(--primary-text)]" />
         Gérer
@@ -47,11 +47,11 @@ export function TableActionsMenu({
 
       {open && (
         <>
-          {/* Scrim sombre : assombrit la page pour faire ressortir le menu (fond bleu nuit ≈ surface). */}
+          {/* Scrim : assombrit la page pour faire ressortir le menu (surface théme-aware). */}
           <div className="fixed inset-0 z-40 bg-black/50" onClick={close} />
           <div
             role="menu"
-            className="absolute right-0 z-50 mt-2 w-[280px] max-w-[calc(100vw-2rem)] rounded-[14px] border border-[var(--ink-500)] bg-[#1B2430] p-1.5 shadow-[0_16px_44px_rgba(0,0,0,0.6)]"
+            className="absolute right-0 z-50 mt-2 w-[280px] max-w-[calc(100vw-2rem)] rounded-[14px] border border-[var(--ink-500)] bg-trail-card p-1.5 shadow-[0_16px_44px_rgba(0,0,0,0.6)]"
           >
             <div className="px-2.5 pb-1.5 pt-1 text-micro font-bold uppercase tracking-wider text-trail-muted">
               {label}
@@ -104,9 +104,9 @@ function MenuItem({ icon, label, description, onClick }: {
       type="button"
       role="menuitem"
       onClick={onClick}
-      className="flex w-full items-start gap-3 rounded-[10px] p-2.5 text-left hover:bg-white/5"
+      className="flex w-full items-start gap-3 rounded-[10px] p-2.5 text-left hover:bg-trail-border/40"
     >
-      <span className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[9px] border border-trail-border bg-white/5 text-[var(--primary-text)]">
+      <span className="grid h-[34px] w-[34px] flex-none place-items-center rounded-[9px] border border-trail-border bg-trail-border/30 text-[var(--primary-text)]">
         {icon}
       </span>
       <span className="min-w-0">
