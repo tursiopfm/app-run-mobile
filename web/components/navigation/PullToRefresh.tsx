@@ -6,6 +6,7 @@ import { RefreshCw } from 'lucide-react'
 import { useT } from '@/lib/i18n/I18nProvider'
 
 const THRESHOLD = 72 // px to pull before triggering
+const HAPTIC_MS = 30 // 10ms is below most phones' perceptible threshold; 30ms reads as a crisp tick
 const SYNC_TIMEOUT_MS = 15000 // abort the sync if Strava hangs
 
 // The page body is the scroll container (not <main>). Using `overflow-y-auto`
@@ -61,7 +62,7 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
       // Light haptic tick once the pull arms the refresh (mobile only, best-effort).
       if (delta >= THRESHOLD && !armed.current) {
         armed.current = true
-        navigator.vibrate?.(10)
+        navigator.vibrate?.(HAPTIC_MS)
       } else if (delta < THRESHOLD && armed.current) {
         armed.current = false
       }
