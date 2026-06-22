@@ -32,7 +32,7 @@ function formatClock(totalSec: number, startDateIso: string | null): string {
 // départ manquants (on n'invente rien).
 export function passageClocks(waypoints: PacingWaypoint[], opts: PassageClockOpts): string[] {
   if (opts.totalDurationSec == null || !opts.startTime) return waypoints.map(() => '')
-  const m = /^(\d{1,2}):(\d{2})/.exec(opts.startTime)
+  const m = /^(\d{1,2}):(\d{2})$/.exec(opts.startTime)
   if (!m) return waypoints.map(() => '')
   const startSec = parseInt(m[1], 10) * 3600 + parseInt(m[2], 10) * 60
   const elapsed = estimatePassageTimes(waypoints, {

@@ -28,4 +28,12 @@ describe('passageClocks', () => {
     })
     expect(out[1]).toBe('dim. 01:00')
   })
+  it('date connue → jour de semaine affiché aussi au départ (J0)', () => {
+    // 2026-06-20 = samedi. Départ 22:00 le samedi, +3h = 01:00 dimanche.
+    const out = passageClocks(flat([0, 10]), {
+      startTime: '22:00', totalDurationSec: 10800, fade: 0, startDateIso: '2026-06-20',
+    })
+    expect(out[0]).toBe('sam. 22:00')
+    expect(out[1]).toBe('dim. 01:00')
+  })
 })
