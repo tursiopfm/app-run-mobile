@@ -46,16 +46,24 @@ export function useOverlapGuard(): { guardedSave: (candidate: TrainingPlan) => P
     const candidate = candidateRef.current
     const found = conflicts ?? []
     if (!candidate) return settle(false)
-    for (const c of found) await saveCurrentPlan({ ...c, status: 'archived' })
-    await saveCurrentPlan(candidate)
-    settle(true)
+    try {
+      for (const c of found) await saveCurrentPlan({ ...c, status: 'archived' })
+      await saveCurrentPlan(candidate)
+      settle(true)
+    } catch {
+      settle(false)
+    }
   }, [conflicts, settle])
 
   const handleConfirm = useCallback(async () => {
     const candidate = candidateRef.current
     if (!candidate) return settle(false)
-    await saveCurrentPlan(candidate)
-    settle(true)
+    try {
+      await saveCurrentPlan(candidate)
+      settle(true)
+    } catch {
+      settle(false)
+    }
   }, [settle])
 
   const handleAdjust = useCallback(() => settle(false), [settle])
