@@ -171,6 +171,32 @@ export function ElevationProfileChart({ waypoints, denseProfile, hoveredIndex, o
         </g>
       )
     }
+    // Bulle de sélection : km + altitude du point sélectionné, ancrée sur la
+    // courbe, qui SUIT la sélection (clic point / ligne tableau / nav ‹ ›). Calque
+    // au-dessus du reste ; Customized donne les échelles px + la largeur du plot
+    // (clamp horizontal pour ne pas sortir du cadre).
+    const renderSelectionBubble = (cp: any) => {
+      if (selectedIndex == null) return null
+      const wp = waypoints[selectedIndex]
+      if (!wp) return null
+      const xMap = cp?.xAxisMap, yMap = cp?.yAxisMap, off = cp?.offset
+      const xs = xMap && xMap[Object.keys(xMap)[0]]?.scale
+      const ys = yMap && yMap[Object.keys(yMap)[0]]?.scale
+      if (!xs || !ys || !off) return null
+      const alt = interpolateAlt(denseProfile.d, denseProfile.e, wp.km) ?? 0
+      const px = xs(wp.km), py = ys(alt)
+      const label = `km ${fmtKm(wp.km)} · ${Math.round(alt)} m`
+      const w = label.length * 5.6 + 14, h = 17
+      const lx = Math.max(off.left, Math.min(px - w / 2, off.left + off.width - w))
+      const ly = Math.max(off.top, py - h - 9)
+      return (
+        <g>
+          <rect x={lx} y={ly} width={w} height={h} rx={8.5} fill={ORANGE} />
+          <text x={lx + w / 2} y={ly + 12} fontSize={10} fontWeight={600} fill="#fff" textAnchor="middle">{label}</text>
+          <circle cx={px} cy={py} r={6.5} fill={ORANGE} stroke="#fff" strokeWidth={2} />
+        </g>
+      )
+    }
     return (
       <div style={{ width: '100%', height: 230 }} onMouseLeave={() => onHoverIndex(null)}>
         <ResponsiveContainer>
@@ -188,18 +214,29 @@ export function ElevationProfileChart({ waypoints, denseProfile, hoveredIndex, o
             <YAxis width={42} domain={[yMin, yMax]} allowDecimals={false}
               tick={{ fontSize: 10, fill: colors.subtleText }} />
             <Tooltip
-              contentStyle={{ backgroundColor: colors.cardBg, border: `1px solid ${colors.border}`, fontSize: 12 }}
-              labelStyle={{ color: colors.text }}
-              labelFormatter={(v: number) => `km ${fmtKm(v)}`}
-              formatter={(value: number) => [`${Math.round(value)} m`, 'Altitude']}
+              cursor={{ stroke: colors.border, strokeDasharray: '3 3' }}
+              content={(tp: { active?: boolean; label?: number; payload?: Array<{ name?: string; value?: number }> }) => {
+                if (!tp?.active || !tp.payload?.length) return null
+                // Area ET Scatter partagent dataKey "alt" → on ne garde que l'aire
+                // (name "Altitude") pour ne pas afficher deux altitudes.
+                const e = tp.payload.find((x) => x?.name === 'Altitude') ?? tp.payload[0]
+                if (e?.value == null) return null
+                return (
+                  <div style={{ backgroundColor: colors.cardBg, border: `1px solid ${colors.border}`, fontSize: 12, padding: '4px 8px', borderRadius: 6 }}>
+                    <div style={{ color: colors.text }}>{`km ${fmtKm(tp.label ?? 0)}`}</div>
+                    <div style={{ color: colors.seriesBlue }}>{`${Math.round(e.value)} m`}</div>
+                  </div>
+                )
+              }}
             />
             <Customized component={renderRidges} />
-            <Area dataKey="alt" type="linear" stroke={colors.seriesBlue} strokeWidth={2}
+            <Area dataKey="alt" name="Altitude" type="linear" stroke={colors.seriesBlue} strokeWidth={2}
               fill="url(#elevFillDense)" dot={false} activeDot={false} />
             <Scatter data={markers} dataKey="alt" shape={renderMarker}
               onClick={(d: any) => onSelectIndex?.(d?.wpIndex ?? d?.payload?.wpIndex)}
               onMouseEnter={(d: any) => onHoverIndex(d?.wpIndex ?? d?.payload?.wpIndex ?? null)}
               onMouseLeave={() => onHoverIndex(null)} />
+            <Customized component={renderSelectionBubble} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
