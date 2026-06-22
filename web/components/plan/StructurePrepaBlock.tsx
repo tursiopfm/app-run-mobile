@@ -12,7 +12,7 @@ import { Fragment, useMemo, useState } from 'react'
 import { SquarePen } from 'lucide-react'
 import type { Phase, Race, TrainingPlan } from '@/types/plan'
 import { PHASE_DEFINITIONS, autoDistributePhases, getPhaseWeeks } from '@/lib/training/phases'
-import { saveCurrentPlan, saveMacrocycle } from '@/lib/plan/storage'
+import { useOverlapGuard } from './useOverlapGuard'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { PhaseEditorModal } from './PhaseEditorModal'
 import { RaceMarkers } from './RaceMarkers'
@@ -94,6 +94,8 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
   // Course candidate pour démarrer une prépa quand aucun macro n'existe encore.
   const seedRace = useMemo<Race | null>(() => pickGoalRace(races), [races])
 
+  const { guardedSave, dialog } = useOverlapGuard()
+
   async function handleGenerateInitial() {
     if (generating) return
     setGenerating(true)
@@ -117,8 +119,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
           createdAt: now,
           updatedAt: now,
         }
-        await saveMacrocycle(newPlan)
-        onChange?.()
+        if (await guardedSave(newPlan)) onChange?.()
         return
       }
       // Cas 2 : macro existant sans phases → on les génère.
@@ -135,8 +136,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
         phases,
         updatedAt: now,
       }
-      await saveCurrentPlan(updated)
-      onChange?.()
+      if (await guardedSave(updated)) onChange?.()
     } finally {
       setGenerating(false)
     }
@@ -233,6 +233,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
           onClose={() => setModalOpen(false)}
           onSaved={() => { onChange?.(); setModalOpen(false) }}
         />
+        {dialog}
       </BlockCard>
     )
   }
