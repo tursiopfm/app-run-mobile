@@ -7,6 +7,8 @@ import { getRaces, deleteRace, peekRaces, saveRace } from '@/lib/plan/storage'
 import { RaceEditorModal } from '@/components/plan/RaceEditorModal'
 import { WaypointsTable } from '@/components/plan/WaypointsTable'
 import { ElevationProfileChart } from '@/components/plan/ElevationProfileChart'
+import { AddTrackDialog } from '@/components/plan/AddTrackDialog'
+import type { RaceTrack } from '@/types/plan'
 import { TableActionsMenu } from '@/components/plan/TableActionsMenu'
 import { PacingStrategyCard } from '@/components/plan/PacingStrategyCard'
 import { isBarrierLocked } from '@/lib/plan/barrier-lock'
@@ -52,6 +54,8 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   const [editLines, setEditLines] = useState(false)
   const [editField, setEditField] = useState<null | 'objective' | 'start'>(null)
   const [hoveredWaypointIndex, setHoveredWaypointIndex] = useState<number | null>(null)
+  const [track, setTrack] = useState<RaceTrack | null>(null)
+  const [trackDialogOpen, setTrackDialogOpen] = useState(false)
 
   // Arrivée depuis « Oui, chercher » à la création (RaceEditorModal) :
   // ?import=auto → on ouvre la feuille sur l'onglet Auto et on lance la recherche.
@@ -108,6 +112,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
       const body = await wpsRes.json()
       setWaypoints(body.waypoints ?? [])
       setMeta(body.meta ?? null)
+      setTrack(body.track ?? null)
     }
   }, [raceId])
 
@@ -296,10 +301,26 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
         )}
       </Section>
 
-      <Section title="Profil de la course">
+      <Section
+        title="Profil de la course"
+        action={
+          waypoints.length > 0 ? (
+            track ? (
+              <button type="button" onClick={async () => {
+                await fetch(`/api/races/${raceId}/track`, { method: 'DELETE' })
+                setTrack(null)
+              }} className="text-caption text-trail-muted underline">Retirer la trace</button>
+            ) : (
+              <button type="button" onClick={() => setTrackDialogOpen(true)}
+                className="text-caption text-trail-primary font-semibold underline">Ajouter une trace GPX</button>
+            )
+          ) : undefined
+        }
+      >
         {waypoints.length > 0 ? (
           <ElevationProfileChart
             waypoints={waypoints.map(({ km, name, altitude, dPlus, dMoins }) => ({ km, name, altitude, dPlus, dMoins }))}
+            denseProfile={track?.profile}
             hoveredIndex={hoveredWaypointIndex}
             onHoverIndex={setHoveredWaypointIndex}
           />
@@ -335,7 +356,15 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
         autoSearch={autoSearch}
         open={importOpen}
         onClose={() => { setImportOpen(false); setAutoSearch(false) }}
-        onSaved={(wps) => { setWaypoints(wps); setImportOpen(false) }}
+        onSaved={(wps) => {
+          setWaypoints(wps)
+          setImportOpen(false)
+          // Auto-UTMB : le serveur no-op (204) si la course n'est pas UTMB.
+          void fetch(`/api/races/${raceId}/track`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ utmbAuto: true }),
+          }).then((r) => { if (r.ok && r.status !== 204) void reload() })
+        }}
       />
       <RaceEditorModal
         race={race}
@@ -373,6 +402,12 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
         hint="Heure de départ (ex. 19 : 00)"
         onSave={saveStart}
         onClose={() => setEditField(null)}
+      />
+      <AddTrackDialog
+        raceId={raceId}
+        open={trackDialogOpen}
+        onClose={() => setTrackDialogOpen(false)}
+        onSaved={(t) => setTrack(t)}
       />
     </div>
   )
