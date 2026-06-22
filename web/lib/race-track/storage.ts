@@ -31,7 +31,9 @@ export async function upsertRaceTrack(
     profile_gz: encodeProfile(args.profile),
     point_count: args.profile.d.length,
     source: args.source,
-    distance_m: args.distanceM,
+    // distance_m est une colonne integer : Postgres rejette un float (la distance
+    // GPX brute est décimale) → on arrondit ici, au passage vers la DB.
+    distance_m: args.distanceM == null ? null : Math.round(args.distanceM),
     created_at: new Date().toISOString(),
   }, { onConflict: 'race_id' })
   if (error) throw new Error(error.message)

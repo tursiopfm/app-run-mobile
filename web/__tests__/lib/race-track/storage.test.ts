@@ -1,4 +1,4 @@
-import { encodeProfile, decodeProfile, rowToRaceTrack } from '@/lib/race-track/storage'
+import { encodeProfile, decodeProfile, rowToRaceTrack, upsertRaceTrack } from '@/lib/race-track/storage'
 
 describe('encode/decodeProfile', () => {
   it('round-trip gzip+base64 d\'un profil dense', () => {
@@ -20,5 +20,32 @@ describe('rowToRaceTrack', () => {
       raceId: 'r1', profile, pointCount: 2, source: 'gpx_upload',
       distanceM: 2000, createdAt: '2026-06-22T00:00:00Z',
     })
+  })
+})
+
+describe('upsertRaceTrack', () => {
+  const capture = () => {
+    const state: { row: any } = { row: null }
+    const supabase = { from: () => ({ upsert: async (row: any) => { state.row = row; return { error: null } } }) }
+    return { supabase, state }
+  }
+
+  // distance_m est une colonne integer en DB ; un float (distance GPX brute) y est
+  // REJETÉ par Postgres ("invalid input syntax for type integer") → upsert lève → 422.
+  it('arrondit distance_m à un entier avant l\'insert', async () => {
+    const { supabase, state } = capture()
+    await upsertRaceTrack(supabase, 'r1', {
+      profile: { d: [0, 1], e: [10, 20] }, source: 'gpx_upload', distanceM: 144911.93,
+    })
+    expect(state.row.distance_m).toBe(144912)
+    expect(Number.isInteger(state.row.distance_m)).toBe(true)
+  })
+
+  it('tolère distanceM null', async () => {
+    const { supabase, state } = capture()
+    await upsertRaceTrack(supabase, 'r1', {
+      profile: { d: [0, 1], e: [10, 20] }, source: 'utmb_auto', distanceM: null,
+    })
+    expect(state.row.distance_m).toBeNull()
   })
 })
