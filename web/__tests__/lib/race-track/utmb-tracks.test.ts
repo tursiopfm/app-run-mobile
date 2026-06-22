@@ -1,4 +1,4 @@
-import { deriveTracksUrl, extractGpxCandidates, selectGpxUrl, isPrivateOrReservedIp, fetchGpxFromUrl } from '@/lib/race-track/utmb-tracks'
+import { deriveTracksUrl, extractGpxCandidates, selectGpxUrl, extractGpxUrlFromRacePage, isPrivateOrReservedIp, fetchGpxFromUrl } from '@/lib/race-track/utmb-tracks'
 
 const HTML = `
 <a href="https://res.cloudinary.com/utmb-world/raw/upload/v1760605599/mallorca/GPX%20TRACKS/X/100_M_SDT_2025_9207594015.gpx">SDT - 100M</a>
@@ -6,6 +6,19 @@ const HTML = `
 <a href="https://res.cloudinary.com/utmb-world/raw/upload/v1760537057/mallorca/GPX%20TRACKS/X/50_K_ETM_2025_4a4b7cc285.gpx">ETM - 50K</a>
 <a href="https://res.cloudinary.com/utmb-world/raw/upload/v1760537057/mallorca/GPX%20TRACKS/X/20_K_CDA_2025_9dc4d1c265.gpx">CDA - 20K</a>
 `
+
+describe('extractGpxUrlFromRacePage', () => {
+  // La page course UTMB embarque l'URL GPX dans son JSON : "gpxUrl":"…cloudinary….gpx"
+  const RACE_HTML = 'x{"name":"TDS","gpxUrl":"https://res.cloudinary.com/utmb-world/raw/upload/v1770216248/montblanc/Races/GPX/TDS_2026_28cd7bd6a0.gpx","points":[]}y'
+
+  it('extrait l\'URL GPX Cloudinary embarquée ("gpxUrl")', () => {
+    expect(extractGpxUrlFromRacePage(RACE_HTML))
+      .toBe('https://res.cloudinary.com/utmb-world/raw/upload/v1770216248/montblanc/Races/GPX/TDS_2026_28cd7bd6a0.gpx')
+  })
+  it('renvoie null si aucun gpxUrl', () => {
+    expect(extractGpxUrlFromRacePage('<html>pas de gpx</html>')).toBeNull()
+  })
+})
 
 describe('deriveTracksUrl', () => {
   it('dérive {event}.utmb.world/race/tracks depuis une URL de course UTMB', () => {

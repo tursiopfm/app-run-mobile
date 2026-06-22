@@ -15,6 +15,15 @@ export function deriveTracksUrl(raceUrl: string): string | null {
   }
 }
 
+// La page d'une course UTMB embarque directement l'URL GPX Cloudinary dans son
+// JSON, sous la clé "gpxUrl":"…". Méthode robuste et race-exacte (la page EST la
+// course), contrairement au scraping d'une page /race/tracks qui n'existe pas sur
+// tous les événements (ex. Mont-Blanc → 404).
+export function extractGpxUrlFromRacePage(html: string): string | null {
+  const m = /"gpxUrl"\s*:\s*"(https:\/\/[^"\\]+?\.gpx)"/i.exec(html)
+  return m ? m[1] : null
+}
+
 // Extrait les liens GPX Cloudinary + leur distance (km) lue dans le nom de fichier
 // ({DIST}_{K|M}_...). K = kilomètres, M = miles → km.
 export function extractGpxCandidates(html: string): { url: string; km: number }[] {
@@ -121,6 +130,26 @@ export async function fetchGpxFromUrl(url: string): Promise<string | null> {
 
 // Orchestrateur fail-soft : URL course UTMB + distance → texte GPX, ou null.
 export async function fetchUtmbTrackGpx(raceUrl: string, officialKm: number): Promise<string | null> {
+  // Garde host UTMB (sinon on ne fetche rien).
+  try {
+    if (!new URL(raceUrl).hostname.endsWith('.utmb.world')) return null
+  } catch {
+    return null
+  }
+
+  // 1) Méthode principale : la page course embarque "gpxUrl":"…" (universel sur
+  //    la plateforme UTMB World, race-exact). On fetche la page course directement.
+  const racePage = await fetchGpxFromUrl(raceUrl)
+  if (racePage) {
+    const embedded = extractGpxUrlFromRacePage(racePage)
+    if (embedded) {
+      const gpx = await fetchGpxFromUrl(embedded)
+      if (gpx) return gpx
+    }
+  }
+
+  // 2) Fallback : page /race/tracks listant des GPX par distance (certains
+  //    événements, ex. Mallorca) → matching par distance officielle.
   const tracksUrl = deriveTracksUrl(raceUrl)
   if (!tracksUrl) return null
   const html = await fetchGpxFromUrl(tracksUrl)
