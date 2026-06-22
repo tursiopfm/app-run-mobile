@@ -24,7 +24,7 @@ import {
   getPhaseWeeks,
   phaseWeekCount,
 } from '@/lib/training/phases'
-import { saveCurrentPlan } from '@/lib/plan/storage'
+import { useOverlapGuard } from './useOverlapGuard'
 import { useT } from '@/lib/i18n/I18nProvider'
 import type { Dict } from '@/lib/i18n/dictionaries/fr'
 
@@ -135,6 +135,8 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
     }
     return null
   }, [phases, L])
+
+  const { guardedSave, dialog } = useOverlapGuard()
 
   if (!open) return null
   if (typeof document === 'undefined') return null
@@ -276,15 +278,17 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
             createdAt: now,
             updatedAt: now,
           }
-      await saveCurrentPlan(updated)
-      onSaved()
-      onClose()
+      const saved = await guardedSave(updated)
+      if (saved) {
+        onSaved()
+        onClose()
+      }
     } finally {
       setSaving(false)
     }
   }
 
-  return createPortal(
+  return (<>{createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60"
       onClick={onClose}
@@ -384,7 +388,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
       </div>
     </div>,
     document.body,
-  )
+  )}{dialog}</>)
 }
 
 function SortablePhaseRow({
