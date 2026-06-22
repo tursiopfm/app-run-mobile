@@ -7,8 +7,8 @@ import {
 class ResizeObserverStub { observe() {} unobserve() {} disconnect() {} }
 ;(global as unknown as { ResizeObserver: unknown }).ResizeObserver = ResizeObserverStub
 
-const wp = (over: Partial<{ km: number; name: string; altitude: number | null; dPlus: number | null; dMoins: number | null }>) => ({
-  km: 0, name: 'P', altitude: null, dPlus: 0, dMoins: 0, ...over,
+const wp = (over: Partial<{ km: number; name: string; altitude: number | null; dPlus: number | null; dMoins: number | null; supplies: import('@/types/plan').WaypointSupply[]; cutoffRaw: string | null }>) => ({
+  km: 0, name: 'P', altitude: null, dPlus: 0, dMoins: 0, supplies: [] as import('@/types/plan').WaypointSupply[], cutoffRaw: null, ...over,
 })
 
 describe('buildProfileData', () => {

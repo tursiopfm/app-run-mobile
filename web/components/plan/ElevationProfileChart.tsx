@@ -10,6 +10,8 @@ import {
 } from 'recharts'
 import { resolveAltitudes } from '@/lib/plan/waypoint-view'
 import { colors } from '@/lib/design/colors'
+import type { WaypointSupply } from '@/types/plan'
+import { chartChips, SUPPLY_META } from '@/lib/plan/supply-chips'
 
 export interface ProfileWaypoint {
   km: number
@@ -17,6 +19,8 @@ export interface ProfileWaypoint {
   altitude: number | null
   dPlus: number | null
   dMoins: number | null
+  supplies: WaypointSupply[]
+  cutoffRaw: string | null
 }
 export interface ProfilePoint { km: number; alt: number | null; name: string }
 
@@ -46,14 +50,26 @@ export function interpolateAlt(d: number[], e: number[], km: number): number | n
   return e[e.length - 1]
 }
 
-export interface DenseMarker { km: number; alt: number; wpIndex: number; name: string }
+export interface DenseMarker {
+  km: number; alt: number; wpIndex: number; name: string
+  chips: WaypointSupply[]; stackBase: number
+}
+const STACK_BASE_LOW = 44   // px : bas de la colonne de puces (cas normal)
+const STACK_BASE_HIGH = 30  // px : décalé vers le haut pour un ravito proche du précédent
+const PROXIMITY_KM = 6
+
 export function buildMarkers(
-  waypoints: { km: number; name: string }[],
+  waypoints: { km: number; name: string; supplies: WaypointSupply[] }[],
   profile: { d: number[]; e: number[] },
 ): DenseMarker[] {
-  return waypoints.map((w, i) => ({
-    km: w.km, alt: interpolateAlt(profile.d, profile.e, w.km) ?? 0, wpIndex: i, name: w.name,
-  }))
+  return waypoints.map((w, i) => {
+    const close = i > 0 && w.km - waypoints[i - 1].km < PROXIMITY_KM
+    return {
+      km: w.km, alt: interpolateAlt(profile.d, profile.e, w.km) ?? 0, wpIndex: i, name: w.name,
+      chips: chartChips(w.supplies),
+      stackBase: close ? STACK_BASE_HIGH : STACK_BASE_LOW,
+    }
+  })
 }
 
 const fmtKm = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1)).replace('.', ',')
@@ -77,28 +93,57 @@ type Props = {
   denseProfile?: { d: number[]; e: number[] }
   hoveredIndex: number | null
   onHoverIndex: (i: number | null) => void
+  selectedIndex?: number | null
+  onSelectIndex?: (i: number) => void
 }
 
-export function ElevationProfileChart({ waypoints, denseProfile, hoveredIndex, onHoverIndex }: Props) {
+export function ElevationProfileChart({ waypoints, denseProfile, hoveredIndex, onHoverIndex, selectedIndex = null, onSelectIndex }: Props) {
   const { mode, points } = useMemo(() => buildProfileData(waypoints), [waypoints])
 
   // Mode dense : si une trace est attachée (≥ 2 points), elle prime sur l'escalier.
   if (denseProfile && denseProfile.d.length >= 2) {
     const data = denseProfile.d.map((km, i) => ({ km, alt: denseProfile.e[i] }))
     const [yMin, yMax] = elevationDomain(denseProfile.e)
-    const markers = buildMarkers(waypoints.map((w) => ({ km: w.km, name: w.name })), denseProfile)
+    const markers = buildMarkers(
+      waypoints.map((w) => ({ km: w.km, name: w.name, supplies: w.supplies })), denseProfile,
+    )
+    const ORANGE = colors.chargeOrange
+    const CHIP_W = 10, CHIP_H = 10, CHIP_GAP = 1.6
+    // shape custom : connecteur + colonne de puces (nourriture en haut) + point.
     const renderMarker = (p: { cx?: number; cy?: number; payload?: DenseMarker }) => {
-      if (p.cx == null || p.cy == null) return <g />
-      const active = p.payload?.wpIndex === hoveredIndex
+      if (p.cx == null || p.cy == null || !p.payload) return <g />
+      const m = p.payload
+      const active = m.wpIndex === selectedIndex
+      const hovered = m.wpIndex === hoveredIndex
+      const base = m.stackBase
+      // colonne empilée (chartChips déjà ordonné food, BV, A) → on inverse pour
+      // poser la nourriture EN HAUT et A près du point.
+      const stack = [...m.chips].reverse()
+      const chipsSvg = stack.map((c, i) => {
+        const w = SUPPLY_META[c].letter.length > 1 ? 13 : CHIP_W
+        const y = base - (i + 1) * CHIP_H - i * CHIP_GAP
+        return (
+          <g key={c}>
+            <rect x={p.cx! - w / 2} y={y} width={w} height={CHIP_H} rx={2.4} fill={SUPPLY_META[c].color} />
+            <text x={p.cx} y={y + 7.4} fontSize={6.6} fontWeight={700} fill="#fff" textAnchor="middle">{SUPPLY_META[c].letter}</text>
+          </g>
+        )
+      })
       return (
-        <circle cx={p.cx} cy={p.cy} r={active ? 6 : 3.5}
-          fill={active ? colors.chargeOrange : colors.seriesBlue} stroke="#fff" strokeWidth={active ? 2 : 1} />
+        <g>
+          <line x1={p.cx} y1={base} x2={p.cx} y2={p.cy}
+            stroke={active ? ORANGE : colors.seriesBlue} strokeWidth={active ? 1.4 : 1}
+            strokeDasharray={active ? '3 3' : undefined} opacity={active ? 0.8 : 0.4} />
+          {chipsSvg}
+          <circle cx={p.cx} cy={p.cy} r={active ? 6 : hovered ? 4.5 : 3}
+            fill={active ? ORANGE : colors.seriesBlue} stroke="#fff" strokeWidth={active ? 2 : 1} />
+        </g>
       )
     }
     return (
-      <div style={{ width: '100%', height: 180 }} onMouseLeave={() => onHoverIndex(null)}>
+      <div style={{ width: '100%', height: 230 }} onMouseLeave={() => onHoverIndex(null)}>
         <ResponsiveContainer>
-          <ComposedChart data={data} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+          <ComposedChart data={data} margin={{ top: 50, right: 8, left: -8, bottom: 0 }}>
             <defs>
               <linearGradient id="elevFillDense" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={colors.seriesBlue} stopOpacity={0.35} />
@@ -120,6 +165,7 @@ export function ElevationProfileChart({ waypoints, denseProfile, hoveredIndex, o
             <Area dataKey="alt" type="linear" stroke={colors.seriesBlue} strokeWidth={2}
               fill="url(#elevFillDense)" dot={false} activeDot={false} />
             <Scatter data={markers} dataKey="alt" shape={renderMarker}
+              onClick={(d: any) => onSelectIndex?.(d?.wpIndex ?? d?.payload?.wpIndex)}
               onMouseEnter={(d: any) => onHoverIndex(d?.wpIndex ?? d?.payload?.wpIndex ?? null)}
               onMouseLeave={() => onHoverIndex(null)} />
           </ComposedChart>
