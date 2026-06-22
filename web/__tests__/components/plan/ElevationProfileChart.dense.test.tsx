@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import {
-  ElevationProfileChart, interpolateAlt, buildMarkers,
+  ElevationProfileChart, interpolateAlt, buildMarkers, elevationDomain,
 } from '@/components/plan/ElevationProfileChart'
 
 class ResizeObserverStub { observe() {} unobserve() {} disconnect() {} }
@@ -30,6 +30,27 @@ describe('buildMarkers', () => {
       { km: 0, alt: 1000, wpIndex: 0, name: 'Départ' },
       { km: 5, alt: 1500, wpIndex: 1, name: 'Col' },
     ])
+  })
+})
+
+describe('elevationDomain', () => {
+  it('laisse une marge au-dessus du sommet (la crête ne touche pas le bord)', () => {
+    const [lo, hi] = elevationDomain([600, 1800, 2300, 900])
+    expect(hi).toBeGreaterThan(2300)
+    expect(lo).toBeLessThanOrEqual(600)
+    expect(lo).toBeGreaterThanOrEqual(0)
+  })
+  it('arrondit aux 100 m', () => {
+    const [lo, hi] = elevationDomain([612, 2287])
+    expect(lo % 100).toBe(0)
+    expect(hi % 100).toBe(0)
+  })
+  it('ne descend jamais sous 0', () => {
+    const [lo] = elevationDomain([5, 30])
+    expect(lo).toBe(0)
+  })
+  it('tableau vide → domaine de repli', () => {
+    expect(elevationDomain([])).toEqual([0, 100])
   })
 })
 

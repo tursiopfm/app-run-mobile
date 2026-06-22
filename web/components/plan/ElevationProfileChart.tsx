@@ -58,6 +58,20 @@ export function buildMarkers(
 
 const fmtKm = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1)).replace('.', ',')
 
+// Domaine Y « propre » : plancher/plafond arrondis aux 100 m, avec une marge en
+// haut pour que le sommet du profil ne touche jamais le bord du cadre (sans ça,
+// Recharts cale le max pile au bord et la crête déborde du graphe). Le plancher
+// est ramené près du fond de vallée (pas forcé à 0) pour exploiter la hauteur.
+export function elevationDomain(e: number[]): [number, number] {
+  if (e.length === 0) return [0, 100]
+  let min = e[0], max = e[0]
+  for (const v of e) { if (v < min) min = v; if (v > max) max = v }
+  const span = max - min || 100
+  const lo = Math.max(0, Math.floor((min - span * 0.08) / 100) * 100)
+  const hi = Math.ceil((max + span * 0.12) / 100) * 100
+  return [lo, hi]
+}
+
 type Props = {
   waypoints: ProfileWaypoint[]
   denseProfile?: { d: number[]; e: number[] }
@@ -71,6 +85,7 @@ export function ElevationProfileChart({ waypoints, denseProfile, hoveredIndex, o
   // Mode dense : si une trace est attachée (≥ 2 points), elle prime sur l'escalier.
   if (denseProfile && denseProfile.d.length >= 2) {
     const data = denseProfile.d.map((km, i) => ({ km, alt: denseProfile.e[i] }))
+    const [yMin, yMax] = elevationDomain(denseProfile.e)
     const markers = buildMarkers(waypoints.map((w) => ({ km: w.km, name: w.name })), denseProfile)
     const renderMarker = (p: { cx?: number; cy?: number; payload?: DenseMarker }) => {
       if (p.cx == null || p.cy == null) return <g />
@@ -94,7 +109,8 @@ export function ElevationProfileChart({ waypoints, denseProfile, hoveredIndex, o
             <XAxis dataKey="km" type="number" domain={['dataMin', 'dataMax']}
               tickFormatter={(v: number) => `${fmtKm(v)}`}
               tick={{ fontSize: 10, fill: colors.subtleText }} />
-            <YAxis width={42} tick={{ fontSize: 10, fill: colors.subtleText }} />
+            <YAxis width={42} domain={[yMin, yMax]} allowDecimals={false}
+              tick={{ fontSize: 10, fill: colors.subtleText }} />
             <Tooltip
               contentStyle={{ backgroundColor: colors.cardBg, border: `1px solid ${colors.border}`, fontSize: 12 }}
               labelStyle={{ color: colors.text }}
