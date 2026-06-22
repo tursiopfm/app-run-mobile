@@ -1,7 +1,9 @@
 # Profil de course — fiche détail + puces ravito + sélection unifiée (mode dense)
 
+> **Status: Implémenté** · 2026-06-22 · Code: `web/lib/plan/supply-chips.ts`, `web/lib/plan/passage-clock.ts`, `web/components/plan/WaypointDetailCard.tsx`, `web/components/plan/ElevationProfileChart.tsx`, `web/components/plan/WaypointsTable.tsx`, `web/app/(main)/plan/courses/[id]/CoursePageClient.tsx`
+
 **Date :** 2026-06-22
-**Statut :** Spec validée — à implémenter
+**Statut :** Implémenté (branche `feat/profil-course-fiche-detail`, review finale ✅)
 **Maquette de référence :** `Prompts/profil-course-mockup-D-hybride.html` (rendu validé par Franck)
 
 ## Contexte & objectif
