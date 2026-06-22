@@ -81,9 +81,10 @@ CoursePageClient
 ### `lib/plan/supply-chips.ts` *(nouveau — pur, testé)*
 Source unique de la logique puces, partagée graphe / fiche / légende.
 - `SUPPLY_META: Record<WaypointSupply, { letter: string; label: string; color: string }>`
-  — `color` en hex fixe issu des tokens série de `lib/design/colors.ts`
-  (`seriesBlue`, `seriesYellow`, `seriesRed`, `greenOk`) + `#7C5CFC` pour `assistance`,
-  pour rester cohérent avec les couleurs de série fixes déjà utilisées par le graphe.
+  — `color` = valeurs `light` de `lib/design/colors.ts` (`light.seriesBlue` #1D8FC6,
+  `light.seriesYellow` #CC9200, `light.seriesRed` #D94F45, `light.greenOk` #138A52)
+  + `#7C5CFC` pour `assistance` : identiques aux puces du tableau, texte blanc lisible
+  sur fond clair.
 - `chartChips(supplies: WaypointSupply[]): WaypointSupply[]` — vue réduite (règle ci-dessus).
 - `allChips(supplies: WaypointSupply[]): WaypointSupply[]` — ordre canonique filtré.
 
@@ -153,7 +154,8 @@ altitude (interpolée sur la trace), son heure de passage, callbacks `onPrev`/`o
 - **Passage estimé** : dépend de l'objectif (`targetDurationMin`) et de l'heure de départ
   (`startTime`) ; si absents, le champ affiche « — » sans casser le reste. Le jour de
   semaine n'est affiché que si la date d'édition est connue, sinon « J+1 ».
-- **Cohérence couleurs** : les puces utilisent les tokens série fixes (comme la courbe),
-  pas les `var(--*)` thème du tableau ; écart visuel négligeable, à surveiller en revue.
+- **Cohérence couleurs** : les puces utilisent les valeurs `light` de `colors.ts`
+  (identiques aux puces du tableau, texte blanc lisible) ; en thème sombre, léger écart
+  avec la courbe (`colors.seriesBlue` fixe), à surveiller en revue.
 - **Densité** : le décalage vertical gère les paires proches ; au-delà de ~3 ravitos en
   4-5 km, un léger empiètement reste possible (acceptable, à réévaluer si gênant).
