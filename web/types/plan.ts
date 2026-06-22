@@ -252,6 +252,15 @@ export interface RaceTableauMeta {
   pendingDiffAt: string | null
 }
 
+export interface RaceTrack {
+  raceId: string
+  profile: { d: number[]; e: number[] }   // d = km (scalés), e = altitude m
+  pointCount: number
+  source: 'gpx_upload' | 'gpx_url' | 'utmb_auto'
+  distanceM: number | null
+  createdAt: string
+}
+
 // === Diff de re-check d'un tableau (Lot 2) ===
 type RaceWaypointData = Omit<RaceWaypoint, 'id' | 'raceId'>
 

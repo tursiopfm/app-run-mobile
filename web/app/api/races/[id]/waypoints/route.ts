@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/database/supabase-server'
 import { rowToRaceWaypoint, rowToTableauMeta } from '@/lib/race-import/schema'
+import { getRaceTrack } from '@/lib/race-track/storage'
 import { computeFreshness, type DetectedEdition } from '@/lib/race-import/freshness'
 import { hashWaypoints } from '@/lib/race-import/hash'
 import type { RaceWaypoint } from '@/types/plan'
@@ -30,8 +31,9 @@ export async function GET(
     .eq('race_id', params.id)
     .maybeSingle()
 
+  const track = await getRaceTrack(supabase, params.id)
   const waypoints: RaceWaypoint[] = (data ?? []).map(rowToRaceWaypoint as any)
-  return NextResponse.json({ waypoints, meta: metaRow ? rowToTableauMeta(metaRow) : null })
+  return NextResponse.json({ waypoints, meta: metaRow ? rowToTableauMeta(metaRow) : null, track })
 }
 
 // PUT /api/races/[id]/waypoints → remplace TOUS les waypoints.
