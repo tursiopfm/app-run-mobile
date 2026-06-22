@@ -1,4 +1,4 @@
-import { deriveTracksUrl, extractGpxCandidates, selectGpxUrl } from '@/lib/race-track/utmb-tracks'
+import { deriveTracksUrl, extractGpxCandidates, selectGpxUrl, isPrivateOrReservedIp, fetchGpxFromUrl } from '@/lib/race-track/utmb-tracks'
 
 const HTML = `
 <a href="https://res.cloudinary.com/utmb-world/raw/upload/v1760605599/mallorca/GPX%20TRACKS/X/100_M_SDT_2025_9207594015.gpx">SDT - 100M</a>
@@ -42,5 +42,37 @@ describe('selectGpxUrl', () => {
   })
   it('renvoie null si la page ne contient aucun GPX', () => {
     expect(selectGpxUrl('<html>rien</html>', 50)).toBeNull()
+  })
+})
+
+describe('isPrivateOrReservedIp', () => {
+  it.each([
+    ['127.0.0.1'],
+    ['10.1.2.3'],
+    ['169.254.169.254'],
+    ['192.168.0.1'],
+    ['172.16.0.1'],
+    ['100.64.0.1'],
+    ['::1'],
+    ['fe80::1'],
+    ['fd00::1'],
+    ['::ffff:127.0.0.1'],
+  ])('%s → true', (ip) => {
+    expect(isPrivateOrReservedIp(ip)).toBe(true)
+  })
+
+  it.each([
+    ['8.8.8.8'],
+    ['172.32.0.1'],
+    ['172.15.0.1'],
+    ['2001:4860:4860::8888'],
+  ])('%s → false', (ip) => {
+    expect(isPrivateOrReservedIp(ip)).toBe(false)
+  })
+})
+
+describe('fetchGpxFromUrl — http rejeté sans DNS/réseau', () => {
+  it('renvoie null pour une URL http:// (non-https)', async () => {
+    await expect(fetchGpxFromUrl('http://example.com/x.gpx')).resolves.toBeNull()
   })
 })
