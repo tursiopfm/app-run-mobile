@@ -6,7 +6,7 @@
 // → highlight croisé avec WaypointsTable via hoveredIndex / onHoverIndex.
 import { useMemo } from 'react'
 import {
-  AreaChart, ComposedChart, Area, Scatter, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
+  AreaChart, ComposedChart, Area, Scatter, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Customized,
 } from 'recharts'
 import { resolveAltitudes } from '@/lib/plan/waypoint-view'
 import { colors } from '@/lib/design/colors'
@@ -140,6 +140,37 @@ export function ElevationProfileChart({ waypoints, denseProfile, hoveredIndex, o
         </g>
       )
     }
+    // Effet « courbes de niveau » : copies de la courbe décalées vers le bas en
+    // pixels, opacité dégressive, dessinées SOUS l'aire (calque). Customized donne
+    // accès aux échelles px de Recharts (responsive) ; clippé à la zone de plot.
+    const renderRidges = (cp: any) => {
+      const xMap = cp?.xAxisMap, yMap = cp?.yAxisMap, off = cp?.offset
+      const xs = xMap && xMap[Object.keys(xMap)[0]]?.scale
+      const ys = yMap && yMap[Object.keys(yMap)[0]]?.scale
+      if (!xs || !ys || !off) return null
+      const pts = data.map((d) => [xs(d.km), ys(d.alt)] as [number, number])
+      if (pts.length < 2) return null
+      const N = 11, gap = 4.6
+      const layers = []
+      for (let k = N; k >= 1; k--) {
+        const dy = k * gap
+        const seg = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)} ${(p[1] + dy).toFixed(1)}`).join(' ')
+        layers.push(
+          <path key={k} d={seg} fill="none" stroke={colors.seriesBlue} strokeWidth={1}
+            opacity={Number((0.26 * (1 - k / (N + 1))).toFixed(3))} />,
+        )
+      }
+      return (
+        <g>
+          <defs>
+            <clipPath id="elevRidgeClip">
+              <rect x={off.left} y={off.top} width={off.width} height={off.height} />
+            </clipPath>
+          </defs>
+          <g clipPath="url(#elevRidgeClip)">{layers}</g>
+        </g>
+      )
+    }
     return (
       <div style={{ width: '100%', height: 230 }} onMouseLeave={() => onHoverIndex(null)}>
         <ResponsiveContainer>
@@ -162,6 +193,7 @@ export function ElevationProfileChart({ waypoints, denseProfile, hoveredIndex, o
               labelFormatter={(v: number) => `km ${fmtKm(v)}`}
               formatter={(value: number) => [`${Math.round(value)} m`, 'Altitude']}
             />
+            <Customized component={renderRidges} />
             <Area dataKey="alt" type="linear" stroke={colors.seriesBlue} strokeWidth={2}
               fill="url(#elevFillDense)" dot={false} activeDot={false} />
             <Scatter data={markers} dataKey="alt" shape={renderMarker}
