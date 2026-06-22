@@ -53,4 +53,17 @@ describe('WaypointDetailCard', () => {
     expect(onPrev).not.toHaveBeenCalled() // désactivé (hasPrev=false)
     expect(onNext).toHaveBeenCalledTimes(1)
   })
+
+  it('tronçon sans descente (D−=0) → « 0 » sans signe, pas « +0 »', () => {
+    render(
+      <WaypointDetailCard
+        waypoint={wp({ dPlus: 4200, dMoins: 3100 })}
+        previous={wp({ name: 'Roselend', dPlus: 3380, dMoins: 3100 })}
+        altitude={1100} passageClock=""
+        hasPrev hasNext onPrev={() => {}} onNext={() => {}}
+      />,
+    )
+    // descente du tronçon = 3100 − 3100 = 0 → affichée « 0 m », jamais « +0 »
+    expect(screen.queryByText(/\+0/)).not.toBeInTheDocument()
+  })
 })

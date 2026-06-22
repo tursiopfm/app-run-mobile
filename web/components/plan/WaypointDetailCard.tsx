@@ -18,7 +18,9 @@ function Chip({ supply }: { supply: RaceWaypoint['supplies'][number] }) {
 }
 
 function fmtSigned(n: number): string {
-  return `${n >= 0 ? '+' : '−'}${Math.abs(Math.round(n)).toLocaleString('fr-FR')}`
+  const r = Math.round(n)
+  const sign = r > 0 ? '+' : r < 0 ? '−' : ''
+  return `${sign}${Math.abs(r).toLocaleString('fr-FR')}`
 }
 
 export interface WaypointDetailCardProps {
