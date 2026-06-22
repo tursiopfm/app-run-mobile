@@ -603,6 +603,9 @@ export type Dict = {
     structureEditCycle: string
     structureEditCycleAria: (label: string) => string
     structurePlanName: (name: string) => string
+    overlapTitle: string; overlapBody: string
+    overlapItem: (name: string, start: string, end: string) => string
+    overlapArchive: string; overlapAdjust: string; overlapConfirm: string
 
     weekTitleBlock: string; weekHelp: string; weekRestDay: string; weekDropHere: string
     weekTotal: string; weekEmptyHint: string
@@ -2551,6 +2554,14 @@ export const fr: Dict = {
     structureEditCycle:  'Éditer ce cycle',
     structureEditCycleAria: (label: string) => `Éditer le cycle ${label}`,
     structurePlanName:   (name: string) => `Prépa ${name}`,
+
+    // Garde anti-chevauchement de cycles
+    overlapTitle:   'Chevauchement de cycles',
+    overlapBody:    "Ce cycle recouvre la période d’un ou plusieurs cycles actifs :",
+    overlapItem:    (name: string, start: string, end: string) => `${name} (${start} → ${end})`,
+    overlapArchive: 'Archiver le(s) cycle(s) en conflit',
+    overlapAdjust:  'Ajuster les dates',
+    overlapConfirm: 'Confirmer quand même',
 
     // VueSemaineBlock
     weekTitleBlock:      'Semaine en cours',
