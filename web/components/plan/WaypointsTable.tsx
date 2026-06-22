@@ -33,6 +33,9 @@ type Props = {
   // Highlight croisé avec le profil altimétrique (optionnel).
   hoveredIndex?: number | null
   onHoverIndex?: (i: number | null) => void
+  // Sélection unifiée avec le profil (optionnel).
+  selectedIndex?: number | null
+  onSelectIndex?: (i: number) => void
 }
 
 // Parse une saisie de barrière/heure 'HH:MM' (ou 'HhMM').
@@ -101,6 +104,7 @@ export function WaypointsTable({
   waypoints, onChange, readOnly, editLines = false, onEditLinesChange,
   startTime, targetDurationMin, pacingFade, onStartTimeChange,
   hoveredIndex, onHoverIndex,
+  selectedIndex, onSelectIndex,
 }: Props) {
   const update = useCallback(
     (i: number, patch: Partial<Draft>) => {
@@ -220,6 +224,7 @@ export function WaypointsTable({
         .wtbl .gA.head .r{text-align:right;} .wtbl .gA.head .c{text-align:center;}
         .wtbl .gA.row{padding:7px 3px;border-bottom:1px solid var(--border);}
         .wtbl .gA.row.hl{background:rgba(127,127,127,.10);border-radius:6px;}
+        .wtbl .gA.row.sel{box-shadow:inset 3px 0 0 var(--orange);border-radius:6px;}
         .wtbl .c-point{display:flex;align-items:center;gap:6px;min-width:0;}
         .wtbl .dot{width:7px;height:7px;border-radius:50%;flex:none;}
         .wtbl .ic{width:13px;height:13px;display:inline-block;flex:none;}
@@ -293,12 +298,13 @@ export function WaypointsTable({
         return (
           <div className="row-wrap" key={`${w.orderIndex}-${i}`}
             onMouseEnter={() => onHoverIndex?.(i)}
-            onMouseLeave={() => onHoverIndex?.(null)}>
+            onMouseLeave={() => onHoverIndex?.(null)}
+            onClick={() => onSelectIndex?.(i)}>
             {editLines && !readOnly && (
               <button type="button" className="del" aria-label="Supprimer la ligne"
                 onClick={() => removeRow(i)}>×</button>
             )}
-            <div className={`gA row${hoveredIndex === i ? ' hl' : ''}`}>
+            <div className={`gA row${hoveredIndex === i ? ' hl' : ''}${selectedIndex === i ? ' sel' : ''}`}>
             {/* Point */}
             <div className="c-point">
               <span className="dot" style={{ background: lead.dot }} />
