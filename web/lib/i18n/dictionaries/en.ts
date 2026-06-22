@@ -1341,6 +1341,14 @@ export const en: Dict = {
     structureEditCycleAria: (label: string) => `Edit cycle ${label}`,
     structurePlanName:   (name: string) => `${name} plan`,
 
+    // Overlap guard
+    overlapTitle:   'Overlapping cycles',
+    overlapBody:    'This cycle overlaps one or more active cycles:',
+    overlapItem:    (name: string, start: string, end: string) => `${name} (${start} → ${end})`,
+    overlapArchive: 'Archive the conflicting cycle(s)',
+    overlapAdjust:  'Adjust the dates',
+    overlapConfirm: 'Keep it anyway',
+
     weekTitleBlock:      'Current week',
     weekHelp:            'Drag sessions from the library onto the day columns to plan your week.',
     weekRestDay:         'Rest',
