@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Profil course — Maquette D (Hybride, puces ravito)</title>
+<style>
+  :root{
+    --bg:#F4F7F6;--card:#FFFFFF;--border:#D6E1DD;--muted:#5F7771;--text:#13201D;--blue:#1D8FC6;--orange:#FF7900;
+    --liq:#1D8FC6;--sol:#CC9200;--hot:#D94F45;--base:#138A52;--ass:#7C5CFC;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;color:var(--text);padding:24px;display:flex;justify-content:center}
+  .phone{width:390px}
+  .label{font-size:12px;color:var(--muted);margin:0 0 8px 2px;letter-spacing:.02em;text-transform:uppercase}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 16px 16px;box-shadow:0 1px 2px rgba(20,40,40,.05)}
+  .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
+  .head h2{font-size:16px;font-weight:700;margin:0;letter-spacing:-.01em}
+  .head a{font-size:12px;color:var(--blue);text-decoration:none}
+  .tiphint{font-size:10.5px;color:var(--muted);margin:2px 0 0 1px}
+  svg{display:block;width:100%}
+  /* puces ravito — identiques au tableau de course */
+  .chip{font-weight:700;font-size:8.5px;min-width:13px;height:13px;padding:0 2px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;color:#fff;line-height:1}
+  .chip.liq{background:var(--liq)}.chip.sol{background:var(--sol)}.chip.hot{background:var(--hot)}.chip.base{background:var(--base)}.chip.ass{background:var(--ass)}
+  .detail{margin-top:12px;border:1px solid #FCE3C4;border-radius:13px;padding:12px 13px;background:linear-gradient(180deg,#FFF4E6,#FFFFFF)}
+  .detail .r1{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .detail .nm{font-size:15px;font-weight:700}
+  .chips{display:flex;gap:3px;margin-left:1px}
+  .tag{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#fff;background:var(--base);padding:2px 7px;border-radius:6px}
+  .nav{margin-left:auto;display:flex;gap:6px}
+  .nav button{width:26px;height:26px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:14px;line-height:1;cursor:pointer}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:7px 14px;margin-top:4px}
+  .cell .k{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+  .cell .v{font-size:13px;font-weight:600;margin-top:1px}
+  .cell .v.orange{color:var(--orange)}
+  .legend{font-size:9.5px;color:var(--muted);margin-top:9px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .legend .lg{display:inline-flex;align-items:center;gap:3px}
+</style>
+</head>
+<body>
+<div class="phone">
+  <p class="label">Maquette D · Hybride · puces ravito du tableau</p>
+  <div class="card">
+    <div class="head"><h2>Profil de la course</h2><a href="#">Retirer la trace</a></div>
+    <p class="tiphint">Touche un ravitaillement pour le détail · puces = contenu (comme le tableau)</p>
+    <div id="chart"></div>
+    <div class="legend">
+      <span class="lg"><span class="chip liq">L</span>liquide</span>
+      <span class="lg"><span class="chip sol">S</span>solide</span>
+      <span class="lg"><span class="chip hot">C</span>chaud</span>
+      <span class="lg"><span class="chip base">BV</span>base vie</span>
+      <span class="lg"><span class="chip ass">A</span>assist.</span>
+    </div>
+    <div class="detail">
+      <div class="r1">
+        <div class="chips"><span class="chip liq">L</span><span class="chip sol">S</span><span class="chip hot">C</span><span class="chip base">BV</span></div>
+        <span class="nm">Beaufort</span>
+        <span class="tag">Base vie</span>
+        <div class="nav"><button>‹</button><button>›</button></div>
+      </div>
+      <div class="grid">
+        <div class="cell"><div class="k">Distance</div><div class="v">km 92,3</div></div>
+        <div class="cell"><div class="k">Altitude</div><div class="v">1 100 m</div></div>
+        <div class="cell"><div class="k">Depuis Roselend</div><div class="v">+820 m · −1 210 m</div></div>
+        <div class="cell"><div class="k">Passage estimé</div><div class="v">mar. 21:30</div></div>
+        <div class="cell"><div class="k">Barrière horaire</div><div class="v orange">mer. 00:30</div></div>
+        <div class="cell"><div class="k">Ravitaillement</div><div class="v">Eau · Solide · Chaud</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const W=358,H=214,padL=30,padR=8,yTop=66,bot=180,KM=148,A_HI=2750,A_LO=600;
+const ctrl=[[0,1224],[8,1956],[16,2603],[22,1880],[26,2010],[30,1500],[36.5,1441],[42,2210],[47,1820],
+[50.8,900],[55.6,810],[60,1720],[65.9,2030],[70,1700],[73.5,1487],[78,2010],[85,1600],[92.3,1100],
+[99.4,1080],[105,1910],[112,2130],[115.6,1340],[123.3,1160],[130,2140],[135.2,1780],[139.8,1007],[144,1640],[148,1035]];
+function altAt(km){for(let i=1;i<ctrl.length;i++){if(ctrl[i][0]>=km){const[x0,y0]=ctrl[i-1],[x1,y1]=ctrl[i];const t=(km-x0)/((x1-x0)||1);const s=t*t*(3-2*t);return y0+(y1-y0)*s;}}return ctrl[ctrl.length-1][1];}
+const X=km=>padL+km/KM*(W-padL-padR);
+const Y=a=>yTop+(A_HI-a)/(A_HI-A_LO)*(bot-yTop);
+const SUP={liquid:{l:'L',c:'#1D8FC6'},solid:{l:'S',c:'#CC9200'},hot:{l:'C',c:'#D94F45'},base_vie:{l:'BV',c:'#138A52'},assistance:{l:'A',c:'#7C5CFC'}};
+const R=[
+ {n:'Checrouit',km:7.6,s:['liquid']},
+ {n:'Lac Combal',km:16.3,s:['liquid','solid']},
+ {n:'La Thuile',km:36.5,s:['liquid','solid','base_vie']},
+ {n:'Seez',km:50.8,s:['liquid']},
+ {n:'Bourg-St-M.',km:55.6,s:['liquid','solid','base_vie','assistance']},
+ {n:'Fort Platte',km:65.9,s:['liquid']},
+ {n:'Roselend',km:73.5,s:['liquid','solid']},
+ {n:'Beaufort',km:92.3,s:['liquid','solid','hot','base_vie'],sel:1},
+ {n:'Hauteluce',km:99.4,s:['liquid']},
+ {n:'Les Contamines',km:123.3,s:['liquid','solid','hot','base_vie','assistance']},
+ {n:'Bellevue',km:135.2,s:['liquid']},
+ {n:'Les Houches',km:139.8,s:['liquid','solid']},
+];
+// Hiérarchie implicite (comme demandé) : une seule puce « nourriture » = le niveau
+// le plus haut présent (chaud ⊃ solide ⊃ liquide), + BV si base vie, + A si assistance.
+function visibleSupplies(s){
+  const out=[];
+  if(s.includes('hot')) out.push('hot');
+  else if(s.includes('solid')) out.push('solid');
+  else if(s.includes('liquid')) out.push('liquid');
+  if(s.includes('base_vie')) out.push('base_vie');
+  if(s.includes('assistance')) out.push('assistance');
+  return out;
+}
+// colonne de puces EMPILÉES verticalement, centrées en cx, bas de pile à baseY
+// (food en bas près du point, puis BV, A vers le haut). Largeur minimale → pas de
+// chevauchement horizontal aux ravitos proches.
+function chipColumn(supplies,cx,baseY){
+  const its=supplies.map(k=>SUP[k]).reverse();
+  const ch=10,gap=1.6;let out='';
+  its.forEach((it,i)=>{
+    const w=it.l.length>1?13:9.5;
+    const y=baseY-(i+1)*ch-i*gap;
+    out+=`<rect x="${(cx-w/2).toFixed(1)}" y="${y.toFixed(1)}" width="${w}" height="${ch}" rx="2.4" fill="${it.c}"/>`
+       +`<text x="${cx}" y="${(y+7.4).toFixed(1)}" font-size="6.6" font-weight="700" fill="#fff" text-anchor="middle">${it.l}</text>`;
+  });
+  return out;
+}
+let s='';
+[1000,2000].forEach(a=>{const y=Y(a);s+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#EAF1EE" stroke-width="1"/><text x="2" y="${y+3}" font-size="9" fill="#9AB0AB">${a}</text>`;});
+let pts=[];for(let km=0;km<=KM+0.01;km+=0.4)pts.push([X(km),Y(altAt(km))]);
+const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+const area=line+` L ${X(KM).toFixed(1)} ${bot} L ${padL} ${bot} Z`;
+// crêtes empilées
+const N=11,gap=4.6;
+for(let k=N;k>=1;k--){const dy=k*gap;const seg=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+(p[1]+dy).toFixed(1)).join(' ');s+=`<path d="${seg}" fill="none" stroke="#1D8FC6" stroke-width="1" opacity="${(0.26*(1-k/(N+1))).toFixed(3)}"/>`;}
+s+=`<path d="${area}" fill="url(#g)"/>`;
+s+=`<path d="${line}" fill="none" stroke="#1D8FC6" stroke-width="2.1"/>`;
+// connecteurs + points + colonnes de puces empilées
+const STACK_BASE=44;
+R.forEach(r=>{
+  const x=X(r.km),y=Y(altAt(r.km)),orange=!!r.sel;
+  s+=`<line x1="${x}" y1="${STACK_BASE}" x2="${x}" y2="${y}" stroke="${orange?'#FF7900':'#1D8FC6'}" stroke-width="${orange?1.2:1}" opacity="${orange?0.75:0.4}" ${orange?'stroke-dasharray="3 3"':''}/>`;
+  s+=chipColumn(visibleSupplies(r.s),x,STACK_BASE);
+  if(orange){
+    s+=`<circle cx="${x}" cy="${y}" r="6" fill="#FF7900" stroke="#fff" stroke-width="2"/>`;
+    const lbl='km 92,3';const lw=lbl.length*5.4+12;let lx=x-lw/2;lx=Math.max(padL,Math.min(lx,W-padR-lw));
+    s+=`<rect x="${lx}" y="${y-22}" width="${lw}" height="15" rx="7.5" fill="#FF7900"/><text x="${lx+lw/2}" y="${y-11.5}" font-size="9" fill="#fff" text-anchor="middle" font-weight="600">${lbl}</text>`;
+  }else{
+    const bv=r.s.includes('base_vie');
+    s+=`<circle cx="${x}" cy="${y}" r="${bv?3.4:2.5}" fill="${bv?'#138A52':'#fff'}" stroke="${bv?'#138A52':'#1D8FC6'}" stroke-width="1.3"/>`;
+  }
+});
+[0,40,80,120,148].forEach(km=>{const x=X(km);s+=`<text x="${x}" y="${bot+13}" font-size="9" fill="#8FA39E" text-anchor="middle">${km}</text>`;});
+document.getElementById('chart').innerHTML=
+ `<svg viewBox="0 0 ${W} ${H}"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+   <stop offset="0%" stop-color="#1D8FC6" stop-opacity="0.30"/><stop offset="100%" stop-color="#1D8FC6" stop-opacity="0.03"/>
+ </linearGradient></defs>${s}</svg>`;
+</script>
+</body>
+</html>
