@@ -45,7 +45,12 @@ export function WaypointDetailCard({
 
   return (
     <div className="mt-3 rounded-[13px] border p-3"
-      style={{ borderColor: '#FCE3C4', background: 'linear-gradient(180deg,#FFF4E6,var(--trail-card))' }}>
+      style={{
+        // Thème-aware : teinte orange translucide PAR-DESSUS le fond de carte du
+        // thème (clair en light, sombre en dark) → texte du thème lisible partout.
+        borderColor: 'rgba(255,121,0,0.35)',
+        background: 'linear-gradient(180deg, rgba(255,121,0,0.10), rgba(255,121,0,0)), var(--trail-card)',
+      }}>
       <div className="flex items-center gap-2 mb-2">
         <div className="flex gap-[3px]">{chips.map((c) => <Chip key={c} supply={c} />)}</div>
         <span className="text-[15px] font-bold text-trail-text">{waypoint.name}</span>
