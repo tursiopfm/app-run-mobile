@@ -302,7 +302,7 @@ export function WaypointsTable({
             onClick={() => onSelectIndex?.(i)}>
             {editLines && !readOnly && (
               <button type="button" className="del" aria-label="Supprimer la ligne"
-                onClick={() => removeRow(i)}>×</button>
+                onClick={(e) => { e.stopPropagation(); removeRow(i) }}>×</button>
             )}
             <div className={`gA row${hoveredIndex === i ? ' hl' : ''}${selectedIndex === i ? ' sel' : ''}`}>
             {/* Point */}
@@ -379,7 +379,7 @@ export function WaypointsTable({
             <div className="c-rav">
               <button type="button" className="rav-cell" disabled={readOnly}
                 aria-label="Modifier les ravitos"
-                onClick={() => setEditRow(editRow === i ? null : i)}>
+                onClick={(e) => { e.stopPropagation(); setEditRow(editRow === i ? null : i) }}>
                 {activeSupplies(w.supplies).length === 0
                   ? <span className="rav-empty">{readOnly ? '–' : '+'}</span>
                   : activeSupplies(w.supplies).map((c) => (
