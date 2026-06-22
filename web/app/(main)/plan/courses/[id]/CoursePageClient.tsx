@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Race, RaceTableauMeta, RaceWaypoint } from '@/types/plan'
 import { getRaces, deleteRace, peekRaces, saveRace } from '@/lib/plan/storage'
@@ -10,6 +10,9 @@ import { ElevationProfileChart } from '@/components/plan/ElevationProfileChart'
 import { AddTrackDialog } from '@/components/plan/AddTrackDialog'
 import type { RaceTrack } from '@/types/plan'
 import { TableActionsMenu } from '@/components/plan/TableActionsMenu'
+import { WaypointDetailCard } from '@/components/plan/WaypointDetailCard'
+import { passageClocks } from '@/lib/plan/passage-clock'
+import { interpolateAlt } from '@/components/plan/ElevationProfileChart'
 import { PacingStrategyCard } from '@/components/plan/PacingStrategyCard'
 import { isBarrierLocked } from '@/lib/plan/barrier-lock'
 import { RaceImportSheet } from '@/components/plan/RaceImportSheet'
@@ -54,6 +57,7 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
   const [editLines, setEditLines] = useState(false)
   const [editField, setEditField] = useState<null | 'objective' | 'start'>(null)
   const [hoveredWaypointIndex, setHoveredWaypointIndex] = useState<number | null>(null)
+  const [selectedWaypointIndex, setSelectedWaypointIndex] = useState<number>(0)
   const [track, setTrack] = useState<RaceTrack | null>(null)
   const [trackDialogOpen, setTrackDialogOpen] = useState(false)
 
@@ -118,6 +122,13 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
 
   useEffect(() => { void reload() }, [reload])
 
+  // Sélection par défaut = 1er ravito (sinon 1er point après le départ, sinon 0).
+  useEffect(() => {
+    if (waypoints.length === 0) return
+    const firstRavito = waypoints.findIndex((w) => w.type === 'ravito')
+    setSelectedWaypointIndex(firstRavito >= 0 ? firstRavito : Math.min(1, waypoints.length - 1))
+  }, [waypoints.length])
+
   async function resolveDiff(action: 'apply' | 'dismiss') {
     setDiffBusy(true)
     try {
@@ -166,6 +177,16 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
       setDeleting(false)
     }
   }
+
+  const passages = useMemo(() => passageClocks(
+    waypoints.map(({ km, dPlus, targetOverrideSec }) => ({ km, dPlus, targetOverrideSec })),
+    {
+      startTime: race?.startTime ?? null,
+      totalDurationSec: race?.targetDurationMin != null ? race.targetDurationMin * 60 : null,
+      fade: race?.pacingFade ?? 0,
+      startDateIso: meta?.editionDate ?? race?.date ?? null,
+    },
+  ), [waypoints, race?.startTime, race?.targetDurationMin, race?.pacingFade, meta?.editionDate, race?.date])
 
   if (!loaded) {
     return (
@@ -296,6 +317,8 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
               onEditLinesChange={setEditLines}
               hoveredIndex={hoveredWaypointIndex}
               onHoverIndex={setHoveredWaypointIndex}
+              selectedIndex={selectedWaypointIndex}
+              onSelectIndex={setSelectedWaypointIndex}
             />
           </>
         )}
@@ -318,12 +341,29 @@ export function CoursePageClient({ raceId }: { raceId: string }) {
         }
       >
         {waypoints.length > 0 ? (
-          <ElevationProfileChart
-            waypoints={waypoints.map(({ km, name, altitude, dPlus, dMoins }) => ({ km, name, altitude, dPlus, dMoins }))}
-            denseProfile={track?.profile}
-            hoveredIndex={hoveredWaypointIndex}
-            onHoverIndex={setHoveredWaypointIndex}
-          />
+          <>
+            <ElevationProfileChart
+              waypoints={waypoints.map(({ km, name, altitude, dPlus, dMoins, supplies, cutoffRaw }) =>
+                ({ km, name, altitude, dPlus, dMoins, supplies, cutoffRaw }))}
+              denseProfile={track?.profile}
+              hoveredIndex={hoveredWaypointIndex}
+              onHoverIndex={setHoveredWaypointIndex}
+              selectedIndex={selectedWaypointIndex}
+              onSelectIndex={setSelectedWaypointIndex}
+            />
+            {track && waypoints[selectedWaypointIndex] && (
+              <WaypointDetailCard
+                waypoint={waypoints[selectedWaypointIndex]}
+                previous={selectedWaypointIndex > 0 ? waypoints[selectedWaypointIndex - 1] : null}
+                altitude={interpolateAlt(track.profile.d, track.profile.e, waypoints[selectedWaypointIndex].km)}
+                passageClock={passages[selectedWaypointIndex] ?? ''}
+                hasPrev={selectedWaypointIndex > 0}
+                hasNext={selectedWaypointIndex < waypoints.length - 1}
+                onPrev={() => setSelectedWaypointIndex((i) => Math.max(0, i - 1))}
+                onNext={() => setSelectedWaypointIndex((i) => Math.min(waypoints.length - 1, i + 1))}
+              />
+            )}
+          </>
         ) : (
           <div className="h-[120px] rounded-[8px] bg-trail-surface border border-dashed border-trail-border flex items-center justify-center">
             <p className="text-caption text-trail-muted">Importe le tableau pour voir le profil.</p>
