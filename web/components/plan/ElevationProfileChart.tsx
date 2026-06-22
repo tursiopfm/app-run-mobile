@@ -150,14 +150,14 @@ export function ElevationProfileChart({ waypoints, denseProfile, hoveredIndex, o
       if (!xs || !ys || !off) return null
       const pts = data.map((d) => [xs(d.km), ys(d.alt)] as [number, number])
       if (pts.length < 2) return null
-      const N = 11, gap = 4.6
+      const N = 13, gap = 4.2
       const layers = []
       for (let k = N; k >= 1; k--) {
         const dy = k * gap
         const seg = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)} ${(p[1] + dy).toFixed(1)}`).join(' ')
         layers.push(
-          <path key={k} d={seg} fill="none" stroke={colors.seriesBlue} strokeWidth={1}
-            opacity={Number((0.26 * (1 - k / (N + 1))).toFixed(3))} />,
+          <path key={k} d={seg} fill="none" stroke={colors.seriesBlue} strokeWidth={1.1}
+            opacity={Number((0.5 * (1 - k / (N + 5))).toFixed(3))} />,
         )
       }
       return (
