@@ -237,7 +237,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
       <style>{`
         .pdfroot{
           --ink:#0E1513; --ink-soft:#55615E; --ink-faint:#8A938F;
-          --line:#C9D1CE; --line-strong:#2A332F; --zebra:#E3EAE8; --accent:#C44E22;
+          --line:#C9D1CE; --line-strong:#2A332F; --zebra:#E3EAE8; --brand:#FF7900;
           --d:'Space Grotesk',var(--font-display,system-ui),sans-serif;
           background:var(--trail-bg); min-height:100vh; display:flex; flex-direction:column; align-items:center;
           padding:28px 16px 60px; color:var(--trail-text); font-family:system-ui,sans-serif;
@@ -262,7 +262,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .race{font-family:var(--d);font-size:9px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;line-height:1.1;}
         .pdfroot .stats{font-family:var(--d);font-size:5.8px;color:var(--ink-soft);font-weight:600;white-space:nowrap;}
         .pdfroot .stats b{color:var(--ink);}
-        .pdfroot .goal{font-family:var(--d);font-size:8.5px;color:var(--accent);font-weight:700;white-space:nowrap;}
+        .pdfroot .goal{font-family:var(--d);font-size:8.5px;color:var(--brand);font-weight:700;white-space:nowrap;}
         .pdfroot .goal .lbl{color:var(--ink-faint);font-size:6px;font-weight:600;}
         /* fixed-layout + colgroup par poids (normalisés sur les colonnes visibles)
            = colonnes harmonisées remplissant la carte, MÊME équilibre quel que soit
@@ -281,7 +281,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .km{font-family:var(--d);font-size:9.5px;font-weight:700;}
         .pdfroot .cum{font-family:var(--d);font-size:9.5px;font-weight:700;color:var(--ink);}
         .pdfroot .sv{font-family:var(--d);font-size:9.5px;font-weight:700;white-space:nowrap;}
-        .pdfroot .sv.dp .ar{color:var(--accent);font-size:6.5px;}
+        .pdfroot .sv.dp .ar{color:var(--brand);font-size:6.5px;}
         .pdfroot .sv.dm{color:var(--ink-soft);} .pdfroot .sv.dm .ar{font-size:6.5px;}
         .pdfroot .dash{color:var(--ink-faint);font-weight:500;}
         .pdfroot .rav{display:inline-flex;gap:1.5px;}
@@ -292,7 +292,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .obj{font-family:var(--d);font-size:9.5px;font-weight:700;}
         .pdfroot .bh{font-family:var(--d);font-size:9.5px;font-weight:700;color:var(--ink);white-space:nowrap;}
         .pdfroot tr.is-base td{background:#D5E3DD;}
-        .pdfroot tr.is-end .pt,.pdfroot tr.is-start .pt{color:var(--accent);}
+        .pdfroot tr.is-end .pt,.pdfroot tr.is-start .pt{color:var(--brand);}
         .pdfroot .legend{flex:none;display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:.5px;padding-top:1px;border-top:1px solid var(--line-strong);font-family:var(--d);font-size:5.2px;color:var(--ink-soft);font-weight:600;line-height:1.2;}
         .pdfroot .legend .k{display:inline-flex;align-items:center;gap:3px;}
         .pdfroot .legend .rb{transform:scale(.78);}
@@ -306,9 +306,9 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         /* Marque AU MILIEU de l'en-tête : prend l'espace central, centrée et alignée
            verticalement avec les 2 lignes (nom + infos). */
         .pdfroot .brand{flex:1;min-width:0;align-self:center;text-align:center;font-family:var(--d);font-weight:800;font-size:10px;letter-spacing:.6px;line-height:1;padding:0 6px;white-space:nowrap;}
-        .pdfroot .brand .b1{color:var(--accent);}
+        .pdfroot .brand .b1{color:var(--brand);}
         .pdfroot .brand .b2{color:var(--ink-soft);}
-        .pdfroot .brand .b3{color:var(--accent);}
+        .pdfroot .brand .b3{color:var(--brand);}
 
         /* Zoom de l'aperçu ÉCRAN (pincement) : zoomview réserve la taille mise à l'échelle
            (→ scroll/pan), cardwrap est scalé. N'affecte ni l'impression ni l'export image
