@@ -2,7 +2,7 @@
 
 // Export PDF — carte de course format iPhone (cf. Prompts/tableau-course-pdf-mockup.html).
 // Colonnes personnalisables (choix + ordre) via PrintColumnsDialog, largeurs auto.
-import { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import type { Race, RaceWaypoint } from '@/types/plan'
 import { getRaces } from '@/lib/plan/storage'
@@ -14,9 +14,12 @@ import {
 } from '@/lib/plan/print-columns'
 import { PrintColumnsDialog } from '@/components/plan/PrintColumnsDialog'
 import { toJpeg } from 'html-to-image'
-import { FileText, Image as ImageIcon, Share2, Settings2, Ruler } from 'lucide-react'
-import { loadPrintSize, savePrintSize, PRINT_SIZE_DEFS, DEFAULT_PRINT_SIZE, type PrintSize } from '@/lib/plan/print-size'
+import { FileText, Image as ImageIcon, Share2, Settings2, Ruler, Map as MapIcon } from 'lucide-react'
+import { loadPrintSize, savePrintSize, PRINT_SIZE_DEFS, PRINT_SIZE_DEFS_PROFILE, DEFAULT_PRINT_SIZE, type PrintSize } from '@/lib/plan/print-size'
 import { PrintSizeDialog } from '@/components/plan/PrintSizeDialog'
+import { ProfilePrintCard } from '@/components/plan/ProfilePrintCard'
+import { ProfileInfoDialog } from '@/components/plan/ProfileInfoDialog'
+import { loadProfileInfo, saveProfileInfo, DEFAULT_PROFILE_INFO, type ProfileInfoConfig } from '@/lib/plan/print-profile-info'
 
 const fmt = (n: number) => String(n).replace('.', ',')
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -42,16 +45,29 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [size, setSize] = useState<PrintSize>(DEFAULT_PRINT_SIZE)
   const [sizeDialogOpen, setSizeDialogOpen] = useState(false)
+  const [tab, setTab] = useState<'tableau' | 'profil'>('tableau')
+  const [track, setTrack] = useState<{ profile: { d: number[]; e: number[] } } | null>(null)
+  const [infoCfg, setInfoCfg] = useState<ProfileInfoConfig>(DEFAULT_PROFILE_INFO)
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false)
 
   useEffect(() => { setCfg(loadPrintColConfig()) }, [])
   useEffect(() => { setSize(loadPrintSize()) }, [])
+  useEffect(() => { setInfoCfg(loadProfileInfo()) }, [])
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('tab')
+    if (t === 'profil') setTab('profil')
+  }, [])
 
   useEffect(() => {
     void (async () => {
       const races = await getRaces()
       setRace(races.find((r) => r.id === params.id) ?? null)
       const res = await fetch(`/api/races/${params.id}/waypoints`)
-      if (res.ok) setWps((await res.json()).waypoints ?? [])
+      if (res.ok) {
+        const body = await res.json()
+        setWps(body.waypoints ?? [])
+        setTrack(body.track ?? null)
+      }
       setReady(true)
     })()
   }, [params.id])
@@ -61,6 +77,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
 
   const updateCfg = (next: PrintColConfig) => { setCfg(next); savePrintColConfig(next) }
   const updateSize = (next: PrintSize) => { setSize(next); savePrintSize(next) }
+  const updateInfo = (next: ProfileInfoConfig) => { setInfoCfg(next); saveProfileInfo(next) }
 
   const cardRef = useRef<HTMLDivElement>(null)
   const jpegBtnRef = useRef<HTMLButtonElement>(null)
@@ -318,7 +335,12 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .zoomview{width:calc(65mm * var(--zoom,1));height:calc(120mm * var(--zoom,1));margin:0 auto;}
         .pdfroot .zoomview .cardwrap{transform:scale(var(--zoom,1));transform-origin:top left;}
 
-        @page{${PRINT_SIZE_DEFS[size].pageRule}}
+        .pdfroot .tabs{display:flex;gap:6px;}
+        .pdfroot .tab{flex:1;font-family:var(--d);font-weight:700;font-size:13px;padding:8px;border-radius:10px;border:1.5px solid var(--trail-border);background:transparent;color:var(--trail-muted);cursor:pointer;}
+        .pdfroot .tab.on{border-color:var(--trail-primary);color:var(--trail-primary);background:color-mix(in srgb, var(--trail-primary) 10%, transparent);}
+        .pdfroot .pcardwrap{width:100%;display:flex;justify-content:center;}
+
+        @page{${(tab === 'profil' ? PRINT_SIZE_DEFS_PROFILE : PRINT_SIZE_DEFS)[size].pageRule}}
         @media print{
           /* UNE page : on annule les min-height de la coquille app (2× min-h-screen,
              sidebar, bottom-nav) qui forceraient une 2e page même en visibility:hidden. */
@@ -335,6 +357,8 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           .pdfroot .cut{border:none;background:none;padding:0;margin:0;width:auto;}
           .pdfroot .cardwrap{position:static !important;width:auto !important;height:auto !important;}
           .pdfroot .card{position:static !important;transform:scale(${PRINT_SIZE_DEFS[size].scale}) !important;transform-origin:top center !important;top:auto;left:auto;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
+          .pdfroot .pcardwrap{display:block !important;}
+          .pdfroot .pcard{transform:scale(${PRINT_SIZE_DEFS_PROFILE[size].scale}) !important;transform-origin:top center !important;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
           .pdfroot tbody tr:nth-child(even){background:var(--zebra) !important;}
           .pdfroot tr.is-base td{background:#D5E3DD !important;}
           *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -342,88 +366,107 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
       `}</style>
 
       <div className="toolbar">
-        <span className="ttl">Carte de course</span>
+        <div className="tabs">
+          <button className={`tab ${tab === 'tableau' ? 'on' : ''}`} onClick={() => setTab('tableau')}>Tableau</button>
+          <button className={`tab ${tab === 'profil' ? 'on' : ''}`} onClick={() => setTab('profil')}>Profil</button>
+        </div>
         <div className="actions">
           <button className="btn" onClick={() => window.print()}><FileText size={16} /> PDF</button>
           <button className="btn" ref={jpegBtnRef} onClick={() => void exportJpeg()} disabled={busy}><ImageIcon size={16} /> Image</button>
           <button className="btn" ref={shareBtnRef} onClick={() => void shareJpeg()} disabled={busy}><Share2 size={16} /> Partager</button>
         </div>
         <div className="actions2">
-          <button className="btn ghost" onClick={() => setDialogOpen(true)}><Settings2 size={16} /> Colonnes</button>
+          {tab === 'tableau'
+            ? <button className="btn ghost" onClick={() => setDialogOpen(true)}><Settings2 size={16} /> Colonnes</button>
+            : <button className="btn ghost" onClick={() => setInfoDialogOpen(true)}><MapIcon size={16} /> Infos</button>}
           <button className="btn ghost" onClick={() => setSizeDialogOpen(true)}><Ruler size={16} /> Taille</button>
         </div>
       </div>
-      <p className="caption">{"Les colonnes choisies s'appliquent aux trois formats (PDF, image, partage) ; la taille ne change que le PDF. Pince à deux doigts pour zoomer l'aperçu. À l'impression : carte à l'horizontale, calée en haut de la feuille. Découpe, plastifie."}</p>
+      <p className="caption">{tab === 'tableau'
+        ? "Les colonnes choisies s'appliquent aux trois formats (PDF, image, partage) ; la taille ne change que le PDF. Pince à deux doigts pour zoomer l'aperçu. À l'impression : carte à l'horizontale, calée en haut de la feuille. Découpe, plastifie."
+        : "Choisis les infos à afficher (bouton Infos) ; la taille ne change que le PDF. À l'impression : profil paysage calé en haut de la feuille."}</p>
 
-      <div className="previewscroll" ref={previewRef}>
-      <div className="cut">
-        <span className="scis">✂ — — — — — — — — découper — — — — — — — —</span>
+      {tab === 'tableau' ? (
+        <div className="previewscroll" ref={previewRef}>
+        <div className="cut">
+          <span className="scis">✂ — — — — — — — — découper — — — — — — — —</span>
 
-        <div className="zoomview">
-        <div className="cardwrap">
-        <div className="card" ref={cardRef}>
-          <div className="hd">
-            <div>
-              <div className="race">{race.name}</div>
-              <div className="stats">
-                <b>{race.distance} km</b> · <b>{race.elevation} D+</b> · {wps.length} pts
-                {startClock ? <> · Dép. <b>{startClock}</b></> : null}
-                {arrClock ? <> · Arr. visée <b>{arrClock}</b></> : null}
+          <div className="zoomview">
+          <div className="cardwrap">
+          <div className="card" ref={cardRef}>
+            <div className="hd">
+              <div>
+                <div className="race">{race.name}</div>
+                <div className="stats">
+                  <b>{race.distance} km</b> · <b>{race.elevation} D+</b> · {wps.length} pts
+                  {startClock ? <> · Dép. <b>{startClock}</b></> : null}
+                  {arrClock ? <> · Arr. visée <b>{arrClock}</b></> : null}
+                </div>
               </div>
+              <div className="brand"><span className="b1">TRAIL</span> <span className="b2">COCKPIT</span><span className="b3">.RUN</span></div>
+              {goal ? <div className="goal"><span className="lbl">Objectif</span> {goal}</div> : null}
             </div>
-            <div className="brand"><span className="b1">TRAIL</span> <span className="b2">COCKPIT</span><span className="b3">.RUN</span></div>
-            {goal ? <div className="goal"><span className="lbl">Objectif</span> {goal}</div> : null}
-          </div>
 
-          <table>
-            <colgroup>
-              {cols.map((k) => (
-                <col key={k} style={{ width: `${(PRINT_COL_DEFS[k].weight / totalW) * 100}%` }} />
-              ))}
-            </colgroup>
-            <thead>
-              <tr>
+            <table>
+              <colgroup>
                 {cols.map((k) => (
-                  <th key={k} style={{ textAlign: ta(k) }}>
-                    {PRINT_COL_DEFS[k].th}
-                  </th>
+                  <col key={k} style={{ width: `${(PRINT_COL_DEFS[k].weight / totalW) * 100}%` }} />
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {wps.map((w, i) => {
-                const rowCls = i === 0 ? 'is-start' : i === wps.length - 1 ? 'is-end' : w.supplies.includes('base_vie') ? 'is-base' : ''
-                return (
-                  <tr key={w.id} className={rowCls}>
-                    {cols.map((k) => (
-                      <td key={k} style={{ textAlign: ta(k) }}>
-                        {cell(k, w, i)}
-                      </td>
-                    ))}
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+              </colgroup>
+              <thead>
+                <tr>
+                  {cols.map((k) => (
+                    <th key={k} style={{ textAlign: ta(k) }}>
+                      {PRINT_COL_DEFS[k].th}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {wps.map((w, i) => {
+                  const rowCls = i === 0 ? 'is-start' : i === wps.length - 1 ? 'is-end' : w.supplies.includes('base_vie') ? 'is-base' : ''
+                  return (
+                    <tr key={w.id} className={rowCls}>
+                      {cols.map((k) => (
+                        <td key={k} style={{ textAlign: ta(k) }}>
+                          {cell(k, w, i)}
+                        </td>
+                      ))}
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
 
-          <div className="legend">
-            <span className="k">Inter · ▲D+ · ▼D− = tronçon (depuis pt préc.)</span>
-            <span className="k">ΣD+ = cumulé</span>
-            <span className="k"><span className="rb liq">L</span>liquide</span>
-            <span className="k"><span className="rb sol">S</span>solide</span>
-            <span className="k"><span className="rb hot">C</span>chaud</span>
-            <span className="k"><span className="rb base">BV</span>base vie</span>
-            <span className="k"><span className="rb ass">A</span>assistance</span>
-            <span className="k" style={{ marginLeft: 'auto', color: 'var(--ink-faint)' }}>Obj = heure visée · Barrière = limite</span>
+            <div className="legend">
+              <span className="k">Inter · ▲D+ · ▼D− = tronçon (depuis pt préc.)</span>
+              <span className="k">ΣD+ = cumulé</span>
+              <span className="k"><span className="rb liq">L</span>liquide</span>
+              <span className="k"><span className="rb sol">S</span>solide</span>
+              <span className="k"><span className="rb hot">C</span>chaud</span>
+              <span className="k"><span className="rb base">BV</span>base vie</span>
+              <span className="k"><span className="rb ass">A</span>assistance</span>
+              <span className="k" style={{ marginLeft: 'auto', color: 'var(--ink-faint)' }}>Obj = heure visée · Barrière = limite</span>
+            </div>
+          </div>
+          </div>
           </div>
         </div>
         </div>
+      ) : (
+        <div className="previewscroll">
+          <div className="cut">
+            <span className="scis">✂ — — — — — — — — découper — — — — — — — —</span>
+            <div className="pcardwrap" ref={cardRef as React.RefObject<HTMLDivElement>}>
+              <ProfilePrintCard race={race} waypoints={wps} denseProfile={track?.profile} info={infoCfg} />
+            </div>
+          </div>
         </div>
-      </div>
-      </div>
+      )}
 
       <PrintColumnsDialog open={dialogOpen} config={cfg} onChange={updateCfg} onClose={() => setDialogOpen(false)} />
       <PrintSizeDialog open={sizeDialogOpen} value={size} onChange={updateSize} onClose={() => setSizeDialogOpen(false)} />
+      <ProfileInfoDialog open={infoDialogOpen} config={infoCfg} onChange={updateInfo} onClose={() => setInfoDialogOpen(false)} />
     </div>
   )
 }
