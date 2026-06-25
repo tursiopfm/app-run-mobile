@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Export Profil de course — 3 mockups</title>
+<style>
+  :root{
+    --ink:#0E1513; --ink-soft:#55615E; --ink-faint:#8A938F;
+    --line:#C9D1CE; --line-strong:#2A332F; --zebra:#EEF3F1; --brand:#FF7900;
+    --blue:#2E90D0; --d:'Space Grotesk',system-ui,sans-serif;
+    --liq:#2E90D0; --sol:#B45309; --hot:#DC2626; --base:#16A34A; --ass:#7C5CFC;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:system-ui,Segoe UI,Roboto,sans-serif;background:#0c1412;color:#e7efed;padding:28px 18px 80px;}
+  .page-head{max-width:980px;margin:0 auto 26px;}
+  .page-head h1{font-family:var(--d);font-size:22px;margin:0 0 6px;}
+  .page-head p{margin:0;color:#9fb0ab;font-size:13px;line-height:1.5;max-width:760px;}
+  .mock{max-width:980px;margin:0 auto 40px;}
+  .mock > .label{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;flex-wrap:wrap;}
+  .mock > .label .tag{font-family:var(--d);font-weight:700;font-size:13px;color:#0c1412;background:var(--brand);padding:3px 9px;border-radius:6px;}
+  .mock > .label h2{font-family:var(--d);font-size:17px;margin:0;}
+  .mock > .label .sub{color:#9fb0ab;font-size:12.5px;}
+
+  /* ---- la "carte" exportée (fond blanc, comme le tableau de course) ---- */
+  .card{background:#fff;color:var(--ink);border-radius:10px;padding:14px 16px 12px;box-shadow:0 24px 50px -22px rgba(0,0,0,.7);}
+  .hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.6px solid var(--line-strong);padding-bottom:7px;gap:12px;}
+  .hd .race{font-family:var(--d);font-size:18px;font-weight:700;letter-spacing:-.3px;line-height:1.05;}
+  .hd .stats{font-family:var(--d);font-size:11px;color:var(--ink-soft);font-weight:600;margin-top:3px;}
+  .hd .stats b{color:var(--ink);}
+  .hd .brand{font-family:var(--d);font-weight:800;font-size:14px;letter-spacing:.5px;align-self:center;white-space:nowrap;}
+  .hd .brand .b1{color:var(--brand);} .hd .brand .b2{color:var(--ink-soft);} .hd .brand .b3{color:var(--brand);}
+  .hd .goal{font-family:var(--d);text-align:right;white-space:nowrap;}
+  .hd .goal .lbl{display:block;color:var(--ink-faint);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+  .hd .goal .val{color:var(--brand);font-size:17px;font-weight:700;}
+
+  .plot{position:relative;width:100%;margin-top:6px;}
+  .plot svg{display:block;width:100%;height:auto;}
+
+  /* foot / legend */
+  .legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:8px;padding-top:7px;border-top:1px solid var(--line-strong);font-family:var(--d);font-size:9.5px;color:var(--ink-soft);font-weight:600;}
+  .legend .k{display:inline-flex;align-items:center;gap:4px;}
+  .chip{font-family:var(--d);font-weight:700;font-size:9px;min-width:13px;height:13px;padding:0 3px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;color:#fff;line-height:1;}
+  .chip.liq{background:var(--liq);} .chip.sol{background:var(--sol);} .chip.hot{background:var(--hot);}
+  .chip.base{background:var(--base);} .chip.ass{background:var(--ass);}
+
+  /* ---------- A : callouts (drapeaux) ---------- */
+  .calloutA{position:absolute;width:128px;transform:translateX(-50%);}
+  .calloutA .box{background:#fff;border:1px solid var(--line);border-top:3px solid var(--blue);border-radius:7px;padding:5px 7px;box-shadow:0 6px 14px -8px rgba(0,0,0,.4);}
+  .calloutA.is-end .box,.calloutA.is-start .box{border-top-color:var(--brand);}
+  .calloutA .nm{font-family:var(--d);font-weight:700;font-size:11px;line-height:1.1;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .calloutA .ka{font-family:var(--d);font-size:9.5px;color:var(--ink-soft);font-weight:600;margin-top:1px;}
+  .calloutA .row{display:flex;align-items:center;gap:4px;margin-top:3px;}
+  .calloutA .obj{font-family:var(--d);font-weight:700;font-size:11px;color:var(--brand);}
+  .calloutA .bar{font-family:var(--d);font-weight:700;font-size:9px;color:#fff;background:var(--hot);border-radius:3px;padding:1px 4px;margin-top:3px;display:inline-block;}
+  .calloutA .chips{display:inline-flex;gap:2px;}
+
+  .climbBadge{position:absolute;transform:translate(-50%,-50%);background:#fff;border:1px solid var(--brand);color:var(--brand);font-family:var(--d);font-weight:700;font-size:9.5px;padding:2px 6px;border-radius:20px;white-space:nowrap;box-shadow:0 4px 10px -6px rgba(0,0,0,.4);}
+  .climbBadge .ar{font-size:8px;}
+
+  /* ---------- B : rail tronçons ---------- */
+  .pinB{position:absolute;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .pinB .chips{display:flex;gap:2px;}
+  .pinB .alt{font-family:var(--d);font-weight:700;font-size:9.5px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:4px;padding:0 3px;}
+  .railB{display:grid;margin-top:4px;border-top:1px solid var(--line-strong);}
+  .railB .col{padding:6px 5px 4px;border-left:1px dashed var(--line);text-align:center;}
+  .railB .col:first-child{border-left:0;}
+  .railB .col .nm{font-family:var(--d);font-weight:700;font-size:10px;color:var(--ink);line-height:1.05;min-height:22px;display:flex;align-items:center;justify-content:center;}
+  .railB .col.is-key .nm{color:var(--brand);}
+  .railB .col .ka{font-family:var(--d);font-size:9px;color:var(--ink-soft);font-weight:600;margin:2px 0 4px;}
+  .railB .col .seg{font-family:var(--d);font-size:9.5px;font-weight:700;color:var(--ink);}
+  .railB .col .seg .up{color:var(--brand);} .railB .col .seg .dn{color:var(--ink-soft);}
+  .railB .col .obj{font-family:var(--d);font-size:11.5px;font-weight:700;color:var(--brand);margin-top:3px;}
+  .railB .col .bar{font-family:var(--d);font-size:9px;font-weight:700;color:#fff;background:var(--hot);border-radius:3px;padding:1px 4px;margin-top:3px;display:inline-block;}
+  .railB .col .chips{display:inline-flex;gap:2px;margin-top:3px;}
+
+  /* ---------- ★ Retenu : frise B + bord coloré ravito ---------- */
+  .railR{display:grid;margin-top:8px;}
+  .railR .col{padding:0 5px 5px;border-left:1px dashed var(--line);text-align:center;background:#FBFCFC;}
+  .railR .col:first-child{border-left:0;}
+  .railR .col .acc{height:4px;border-radius:0 0 3px 3px;margin:0 6px 6px;}
+  .railR .col .nm{font-family:var(--d);font-weight:700;font-size:10px;color:var(--ink);line-height:1.05;min-height:22px;display:flex;align-items:center;justify-content:center;}
+  .railR .col.is-key .nm{color:var(--brand);}
+  .railR .col .ka{font-family:var(--d);font-size:9px;color:var(--ink-soft);font-weight:600;margin:2px 0 4px;}
+  .railR .col .seg{font-family:var(--d);font-size:9.5px;font-weight:700;color:var(--ink);}
+  .railR .col .seg .up{color:var(--brand);} .railR .col .seg .dn{color:var(--ink-soft);}
+  .railR .col .obj{font-family:var(--d);font-size:11.5px;font-weight:700;color:var(--brand);margin-top:3px;}
+  .railR .col .bar{font-family:var(--d);font-size:9px;font-weight:700;color:#fff;background:var(--hot);border-radius:3px;padding:1px 4px;margin-top:3px;display:inline-block;}
+  .railR .col .chips{display:inline-flex;gap:2px;margin-top:3px;}
+
+  /* ---------- C : cartouches stations ---------- */
+  .cartC{position:absolute;width:122px;transform:translateX(-50%);background:#fff;border-radius:9px;box-shadow:0 8px 18px -8px rgba(0,0,0,.5);overflow:hidden;border:1px solid var(--line);}
+  .cartC .top{height:5px;}
+  .cartC .body{padding:6px 8px 7px;}
+  .cartC .nm{font-family:var(--d);font-weight:700;font-size:11px;line-height:1.1;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cartC .ka{font-family:var(--d);font-size:9.5px;color:var(--ink-soft);font-weight:600;margin-top:1px;}
+  .cartC .chips{display:flex;gap:3px;margin:5px 0 4px;}
+  .cartC .chips .chip{height:16px;min-width:16px;font-size:10px;}
+  .cartC .obj{font-family:var(--d);font-weight:700;font-size:13px;color:var(--brand);}
+  .cartC .obj .lbl{color:var(--ink-faint);font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
+  .cartC .bar{font-family:var(--d);font-weight:700;font-size:9.5px;color:#fff;background:var(--hot);border-radius:4px;padding:2px 5px;margin-top:4px;display:inline-flex;gap:3px;align-items:center;}
+  .cartC .bar .lbl{opacity:.85;font-size:8px;text-transform:uppercase;}
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>Export « Profil de course » — 3 pistes de mise en page</h1>
+    <p>Même module d'export que le tableau (onglet <b>Tableau | Profil</b> dans <code>/print</code>, boutons PDF / Image / Partager, tailles iPhone&nbsp;/&nbsp;A5&nbsp;/&nbsp;A4). Les 3 pistes affichent <b>les mêmes 4 infos</b> — nom·alt·km, objectif horaire, ravitos&nbsp;+ barrières, montées principales — mais les disposent différemment. Données fictives (Trail du Mercantour 68K).</p>
+  </div>
+
+  <div class="mock">
+    <div class="label"><span class="tag">A</span><h2>Roadbook annoté — drapeaux au-dessus de la courbe</h2><span class="sub">le plus proche du profil actuel, enrichi</span></div>
+    <div class="card" id="cardA"></div>
+  </div>
+
+  <div class="mock">
+    <div class="label"><span class="tag">B</span><h2>Profil + frise des tronçons</h2><span class="sub">le dessin en haut, les chiffres alignés dessous</span></div>
+    <div class="card" id="cardB"></div>
+  </div>
+
+  <div class="mock">
+    <div class="label"><span class="tag">C</span><h2>Stations en cartouches — bandes verticales fortes</h2><span class="sub">façon « carte de poche », info en boîtes très contrastées</span></div>
+    <div class="card" id="cardC"></div>
+  </div>
+
+  <div class="mock">
+    <div class="label"><span class="tag" style="background:#16A34A;color:#fff">★</span><h2>Retenu — B + bords ravito (de C)</h2><span class="sub">lisible iPhone→A4, punch visuel par couleur de ravito</span></div>
+    <div class="card" id="cardR"></div>
+  </div>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+const RACE={name:'Trail du Mercantour', dist:68, dplus:4200, start:'06:00', goal:'16 h 15', arr:'22:15', pts:7};
+
+// anchors (km, alt) — profil dense fictif
+const ANCH=[[0,1100],[1.5,1230],[3,1450],[4.5,1680],[6,1900],[7.5,2080],[9,2300],[10.5,2520],[12,2715],
+[13.5,2600],[15,2450],[16.5,2330],[18,2200],[20,2110],[22,2050],
+[24,1980],[26,1900],[28,1860],[30,1820],[32,1790],[34,1750],
+[36,1900],[38,2050],[40,2180],[42,2300],[43.5,2360],[45,2380],
+[46.5,2260],[48,2100],[49.5,1920],[51,1750],[52.5,1620],[54,1500],
+[56,1680],[58,1850],[60,1950],[62,2000],[63.5,1850],[65,1650],[66.5,1380],[68,1100]];
+
+// waypoints
+const WP=[
+ {km:0, alt:1100, nm:'Départ · St-Martin', obj:'06:00', sup:[], bar:null, kind:'start'},
+ {km:12, alt:2715, nm:'Col de la Bonette', obj:'08:40', sup:['liq'], bar:null},
+ {km:22, alt:2050, nm:'Refuge du Vallon', obj:'10:30', sup:['liq','sol'], bar:'11:30'},
+ {km:34, alt:1750, nm:'Base Vie · Bastion', obj:'13:05', sup:['liq','sol','hot','base'], bar:'15:00', base:true},
+ {km:45, alt:2380, nm:'Crête des Granges', obj:'16:20', sup:['liq'], bar:null},
+ {km:54, alt:1500, nm:'Vallon Obscur', obj:'18:40', sup:['liq','sol'], bar:'20:00'},
+ {km:68, alt:1100, nm:'Arrivée · St-Martin', obj:'22:15', sup:[], bar:null, kind:'end'},
+];
+// tronçon (depuis le point précédent) : dist, D+, D-
+const SEG=[null,
+ {d:12,up:1700,dn:85},{d:10,up:260,dn:925},{d:12,up:180,dn:480},
+ {d:11,up:760,dn:130},{d:9,up:150,dn:1030},{d:14,up:600,dn:1010}];
+// montées principales à badger
+const CLIMBS=[
+ {km:6.5, txt:'+1 615 D+ · 13%'},
+ {km:40, txt:'+760 D+ · 7%'},
+ {km:58, txt:'+500 D+ · 6%'},
+];
+
+const SUPNAME={liq:'L',sol:'S',hot:'C',base:'BV',ass:'A'};
+const SUPCLASS={liq:'liq',sol:'sol',hot:'hot',base:'base',ass:'ass'};
+const fmtKm=n=>(Number.isInteger(n)?String(n):n.toFixed(1)).replace('.',',');
+
+function chipsHTML(sup){return sup.map(s=>`<span class="chip ${SUPCLASS[s]}">${SUPNAME[s]}</span>`).join('');}
+
+// ---- géométrie commune ----
+function makeGeom(W,plotTop,plotH,padL,padR){
+  const YMIN=1000,YMAX=2800;
+  const plotW=W-padL-padR;
+  const xOf=km=>padL+(km/RACE.dist)*plotW;
+  const yOf=alt=>plotTop+(1-(alt-YMIN)/(YMAX-YMIN))*plotH;
+  const baseY=plotTop+plotH;
+  return {W,plotTop,plotH,padL,padR,plotW,YMIN,YMAX,xOf,yOf,baseY};
+}
+function curvePaths(g){
+  let line='', area=`M ${g.xOf(ANCH[0][0]).toFixed(1)} ${g.baseY.toFixed(1)} `;
+  ANCH.forEach((p,i)=>{const x=g.xOf(p[0]).toFixed(1),y=g.yOf(p[1]).toFixed(1);line+=(i?'L':'M')+x+' '+y+' ';area+='L '+x+' '+y+' ';});
+  area+=`L ${g.xOf(ANCH[ANCH.length-1][0]).toFixed(1)} ${g.baseY.toFixed(1)} Z`;
+  return {line,area};
+}
+function svgEl(tag,attrs){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+
+function drawProfile(svg,g,{mute=false,grid=true}={}){
+  // gradient
+  const defs=svgEl('defs',{});
+  const grad=svgEl('linearGradient',{id:'fill'+g.gid,x1:0,y1:0,x2:0,y2:1});
+  grad.appendChild(svgEl('stop',{offset:'0%','stop-color':'#2E90D0','stop-opacity':mute?0.18:0.34}));
+  grad.appendChild(svgEl('stop',{offset:'100%','stop-color':'#2E90D0','stop-opacity':0.03}));
+  defs.appendChild(grad);svg.appendChild(defs);
+  if(grid){
+    for(let a=1000;a<=2800;a+=400){const y=g.yOf(a);
+      svg.appendChild(svgEl('line',{x1:g.padL,y1:y,x2:g.W-g.padR,y2:y,stroke:'#C9D1CE','stroke-dasharray':'2 3','stroke-width':1}));
+      const t=svgEl('text',{x:g.padL-4,y:y+3,'text-anchor':'end','font-size':9,fill:'#8A938F','font-family':'Space Grotesk,sans-serif'});t.textContent=a+' m';svg.appendChild(t);
+    }
+    for(let km=0;km<=68;km+=10){const x=g.xOf(km);
+      const t=svgEl('text',{x:x,y:g.baseY+13,'text-anchor':'middle','font-size':9,fill:'#8A938F','font-family':'Space Grotesk,sans-serif'});t.textContent='km '+km;svg.appendChild(t);}
+  }
+  const p=curvePaths(g);
+  svg.appendChild(svgEl('path',{d:p.area,fill:'url(#fill'+g.gid+')'}));
+  svg.appendChild(svgEl('path',{d:p.line,fill:'none',stroke:'#2E90D0','stroke-width':mute?1.6:2.2,'stroke-opacity':mute?0.5:1}));
+}
+function header(){
+  return `<div class="hd">
+    <div>
+      <div class="race">${RACE.name}</div>
+      <div class="stats"><b>${RACE.dist} km</b> · <b>${RACE.dplus} D+</b> · ${RACE.pts} pts · Dép. <b>${RACE.start}</b> · Arr. visée <b>${RACE.arr}</b></div>
+    </div>
+    <div class="brand"><span class="b1">TRAIL</span> <span class="b2">COCKPIT</span><span class="b3">.RUN</span></div>
+    <div class="goal"><span class="lbl">Objectif</span><span class="val">${RACE.goal}</span></div>
+  </div>`;
+}
+function legend(extra){
+  return `<div class="legend">
+    <span class="k"><span class="chip liq">L</span>liquide</span>
+    <span class="k"><span class="chip sol">S</span>solide</span>
+    <span class="k"><span class="chip hot">C</span>chaud</span>
+    <span class="k"><span class="chip base">BV</span>base vie</span>
+    <span class="k"><span class="chip ass">A</span>assistance</span>
+    ${extra||''}
+    <span class="k" style="margin-left:auto;color:var(--ink-faint)">Obj = heure visée · Barrière = limite</span>
+  </div>`;
+}
+function dot(svg,x,y,key){
+  const c=(key==='start'||key==='end')?'#FF7900':'#2E90D0';
+  svg.appendChild(svgEl('circle',{cx:x,cy:y,r:4.5,fill:c,stroke:'#fff','stroke-width':1.6}));
+}
+
+/* =================== A — roadbook annoté =================== */
+(function(){
+  const W=948,H=360,plotTop=150,plotH=150,padL=46,padR=14;
+  const g=makeGeom(W,plotTop,plotH,padL,padR);g.gid='A';
+  const card=document.getElementById('cardA');
+  card.innerHTML=header()+`<div class="plot" id="plotA" style="height:${H}px"></div>`+legend(`<span class="k"><span style="color:var(--brand);font-weight:700">▲</span> montée principale</span>`);
+  const plot=document.getElementById('plotA');plot.style.position='relative';
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'none'});svg.style.position='absolute';svg.style.inset='0';svg.style.width='100%';svg.style.height='100%';
+  plot.appendChild(svg);
+  drawProfile(svg,g);
+  // connectors + dots
+  WP.forEach((w,i)=>{
+    const x=g.xOf(w.km),y=g.yOf(w.alt);
+    const tierHigh=(i%2===0);
+    const boxBottom=tierHigh?64:128; // px depuis le haut
+    svg.appendChild(svgEl('line',{x1:x,y1:y,x2:x,y2:boxBottom,stroke:(w.kind?'#FF7900':'#2E90D0'),'stroke-width':1.2,'stroke-dasharray':'3 2','stroke-opacity':.7}));
+    dot(svg,x,y,w.kind);
+  });
+  // callouts (HTML)
+  const pct=v=>(v/W*100);
+  WP.forEach((w,i)=>{
+    const x=g.xOf(w.km);const tierHigh=(i%2===0);const top=tierHigh?6:70;
+    const el=document.createElement('div');el.className='calloutA'+(w.kind?(' is-'+w.kind):'');
+    el.style.left=pct(x)+'%';el.style.top=top+'px';
+    el.innerHTML=`<div class="box">
+      <div class="nm">${w.nm}</div>
+      <div class="ka">km ${fmtKm(w.km)} · ${w.alt} m</div>
+      <div class="row"><span class="obj">${w.obj}</span><span class="chips">${chipsHTML(w.sup)}</span></div>
+      ${w.bar?`<span class="bar">⛔ ${w.bar}</span>`:''}
+    </div>`;
+    plot.appendChild(el);
+  });
+  // climbs
+  CLIMBS.forEach(c=>{
+    const x=g.xOf(c.km),y=g.yOf(ANCH.reduce((a,b)=>Math.abs(b[0]-c.km)<Math.abs(a[0]-c.km)?b:a)[1]);
+    const el=document.createElement('div');el.className='climbBadge';
+    el.style.left=pct(x)+'%';el.style.top=(y-14)+'px';
+    el.innerHTML=`<span class="ar">▲</span> ${c.txt}`;
+    plot.appendChild(el);
+  });
+})();
+
+/* =================== B — profil + frise tronçons =================== */
+(function(){
+  const W=948,H=250,plotTop=14,plotH=180,padL=46,padR=14;
+  const g=makeGeom(W,plotTop,plotH,padL,padR);g.gid='B';
+  const card=document.getElementById('cardB');
+  // rail columns widths: proportional segment by km would misalign labels; use equal columns centered under each wp
+  const railCols=WP.map(()=>'1fr').join(' ');
+  card.innerHTML=header()
+    +`<div class="plot" id="plotB" style="height:${H}px"></div>`
+    +`<div class="railB" id="railB" style="grid-template-columns:${railCols}"></div>`
+    +legend('');
+  const plot=document.getElementById('plotB');plot.style.position='relative';
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'none'});svg.style.position='absolute';svg.style.inset='0';svg.style.width='100%';svg.style.height='100%';
+  plot.appendChild(svg);
+  drawProfile(svg,g);
+  const pct=v=>(v/W*100);
+  // guides + dots + minimal pins (chips + alt)
+  WP.forEach(w=>{
+    const x=g.xOf(w.km),y=g.yOf(w.alt);
+    svg.appendChild(svgEl('line',{x1:x,y1:y,x2:x,y2:g.baseY,stroke:'#C9D1CE','stroke-dasharray':'3 3','stroke-width':1}));
+    dot(svg,x,y,w.kind);
+    const pin=document.createElement('div');pin.className='pinB';
+    pin.style.left=pct(x)+'%';pin.style.top=Math.max(2,y-34)+'px';
+    pin.innerHTML=`${w.sup.length?`<div class="chips">${chipsHTML(w.sup)}</div>`:''}<div class="alt">${w.alt} m</div>`;
+    plot.appendChild(pin);
+  });
+  // rail
+  const rail=document.getElementById('railB');
+  WP.forEach((w,i)=>{
+    const seg=SEG[i];
+    const col=document.createElement('div');col.className='col'+(w.sup.length||w.kind?' is-key':'');
+    col.innerHTML=`
+      <div class="nm">${w.nm}</div>
+      <div class="ka">km ${fmtKm(w.km)} · ${w.alt} m</div>
+      <div class="seg">${seg?`${seg.d} km · <span class="up">▲${seg.up}</span> <span class="dn">▼${seg.dn}</span>`:'<span class="dn">départ</span>'}</div>
+      <div class="obj">${w.obj}</div>
+      ${w.bar?`<span class="bar">⛔ ${w.bar}</span>`:''}
+      ${w.sup.length?`<span class="chips">${chipsHTML(w.sup)}</span>`:''}
+    `;
+    rail.appendChild(col);
+  });
+})();
+
+/* =================== C — stations en cartouches =================== */
+(function(){
+  const W=948,H=370,plotTop=168,plotH=150,padL=46,padR=14;
+  const g=makeGeom(W,plotTop,plotH,padL,padR);g.gid='C';
+  const card=document.getElementById('cardC');
+  card.innerHTML=header()+`<div class="plot" id="plotC" style="height:${H}px"></div>`+legend(`<span class="k"><span style="color:var(--brand);font-weight:700">▲</span> montée principale</span>`);
+  const plot=document.getElementById('plotC');plot.style.position='relative';
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'none'});svg.style.position='absolute';svg.style.inset='0';svg.style.width='100%';svg.style.height='100%';
+  plot.appendChild(svg);
+  drawProfile(svg,g,{mute:true});
+  const pct=v=>(v/W*100);
+  const topColor=w=>{
+    if(w.base)return '#16A34A';
+    if(w.kind)return '#FF7900';
+    if(w.sup.includes('sol'))return '#B45309';
+    if(w.sup.includes('liq'))return '#2E90D0';
+    return '#2E90D0';
+  };
+  // vertical bands + dots
+  WP.forEach((w,i)=>{
+    const x=g.xOf(w.km),y=g.yOf(w.alt);
+    const col=topColor(w);
+    const band=svgEl('rect',{x:x-1.4,y:148,width:2.8,height:(g.baseY-148),fill:col,opacity:.18});
+    svg.appendChild(band);
+    svg.appendChild(svgEl('line',{x1:x,y1:148,x2:x,y2:y,stroke:col,'stroke-width':1.6,'stroke-opacity':.7}));
+    svg.appendChild(svgEl('circle',{cx:x,cy:y,r:5,fill:col,stroke:'#fff','stroke-width':1.8}));
+  });
+  // cartouches HTML (deux rangées alternées pour respirer)
+  WP.forEach((w,i)=>{
+    const x=g.xOf(w.km);const tierHigh=(i%2===0);const top=tierHigh?6:80;
+    const col=topColor(w);
+    const el=document.createElement('div');el.className='cartC';
+    el.style.left=pct(x)+'%';el.style.top=top+'px';
+    el.innerHTML=`<div class="top" style="background:${col}"></div>
+      <div class="body">
+        <div class="nm">${w.nm}</div>
+        <div class="ka">km ${fmtKm(w.km)} · ${w.alt} m</div>
+        ${w.sup.length?`<div class="chips">${chipsHTML(w.sup)}</div>`:'<div class="chips" style="height:2px"></div>'}
+        <div class="obj"><span class="lbl">Obj </span>${w.obj}</div>
+        ${w.bar?`<span class="bar"><span class="lbl">Barr.</span> ${w.bar}</span>`:''}
+      </div>`;
+    plot.appendChild(el);
+  });
+  // climbs between cartouches
+  CLIMBS.forEach(c=>{
+    const x=g.xOf(c.km),y=g.yOf(ANCH.reduce((a,b)=>Math.abs(b[0]-c.km)<Math.abs(a[0]-c.km)?b:a)[1]);
+    const el=document.createElement('div');el.className='climbBadge';
+    el.style.left=pct(x)+'%';el.style.top=(y-12)+'px';
+    el.innerHTML=`<span class="ar">▲</span> ${c.txt}`;
+    plot.appendChild(el);
+  });
+})();
+
+/* =================== ★ Retenu — B + bords ravito =================== */
+(function(){
+  const W=948,H=250,plotTop=14,plotH=180,padL=46,padR=14;
+  const g=makeGeom(W,plotTop,plotH,padL,padR);g.gid='R';
+  const card=document.getElementById('cardR');
+  const railCols=WP.map(()=>'1fr').join(' ');
+  const accOf=w=>{
+    if(w.base)return '#16A34A';
+    if(w.kind)return '#FF7900';
+    if(w.sup.includes('sol'))return '#B45309';
+    if(w.sup.includes('liq'))return '#2E90D0';
+    return '#8A938F';
+  };
+  card.innerHTML=header()
+    +`<div class="plot" id="plotR" style="height:${H}px"></div>`
+    +`<div class="railR" id="railR" style="grid-template-columns:${railCols}"></div>`
+    +legend(`<span class="k"><span style="color:var(--brand);font-weight:700">▲</span> montée principale</span>`);
+  const plot=document.getElementById('plotR');plot.style.position='relative';
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'none'});svg.style.position='absolute';svg.style.inset='0';svg.style.width='100%';svg.style.height='100%';
+  plot.appendChild(svg);
+  drawProfile(svg,g);
+  const pct=v=>(v/W*100);
+  WP.forEach(w=>{
+    const x=g.xOf(w.km),y=g.yOf(w.alt),acc=accOf(w);
+    svg.appendChild(svgEl('line',{x1:x,y1:y,x2:x,y2:g.baseY,stroke:acc,'stroke-dasharray':'3 3','stroke-width':1,'stroke-opacity':.55}));
+    svg.appendChild(svgEl('circle',{cx:x,cy:y,r:4.5,fill:acc,stroke:'#fff','stroke-width':1.6}));
+    const pin=document.createElement('div');pin.className='pinB';
+    pin.style.left=pct(x)+'%';pin.style.top=Math.max(2,y-34)+'px';
+    pin.innerHTML=`${w.sup.length?`<div class="chips">${chipsHTML(w.sup)}</div>`:''}<div class="alt" style="border-color:${acc}">${w.alt} m</div>`;
+    plot.appendChild(pin);
+  });
+  const rail=document.getElementById('railR');
+  WP.forEach((w,i)=>{
+    const seg=SEG[i],acc=accOf(w);
+    const col=document.createElement('div');col.className='col'+(w.sup.length||w.kind?' is-key':'');
+    col.innerHTML=`
+      <div class="acc" style="background:${acc}"></div>
+      <div class="nm">${w.nm}</div>
+      <div class="ka">km ${fmtKm(w.km)} · ${w.alt} m</div>
+      <div class="seg">${seg?`${seg.d} km · <span class="up">▲${seg.up}</span> <span class="dn">▼${seg.dn}</span>`:'<span class="dn">départ</span>'}</div>
+      <div class="obj">${w.obj}</div>
+      ${w.bar?`<span class="bar">⛔ ${w.bar}</span>`:''}
+      ${w.sup.length?`<span class="chips">${chipsHTML(w.sup)}</span>`:''}
+    `;
+    rail.appendChild(col);
+  });
+})();
+</script>
+</body>
+</html>
