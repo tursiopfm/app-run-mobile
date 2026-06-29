@@ -198,5 +198,15 @@ c'est le seul point qui demande un aller-retour visuel. On introduit
   `.pcard{box-sizing:border-box;width:280 mm × scale}` sans aucun `transform`. Les
   échelles `PRINT_SIZE_DEFS_PROFILE` (= fraction de 280 mm) : iphone 0.536 (~150 mm) ·
   a5 0.686 (~192 mm) · a4 0.996 (~279 mm), avec un léger jeu sous la largeur imprimable ;
-  à affiner au Ctrl+P. ⚠️ Non vérifiable en headless ici (pas de rasteriseur PDF) —
-  confirmation finale par Franck à l'aperçu Ctrl+P.
+  à affiner au Ctrl+P.
+- **Overlays du profil rendus en SVG (correctif définitif du décrochage à l'impression)** :
+  les puces ravito, pastilles d'altitude et badges de montée étaient des `<div>`
+  HTML en `position:absolute` superposés au SVG. À l'impression PDF, ces overlays
+  se détachaient et tombaient sous le profil (voire sur une 2ᵉ page) — le retrait du
+  `transform` n'a pas suffi. Ils sont désormais dessinés **dans le SVG** (`<rect>` /
+  `<text>`, comme `ElevationProfileChart`), donc partie intégrante d'un élément
+  atomique qui ne peut pas se fragmenter à l'impression. Le SVG passe en mise à
+  l'échelle **uniforme** (`width:100%;height:auto`, sans `preserveAspectRatio="none"`)
+  pour que le texte ne soit pas déformé ; viewBox `948×248` (bande haute `plotTop:46`
+  réservée aux puces/altitudes posées au-dessus des points). Plus aucun overlay HTML
+  absolu dans la carte profil.

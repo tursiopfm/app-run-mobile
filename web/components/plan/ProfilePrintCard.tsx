@@ -3,7 +3,6 @@
 // Carte « Profil de course » pour l'export (PDF / image / partage). Présentation
 // PURE et déterministe (SVG, pas Recharts). Charte identique à la carte tableau.
 import { useMemo } from 'react'
-import type { CSSProperties } from 'react'
 import type { Race, RaceWaypoint, WaypointSupply } from '@/types/plan'
 import type { ProfileInfoConfig } from '@/lib/plan/print-profile-info'
 import { detectMainClimbs } from '@/lib/plan/main-climbs'
@@ -58,12 +57,12 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
     [info.climbs, profile],
   )
 
-  // Géométrie fixe (design ~180 mm de large → 948×250 px pour le plot).
+  // Géométrie du SVG (viewBox 948×248, mise à l'échelle UNIFORME). La bande haute
+  // (plotTop) est réservée aux puces / altitudes posées au-dessus des points.
   const [yMin, yMax] = profile.e.length ? elevationDomain(profile.e) : [0, 100]
   const maxKm = Math.max(profile.d[profile.d.length - 1] ?? 0, ...waypoints.map((w) => w.km), 1)
-  const g: ProfileGeom = { W: 948, H: 230, padL: 46, padR: 14, plotTop: 14, plotH: 176, yMin, yMax, maxKm }
+  const g: ProfileGeom = { W: 948, H: 248, padL: 46, padR: 14, plotTop: 46, plotH: 176, yMin, yMax, maxKm }
   const baseY = g.plotTop + g.plotH
-  const pct = (x: number) => (x / g.W) * 100
 
   const interp = (km: number): number => {
     const { d, e } = profile
@@ -101,14 +100,10 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
         .pcard .goal{font-family:var(--d);text-align:right;white-space:nowrap;}
         .pcard .goal .lbl{display:block;color:var(--ink-faint);font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
         .pcard .goal .val{color:var(--brand);font-size:14px;font-weight:700;}
-        .pcard .plot{position:relative;width:100%;margin-top:5px;}
+        .pcard .plot{width:100%;margin-top:5px;}
         .pcard .plot svg{display:block;width:100%;height:auto;}
-        .pcard .pin{position:absolute;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px;}
-        .pcard .pin .chips{display:flex;gap:2px;}
-        .pcard .pin .alt{font-family:var(--d);font-weight:700;font-size:9px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:4px;padding:0 3px;}
         .pcard .chip{font-family:var(--d);font-weight:700;font-size:8.5px;min-width:12px;height:12px;padding:0 2.5px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;color:#fff;line-height:1;}
         .pcard .chip.liq{background:#2E90D0;}.pcard .chip.sol{background:#B45309;}.pcard .chip.hot{background:#DC2626;}.pcard .chip.base{background:#16A34A;}.pcard .chip.ass{background:#7C5CFC;}
-        .pcard .climb{position:absolute;transform:translate(-50%,-50%);background:#fff;border:1px solid var(--brand);color:var(--brand);font-family:var(--d);font-weight:700;font-size:9px;padding:1.5px 5px;border-radius:20px;white-space:nowrap;}
         .pcard .rail{display:grid;margin-top:6px;}
         .pcard .rail .col{padding:0 4px 4px;border-left:1px dashed var(--line);text-align:center;background:#FBFCFC;min-width:0;overflow:hidden;}
         .pcard .rail .col:first-child{border-left:0;}
@@ -138,8 +133,8 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
         {goal ? <div className="goal"><span className="lbl">Objectif</span><span className="val">{goal}</span></div> : null}
       </div>
 
-      <div className="plot" style={{ height: g.H }}>
-        <svg viewBox={`0 0 ${g.W} ${g.H}`} preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' } as CSSProperties}>
+      <div className="plot">
+        <svg viewBox={`0 0 ${g.W} ${g.H}`}>
           <defs>
             <linearGradient id="pfill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#2E90D0" stopOpacity={0.32} />
@@ -158,39 +153,68 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
           {profile.d.length >= 2 && <path d={buildAreaPath(g, profile)} fill="url(#pfill)" />}
           {profile.d.length >= 2 && <path d={buildLinePath(g, profile)} fill="none" stroke="#2E90D0" strokeWidth={2.2} />}
           {waypoints.map((w, i) => {
-            const isEnd = i === waypoints.length - 1, isStart = i === 0
-            const acc = accentOf(w, isEnd || isStart)
+            const acc = accentOf(w, i === 0 || i === waypoints.length - 1)
             const y = interp(w.km)
             return (
-              <g key={w.id ?? i}>
+              <g key={`pt${w.id ?? i}`}>
                 <line x1={xOf(g, w.km)} y1={y} x2={xOf(g, w.km)} y2={baseY} stroke={acc} strokeDasharray="3 3" strokeWidth={1} strokeOpacity={0.55} />
                 <circle cx={xOf(g, w.km)} cy={y} r={4.5} fill={acc} stroke="#fff" strokeWidth={1.6} />
               </g>
             )
           })}
+
+          {/* puces ravito + pastille altitude — DANS le SVG (impression fiable, pas d'overlay HTML qui décroche) */}
+          {waypoints.map((w, i) => {
+            const acc = accentOf(w, i === 0 || i === waypoints.length - 1)
+            const chips = info.supplies ? SUPPLY_ORDER.filter((s) => w.supplies.includes(s)) : []
+            if (chips.length === 0 && !info.altitudes) return null
+            const cx = xOf(g, w.km)
+            const y = interp(w.km)
+            const top = Math.max(2, y - 34)
+            const gap = 1.6, chipH = 12
+            const ws = chips.map((s) => (SUP[s].letter.length > 1 ? 15 : 11))
+            const totalW = ws.reduce((a, b) => a + b, 0) + gap * Math.max(0, chips.length - 1)
+            let x0 = cx - totalW / 2
+            const altLabel = `${Math.round(y)} m`
+            const altW = altLabel.length * 4.7 + 8
+            const altTop = top + (chips.length ? chipH + 2 : 0)
+            return (
+              <g key={`pin${w.id ?? i}`}>
+                {chips.map((s, j) => {
+                  const wch = ws[j]
+                  const x = x0
+                  x0 += wch + gap
+                  return (
+                    <g key={s}>
+                      <rect x={x} y={top} width={wch} height={chipH} rx={2.5} fill={SUP_COLOR[SUP[s].cls]} />
+                      <text x={x + wch / 2} y={top + 9.2} fontSize={7.4} fontWeight={700} fill="#fff" textAnchor="middle" fontFamily="Space Grotesk,sans-serif">{SUP[s].letter}</text>
+                    </g>
+                  )
+                })}
+                {info.altitudes && (
+                  <g>
+                    <rect x={cx - altW / 2} y={altTop} width={altW} height={12} rx={3} fill="#fff" stroke={acc} strokeWidth={1} />
+                    <text x={cx} y={altTop + 8.6} fontSize={7.6} fontWeight={700} fill="#0E1513" textAnchor="middle" fontFamily="Space Grotesk,sans-serif">{altLabel}</text>
+                  </g>
+                )}
+              </g>
+            )
+          })}
+
+          {/* badges montées principales — DANS le SVG */}
+          {climbs.map((c, i) => {
+            const cx = xOf(g, c.midKm)
+            const cy = yOf(g, interp(c.midKm)) - 12
+            const label = `▲ +${c.dPlus} D+ · ${Math.round(c.gradientPct)}%`
+            const w = label.length * 4.5 + 12
+            return (
+              <g key={`cl${i}`} data-testid="climb">
+                <rect x={cx - w / 2} y={cy - 6.5} width={w} height={13} rx={6.5} fill="#fff" stroke="#FF7900" strokeWidth={1} />
+                <text x={cx} y={cy + 3.2} fontSize={7.6} fontWeight={700} fill="#FF7900" textAnchor="middle" fontFamily="Space Grotesk,sans-serif">{label}</text>
+              </g>
+            )
+          })}
         </svg>
-
-        {/* pastilles altitude + puces ravito sur la courbe */}
-        {waypoints.map((w, i) => {
-          const isEnd = i === waypoints.length - 1, isStart = i === 0
-          const acc = accentOf(w, isEnd || isStart)
-          const chips = info.supplies ? SUPPLY_ORDER.filter((s) => w.supplies.includes(s)) : []
-          const y = interp(w.km)
-          if (chips.length === 0 && !info.altitudes) return null
-          return (
-            <div key={`pin${w.id ?? i}`} className="pin" style={{ left: `${pct(xOf(g, w.km))}%`, top: Math.max(2, y - 34) }}>
-              {chips.length > 0 && <div className="chips">{chips.map((s) => <span key={s} className={`chip ${SUP[s].cls}`}>{SUP[s].letter}</span>)}</div>}
-              {info.altitudes && <div className="alt" style={{ borderColor: acc }}>{Math.round(interp(w.km))} m</div>}
-            </div>
-          )
-        })}
-
-        {/* badges montées principales */}
-        {climbs.map((c, i) => (
-          <div key={`cl${i}`} className="climb" style={{ left: `${pct(xOf(g, c.midKm))}%`, top: yOf(g, interp(c.midKm)) - 12 }} data-testid="climb">
-            ▲ +{c.dPlus} D+ · {Math.round(c.gradientPct)}%
-          </div>
-        ))}
       </div>
 
       <div className="rail" style={{ gridTemplateColumns: `repeat(${waypoints.length}, minmax(0, 1fr))` }}>
