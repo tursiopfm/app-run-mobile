@@ -53,26 +53,27 @@ export function savePrintSize(size: PrintSize): void {
   try { window.localStorage.setItem(LS_KEY, size) } catch { /* quota / navigation privée */ }
 }
 
-// Échelles pour la carte PROFIL (paysage-natif, largeur de design ~180 mm), à la
-// différence de la carte tableau (120 mm, tournée). Échelle ≈ largeur imprimable
-// ÷ 180 mm (marges 8 mm). Valeurs indicatives — à affiner à l'aperçu Ctrl+P.
-//   A5  : A4 portrait, (210 − 16) / 180 = 1.078
-//   A4  : A4 paysage,  (297 − 16) / 180 = 1.561
-//   iPhone : carte de poche réduite, ~120 / 180 = 0.667
+// Échelles pour la carte PROFIL (paysage-natif, largeur de design 280 mm = largeur
+// de `.pcard` en impression), à la différence de la carte tableau (120 mm, tournée).
+// Échelle ≈ largeur imprimable ÷ 280 mm (marges 8 mm). Valeurs indicatives — à
+// affiner à l'aperçu Ctrl+P.
+//   A5  : A4 portrait, (210 − 16) / 280 = 0.693
+//   A4  : A4 paysage,  (297 − 16) / 280 = 1.004
+//   iPhone : profil de poche réduit, ~150 / 280 = 0.536
 export const PRINT_SIZE_DEFS_PROFILE: Record<PrintSize, PrintSizeDef> = {
   iphone: {
     key: 'iphone', label: 'Format iPhone',
     hint: 'Petit profil à découper, à glisser dans la poche.',
-    pageRule: 'size:A4 portrait;margin:8mm;', scale: 0.667,
+    pageRule: 'size:A4 portrait;margin:8mm;', scale: 0.536,
   },
   a5: {
     key: 'a5', label: 'Format A5',
     hint: 'Profil agrandi, en haut d\'une feuille A4 portrait.',
-    pageRule: 'size:A4 portrait;margin:8mm;', scale: 1.078,
+    pageRule: 'size:A4 portrait;margin:8mm;', scale: 0.693,
   },
   a4: {
     key: 'a4', label: 'Format A4',
     hint: 'Le profil remplit une feuille A4 en paysage.',
-    pageRule: 'size:A4 landscape;margin:8mm;', scale: 1.561,
+    pageRule: 'size:A4 landscape;margin:8mm;', scale: 1.004,
   },
 }

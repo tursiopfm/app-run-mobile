@@ -91,7 +91,7 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
   return (
     <div className="pcard">
       <style>{`
-        .pcard{--ink:#0E1513;--ink-soft:#55615E;--ink-faint:#8A938F;--line:#C9D1CE;--line-strong:#2A332F;--brand:#FF7900;--blue:#2E90D0;--d:'Space Grotesk',var(--font-display,system-ui),sans-serif;background:#fff;color:var(--ink);width:200mm;max-width:100%;border-radius:2.5mm;padding:10px 12px 9px;box-shadow:0 18px 40px -16px rgba(0,0,0,.5);font-family:system-ui,sans-serif;}
+        .pcard{--ink:#0E1513;--ink-soft:#55615E;--ink-faint:#8A938F;--line:#C9D1CE;--line-strong:#2A332F;--brand:#FF7900;--blue:#2E90D0;--d:'Space Grotesk',var(--font-display,system-ui),sans-serif;background:#fff;color:var(--ink);width:100%;max-width:280mm;margin:0 auto;border-radius:2.5mm;padding:10px 12px 9px;box-shadow:0 18px 40px -16px rgba(0,0,0,.5);font-family:system-ui,sans-serif;}
         .pcard .hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.6px solid var(--line-strong);padding-bottom:5px;gap:10px;}
         .pcard .race{font-family:var(--d);font-size:15px;font-weight:700;letter-spacing:-.3px;line-height:1.05;}
         .pcard .stats{font-family:var(--d);font-size:9.5px;color:var(--ink-soft);font-weight:600;margin-top:2px;}
@@ -110,13 +110,13 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
         .pcard .chip.liq{background:#2E90D0;}.pcard .chip.sol{background:#B45309;}.pcard .chip.hot{background:#DC2626;}.pcard .chip.base{background:#16A34A;}.pcard .chip.ass{background:#7C5CFC;}
         .pcard .climb{position:absolute;transform:translate(-50%,-50%);background:#fff;border:1px solid var(--brand);color:var(--brand);font-family:var(--d);font-weight:700;font-size:9px;padding:1.5px 5px;border-radius:20px;white-space:nowrap;}
         .pcard .rail{display:grid;margin-top:6px;}
-        .pcard .rail .col{padding:0 4px 4px;border-left:1px dashed var(--line);text-align:center;background:#FBFCFC;}
+        .pcard .rail .col{padding:0 4px 4px;border-left:1px dashed var(--line);text-align:center;background:#FBFCFC;min-width:0;overflow:hidden;}
         .pcard .rail .col:first-child{border-left:0;}
         .pcard .rail .acc{height:3.5px;border-radius:0 0 3px 3px;margin:0 6px 5px;}
-        .pcard .rail .nm{font-family:var(--d);font-weight:700;font-size:9.5px;color:var(--ink);line-height:1.05;min-height:21px;display:flex;align-items:center;justify-content:center;}
+        .pcard .rail .nm{font-family:var(--d);font-weight:700;font-size:9.5px;color:var(--ink);line-height:1.05;min-height:21px;display:flex;align-items:center;justify-content:center;overflow-wrap:anywhere;}
         .pcard .rail .col.is-key .nm{color:var(--brand);}
-        .pcard .rail .ka{font-family:var(--d);font-size:8.5px;color:var(--ink-soft);font-weight:600;margin:1px 0 3px;}
-        .pcard .rail .seg{font-family:var(--d);font-size:9px;font-weight:700;color:var(--ink);}
+        .pcard .rail .ka{font-family:var(--d);font-size:8.5px;color:var(--ink-soft);font-weight:600;margin:1px 0 3px;overflow-wrap:anywhere;}
+        .pcard .rail .seg{font-family:var(--d);font-size:9px;font-weight:700;color:var(--ink);overflow-wrap:anywhere;}
         .pcard .rail .seg .up{color:var(--brand);}.pcard .rail .seg .dn{color:var(--ink-soft);}
         .pcard .rail .obj{font-family:var(--d);font-size:11px;font-weight:700;color:var(--brand);margin-top:2px;}
         .pcard .rail .bar{font-family:var(--d);font-size:8.5px;font-weight:700;color:#fff;background:#DC2626;border-radius:3px;padding:1px 4px;margin-top:2px;display:inline-block;}
@@ -193,7 +193,7 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
         ))}
       </div>
 
-      <div className="rail" style={{ gridTemplateColumns: waypoints.map(() => '1fr').join(' ') }}>
+      <div className="rail" style={{ gridTemplateColumns: `repeat(${waypoints.length}, minmax(0, 1fr))` }}>
         {waypoints.map((w, i) => {
           const isEnd = i === waypoints.length - 1, isStart = i === 0
           const acc = accentOf(w, isEnd || isStart)

@@ -179,3 +179,17 @@ c'est le seul point qui demande un aller-retour visuel. On introduit
 
 > Le rendu d'impression dépend du navigateur — calibration finale des échelles
 > profil par Franck via l'aperçu Ctrl+P (Chromium).
+
+## Drift notes
+
+- **Débordement courses longues (UTMB ~17 pts) corrigé** : la frise utilisait des
+  colonnes `1fr` (qui ne rétrécissent pas sous leur contenu) et l'onglet profil
+  réutilisait le wrapper `.cut` du tableau (`width:max-content`) → la frise sortait
+  du cadre à droite. Corrigé : `grid-template-columns: repeat(N, minmax(0,1fr))`,
+  `.col{min-width:0;overflow:hidden}` + `overflow-wrap:anywhere` sur nom/km/tronçon ;
+  l'onglet profil n'utilise plus `.cut`/`.scis` (un roadbook n'est pas une carte à
+  découper), juste un `.pcardwrap` centré.
+- **Largeur de design = 280 mm** (et non 180) : `.pcard` est `width:100%;max-width:280mm`
+  à l'écran (tient toujours dans l'aperçu), figée à `280mm` en impression et à l'export
+  image. Les échelles `PRINT_SIZE_DEFS_PROFILE` ont été recalées sur 280 mm
+  (iphone 0.536 · a5 0.693 · a4 1.004), toujours à affiner au Ctrl+P.

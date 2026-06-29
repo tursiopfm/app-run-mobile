@@ -317,6 +317,8 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         /* Capture image (html-to-image) : appliquée au WRAPPER hors écran qui
            contient le clone de la carte (cf. renderJpeg) — met le clone à plat. */
         .pdfroot.exporting .card{position:static;transform:none;top:auto;left:auto;margin:0 auto;box-shadow:none;}
+        /* Export image du profil : largeur figée (280 mm) → raster déterministe, indépendant du viewport. */
+        .pdfroot.exporting .pcard{width:280mm !important;max-width:none !important;}
         .pdfroot .btn:disabled{opacity:.5;cursor:default;}
 
         /* Marque en haut de la carte (présente aussi en PDF / image). */
@@ -358,7 +360,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           .pdfroot .cardwrap{position:static !important;width:auto !important;height:auto !important;}
           .pdfroot .card{position:static !important;transform:scale(${PRINT_SIZE_DEFS[size].scale}) !important;transform-origin:top center !important;top:auto;left:auto;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
           .pdfroot .pcardwrap{display:block !important;}
-          .pdfroot .pcard{transform:scale(${PRINT_SIZE_DEFS_PROFILE[size].scale}) !important;transform-origin:top center !important;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
+          .pdfroot .pcard{width:280mm !important;max-width:none !important;transform:scale(${PRINT_SIZE_DEFS_PROFILE[size].scale}) !important;transform-origin:top center !important;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
           .pdfroot tbody tr:nth-child(even){background:var(--zebra) !important;}
           .pdfroot tr.is-base td{background:#D5E3DD !important;}
           *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -455,11 +457,8 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         </div>
       ) : (
         <div className="previewscroll">
-          <div className="cut">
-            <span className="scis">✂ — — — — — — — — découper — — — — — — — —</span>
-            <div className="pcardwrap" ref={cardRef as React.RefObject<HTMLDivElement>}>
-              <ProfilePrintCard race={race} waypoints={wps} denseProfile={track?.profile} info={infoCfg} />
-            </div>
+          <div className="pcardwrap" ref={cardRef as React.RefObject<HTMLDivElement>}>
+            <ProfilePrintCard race={race} waypoints={wps} denseProfile={track?.profile} info={infoCfg} />
           </div>
         </div>
       )}
