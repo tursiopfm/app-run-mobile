@@ -360,7 +360,10 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           .pdfroot .cardwrap{position:static !important;width:auto !important;height:auto !important;}
           .pdfroot .card{position:static !important;transform:scale(${PRINT_SIZE_DEFS[size].scale}) !important;transform-origin:top center !important;top:auto;left:auto;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
           .pdfroot .pcardwrap{display:block !important;}
-          .pdfroot .pcard{width:280mm !important;max-width:none !important;transform:scale(${PRINT_SIZE_DEFS_PROFILE[size].scale}) !important;transform-origin:top center !important;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
+          /* Profil dimensionné par LARGEUR (pas de transform:scale). Un ancêtre
+             transformé détache les overlays positionnés en absolu (puces / altitude /
+             badges de montée) à l'impression Blink → ils tombaient sous le profil. */
+          .pdfroot .pcard{box-sizing:border-box !important;width:${Math.round(280 * PRINT_SIZE_DEFS_PROFILE[size].scale)}mm !important;max-width:none !important;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
           .pdfroot tbody tr:nth-child(even){background:var(--zebra) !important;}
           .pdfroot tr.is-base td{background:#D5E3DD !important;}
           *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}

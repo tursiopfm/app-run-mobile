@@ -190,6 +190,13 @@ c'est le seul point qui demande un aller-retour visuel. On introduit
   l'onglet profil n'utilise plus `.cut`/`.scis` (un roadbook n'est pas une carte à
   découper), juste un `.pcardwrap` centré.
 - **Largeur de design = 280 mm** (et non 180) : `.pcard` est `width:100%;max-width:280mm`
-  à l'écran (tient toujours dans l'aperçu), figée à `280mm` en impression et à l'export
-  image. Les échelles `PRINT_SIZE_DEFS_PROFILE` ont été recalées sur 280 mm
-  (iphone 0.536 · a5 0.693 · a4 1.004), toujours à affiner au Ctrl+P.
+  à l'écran (tient toujours dans l'aperçu) ; figée à `280mm` à l'export image.
+- **Impression dimensionnée par LARGEUR, pas par `transform:scale`** : un ancêtre
+  transformé **détache les overlays positionnés en absolu** (puces / altitude / badges
+  de montée superposés à la courbe) à l'impression Blink → ils « tombaient » sous le
+  profil (signalé par Franck sur l'UTMB). En impression on pose donc
+  `.pcard{box-sizing:border-box;width:280 mm × scale}` sans aucun `transform`. Les
+  échelles `PRINT_SIZE_DEFS_PROFILE` (= fraction de 280 mm) : iphone 0.536 (~150 mm) ·
+  a5 0.686 (~192 mm) · a4 0.996 (~279 mm), avec un léger jeu sous la largeur imprimable ;
+  à affiner au Ctrl+P. ⚠️ Non vérifiable en headless ici (pas de rasteriseur PDF) —
+  confirmation finale par Franck à l'aperçu Ctrl+P.
