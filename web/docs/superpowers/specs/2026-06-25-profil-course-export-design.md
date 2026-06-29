@@ -210,3 +210,14 @@ c'est le seul point qui demande un aller-retour visuel. On introduit
   pour que le texte ne soit pas déformé ; viewBox `948×248` (bande haute `plotTop:46`
   réservée aux puces/altitudes posées au-dessus des points). Plus aucun overlay HTML
   absolu dans la carte profil.
+- **Refonte de mise en page « option B » (inspirée TraceDeTrail)** — remplace la
+  frise/cartouche dense (jugée illisible) par : **bande haute** = pastilles ravito +
+  objectif horaire (orange) + **barrière en drapeau rouge plein, texte blanc** (fini le
+  rouge-sur-rouge) ; **noms de points à la verticale** sur la courbe (halo blanc) ;
+  **bande basse** = **cotation par tronçon** (trait de cote ⟝──⟞, `distance` au-dessus,
+  `▲ D+` orange + `▼ D−` gris en dessous), police agrandie. Déclutter glouton : sur les
+  courses denses, le libellé d'un tronçon trop étroit est masqué (le trait reste).
+  `info.altitudes` ne pilote plus de pastille par point (supprimée) mais l'axe Y des
+  altitudes. Maquette de référence : `Prompts/profil-course-export-mockups-v2.html`.
+  viewBox `1180×328`. Les montées principales restent disponibles (toggle Infos, badges
+  sur la courbe).

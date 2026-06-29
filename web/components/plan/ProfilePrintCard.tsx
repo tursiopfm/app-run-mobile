@@ -1,7 +1,14 @@
 'use client'
 
 // Carte « Profil de course » pour l'export (PDF / image / partage). Présentation
-// PURE et déterministe (SVG, pas Recharts). Charte identique à la carte tableau.
+// PURE et déterministe : TOUT est dessiné dans le SVG (pas d'overlay HTML
+// position:absolute, qui décroche à l'impression). Charte identique au tableau.
+//
+// Mise en page (option B révisée) :
+//  - bande HAUTE : pastilles ravito · objectif horaire (orange) · barrière (drapeau rouge)
+//  - courbe + noms de points à la VERTICALE sur la courbe
+//  - bande BASSE : cotation par tronçon (distance · ▲D+ orange · ▼D− gris),
+//    avec déclutter (on masque le libellé d'un tronçon trop étroit, le trait reste).
 import { useMemo } from 'react'
 import type { Race, RaceWaypoint, WaypointSupply } from '@/types/plan'
 import type { ProfileInfoConfig } from '@/lib/plan/print-profile-info'
@@ -20,13 +27,14 @@ const SUP: Record<WaypointSupply, { letter: string; cls: string }> = {
 const SUP_COLOR: Record<string, string> = {
   liq: '#2E90D0', sol: '#B45309', hot: '#DC2626', base: '#16A34A', ass: '#7C5CFC',
 }
+const BAR = '#E11D2A'
 const fmtKm = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1)).replace('.', ',')
 const pad = (n: number) => String(n).padStart(2, '0')
 const noDay = (s: string | null | undefined) => (s ? s.replace(/^J\d+\s+/, '') : null)
 
-// Couleur d'accent (bandeau + point) selon le ravito dominant.
-function accentOf(w: RaceWaypoint, isEnd: boolean): string {
-  if (isEnd) return '#FF7900'
+// Couleur d'accent (point + connecteur) selon le ravito dominant.
+function accentOf(w: RaceWaypoint, isEdge: boolean): string {
+  if (isEdge) return '#FF7900'
   if (w.supplies.includes('base_vie')) return SUP_COLOR.base
   if (w.supplies.includes('hot') || w.supplies.includes('solid')) return SUP_COLOR.sol
   if (w.supplies.includes('liquid')) return SUP_COLOR.liq
@@ -57,12 +65,14 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
     [info.climbs, profile],
   )
 
-  // Géométrie du SVG (viewBox 948×248, mise à l'échelle UNIFORME). La bande haute
-  // (plotTop) est réservée aux puces / altitudes posées au-dessus des points.
+  // Géométrie du SVG (échelle UNIFORME, width:100%;height:auto). Bandes réservées :
+  // haute (0→plotTop) pour les marqueurs, basse (sous baseY) pour la cotation.
   const [yMin, yMax] = profile.e.length ? elevationDomain(profile.e) : [0, 100]
   const maxKm = Math.max(profile.d[profile.d.length - 1] ?? 0, ...waypoints.map((w) => w.km), 1)
-  const g: ProfileGeom = { W: 948, H: 248, padL: 46, padR: 14, plotTop: 46, plotH: 176, yMin, yMax, maxKm }
-  const baseY = g.plotTop + g.plotH
+  const g: ProfileGeom = { W: 1180, H: 328, padL: 46, padR: 18, plotTop: 96, plotH: 156, yMin, yMax, maxKm }
+  const baseY = g.plotTop + g.plotH        // 252
+  const KMY = baseY + 15                   // axe km
+  const coteY = baseY + 48                 // trait de cote des tronçons
 
   const interp = (km: number): number => {
     const { d, e } = profile
@@ -87,6 +97,22 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
   const gridKms: number[] = []
   for (let k = 0; k <= maxKm; k += Math.max(5, Math.round(maxKm / 10 / 5) * 5)) gridKms.push(k)
 
+  // Cotation des tronçons : déclutter glouton (gauche→droite). Le trait de cote est
+  // toujours tracé ; le libellé n'est posé que s'il ne chevauche pas le précédent.
+  const segPts = waypoints.map((w) => ({ km: w.km, dPlus: w.dPlus, dMoins: w.dMoins }))
+  const segView: { x1: number; x2: number; mid: number; dp: number; dm: number; kmLabel: string; show: boolean }[] = []
+  let lastRight = -1e9
+  for (let i = 1; i < waypoints.length; i++) {
+    const seg = deriveSegment(segPts, i)
+    const x1 = xOf(g, waypoints[i - 1].km), x2 = xOf(g, waypoints[i].km), mid = (x1 + x2) / 2
+    const dp = seg.dPlusSeg ?? 0, dm = seg.dMoinsSeg ?? 0
+    const kmLabel = seg.interKm != null ? `${fmtKm(seg.interKm)} km` : ''
+    const needed = Math.max(kmLabel.length * 7.2, `▲${dp} ▼${dm}`.length * 7.6)
+    let show = false
+    if (mid - needed / 2 >= lastRight + 8) { show = true; lastRight = mid + needed / 2 }
+    segView.push({ x1, x2, mid, dp, dm, kmLabel, show })
+  }
+
   return (
     <div className="pcard">
       <style>{`
@@ -102,22 +128,11 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
         .pcard .goal .val{color:var(--brand);font-size:14px;font-weight:700;}
         .pcard .plot{width:100%;margin-top:5px;}
         .pcard .plot svg{display:block;width:100%;height:auto;}
-        .pcard .chip{font-family:var(--d);font-weight:700;font-size:8.5px;min-width:12px;height:12px;padding:0 2.5px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;color:#fff;line-height:1;}
+        .pcard .chip{font-family:var(--d);font-weight:700;font-size:9.5px;min-width:15px;height:15px;padding:0 3px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;color:#fff;line-height:1;}
         .pcard .chip.liq{background:#2E90D0;}.pcard .chip.sol{background:#B45309;}.pcard .chip.hot{background:#DC2626;}.pcard .chip.base{background:#16A34A;}.pcard .chip.ass{background:#7C5CFC;}
-        .pcard .rail{display:grid;margin-top:6px;}
-        .pcard .rail .col{padding:0 4px 4px;border-left:1px dashed var(--line);text-align:center;background:#FBFCFC;min-width:0;overflow:hidden;}
-        .pcard .rail .col:first-child{border-left:0;}
-        .pcard .rail .acc{height:3.5px;border-radius:0 0 3px 3px;margin:0 6px 5px;}
-        .pcard .rail .nm{font-family:var(--d);font-weight:700;font-size:9.5px;color:var(--ink);line-height:1.05;min-height:21px;display:flex;align-items:center;justify-content:center;overflow-wrap:anywhere;}
-        .pcard .rail .col.is-key .nm{color:var(--brand);}
-        .pcard .rail .ka{font-family:var(--d);font-size:8.5px;color:var(--ink-soft);font-weight:600;margin:1px 0 3px;overflow-wrap:anywhere;}
-        .pcard .rail .seg{font-family:var(--d);font-size:9px;font-weight:700;color:var(--ink);overflow-wrap:anywhere;}
-        .pcard .rail .seg .up{color:var(--brand);}.pcard .rail .seg .dn{color:var(--ink-soft);}
-        .pcard .rail .obj{font-family:var(--d);font-size:11px;font-weight:700;color:var(--brand);margin-top:2px;}
-        .pcard .rail .bar{font-family:var(--d);font-size:8.5px;font-weight:700;color:#fff;background:#DC2626;border-radius:3px;padding:1px 4px;margin-top:2px;display:inline-block;}
-        .pcard .rail .railchips{display:inline-flex;gap:2px;margin-top:2px;}
-        .pcard .legend{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:6px;padding-top:5px;border-top:1px solid var(--line-strong);font-family:var(--d);font-size:8.5px;color:var(--ink-soft);font-weight:600;}
-        .pcard .legend .k{display:inline-flex;align-items:center;gap:3px;}
+        .pcard .legend{display:flex;gap:11px;flex-wrap:wrap;align-items:center;margin-top:6px;padding-top:5px;border-top:1px solid var(--line-strong);font-family:var(--d);font-size:10px;color:var(--ink-soft);font-weight:600;}
+        .pcard .legend .k{display:inline-flex;align-items:center;gap:4px;}
+        .pcard .legend .bar{font-family:var(--d);font-weight:700;font-size:9.5px;color:#fff;background:#E11D2A;border-radius:3px;padding:1px 5px;}
       `}</style>
 
       <div className="hd">
@@ -138,108 +153,117 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
           <defs>
             <linearGradient id="pfill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#2E90D0" stopOpacity={0.32} />
-              <stop offset="100%" stopColor="#2E90D0" stopOpacity={0.03} />
+              <stop offset="100%" stopColor="#2E90D0" stopOpacity={0.04} />
             </linearGradient>
           </defs>
+
+          {/* grille altitude + axe */}
           {gridAlts.map((a) => (
             <g key={`ga${a}`}>
-              <line x1={g.padL} y1={yOf(g, a)} x2={g.W - g.padR} y2={yOf(g, a)} stroke="#C9D1CE" strokeDasharray="2 3" strokeWidth={1} />
-              {info.altitudes && <text x={g.padL - 4} y={yOf(g, a) + 3} textAnchor="end" fontSize={9} fill="#8A938F" fontFamily="Space Grotesk,sans-serif">{a} m</text>}
+              <line x1={g.padL} y1={yOf(g, a)} x2={g.W - g.padR} y2={yOf(g, a)} stroke="#E2E8F0" strokeWidth={1} />
+              {info.altitudes && <text x={g.padL - 5} y={yOf(g, a) + 3.5} textAnchor="end" fontSize={10.5} fill="#94A3B8" fontFamily="Space Grotesk,sans-serif">{a}</text>}
             </g>
           ))}
           {gridKms.map((k) => (
-            <text key={`gk${k}`} x={xOf(g, k)} y={baseY + 13} textAnchor="middle" fontSize={9} fill="#8A938F" fontFamily="Space Grotesk,sans-serif">km {k}</text>
+            <text key={`gk${k}`} x={xOf(g, k)} y={KMY} textAnchor="middle" fontSize={11} fill="#94A3B8" fontFamily="Space Grotesk,sans-serif">{k}</text>
           ))}
+
+          {/* aire + courbe */}
           {profile.d.length >= 2 && <path d={buildAreaPath(g, profile)} fill="url(#pfill)" />}
-          {profile.d.length >= 2 && <path d={buildLinePath(g, profile)} fill="none" stroke="#2E90D0" strokeWidth={2.2} />}
+          {profile.d.length >= 2 && <path d={buildLinePath(g, profile)} fill="none" stroke="#2E6FA0" strokeWidth={1.9} />}
+
+          {/* points + connecteur + nom vertical */}
           {waypoints.map((w, i) => {
-            const acc = accentOf(w, i === 0 || i === waypoints.length - 1)
-            const y = interp(w.km)
+            const isEdge = i === 0 || i === waypoints.length - 1
+            const acc = accentOf(w, isEdge)
+            const x = xOf(g, w.km), y = interp(w.km)
             return (
               <g key={`pt${w.id ?? i}`}>
-                <line x1={xOf(g, w.km)} y1={y} x2={xOf(g, w.km)} y2={baseY} stroke={acc} strokeDasharray="3 3" strokeWidth={1} strokeOpacity={0.55} />
-                <circle cx={xOf(g, w.km)} cy={y} r={4.5} fill={acc} stroke="#fff" strokeWidth={1.6} />
+                <line x1={x} y1={y} x2={x} y2={g.plotTop - 2} stroke="#94A3B8" strokeDasharray="2 3" strokeWidth={1} strokeOpacity={0.7} />
+                <text x={x + 3.5} y={baseY - 7} fontSize={11.5} fontWeight={700} fill="#334155" fontFamily="Space Grotesk,sans-serif"
+                  transform={`rotate(-90 ${x + 3.5} ${baseY - 7})`} paintOrder="stroke" stroke="#fff" strokeWidth={3} strokeLinejoin="round">{w.name}</text>
+                <circle cx={x} cy={y} r={4.5} fill={acc} stroke="#fff" strokeWidth={1.6} />
               </g>
             )
           })}
 
-          {/* puces ravito + pastille altitude — DANS le SVG (impression fiable, pas d'overlay HTML qui décroche) */}
+          {/* bande HAUTE : pastilles ravito · objectif (orange) · barrière (drapeau rouge) */}
           {waypoints.map((w, i) => {
-            const acc = accentOf(w, i === 0 || i === waypoints.length - 1)
+            const x = xOf(g, w.km)
             const chips = info.supplies ? SUPPLY_ORDER.filter((s) => w.supplies.includes(s)) : []
-            if (chips.length === 0 && !info.altitudes) return null
-            const cx = xOf(g, w.km)
-            const y = interp(w.km)
-            const top = Math.max(2, y - 34)
-            const gap = 1.6, chipH = 12
-            const ws = chips.map((s) => (SUP[s].letter.length > 1 ? 15 : 11))
+            const objClock = info.objectif && elapsed && race.startTime ? noDay(formatElapsedToClock(race.startTime, elapsed[i])?.label) : null
+            const bhRaw = info.barriers ? formatBarrierClock(race.startTime, w.cutoffRaw, w.cutoffKind, elapsed?.[i] ?? 0) : null
+            const bh = bhRaw ? bhRaw.replace(/^J\d+\s+/, '') : null
+            // chips
+            const chipH = 16, gap = 2.4
+            const ws = chips.map((s) => (SUP[s].letter.length > 1 ? 21 : 15))
             const totalW = ws.reduce((a, b) => a + b, 0) + gap * Math.max(0, chips.length - 1)
-            let x0 = cx - totalW / 2
-            const altLabel = `${Math.round(y)} m`
-            const altW = altLabel.length * 4.7 + 8
-            const altTop = top + (chips.length ? chipH + 2 : 0)
+            let x0 = x - totalW / 2
+            const chipsY = g.plotTop - 20
+            // barrière
+            const bw = 52, bh2 = 19, bx = x - bw / 2, by = 6
             return (
-              <g key={`pin${w.id ?? i}`}>
+              <g key={`top${w.id ?? i}`}>
+                {bh && (
+                  <g data-testid="barrier">
+                    <rect x={bx} y={by} width={bw} height={bh2} rx={3.5} fill={BAR} />
+                    <path d={`M${x} ${by + bh2} l-5 7 l5 -2.5 l5 2.5 z`} fill={BAR} />
+                    <text x={x} y={by + 13.6} textAnchor="middle" fontSize={11.5} fontWeight={700} fill="#fff" fontFamily="Space Grotesk,sans-serif">{`⏱ ${bh}`}</text>
+                  </g>
+                )}
+                {objClock && <text data-testid="obj" x={x} y={g.plotTop - 44} textAnchor="middle" fontSize={12.5} fontWeight={700} fill="#FF7900" fontFamily="Space Grotesk,sans-serif">{objClock}</text>}
                 {chips.map((s, j) => {
-                  const wch = ws[j]
-                  const x = x0
-                  x0 += wch + gap
+                  const wch = ws[j]; const cx = x0; x0 += wch + gap
                   return (
                     <g key={s}>
-                      <rect x={x} y={top} width={wch} height={chipH} rx={2.5} fill={SUP_COLOR[SUP[s].cls]} />
-                      <text x={x + wch / 2} y={top + 9.2} fontSize={7.4} fontWeight={700} fill="#fff" textAnchor="middle" fontFamily="Space Grotesk,sans-serif">{SUP[s].letter}</text>
+                      <rect x={cx} y={chipsY} width={wch} height={chipH} rx={3} fill={SUP_COLOR[SUP[s].cls]} />
+                      <text x={cx + wch / 2} y={chipsY + 11.8} fontSize={10} fontWeight={700} fill="#fff" textAnchor="middle" fontFamily="Space Grotesk,sans-serif">{SUP[s].letter}</text>
                     </g>
                   )
                 })}
-                {info.altitudes && (
-                  <g>
-                    <rect x={cx - altW / 2} y={altTop} width={altW} height={12} rx={3} fill="#fff" stroke={acc} strokeWidth={1} />
-                    <text x={cx} y={altTop + 8.6} fontSize={7.6} fontWeight={700} fill="#0E1513" textAnchor="middle" fontFamily="Space Grotesk,sans-serif">{altLabel}</text>
-                  </g>
-                )}
               </g>
             )
           })}
 
-          {/* badges montées principales — DANS le SVG */}
+          {/* montées principales (sur la courbe) */}
           {climbs.map((c, i) => {
             const cx = xOf(g, c.midKm)
             const cy = yOf(g, interp(c.midKm)) - 12
             const label = `▲ +${c.dPlus} D+ · ${Math.round(c.gradientPct)}%`
-            const w = label.length * 4.5 + 12
+            const w = label.length * 4.7 + 12
             return (
               <g key={`cl${i}`} data-testid="climb">
-                <rect x={cx - w / 2} y={cy - 6.5} width={w} height={13} rx={6.5} fill="#fff" stroke="#FF7900" strokeWidth={1} />
-                <text x={cx} y={cy + 3.2} fontSize={7.6} fontWeight={700} fill="#FF7900" textAnchor="middle" fontFamily="Space Grotesk,sans-serif">{label}</text>
+                <rect x={cx - w / 2} y={cy - 7} width={w} height={14} rx={7} fill="#fff" stroke="#FF7900" strokeWidth={1} />
+                <text x={cx} y={cy + 3.4} fontSize={8} fontWeight={700} fill="#FF7900" textAnchor="middle" fontFamily="Space Grotesk,sans-serif">{label}</text>
+              </g>
+            )
+          })}
+
+          {/* bande BASSE : cotation des tronçons (distance · ▲D+ orange · ▼D− gris) */}
+          {segView.map((s, i) => {
+            const lx1 = s.x1 + 6, lx2 = s.x2 - 6
+            return (
+              <g key={`seg${i}`}>
+                {lx2 > lx1 && (
+                  <>
+                    <line x1={lx1} y1={coteY} x2={lx2} y2={coteY} stroke="#64748B" strokeWidth={1.5} />
+                    <line x1={lx1} y1={coteY - 5} x2={lx1} y2={coteY + 5} stroke="#64748B" strokeWidth={1.5} />
+                    <line x1={lx2} y1={coteY - 5} x2={lx2} y2={coteY + 5} stroke="#64748B" strokeWidth={1.5} />
+                  </>
+                )}
+                {s.show && (
+                  <>
+                    <text x={s.mid} y={coteY - 9} textAnchor="middle" fontSize={13} fontWeight={700} fill="#0E1513" fontFamily="Space Grotesk,sans-serif">{s.kmLabel}</text>
+                    <text x={s.mid} y={coteY + 19} textAnchor="middle" fontSize={14} fontWeight={700} fontFamily="Space Grotesk,sans-serif">
+                      <tspan fill="#FF7900">{`▲${s.dp}`}</tspan>
+                      <tspan fill="#64748B" dx={9}>{`▼${s.dm}`}</tspan>
+                    </text>
+                  </>
+                )}
               </g>
             )
           })}
         </svg>
-      </div>
-
-      <div className="rail" style={{ gridTemplateColumns: `repeat(${waypoints.length}, minmax(0, 1fr))` }}>
-        {waypoints.map((w, i) => {
-          const isEnd = i === waypoints.length - 1, isStart = i === 0
-          const acc = accentOf(w, isEnd || isStart)
-          const seg = deriveSegment(waypoints.map((x) => ({ km: x.km, dPlus: x.dPlus, dMoins: x.dMoins })), i)
-          const objClock = elapsed && race.startTime ? noDay(formatElapsedToClock(race.startTime, elapsed[i])?.label) : null
-          const bhRaw = formatBarrierClock(race.startTime, w.cutoffRaw, w.cutoffKind, elapsed?.[i] ?? 0)
-          const bh = bhRaw ? bhRaw.replace(/^J\d+\s+/, '') : null
-          const chips = info.supplies ? SUPPLY_ORDER.filter((s) => w.supplies.includes(s)) : []
-          return (
-            <div key={`col${w.id ?? i}`} className={`col${w.supplies.length || isStart || isEnd ? ' is-key' : ''}`}>
-              <div className="acc" style={{ background: acc }} />
-              <div className="nm">{w.name}</div>
-              <div className="ka">km {fmtKm(w.km)}{info.altitudes ? ` · ${Math.round(interp(w.km))} m` : ''}</div>
-              <div className="seg">{i === 0
-                ? <span className="dn">départ</span>
-                : <>{seg.interKm != null ? `${fmtKm(seg.interKm)} km · ` : ''}<span className="up">▲{seg.dPlusSeg ?? 0}</span> <span className="dn">▼{seg.dMoinsSeg ?? 0}</span></>}</div>
-              {info.objectif && objClock && <div className="obj" data-testid="obj">{objClock}</div>}
-              {info.barriers && bh && <span className="bar" data-testid="barrier">⛔ {bh}</span>}
-              {chips.length > 0 && <span className="railchips">{chips.map((s) => <span key={s} className={`chip ${SUP[s].cls}`}>{SUP[s].letter}</span>)}</span>}
-            </div>
-          )
-        })}
       </div>
 
       <div className="legend">
@@ -250,8 +274,12 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
           <span className="k"><span className="chip base">BV</span>base vie</span>
           <span className="k"><span className="chip ass">A</span>assistance</span>
         </>}
+        {info.barriers && <span className="k"><span className="bar">⏱ 00:00</span> barrière</span>}
+        {info.objectif && <span className="k" style={{ color: '#FF7900', fontWeight: 700 }}>00:00 objectif</span>}
         {info.climbs && <span className="k"><span style={{ color: 'var(--brand)', fontWeight: 700 }}>▲</span> montée principale</span>}
-        <span className="k" style={{ marginLeft: 'auto', color: 'var(--ink-faint)' }}>Obj = heure visée · Barrière = limite</span>
+        <span className="k" style={{ marginLeft: 'auto', color: 'var(--ink-faint)' }}>
+          tronçon : distance · <span style={{ color: '#FF7900', fontWeight: 700 }}>▲ D+</span> · <span style={{ color: '#64748B', fontWeight: 700 }}>▼ D−</span>
+        </span>
       </div>
     </div>
   )
