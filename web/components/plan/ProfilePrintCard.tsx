@@ -4,11 +4,12 @@
 // PURE et déterministe : TOUT est dessiné dans le SVG (pas d'overlay HTML
 // position:absolute, qui décroche à l'impression). Charte identique au tableau.
 //
-// Mise en page (option B révisée) :
-//  - bande HAUTE : pastilles ravito · objectif horaire (orange) · barrière (drapeau rouge)
+// Mise en page (option B) :
+//  - bande HAUTE : puces ravito (règle « graphe » chartChips) · objectif horaire
+//    (orange) · barrière (drapeau rouge), étalée sur 2 niveaux si trop proches
 //  - courbe + noms de points à la VERTICALE sur la courbe
-//  - bande BASSE : cotation par tronçon (distance · ▲D+ orange · ▼D− gris),
-//    avec déclutter (on masque le libellé d'un tronçon trop étroit, le trait reste).
+//  - bande BASSE : cotation par tronçon (distance · ▲ D+ orange AU-DESSUS du
+//    ▼ D− gris), avec déclutter (libellé masqué si tronçon trop étroit).
 import { useMemo } from 'react'
 import type { Race, RaceWaypoint, WaypointSupply } from '@/types/plan'
 import type { ProfileInfoConfig } from '@/lib/plan/print-profile-info'
@@ -16,7 +17,7 @@ import { detectMainClimbs } from '@/lib/plan/main-climbs'
 import { buildProfileData, elevationDomain } from '@/components/plan/ElevationProfileChart'
 import { deriveSegment, formatElapsedToClock, formatBarrierClock } from '@/lib/plan/waypoint-view'
 import { resolveElapsed } from '@/lib/plan/barrier-lock'
-import { SUPPLY_ORDER } from '@/lib/plan/supply-chips'
+import { chartChips } from '@/lib/plan/supply-chips'
 import { xOf, yOf, buildLinePath, buildAreaPath, type ProfileGeom } from '@/lib/plan/profile-print-geometry'
 
 const SUP: Record<WaypointSupply, { letter: string; cls: string }> = {
@@ -69,10 +70,11 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
   // haute (0→plotTop) pour les marqueurs, basse (sous baseY) pour la cotation.
   const [yMin, yMax] = profile.e.length ? elevationDomain(profile.e) : [0, 100]
   const maxKm = Math.max(profile.d[profile.d.length - 1] ?? 0, ...waypoints.map((w) => w.km), 1)
-  const g: ProfileGeom = { W: 1180, H: 328, padL: 46, padR: 18, plotTop: 96, plotH: 156, yMin, yMax, maxKm }
-  const baseY = g.plotTop + g.plotH        // 252
+  const g: ProfileGeom = { W: 1180, H: 348, padL: 46, padR: 18, plotTop: 112, plotH: 150, yMin, yMax, maxKm }
+  const baseY = g.plotTop + g.plotH        // 262
   const KMY = baseY + 15                   // axe km
-  const coteY = baseY + 48                 // trait de cote des tronçons
+  const coteY = baseY + 50                 // trait de cote des tronçons
+  const BARW = 52                          // largeur du drapeau barrière
 
   const interp = (km: number): number => {
     const { d, e } = profile
@@ -97,8 +99,28 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
   const gridKms: number[] = []
   for (let k = 0; k <= maxKm; k += Math.max(5, Math.round(maxKm / 10 / 5) * 5)) gridKms.push(k)
 
-  // Cotation des tronçons : déclutter glouton (gauche→droite). Le trait de cote est
-  // toujours tracé ; le libellé n'est posé que s'il ne chevauche pas le précédent.
+  // Marqueurs par point : puces (règle graphe), objectif, barrière.
+  const wpMeta = waypoints.map((w, i) => {
+    const x = xOf(g, w.km)
+    const chips = info.supplies ? chartChips(w.supplies) : []
+    const objClock = info.objectif && elapsed && race.startTime
+      ? noDay(formatElapsedToClock(race.startTime, elapsed[i])?.label) : null
+    const bhRaw = info.barriers ? formatBarrierClock(race.startTime, w.cutoffRaw, w.cutoffKind, elapsed?.[i] ?? 0) : null
+    const bh = bhRaw ? bhRaw.replace(/^J\d+\s+/, '') : null
+    return { w, i, x, chips, objClock, bh }
+  })
+  // Barrières trop proches → étalées sur 2 niveaux (greedy) pour ne pas se chevaucher.
+  const barLevel: Record<number, number> = {}
+  const lastR = [-1e9, -1e9]
+  for (const m of wpMeta) {
+    if (!m.bh) continue
+    const left = m.x - BARW / 2
+    const lv = left >= lastR[0] + 4 ? 0 : left >= lastR[1] + 4 ? 1 : (lastR[0] <= lastR[1] ? 0 : 1)
+    barLevel[m.i] = lv
+    lastR[lv] = m.x + BARW / 2
+  }
+
+  // Cotation des tronçons : déclutter glouton (le trait reste, le libellé saute si étroit).
   const segPts = waypoints.map((w) => ({ km: w.km, dPlus: w.dPlus, dMoins: w.dMoins }))
   const segView: { x1: number; x2: number; mid: number; dp: number; dm: number; kmLabel: string; show: boolean }[] = []
   let lastRight = -1e9
@@ -107,7 +129,8 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
     const x1 = xOf(g, waypoints[i - 1].km), x2 = xOf(g, waypoints[i].km), mid = (x1 + x2) / 2
     const dp = seg.dPlusSeg ?? 0, dm = seg.dMoinsSeg ?? 0
     const kmLabel = seg.interKm != null ? `${fmtKm(seg.interKm)} km` : ''
-    const needed = Math.max(kmLabel.length * 7.2, `▲${dp} ▼${dm}`.length * 7.6)
+    // D+ / D− empilés → largeur = la plus large des trois lignes (km, ▲D+, ▼D−).
+    const needed = Math.max(kmLabel.length * 7.0, `▲${dp}`.length * 7.6, `▼${dm}`.length * 7.6)
     let show = false
     if (mid - needed / 2 >= lastRight + 8) { show = true; lastRight = mid + needed / 2 }
     segView.push({ x1, x2, mid, dp, dm, kmLabel, show })
@@ -173,10 +196,9 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
           {profile.d.length >= 2 && <path d={buildLinePath(g, profile)} fill="none" stroke="#2E6FA0" strokeWidth={1.9} />}
 
           {/* points + connecteur + nom vertical */}
-          {waypoints.map((w, i) => {
-            const isEdge = i === 0 || i === waypoints.length - 1
-            const acc = accentOf(w, isEdge)
-            const x = xOf(g, w.km), y = interp(w.km)
+          {wpMeta.map(({ w, i, x }) => {
+            const acc = accentOf(w, i === 0 || i === waypoints.length - 1)
+            const y = interp(w.km)
             return (
               <g key={`pt${w.id ?? i}`}>
                 <line x1={x} y1={y} x2={x} y2={g.plotTop - 2} stroke="#94A3B8" strokeDasharray="2 3" strokeWidth={1} strokeOpacity={0.7} />
@@ -187,31 +209,25 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
             )
           })}
 
-          {/* bande HAUTE : pastilles ravito · objectif (orange) · barrière (drapeau rouge) */}
-          {waypoints.map((w, i) => {
-            const x = xOf(g, w.km)
-            const chips = info.supplies ? SUPPLY_ORDER.filter((s) => w.supplies.includes(s)) : []
-            const objClock = info.objectif && elapsed && race.startTime ? noDay(formatElapsedToClock(race.startTime, elapsed[i])?.label) : null
-            const bhRaw = info.barriers ? formatBarrierClock(race.startTime, w.cutoffRaw, w.cutoffKind, elapsed?.[i] ?? 0) : null
-            const bh = bhRaw ? bhRaw.replace(/^J\d+\s+/, '') : null
-            // chips
+          {/* bande HAUTE : barrière (drapeau rouge, 2 niveaux) · objectif (orange) · puces ravito */}
+          {wpMeta.map(({ w, i, x, chips, objClock, bh }) => {
             const chipH = 16, gap = 2.4
             const ws = chips.map((s) => (SUP[s].letter.length > 1 ? 21 : 15))
             const totalW = ws.reduce((a, b) => a + b, 0) + gap * Math.max(0, chips.length - 1)
             let x0 = x - totalW / 2
             const chipsY = g.plotTop - 20
-            // barrière
-            const bw = 52, bh2 = 19, bx = x - bw / 2, by = 6
+            const by = barLevel[i] === 1 ? 30 : 6
+            const bx = x - BARW / 2
             return (
               <g key={`top${w.id ?? i}`}>
                 {bh && (
                   <g data-testid="barrier">
-                    <rect x={bx} y={by} width={bw} height={bh2} rx={3.5} fill={BAR} />
-                    <path d={`M${x} ${by + bh2} l-5 7 l5 -2.5 l5 2.5 z`} fill={BAR} />
+                    <rect x={bx} y={by} width={BARW} height={19} rx={3.5} fill={BAR} />
+                    <path d={`M${x} ${by + 19} l-5 7 l5 -2.5 l5 2.5 z`} fill={BAR} />
                     <text x={x} y={by + 13.6} textAnchor="middle" fontSize={11.5} fontWeight={700} fill="#fff" fontFamily="Space Grotesk,sans-serif">{`⏱ ${bh}`}</text>
                   </g>
                 )}
-                {objClock && <text data-testid="obj" x={x} y={g.plotTop - 44} textAnchor="middle" fontSize={12.5} fontWeight={700} fill="#FF7900" fontFamily="Space Grotesk,sans-serif">{objClock}</text>}
+                {objClock && <text data-testid="obj" x={x} y={g.plotTop - 40} textAnchor="middle" fontSize={12.5} fontWeight={700} fill="#FF7900" fontFamily="Space Grotesk,sans-serif">{objClock}</text>}
                 {chips.map((s, j) => {
                   const wch = ws[j]; const cx = x0; x0 += wch + gap
                   return (
@@ -239,7 +255,7 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
             )
           })}
 
-          {/* bande BASSE : cotation des tronçons (distance · ▲D+ orange · ▼D− gris) */}
+          {/* bande BASSE : cotation des tronçons (distance · ▲ D+ orange AU-DESSUS du ▼ D− gris) */}
           {segView.map((s, i) => {
             const lx1 = s.x1 + 6, lx2 = s.x2 - 6
             return (
@@ -254,10 +270,8 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
                 {s.show && (
                   <>
                     <text x={s.mid} y={coteY - 9} textAnchor="middle" fontSize={13} fontWeight={700} fill="#0E1513" fontFamily="Space Grotesk,sans-serif">{s.kmLabel}</text>
-                    <text x={s.mid} y={coteY + 19} textAnchor="middle" fontSize={14} fontWeight={700} fontFamily="Space Grotesk,sans-serif">
-                      <tspan fill="#FF7900">{`▲${s.dp}`}</tspan>
-                      <tspan fill="#64748B" dx={9}>{`▼${s.dm}`}</tspan>
-                    </text>
+                    <text x={s.mid} y={coteY + 14} textAnchor="middle" fontSize={13.5} fontWeight={700} fill="#FF7900" fontFamily="Space Grotesk,sans-serif">{`▲${s.dp}`}</text>
+                    <text x={s.mid} y={coteY + 29} textAnchor="middle" fontSize={13.5} fontWeight={700} fill="#64748B" fontFamily="Space Grotesk,sans-serif">{`▼${s.dm}`}</text>
                   </>
                 )}
               </g>
