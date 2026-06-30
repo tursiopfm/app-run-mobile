@@ -345,7 +345,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
            Le profil est dessiné à plat ; on le pivote uniquement pour la visualisation.
            profstage = boîte englobante de la carte tournée ; impression + export à plat. */
         .pdfroot .profscroll{display:flex;justify-content:center;}
-        .pdfroot .profstage{position:relative;width:300px;height:700px;margin:0 auto;}
+        .pdfroot .profstage{position:relative;width:384px;height:700px;margin:0 auto;}
         .pdfroot .profstage .pcardwrap{position:absolute;top:50%;left:50%;width:680px;transform:translate(-50%,-50%) rotate(90deg);}
         .pdfroot .profstage .pcard{width:680px !important;max-width:none !important;}
 

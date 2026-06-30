@@ -70,15 +70,15 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
   // haute (0→plotTop) pour les marqueurs, basse (sous baseY) pour la cotation.
   const [yMin, yMax] = profile.e.length ? elevationDomain(profile.e) : [0, 100]
   const maxKm = Math.max(profile.d[profile.d.length - 1] ?? 0, ...waypoints.map((w) => w.km), 1)
-  const g: ProfileGeom = { W: 1180, H: 392, padL: 46, padR: 18, plotTop: 128, plotH: 150, yMin, yMax, maxKm }
-  const baseY = g.plotTop + g.plotH        // 278
-  const dotY = baseY + 2                   // pastille du point posée sur la ligne de base (sous le nom)
-  const KMY = baseY + 18                   // axe km (sous les pastilles)
-  const coteY0 = baseY + 40                // trait de cote — niveau 0
-  const SEG_ROWH = 46                      // décalage vertical du niveau 1 de cotation
+  const g: ProfileGeom = { W: 1180, H: 460, padL: 54, padR: 22, plotTop: 150, plotH: 150, yMin, yMax, maxKm }
+  const baseY = g.plotTop + g.plotH        // 300
+  const dotY = baseY + 4                   // pastille du point posée sur la ligne de base (sous le nom)
+  const KMY = baseY + 28                   // axe km (sous les pastilles)
+  const coteY0 = baseY + 60                // trait de cote — niveau 0
+  const SEG_ROWH = 60                      // décalage vertical du niveau 1 de cotation
   const coteY1 = coteY0 + SEG_ROWH         // trait de cote — niveau 1 (tronçons serrés)
-  const BARW = 52                          // largeur du drapeau barrière
-  const OBJW = 44                          // largeur estimée d'une heure objectif (étalement)
+  const BARW = 66                          // largeur du drapeau barrière
+  const OBJW = 54                          // largeur estimée d'une heure objectif (étalement)
 
   const interp = (km: number): number => {
     const { d, e } = profile
@@ -104,14 +104,17 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
   for (let k = 0; k <= maxKm; k += Math.max(5, Math.round(maxKm / 10 / 5) * 5)) gridKms.push(k)
 
   // Marqueurs par point : puces (règle graphe), objectif, barrière.
+  const CHIP_GAP = 3
+  const chipWidth = (s: WaypointSupply) => (SUP[s].letter.length > 1 ? 24 : 17)
   const wpMeta = waypoints.map((w, i) => {
     const x = xOf(g, w.km)
     const chips = info.supplies ? chartChips(w.supplies) : []
+    const chipW = chips.reduce((a, s) => a + chipWidth(s), 0) + CHIP_GAP * Math.max(0, chips.length - 1)
     const objClock = info.objectif && elapsed && race.startTime
       ? noDay(formatElapsedToClock(race.startTime, elapsed[i])?.label) : null
     const bhRaw = info.barriers ? formatBarrierClock(race.startTime, w.cutoffRaw, w.cutoffKind, elapsed?.[i] ?? 0) : null
     const bh = bhRaw ? bhRaw.replace(/^J\d+\s+/, '') : null
-    return { w, i, x, chips, objClock, bh }
+    return { w, i, x, chips, chipW, objClock, bh }
   })
   // Barrières trop proches → étalées sur 2 niveaux (greedy) pour ne pas se chevaucher.
   const barLevel: Record<number, number> = {}
@@ -135,6 +138,17 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
     lastObjR[lv] = m.x + OBJW / 2
   }
 
+  // Puces ravito : 2 niveaux aussi (points serrés avec plusieurs puces → sinon ça se chevauche).
+  const chipLevel: Record<number, number> = {}
+  const lastChipR = [-1e9, -1e9]
+  for (const m of wpMeta) {
+    if (!m.chips.length) continue
+    const left = m.x - m.chipW / 2
+    const lv = left >= lastChipR[0] + 4 ? 0 : left >= lastChipR[1] + 4 ? 1 : (lastChipR[0] <= lastChipR[1] ? 0 : 1)
+    chipLevel[m.i] = lv
+    lastChipR[lv] = m.x + m.chipW / 2
+  }
+
   // Cotation des tronçons : étalée sur 2 niveaux (greedy) pour TOUT afficher sans
   // chevauchement — chaque niveau a son propre trait de cote (mini-roadbook 2 rangs).
   const segPts = waypoints.map((w) => ({ km: w.km, dPlus: w.dPlus, dMoins: w.dMoins }))
@@ -146,36 +160,36 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
     const dp = seg.dPlusSeg ?? 0, dm = seg.dMoinsSeg ?? 0
     const kmLabel = seg.interKm != null ? `${fmtKm(seg.interKm)} km` : ''
     // D+ / D− empilés → largeur = la plus large des trois lignes (km, ▲D+, ▼D−).
-    const needed = Math.max(kmLabel.length * 6.3, `▲${dp}`.length * 6.8, `▼${dm}`.length * 6.8)
+    const needed = Math.max(kmLabel.length * 9.0, `▲${dp}`.length * 9.8, `▼${dm}`.length * 9.8)
     const left = mid - needed / 2
-    const level = left >= lastSegR[0] + 6 ? 0 : left >= lastSegR[1] + 6 ? 1 : (lastSegR[0] <= lastSegR[1] ? 0 : 1)
+    const level = left >= lastSegR[0] + 8 ? 0 : left >= lastSegR[1] + 8 ? 1 : (lastSegR[0] <= lastSegR[1] ? 0 : 1)
     lastSegR[level] = mid + needed / 2
     segView.push({ x1, x2, mid, dp, dm, kmLabel, level })
   }
   // Hauteur du SVG : on ne réserve le 2ᵉ rang de cotation que s'il sert (courses denses).
   const usesSegL1 = segView.some((s) => s.level === 1)
-  const svgH = usesSegL1 ? 392 : 346
+  const svgH = usesSegL1 ? 458 : 398
 
   return (
     <div className="pcard">
       <style>{`
         .pcard{--ink:#0E1513;--ink-soft:#55615E;--ink-faint:#8A938F;--line:#C9D1CE;--line-strong:#2A332F;--brand:#FF7900;--blue:#2E90D0;--d:'Space Grotesk',var(--font-display,system-ui),sans-serif;background:#fff;color:var(--ink);width:100%;max-width:280mm;margin:0 auto;border-radius:2.5mm;padding:10px 12px 9px;box-shadow:0 18px 40px -16px rgba(0,0,0,.5);font-family:system-ui,sans-serif;}
         .pcard .hd{display:grid;grid-template-columns:1fr auto 1fr;align-items:start;border-bottom:1.6px solid var(--line-strong);padding-bottom:5px;gap:10px;}
-        .pcard .race{font-family:var(--d);font-size:15px;font-weight:700;letter-spacing:-.3px;line-height:1.05;}
-        .pcard .stats{font-family:var(--d);font-size:9.5px;color:var(--ink-soft);font-weight:600;margin-top:2px;}
+        .pcard .race{font-family:var(--d);font-size:12px;font-weight:700;letter-spacing:-.3px;line-height:1.05;}
+        .pcard .stats{font-family:var(--d);font-size:8px;color:var(--ink-soft);font-weight:600;margin-top:2px;}
         .pcard .stats b{color:var(--ink);}
-        .pcard .brand{font-family:var(--d);font-weight:800;font-size:12px;letter-spacing:.5px;justify-self:center;white-space:nowrap;}
+        .pcard .brand{font-family:var(--d);font-weight:800;font-size:10.5px;letter-spacing:.5px;justify-self:center;white-space:nowrap;}
         .pcard .brand .b1{color:var(--brand);}.pcard .brand .b2{color:var(--ink-soft);}.pcard .brand .b3{color:var(--brand);}
         .pcard .goal{font-family:var(--d);text-align:right;white-space:nowrap;justify-self:end;}
-        .pcard .goal .lbl{display:block;color:var(--ink-faint);font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
-        .pcard .goal .val{color:var(--brand);font-size:14px;font-weight:700;}
+        .pcard .goal .lbl{display:block;color:var(--ink-faint);font-size:7px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+        .pcard .goal .val{color:var(--brand);font-size:11px;font-weight:700;}
         .pcard .plot{width:100%;margin-top:5px;}
         .pcard .plot svg{display:block;width:100%;height:auto;}
-        .pcard .chip{font-family:var(--d);font-weight:700;font-size:9.5px;min-width:15px;height:15px;padding:0 3px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;color:#fff;line-height:1;}
+        .pcard .chip{font-family:var(--d);font-weight:700;font-size:8px;min-width:12px;height:13px;padding:0 2.5px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;color:#fff;line-height:1;}
         .pcard .chip.liq{background:#2E90D0;}.pcard .chip.sol{background:#B45309;}.pcard .chip.hot{background:#DC2626;}.pcard .chip.base{background:#16A34A;}.pcard .chip.ass{background:#7C5CFC;}
-        .pcard .legend{display:flex;gap:11px;flex-wrap:wrap;align-items:center;margin-top:6px;padding-top:5px;border-top:1px solid var(--line-strong);font-family:var(--d);font-size:10px;color:var(--ink-soft);font-weight:600;}
+        .pcard .legend{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:6px;padding-top:5px;border-top:1px solid var(--line-strong);font-family:var(--d);font-size:8px;color:var(--ink-soft);font-weight:600;}
         .pcard .legend .k{display:inline-flex;align-items:center;gap:4px;}
-        .pcard .legend .bar{font-family:var(--d);font-weight:700;font-size:9.5px;color:#fff;background:#E11D2A;border-radius:3px;padding:1px 5px;}
+        .pcard .legend .bar{font-family:var(--d);font-weight:700;font-size:8px;color:#fff;background:#E11D2A;border-radius:3px;padding:1px 4px;}
       `}</style>
 
       <div className="hd">
@@ -204,16 +218,16 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
           {gridAlts.map((a) => (
             <g key={`ga${a}`}>
               <line x1={g.padL} y1={yOf(g, a)} x2={g.W - g.padR} y2={yOf(g, a)} stroke="#E2E8F0" strokeWidth={1} />
-              {info.altitudes && <text x={g.padL - 5} y={yOf(g, a) + 3.5} textAnchor="end" fontSize={10.5} fill="#94A3B8" fontFamily="Space Grotesk,sans-serif">{a}</text>}
+              {info.altitudes && <text x={g.padL - 6} y={yOf(g, a) + 5} textAnchor="end" fontSize={15} fill="#94A3B8" fontFamily="Space Grotesk,sans-serif">{a}</text>}
             </g>
           ))}
           {gridKms.map((k) => (
-            <text key={`gk${k}`} x={xOf(g, k)} y={KMY} textAnchor="middle" fontSize={11} fill="#94A3B8" fontFamily="Space Grotesk,sans-serif">{k}</text>
+            <text key={`gk${k}`} x={xOf(g, k)} y={KMY} textAnchor="middle" fontSize={16} fill="#94A3B8" fontFamily="Space Grotesk,sans-serif">{k}</text>
           ))}
 
           {/* aire + courbe */}
           {profile.d.length >= 2 && <path d={buildAreaPath(g, profile)} fill="url(#pfill)" />}
-          {profile.d.length >= 2 && <path d={buildLinePath(g, profile)} fill="none" stroke="#2E6FA0" strokeWidth={1.9} />}
+          {profile.d.length >= 2 && <path d={buildLinePath(g, profile)} fill="none" stroke="#2E6FA0" strokeWidth={2.4} />}
 
           {/* points + connecteur + nom vertical */}
           {wpMeta.map(({ w, i, x }) => {
@@ -222,40 +236,38 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
               <g key={`pt${w.id ?? i}`}>
                 {/* repère vertical : de la pastille (bas) jusqu'à la bande haute (puces/objectif/barrière) */}
                 <line x1={x} y1={dotY} x2={x} y2={g.plotTop - 2} stroke="#94A3B8" strokeDasharray="2 3" strokeWidth={1} strokeOpacity={0.7} />
-                <text x={x + 3.5} y={baseY - 9} fontSize={11.5} fontWeight={700} fill="#334155" fontFamily="Space Grotesk,sans-serif"
-                  transform={`rotate(-90 ${x + 3.5} ${baseY - 9})`} paintOrder="stroke" stroke="#fff" strokeWidth={3} strokeLinejoin="round">{w.name}</text>
+                <text x={x + 4.5} y={baseY - 11} fontSize={17} fontWeight={700} fill="#334155" fontFamily="Space Grotesk,sans-serif"
+                  transform={`rotate(-90 ${x + 4.5} ${baseY - 11})`} paintOrder="stroke" stroke="#fff" strokeWidth={4} strokeLinejoin="round">{w.name}</text>
                 {/* pastille du point posée en bas du profil, sous le nom (plus de collision avec la courbe) */}
-                <circle cx={x} cy={dotY} r={4.5} fill={acc} stroke="#fff" strokeWidth={1.6} />
+                <circle cx={x} cy={dotY} r={6} fill={acc} stroke="#fff" strokeWidth={2} />
               </g>
             )
           })}
 
           {/* bande HAUTE : barrière (drapeau rouge, 2 niveaux) · objectif (orange) · puces ravito */}
-          {wpMeta.map(({ w, i, x, chips, objClock, bh }) => {
-            const chipH = 16, gap = 2.4
-            const ws = chips.map((s) => (SUP[s].letter.length > 1 ? 21 : 15))
-            const totalW = ws.reduce((a, b) => a + b, 0) + gap * Math.max(0, chips.length - 1)
-            let x0 = x - totalW / 2
-            const chipsY = g.plotTop - 20
-            const by = barLevel[i] === 1 ? 30 : 6
-            const objY = objLevel[i] === 1 ? g.plotTop - 36 : g.plotTop - 52
+          {wpMeta.map(({ w, i, x, chips, chipW, objClock, bh }) => {
+            const chipH = 19
+            let x0 = x - chipW / 2
+            const chipsY = chipLevel[i] === 1 ? g.plotTop - 24 : g.plotTop - 46
+            const by = barLevel[i] === 1 ? 26 : 2
+            const objY = objLevel[i] === 1 ? g.plotTop - 50 : g.plotTop - 70
             const bx = x - BARW / 2
             return (
               <g key={`top${w.id ?? i}`}>
                 {bh && (
                   <g data-testid="barrier">
-                    <rect x={bx} y={by} width={BARW} height={19} rx={3.5} fill={BAR} />
-                    <path d={`M${x} ${by + 19} l-5 7 l5 -2.5 l5 2.5 z`} fill={BAR} />
-                    <text x={x} y={by + 13.6} textAnchor="middle" fontSize={11.5} fontWeight={700} fill="#fff" fontFamily="Space Grotesk,sans-serif">{`⏱ ${bh}`}</text>
+                    <rect x={bx} y={by} width={BARW} height={23} rx={4} fill={BAR} />
+                    <path d={`M${x} ${by + 23} l-6 9 l6 -3 l6 3 z`} fill={BAR} />
+                    <text x={x} y={by + 16.5} textAnchor="middle" fontSize={15} fontWeight={700} fill="#fff" fontFamily="Space Grotesk,sans-serif">{`⏱ ${bh}`}</text>
                   </g>
                 )}
-                {objClock && <text data-testid="obj" x={x} y={objY} textAnchor="middle" fontSize={12.5} fontWeight={700} fill="#FF7900" fontFamily="Space Grotesk,sans-serif">{objClock}</text>}
+                {objClock && <text data-testid="obj" x={x} y={objY} textAnchor="middle" fontSize={17} fontWeight={700} fill="#FF7900" fontFamily="Space Grotesk,sans-serif">{objClock}</text>}
                 {chips.map((s, j) => {
-                  const wch = ws[j]; const cx = x0; x0 += wch + gap
+                  const wch = chipWidth(s); const cx = x0; x0 += wch + CHIP_GAP
                   return (
                     <g key={s}>
-                      <rect x={cx} y={chipsY} width={wch} height={chipH} rx={3} fill={SUP_COLOR[SUP[s].cls]} />
-                      <text x={cx + wch / 2} y={chipsY + 11.8} fontSize={10} fontWeight={700} fill="#fff" textAnchor="middle" fontFamily="Space Grotesk,sans-serif">{SUP[s].letter}</text>
+                      <rect x={cx} y={chipsY} width={wch} height={chipH} rx={3.5} fill={SUP_COLOR[SUP[s].cls]} />
+                      <text x={cx + wch / 2} y={chipsY + 14} fontSize={12.5} fontWeight={700} fill="#fff" textAnchor="middle" fontFamily="Space Grotesk,sans-serif">{SUP[s].letter}</text>
                     </g>
                   )
                 })}
@@ -266,13 +278,13 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
           {/* montées principales (sur la courbe) */}
           {climbs.map((c, i) => {
             const cx = xOf(g, c.midKm)
-            const cy = yOf(g, interp(c.midKm)) - 12
+            const cy = yOf(g, interp(c.midKm)) - 16
             const label = `▲ +${c.dPlus} D+ · ${Math.round(c.gradientPct)}%`
-            const w = label.length * 4.7 + 12
+            const w = label.length * 6.5 + 16
             return (
               <g key={`cl${i}`} data-testid="climb">
-                <rect x={cx - w / 2} y={cy - 7} width={w} height={14} rx={7} fill="#fff" stroke="#FF7900" strokeWidth={1} />
-                <text x={cx} y={cy + 3.4} fontSize={8} fontWeight={700} fill="#FF7900" textAnchor="middle" fontFamily="Space Grotesk,sans-serif">{label}</text>
+                <rect x={cx - w / 2} y={cy - 10} width={w} height={20} rx={10} fill="#fff" stroke="#FF7900" strokeWidth={1.2} />
+                <text x={cx} y={cy + 4} fontSize={11} fontWeight={700} fill="#FF7900" textAnchor="middle" fontFamily="Space Grotesk,sans-serif">{label}</text>
               </g>
             )
           })}
@@ -286,14 +298,14 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
               <g key={`seg${i}`}>
                 {lx2 > lx1 && (
                   <>
-                    <line x1={lx1} y1={cy} x2={lx2} y2={cy} stroke="#64748B" strokeWidth={1.5} />
-                    <line x1={lx1} y1={cy - 5} x2={lx1} y2={cy + 5} stroke="#64748B" strokeWidth={1.5} />
-                    <line x1={lx2} y1={cy - 5} x2={lx2} y2={cy + 5} stroke="#64748B" strokeWidth={1.5} />
+                    <line x1={lx1} y1={cy} x2={lx2} y2={cy} stroke="#64748B" strokeWidth={1.8} />
+                    <line x1={lx1} y1={cy - 7} x2={lx1} y2={cy + 7} stroke="#64748B" strokeWidth={1.8} />
+                    <line x1={lx2} y1={cy - 7} x2={lx2} y2={cy + 7} stroke="#64748B" strokeWidth={1.8} />
                   </>
                 )}
-                <text x={s.mid} y={cy - 8} textAnchor="middle" fontSize={11.5} fontWeight={700} fill="#0E1513" fontFamily="Space Grotesk,sans-serif">{s.kmLabel}</text>
-                <text x={s.mid} y={cy + 12} textAnchor="middle" fontSize={12} fontWeight={700} fill="#FF7900" fontFamily="Space Grotesk,sans-serif">{`▲${s.dp}`}</text>
-                <text x={s.mid} y={cy + 24} textAnchor="middle" fontSize={12} fontWeight={700} fill="#64748B" fontFamily="Space Grotesk,sans-serif">{`▼${s.dm}`}</text>
+                <text x={s.mid} y={cy - 11} textAnchor="middle" fontSize={17} fontWeight={700} fill="#0E1513" fontFamily="Space Grotesk,sans-serif">{s.kmLabel}</text>
+                <text x={s.mid} y={cy + 16} textAnchor="middle" fontSize={18} fontWeight={700} fill="#FF7900" fontFamily="Space Grotesk,sans-serif">{`▲${s.dp}`}</text>
+                <text x={s.mid} y={cy + 33} textAnchor="middle" fontSize={18} fontWeight={700} fill="#64748B" fontFamily="Space Grotesk,sans-serif">{`▼${s.dm}`}</text>
               </g>
             )
           })}

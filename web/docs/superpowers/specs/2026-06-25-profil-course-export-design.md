@@ -232,6 +232,15 @@ c'est le seul point qui demande un aller-retour visuel. On introduit
   dessinée à plat puis pivotée **uniquement en visualisation** via un étage `.profstage`
   (boîte englobante) dans `print/page.tsx`. Impression (`@media print`) et export image
   (`.exporting`, clone hors `.profstage`) restent **à plat**.
+- **Rééquilibrage des tailles de police (retour Franck : titre/légende trop gros, texte du profil trop petit)** :
+  titre (`.race` 15→12, `.stats` 9.5→8, `.goal .val` 14→11) et légende (`.legend`/`.chip`/`.bar` ~8px)
+  **réduits** ; tout le texte **dans le SVG agrandi ~1,4–1,5×** (noms 11.5→17, axe km 11→16, axe altitude
+  10.5→15, cotation km 17 / D+/D− 18, objectif 17, barrière 15). Pour absorber les polices plus grosses sans
+  chevauchement sur les courses denses, **les puces ravito s'étalent aussi sur 2 niveaux** (greedy `chipLevel`,
+  comme barrières/objectif), et les drapeaux barrière/objectif sont un peu resserrés (BARW 66 / OBJW 54) pour
+  tenir à 2 niveaux sur une grappe de 3 points. Géométrie : `plotTop` 128→150, `baseY` 300, `padL` 54, `svgH`
+  dynamique 398/458. La carte devient plus haute → l'étage `.profstage` de l'aperçu écran tourné 90° passe de
+  300 à 384 px de large (sinon la carte tournée dépasse). Vérifié headless (à plat + tourné 90°).
 - **Correctifs lisibilité (retour Franck sur PDF dense type TDS)** : (1) en-tête en
   **grille `1fr auto 1fr`** → `TRAILCOCKPIT.RUN` vraiment centré et aligné en haut (même
   ligne que le nom de course), objectif calé à droite — fini le chevauchement marque ↔
