@@ -5,12 +5,12 @@ describe('print-profile-info', () => {
 
   it('renvoie le défaut (tout activé) si rien en stockage', () => {
     expect(loadProfileInfo()).toEqual(DEFAULT_PROFILE_INFO)
-    expect(DEFAULT_PROFILE_INFO).toEqual({ objectif: true, climbs: true, barriers: true, supplies: true, altitudes: true })
+    expect(DEFAULT_PROFILE_INFO).toEqual({ objectif: true, barriers: true, supplies: true, altitudes: true })
   })
 
   it('round-trip save → load', () => {
-    saveProfileInfo({ objectif: false, climbs: true, barriers: false, supplies: true, altitudes: false })
-    expect(loadProfileInfo()).toEqual({ objectif: false, climbs: true, barriers: false, supplies: true, altitudes: false })
+    saveProfileInfo({ objectif: false, barriers: false, supplies: true, altitudes: false })
+    expect(loadProfileInfo()).toEqual({ objectif: false, barriers: false, supplies: true, altitudes: false })
   })
 
   it('retombe sur le défaut si le JSON stocké est corrompu', () => {

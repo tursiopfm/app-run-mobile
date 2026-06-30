@@ -14,8 +14,7 @@ type Props = {
 
 const ROWS: { key: keyof ProfileInfoConfig; label: string; hint: string }[] = [
   { key: 'objectif',  label: 'Objectif horaire',    hint: "Heure de passage visée à chaque point." },
-  { key: 'climbs',    label: 'Montées principales',  hint: 'Badges ▲ (D+ · pente) sur les grosses bosses.' },
-  { key: 'barriers',  label: 'Barrières',            hint: 'Heures limites (boîte rouge) aux points concernés.' },
+  { key: 'barriers',  label: 'Barrières',            hint: 'Heures limites aux points concernés.' },
   { key: 'supplies',  label: 'Ravitos',              hint: 'Puces L/S/C/BV/A + couleur des bandeaux.' },
   { key: 'altitudes', label: 'Altitudes',            hint: 'Altitude sur la courbe et dans la frise.' },
 ]

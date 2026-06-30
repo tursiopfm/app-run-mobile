@@ -24,6 +24,11 @@ import { loadProfileInfo, saveProfileInfo, DEFAULT_PROFILE_INFO, type ProfileInf
 const fmt = (n: number) => String(n).replace('.', ',')
 const pad = (n: number) => String(n).padStart(2, '0')
 
+// Largeur d'impression de la fiche PROFIL (mm) par taille — dimensionnée par LARGEUR
+// (le SVG suit en width:100%), pas par transform:scale. iPhone allongé de 5 cm
+// (120→170) pour la lisibilité ; A5/A4 déjà au max de la feuille (portrait/paysage).
+const PROFILE_PRINT_MM: Record<PrintSize, number> = { iphone: 170, a5: 194, a4: 281 }
+
 const slug = (s: string) =>
   s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'tableau'
@@ -370,10 +375,10 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           /* impression : on annule la rotation d'aperçu du profil → carte à plat. */
           .pdfroot .profstage{position:static !important;width:auto !important;height:auto !important;}
           .pdfroot .profstage .pcardwrap{position:static !important;transform:none !important;width:auto !important;}
-          /* Profil : MÊME dimensionnement que le tableau (base 120 mm + transform:scale,
-             @page identique). Les overlays sont en SVG → le transform ne les détache plus.
+          /* Profil : dimensionné par LARGEUR en mm par taille (iPhone allongé +5cm),
+             le SVG suit (width:100%;height:auto). Pas de transform:scale. @page identique.
              Sélecteur .profstage .pcard (3 classes) pour battre la règle d'aperçu écran. */
-          .pdfroot .profstage .pcard{box-sizing:border-box !important;width:120mm !important;max-width:none !important;transform:scale(${PRINT_SIZE_DEFS[size].scale}) !important;transform-origin:top center !important;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
+          .pdfroot .profstage .pcard{box-sizing:border-box !important;width:${PROFILE_PRINT_MM[size]}mm !important;max-width:none !important;transform:none !important;transform-origin:top center !important;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
           .pdfroot tbody tr:nth-child(even){background:var(--zebra) !important;}
           .pdfroot tr.is-base td{background:#D5E3DD !important;}
           *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}

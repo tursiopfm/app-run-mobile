@@ -13,7 +13,6 @@
 import { useMemo } from 'react'
 import type { Race, RaceWaypoint, WaypointSupply } from '@/types/plan'
 import type { ProfileInfoConfig } from '@/lib/plan/print-profile-info'
-import { detectMainClimbs } from '@/lib/plan/main-climbs'
 import { buildProfileData, elevationDomain } from '@/components/plan/ElevationProfileChart'
 import { deriveSegment, formatElapsedToClock, formatBarrierClock } from '@/lib/plan/waypoint-view'
 import { resolveElapsed } from '@/lib/plan/barrier-lock'
@@ -61,11 +60,6 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
     race.startTime, race.targetDurationMin ?? null, race.pacingFade ?? 0,
   ).elapsed, [waypoints, race.startTime, race.targetDurationMin, race.pacingFade])
 
-  const climbs = useMemo(
-    () => (info.climbs && profile.d.length >= 2 ? detectMainClimbs(profile) : []),
-    [info.climbs, profile],
-  )
-
   // Géométrie du SVG (échelle UNIFORME, width:100%;height:auto). Bandes réservées :
   // haute (0→plotTop) pour les marqueurs, basse (sous baseY) pour la cotation.
   const [yMin, yMax] = profile.e.length ? elevationDomain(profile.e) : [0, 100]
@@ -79,18 +73,6 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
   const coteY1 = coteY0 + SEG_ROWH         // trait de cote — niveau 1 (tronçons serrés)
   const BARW = 66                          // largeur du drapeau barrière
   const OBJW = 54                          // largeur estimée d'une heure objectif (étalement)
-
-  const interp = (km: number): number => {
-    const { d, e } = profile
-    if (d.length === 0) return yMin
-    if (km <= d[0]) return e[0]
-    if (km >= d[d.length - 1]) return e[e.length - 1]
-    for (let i = 1; i < d.length; i++) if (d[i] >= km) {
-      const t = (km - d[i - 1]) / ((d[i] - d[i - 1]) || 1)
-      return e[i - 1] + (e[i] - e[i - 1]) * t
-    }
-    return e[e.length - 1]
-  }
 
   const goal = race.targetDurationMin != null
     ? `${Math.floor(race.targetDurationMin / 60)} h ${pad(race.targetDurationMin % 60)}` : null
@@ -175,21 +157,21 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
       <style>{`
         .pcard{--ink:#0E1513;--ink-soft:#55615E;--ink-faint:#8A938F;--line:#C9D1CE;--line-strong:#2A332F;--brand:#FF7900;--blue:#2E90D0;--d:'Space Grotesk',var(--font-display,system-ui),sans-serif;background:#fff;color:var(--ink);width:100%;max-width:280mm;margin:0 auto;border-radius:2.5mm;padding:10px 12px 9px;box-shadow:0 18px 40px -16px rgba(0,0,0,.5);font-family:system-ui,sans-serif;}
         .pcard .hd{display:grid;grid-template-columns:1fr auto 1fr;align-items:start;border-bottom:1.6px solid var(--line-strong);padding-bottom:5px;gap:10px;}
-        .pcard .race{font-family:var(--d);font-size:12px;font-weight:700;letter-spacing:-.3px;line-height:1.05;}
-        .pcard .stats{font-family:var(--d);font-size:8px;color:var(--ink-soft);font-weight:600;margin-top:2px;}
+        .pcard .race{font-family:var(--d);font-size:9px;font-weight:700;letter-spacing:-.3px;line-height:1.05;}
+        .pcard .stats{font-family:var(--d);font-size:6px;color:var(--ink-soft);font-weight:600;margin-top:2px;}
         .pcard .stats b{color:var(--ink);}
-        .pcard .brand{font-family:var(--d);font-weight:800;font-size:10.5px;letter-spacing:.5px;justify-self:center;white-space:nowrap;}
+        .pcard .brand{font-family:var(--d);font-weight:800;font-size:8px;letter-spacing:.5px;justify-self:center;white-space:nowrap;}
         .pcard .brand .b1{color:var(--brand);}.pcard .brand .b2{color:var(--ink-soft);}.pcard .brand .b3{color:var(--brand);}
         .pcard .goal{font-family:var(--d);text-align:right;white-space:nowrap;justify-self:end;}
-        .pcard .goal .lbl{display:block;color:var(--ink-faint);font-size:7px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
-        .pcard .goal .val{color:var(--brand);font-size:11px;font-weight:700;}
+        .pcard .goal .lbl{display:block;color:var(--ink-faint);font-size:5.5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+        .pcard .goal .val{color:var(--brand);font-size:8px;font-weight:700;}
         .pcard .plot{width:100%;margin-top:5px;}
         .pcard .plot svg{display:block;width:100%;height:auto;}
-        .pcard .chip{font-family:var(--d);font-weight:700;font-size:8px;min-width:12px;height:13px;padding:0 2.5px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;color:#fff;line-height:1;}
+        .pcard .chip{font-family:var(--d);font-weight:700;font-size:6.5px;min-width:10px;height:11px;padding:0 2px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;color:#fff;line-height:1;}
         .pcard .chip.liq{background:#2E90D0;}.pcard .chip.sol{background:#B45309;}.pcard .chip.hot{background:#DC2626;}.pcard .chip.base{background:#16A34A;}.pcard .chip.ass{background:#7C5CFC;}
-        .pcard .legend{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:6px;padding-top:5px;border-top:1px solid var(--line-strong);font-family:var(--d);font-size:8px;color:var(--ink-soft);font-weight:600;}
-        .pcard .legend .k{display:inline-flex;align-items:center;gap:4px;}
-        .pcard .legend .bar{font-family:var(--d);font-weight:700;font-size:8px;color:#fff;background:#E11D2A;border-radius:3px;padding:1px 4px;}
+        .pcard .legend{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:5px;padding-top:4px;border-top:1px solid var(--line-strong);font-family:var(--d);font-size:6.5px;color:var(--ink-soft);font-weight:600;}
+        .pcard .legend .k{display:inline-flex;align-items:center;gap:3px;}
+        .pcard .legend .bar{font-family:var(--d);font-weight:800;font-size:6.5px;color:#B0111C;background:#fff;border:1.2px solid #E11D2A;border-radius:3px;padding:1px 4px;}
       `}</style>
 
       <div className="hd">
@@ -256,9 +238,10 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
               <g key={`top${w.id ?? i}`}>
                 {bh && (
                   <g data-testid="barrier">
-                    <rect x={bx} y={by} width={BARW} height={23} rx={4} fill={BAR} />
+                    {/* fond blanc + bordure rouge + texte rouge foncé : bien plus lisible que blanc-sur-rouge */}
+                    <rect x={bx} y={by} width={BARW} height={23} rx={4} fill="#fff" stroke={BAR} strokeWidth={2.5} />
                     <path d={`M${x} ${by + 23} l-6 9 l6 -3 l6 3 z`} fill={BAR} />
-                    <text x={x} y={by + 16.5} textAnchor="middle" fontSize={15} fontWeight={700} fill="#fff" fontFamily="Space Grotesk,sans-serif">{`⏱ ${bh}`}</text>
+                    <text x={x} y={by + 16.5} textAnchor="middle" fontSize={15} fontWeight={800} fill="#B0111C" fontFamily="Space Grotesk,sans-serif">{bh}</text>
                   </g>
                 )}
                 {objClock && <text data-testid="obj" x={x} y={objY} textAnchor="middle" fontSize={17} fontWeight={700} fill="#FF7900" fontFamily="Space Grotesk,sans-serif">{objClock}</text>}
@@ -271,20 +254,6 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
                     </g>
                   )
                 })}
-              </g>
-            )
-          })}
-
-          {/* montées principales (sur la courbe) */}
-          {climbs.map((c, i) => {
-            const cx = xOf(g, c.midKm)
-            const cy = yOf(g, interp(c.midKm)) - 16
-            const label = `▲ +${c.dPlus} D+ · ${Math.round(c.gradientPct)}%`
-            const w = label.length * 6.5 + 16
-            return (
-              <g key={`cl${i}`} data-testid="climb">
-                <rect x={cx - w / 2} y={cy - 10} width={w} height={20} rx={10} fill="#fff" stroke="#FF7900" strokeWidth={1.2} />
-                <text x={cx} y={cy + 4} fontSize={11} fontWeight={700} fill="#FF7900" textAnchor="middle" fontFamily="Space Grotesk,sans-serif">{label}</text>
               </g>
             )
           })}
@@ -320,9 +289,8 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
           <span className="k"><span className="chip base">BV</span>base vie</span>
           <span className="k"><span className="chip ass">A</span>assistance</span>
         </>}
-        {info.barriers && <span className="k"><span className="bar">⏱ 00:00</span> barrière</span>}
+        {info.barriers && <span className="k"><span className="bar">00:00</span> barrière</span>}
         {info.objectif && <span className="k" style={{ color: '#FF7900', fontWeight: 700 }}>00:00 objectif</span>}
-        {info.climbs && <span className="k"><span style={{ color: 'var(--brand)', fontWeight: 700 }}>▲</span> montée principale</span>}
         <span className="k" style={{ marginLeft: 'auto', color: 'var(--ink-faint)' }}>
           tronçon : distance · <span style={{ color: '#FF7900', fontWeight: 700 }}>▲ D+</span> · <span style={{ color: '#64748B', fontWeight: 700 }}>▼ D−</span>
         </span>

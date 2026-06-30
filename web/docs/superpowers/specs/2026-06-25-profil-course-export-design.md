@@ -232,6 +232,16 @@ c'est le seul point qui demande un aller-retour visuel. On introduit
   dessinée à plat puis pivotée **uniquement en visualisation** via un étage `.profstage`
   (boîte englobante) dans `print/page.tsx`. Impression (`@media print`) et export image
   (`.exporting`, clone hors `.profstage`) restent **à plat**.
+- **2ᵉ passe lisibilité (retour Franck sur le PDF)** : (1) titre/légende **encore réduits**
+  (`.race` 9px, `.stats` 6px, `.brand` 8px, `.goal .val` 8px, légende ~6.5px) — en impression le
+  texte HTML est en px fixe, donc d'autant plus gros relativement que la fiche est étroite. (2) **« Montées
+  principales » retiré complètement** : badges sur la courbe + entrée de légende + toggle du dialogue + champ
+  `climbs` de `ProfileInfoConfig` ; module `lib/plan/main-climbs.ts` (+ test) **supprimé** (devenu mort). (3)
+  **Barrière relookée pour la lisibilité** : fond **blanc**, bordure rouge 2.5px, texte **rouge foncé `#B0111C`**
+  (au lieu de blanc-sur-rouge illisible), drapeau rouge conservé ; swatch de légende idem. (4) **Fiche allongée
+  de 5 cm en impression** : la largeur PDF du profil est désormais explicite par taille (`PROFILE_PRINT_MM`
+  dans print/page.tsx : iPhone **170 mm** = +5 cm, A5 194, A4 281), dimensionnée par LARGEUR (le SVG suit), **sans
+  transform:scale** ; `@page` inchangé. Le sélecteur `.profstage .pcard` (3 classes) bat toujours l'aperçu écran.
 - **Rééquilibrage des tailles de police (retour Franck : titre/légende trop gros, texte du profil trop petit)** :
   titre (`.race` 15→12, `.stats` 9.5→8, `.goal .val` 14→11) et légende (`.legend`/`.chip`/`.bar` ~8px)
   **réduits** ; tout le texte **dans le SVG agrandi ~1,4–1,5×** (noms 11.5→17, axe km 11→16, axe altitude
