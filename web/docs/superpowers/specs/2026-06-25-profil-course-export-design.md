@@ -221,3 +221,12 @@ c'est le seul point qui demande un aller-retour visuel. On introduit
   altitudes. Maquette de référence : `Prompts/profil-course-export-mockups-v2.html`.
   viewBox `1180×328`. Les montées principales restent disponibles (toggle Infos, badges
   sur la courbe).
+- **Ajustements suivants** : ▲ D+ (orange) **empilé au-dessus** du ▼ D− (gris) ; puces
+  ravito via **`chartChips`** (règle du tableau : C⊃S⊃L + BV + A) → moins larges, fini le
+  chevauchement ; barrières proches **étalées sur 2 niveaux** (greedy). viewBox `1180×348`.
+  Le SVG porte `width`/`height` + `preserveAspectRatio="xMidYMid meet"` (ratio intrinsèque
+  fiable, pas de collapse de hauteur).
+- **Aperçu écran tourné 90° horaire** (comme la carte tableau) : la carte profil est
+  dessinée à plat puis pivotée **uniquement en visualisation** via un étage `.profstage`
+  (boîte englobante) dans `print/page.tsx`. Impression (`@media print`) et export image
+  (`.exporting`, clone hors `.profstage`) restent **à plat**.

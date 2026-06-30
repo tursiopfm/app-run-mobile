@@ -172,7 +172,7 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
       </div>
 
       <div className="plot">
-        <svg viewBox={`0 0 ${g.W} ${g.H}`}>
+        <svg viewBox={`0 0 ${g.W} ${g.H}`} width={g.W} height={g.H} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="pfill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#2E90D0" stopOpacity={0.32} />

@@ -2,151 +2,127 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
-<title>Export Profil — B révisé (cotation + D+/D−, police agrandie)</title>
+<title>Export Profil — B final (D+/D− empilés, règle puces, aperçu tourné)</title>
 <style>
-  :root{--brand:#FF7900;--ink:#0E1513;--soft:#55615E;--faint:#8A938F;--line:#C9D1CE;--blue:#2E90D0;--d:'Space Grotesk',system-ui,sans-serif;}
+  :root{--brand:#FF7900;--ink:#0E1513;--soft:#55615E;--faint:#8A938F;--d:'Space Grotesk',system-ui,sans-serif;}
   *{box-sizing:border-box;}
-  body{margin:0;background:#0c1412;color:#e7efed;font-family:system-ui;padding:26px 18px 80px;}
-  .head{max-width:1040px;margin:0 auto 22px;}
-  .head h1{font-family:var(--d);font-size:21px;margin:0 0 6px;}
+  body{margin:0;background:#0c1412;color:#e7efed;font-family:system-ui;padding:24px 18px 60px;}
+  .head{max-width:1040px;margin:0 auto 18px;}
+  .head h1{font-family:var(--d);font-size:20px;margin:0 0 6px;}
   .head p{margin:0;color:#9fb0ab;font-size:13px;line-height:1.5;max-width:840px;}
-  .mock{max-width:1040px;margin:0 auto 34px;}
-  .mock>.label{display:flex;align-items:baseline;gap:10px;margin:0 0 8px;flex-wrap:wrap;}
-  .mock>.label .tag{font-family:var(--d);font-weight:700;font-size:13px;color:#0c1412;background:var(--brand);padding:3px 9px;border-radius:6px;}
-  .mock>.label h2{font-family:var(--d);font-size:16px;margin:0;}
-  .mock>.label .sub{color:#9fb0ab;font-size:12.5px;}
-  .card{background:#fff;color:var(--ink);border-radius:10px;padding:12px 14px 10px;box-shadow:0 22px 50px -22px rgba(0,0,0,.7);}
-  .hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.6px solid #2A332F;padding-bottom:6px;gap:12px;}
-  .hd .race{font-family:var(--d);font-size:17px;font-weight:700;letter-spacing:-.3px;}
-  .hd .stats{font-family:var(--d);font-size:10.5px;color:var(--soft);font-weight:600;margin-top:2px;}
+  .lab{font-family:var(--d);font-weight:700;color:#e7efed;font-size:14px;margin:22px auto 8px;max-width:1040px;}
+  .card{background:#fff;color:var(--ink);border-radius:10px;padding:10px 12px 9px;box-shadow:0 22px 50px -22px rgba(0,0,0,.7);}
+  .flatwrap{max-width:1040px;margin:0 auto;}
+  .hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.6px solid #2A332F;padding-bottom:5px;gap:12px;}
+  .hd .race{font-family:var(--d);font-size:15px;font-weight:700;}
+  .hd .stats{font-family:var(--d);font-size:9.5px;color:var(--soft);font-weight:600;margin-top:2px;}
   .hd .stats b{color:var(--ink);}
-  .hd .brand{font-family:var(--d);font-weight:800;font-size:13px;align-self:center;white-space:nowrap;}
+  .hd .brand{font-family:var(--d);font-weight:800;font-size:12px;align-self:center;white-space:nowrap;}
   .hd .brand .b1{color:var(--brand);}.hd .brand .b2{color:var(--soft);}.hd .brand .b3{color:var(--brand);}
   .hd .goal{font-family:var(--d);text-align:right;white-space:nowrap;}
-  .hd .goal .lbl{display:block;color:var(--faint);font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
-  .hd .goal .val{color:var(--brand);font-size:16px;font-weight:700;}
-  .plot{width:100%;margin-top:4px;}
+  .hd .goal .lbl{display:block;color:var(--faint);font-size:8px;font-weight:600;text-transform:uppercase;}
+  .hd .goal .val{color:var(--brand);font-size:14px;font-weight:700;}
+  .plot{width:100%;margin-top:5px;}
   .plot svg{display:block;width:100%;height:auto;}
-  .legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:8px;padding-top:6px;border-top:1px solid #2A332F;font-family:var(--d);font-size:10px;color:var(--soft);font-weight:600;}
+  .legend{display:flex;gap:11px;flex-wrap:wrap;align-items:center;margin-top:6px;padding-top:5px;border-top:1px solid #2A332F;font-family:var(--d);font-size:10px;color:var(--soft);font-weight:600;}
   .legend .k{display:inline-flex;align-items:center;gap:4px;}
   .lchip{font-family:var(--d);font-weight:700;font-size:9.5px;min-width:15px;height:15px;padding:0 3px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;color:#fff;}
   .liq{background:#2E90D0;}.sol{background:#B45309;}.hot{background:#DC2626;}.base{background:#16A34A;}.ass{background:#7C5CFC;}
   .lbar{font-family:var(--d);font-weight:700;font-size:9.5px;color:#fff;background:#E11D2A;border-radius:3px;padding:1px 5px;}
+  /* aperçu tourné 90° (écran) */
+  .profstage{position:relative;width:300px;height:700px;margin:0 auto;}
+  .profstage .card{position:absolute;top:50%;left:50%;width:680px;transform:translate(-50%,-50%) rotate(90deg);}
 </style>
 </head>
 <body>
   <div class="head">
-    <h1>Export « Profil de course » — option B révisée</h1>
-    <p>Cotation par tronçon sous le profil (sans boîte) : <b>distance</b> au-dessus du trait, <b>▲ D+ (orange) et ▼ D− (gris)</b> en dessous. <b>Police des indications nettement agrandie.</b> Pastilles ravito + objectif (orange) + barrière (drapeau rouge contrasté) au-dessus ; noms à la verticale sur la courbe. Données = ton exemple (~52 km).</p>
+    <h1>Export « Profil » — version finale (à valider avant prod)</h1>
+    <p>Cotation : <b>▲ D+ (orange) AU-DESSUS du ▼ D− (gris)</b>. Puces ravito = règle du tableau (<b>chartChips</b> : C⊃S⊃L + BV + A) → ex. « Parc Château » liquide+solide+chaud n'affiche que <b>C</b>. Barrières proches <b>étalées sur 2 niveaux</b>. En bas : le même profil <b>tourné 90° horaire</b> (aperçu écran ; l'impression/export restent à plat).</p>
   </div>
 
-  <div class="mock">
-    <div class="label"><span class="tag">B</span><h2>Cotation — D+ / D− , police agrandie</h2><span class="sub">trait de cote ⟝──⟞ par tronçon</span></div>
-    <div class="card"><div class="hd" id="hd"></div><div class="plot" id="plot"></div><div class="legend" id="leg"></div></div>
-  </div>
+  <div class="lab">À plat (= impression / export image)</div>
+  <div class="flatwrap"><div class="card"><div class="hd" id="hdF"></div><div class="plot" id="plotF"></div><div class="legend" id="legF"></div></div></div>
+
+  <div class="lab">Aperçu écran — tourné 90° dans le sens horaire (comme la carte tableau)</div>
+  <div class="profstage"><div class="card"><div class="hd" id="hdR"></div><div class="plot" id="plotR"></div><div class="legend" id="legR"></div></div></div>
 
 <script>
 const NS='http://www.w3.org/2000/svg';
 const RACE={name:'Trail de Chaumont', dist:52.4, dplus:2070, start:'09:00', goal:'7 h 40', arr:'16:40', pts:8};
-
 const WP=[
- {km:0,    alt:320, nm:'Chaumont',          ch:[],            bar:null,  obj:'09:00', kind:'start'},
- {km:11.6, alt:300, nm:'Riaucourt',         ch:['liq'],       bar:null,  obj:'10:15'},
- {km:19.5, alt:250, nm:'La Chapelle',       ch:['liq','ass'], bar:'12:00',obj:'11:05'},
- {km:29.6, alt:300, nm:'Parc Château',      ch:['liq','sol'], bar:'13:30',obj:'12:40'},
- {km:34.9, alt:280, nm:'Barrière Bois',     ch:['liq'],       bar:null,  obj:'13:35'},
- {km:38.2, alt:300, nm:'Place Bois des Bl.',ch:['liq','ass'], bar:'15:00',obj:'14:10'},
- {km:44.3, alt:310, nm:'Les 2 Monts',       ch:['liq','sol'], bar:null,  obj:'15:25'},
- {km:52.4, alt:250, nm:'Arrivée',           ch:[],            bar:'17:30',obj:'16:40', kind:'end'},
+ {km:0,    alt:320, nm:'Chaumont',          ch:[],                  bar:null,  obj:'09:00'},
+ {km:11.6, alt:300, nm:'Riaucourt',         ch:['liquid'],          bar:null,  obj:'10:15'},
+ {km:19.5, alt:250, nm:'La Chapelle',       ch:['liquid','assistance'], bar:'12:00',obj:'11:05'},
+ {km:23.0, alt:300, nm:'Le Gué',            ch:['liquid'],          bar:'12:45',obj:'11:40'}, // proche → barrière niveau 2
+ {km:29.6, alt:300, nm:'Parc Château',      ch:['liquid','solid','hot'], bar:'13:30',obj:'12:40'}, // → C seul
+ {km:34.9, alt:280, nm:'Barrière Bois',     ch:['liquid'],          bar:null,  obj:'13:35'},
+ {km:38.2, alt:300, nm:'Base Vie Mont',     ch:['liquid','solid','hot','base_vie'], bar:'15:00',obj:'14:10'},
+ {km:52.4, alt:250, nm:'Arrivée',           ch:[],                  bar:'17:30',obj:'16:40'},
 ];
-// tronçon arrivant à ce point : dist, D+, D−
 const SEG=[null,
- {d:'11,6',up:340,dn:360},{d:'7,9',up:190,dn:240},{d:'10,1',up:570,dn:520},{d:'5,3',up:240,dn:260},
- {d:'3,3',up:250,dn:230},{d:'6,1',up:190,dn:180},{d:'8,1',up:290,dn:350}];
-
+ {d:'11,6',up:340,dn:360},{d:'7,9',up:190,dn:240},{d:'3,5',up:120,dn:70},{d:'6,6',up:450,dn:450},
+ {d:'5,3',up:240,dn:260},{d:'3,3',up:250,dn:230},{d:'14,2',up:480,dn:530}];
 const ANCH=[[0,320],[2,305],[4,332],[6,288],[8,312],[10,270],[11.6,300],[13,265],[15,250],[17,238],[19.5,250],
-[21,295],[23,275],[25,300],[27,265],[29.6,300],[31,335],[33,290],[34.9,280],[36,305],[38.2,300],
-[40,345],[42,300],[44.3,310],[46,275],[48,300],[50,270],[52.4,250]];
-
+[21,280],[23,300],[25,310],[27,285],[29.6,300],[31,335],[33,290],[34.9,280],[36,305],[38.2,300],
+[40,345],[42,300],[44,330],[46,300],[48,320],[50,290],[52.4,250]];
 const CLR={liq:'#2E90D0',sol:'#B45309',hot:'#DC2626',base:'#16A34A',ass:'#7C5CFC'};
-const LET={liq:'L',sol:'S',hot:'C',base:'BV',ass:'A'};
+const LET={liquid:'L',solid:'S',hot:'C',base_vie:'BV',assistance:'A'};
+const CLS={liquid:'liq',solid:'sol',hot:'hot',base_vie:'base',assistance:'ass'};
 const BAR='#E11D2A';
+// règle chartChips : 1 puce nourriture (C⊃S⊃L) + BV + A
+function chartChips(s){const out=[];if(s.includes('hot'))out.push('hot');else if(s.includes('solid'))out.push('solid');else if(s.includes('liquid'))out.push('liquid');if(s.includes('base_vie'))out.push('base_vie');if(s.includes('assistance'))out.push('assistance');return out;}
 
-const W=1180, padL=46, padR=18;
-const TOP=96, plotTop=TOP, plotH=156, baseY=plotTop+plotH; // 252
-const KMY=baseY+15;
-const SEGTOP=baseY+26;
+const W=1180, padL=46, padR=18, plotTop=112, plotH=150, baseY=plotTop+plotH, KMY=baseY+15, coteY=baseY+50, H=348, BARW=52;
 const YMIN=150,YMAX=360;
 function xOf(km){return padL+(km/RACE.dist)*(W-padL-padR);}
 function yOf(al){return plotTop+(1-(al-YMIN)/(YMAX-YMIN))*plotH;}
 function interp(km){let d=ANCH.map(a=>a[0]),e=ANCH.map(a=>a[1]);if(km<=d[0])return e[0];if(km>=d[d.length-1])return e[e.length-1];for(let i=1;i<d.length;i++)if(d[i]>=km){let t=(km-d[i-1])/((d[i]-d[i-1])||1);return e[i-1]+(e[i]-e[i-1])*t;}return e[e.length-1];}
 function E(t,a,txt){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;return e;}
 
-function drawBase(svg){
-  for(let a=150;a<=350;a+=50){svg.appendChild(E('line',{x1:padL,y1:yOf(a),x2:W-padR,y2:yOf(a),stroke:'#E2E8F0','stroke-width':1}));svg.appendChild(E('text',{x:padL-5,y:yOf(a)+3.5,'text-anchor':'end','font-size':10.5,fill:'#94A3B8','font-family':'Space Grotesk'},a));}
-  const grad=E('linearGradient',{id:'gg',x1:0,y1:0,x2:0,y2:1});grad.appendChild(E('stop',{offset:'0%','stop-color':'#2E90D0','stop-opacity':.34}));grad.appendChild(E('stop',{offset:'100%','stop-color':'#2E90D0','stop-opacity':.05}));const d=E('defs',{});d.appendChild(grad);svg.appendChild(d);
+function build(){
+  const svg=E('svg',{viewBox:`0 0 ${W} ${H}`,width:W,height:H,preserveAspectRatio:'xMidYMid meet'});
+  for(let a=200;a<=350;a+=50){svg.appendChild(E('line',{x1:padL,y1:yOf(a),x2:W-padR,y2:yOf(a),stroke:'#E2E8F0','stroke-width':1}));svg.appendChild(E('text',{x:padL-5,y:yOf(a)+3.5,'text-anchor':'end','font-size':10.5,fill:'#94A3B8','font-family':'Space Grotesk'},a));}
+  for(let k=0;k<=50;k+=5)svg.appendChild(E('text',{x:xOf(k),y:KMY,'text-anchor':'middle','font-size':11,fill:'#94A3B8','font-family':'Space Grotesk'},k));
+  const grad=E('linearGradient',{id:'gg',x1:0,y1:0,x2:0,y2:1});grad.appendChild(E('stop',{offset:'0%','stop-color':'#2E90D0','stop-opacity':.32}));grad.appendChild(E('stop',{offset:'100%','stop-color':'#2E90D0','stop-opacity':.04}));const d=E('defs',{});d.appendChild(grad);svg.appendChild(d);
   let area='M'+xOf(0).toFixed(1)+' '+baseY+' ',line='';
   ANCH.forEach((p,i)=>{const x=xOf(p[0]).toFixed(1),y=yOf(p[1]).toFixed(1);area+='L'+x+' '+y+' ';line+=(i?'L':'M')+x+' '+y+' ';});
-  area+='L'+xOf(RACE.dist).toFixed(1)+' '+baseY+' Z';
-  svg.appendChild(E('path',{d:area,fill:'url(#gg)'}));
-  svg.appendChild(E('path',{d:line,fill:'none',stroke:'#2E6FA0','stroke-width':1.9}));
-  for(let k=0;k<=50;k+=5)svg.appendChild(E('text',{x:xOf(k),y:KMY,'text-anchor':'middle','font-size':11,fill:'#94A3B8','font-family':'Space Grotesk'},k));
-  WP.forEach(w=>{
-    const x=xOf(w.km), y=interp(w.km);
-    svg.appendChild(E('line',{x1:x,y1:y,x2:x,y2:plotTop-2,stroke:'#94A3B8','stroke-width':1,'stroke-dasharray':'2 3','stroke-opacity':.7}));
+  area+='L'+xOf(52.4).toFixed(1)+' '+baseY+' Z';
+  svg.appendChild(E('path',{d:area,fill:'url(#gg)'}));svg.appendChild(E('path',{d:line,fill:'none',stroke:'#2E6FA0','stroke-width':1.9}));
+  // points + noms verticaux
+  WP.forEach((w,i)=>{const x=xOf(w.km),y=interp(w.km);const col=i===0?'#16A34A':i===WP.length-1?'#E11D2A':'#2E6FA0';
+    svg.appendChild(E('line',{x1:x,y1:y,x2:x,y2:plotTop-2,stroke:'#94A3B8','stroke-dasharray':'2 3','stroke-width':1,'stroke-opacity':.7}));
     svg.appendChild(E('text',{x:x+3.5,y:baseY-7,'font-size':11.5,'font-weight':700,fill:'#334155','font-family':'Space Grotesk','transform':`rotate(-90 ${x+3.5} ${baseY-7})`,'paint-order':'stroke','stroke':'#fff','stroke-width':3,'stroke-linejoin':'round'},w.nm));
-    const col = w.kind==='start'?'#16A34A':w.kind==='end'?'#E11D2A':'#2E6FA0';
-    svg.appendChild(E('circle',{cx:x,cy:y,r:4.5,fill:col,stroke:'#fff','stroke-width':1.6}));
+    svg.appendChild(E('circle',{cx:x,cy:y,r:4.5,fill:col,stroke:'#fff','stroke-width':1.6}));});
+  // barrières : niveaux
+  const lastR=[-1e9,-1e9];const lvl={};
+  WP.forEach((w,i)=>{if(!w.bar)return;const left=xOf(w.km)-BARW/2;const lv=left>=lastR[0]+4?0:left>=lastR[1]+4?1:(lastR[0]<=lastR[1]?0:1);lvl[i]=lv;lastR[lv]=xOf(w.km)+BARW/2;});
+  // bande haute
+  WP.forEach((w,i)=>{const x=xOf(w.km);const chips=chartChips(w.ch);
+    if(w.bar){const by=lvl[i]===1?30:6;const bx=x-BARW/2;svg.appendChild(E('rect',{x:bx,y:by,width:BARW,height:19,rx:3.5,fill:BAR}));svg.appendChild(E('path',{d:`M${x} ${by+19} l-5 7 l5 -2.5 l5 2.5 z`,fill:BAR}));svg.appendChild(E('text',{x,y:by+13.6,'text-anchor':'middle','font-size':11.5,'font-weight':700,fill:'#fff','font-family':'Space Grotesk'},'⏱ '+w.bar));}
+    if(w.obj)svg.appendChild(E('text',{x,y:plotTop-40,'text-anchor':'middle','font-size':12.5,'font-weight':700,fill:'#FF7900','font-family':'Space Grotesk'},w.obj));
+    const chipH=16,gap=2.4,ws=chips.map(s=>LET[s].length>1?21:15),tot=ws.reduce((a,b)=>a+b,0)+gap*Math.max(0,chips.length-1);let x0=x-tot/2;const cy=plotTop-20;
+    chips.forEach((s,j)=>{const wch=ws[j],xx=x0;x0+=wch+gap;svg.appendChild(E('rect',{x:xx,y:cy,width:wch,height:chipH,rx:3,fill:CLR[CLS[s]]}));svg.appendChild(E('text',{x:xx+wch/2,y:cy+11.8,'font-size':10,'font-weight':700,fill:'#fff','text-anchor':'middle','font-family':'Space Grotesk'},LET[s]));});
   });
-}
-
-function drawTop(svg){
-  WP.forEach(w=>{
-    const x=xOf(w.km);
-    const chipH=16,gap=2.4,ws=w.ch.map(s=>LET[s].length>1?21:15);
-    const tot=ws.reduce((a,b)=>a+b,0)+gap*Math.max(0,w.ch.length-1);
-    let x0=x-tot/2; const chipsY=plotTop-23;
-    w.ch.forEach((s,j)=>{const wch=ws[j],xx=x0;x0+=wch+gap;svg.appendChild(E('rect',{x:xx,y:chipsY,width:wch,height:chipH,rx:3,fill:CLR[s]}));svg.appendChild(E('text',{x:xx+wch/2,y:chipsY+12,'font-size':10,'font-weight':700,fill:'#fff','text-anchor':'middle','font-family':'Space Grotesk'},LET[s]));});
-    if(w.obj)svg.appendChild(E('text',{x:x,y:plotTop-44,'text-anchor':'middle','font-size':12.5,'font-weight':700,fill:'#FF7900','font-family':'Space Grotesk'},w.obj));
-    if(w.bar){
-      const bw=52,bh=19,bx=x-bw/2,by=6;
-      svg.appendChild(E('rect',{x:bx,y:by,width:bw,height:bh,rx:3.5,fill:BAR}));
-      svg.appendChild(E('path',{d:`M${x} ${by+bh} l-5 7 l5 -2.5 l5 2.5 z`,fill:BAR}));
-      svg.appendChild(E('text',{x:x,y:by+13.6,'text-anchor':'middle','font-size':11.5,'font-weight':700,fill:'#fff','font-family':'Space Grotesk'},'⏱ '+w.bar));
+  // cotation : D+ au-dessus de D−, déclutter
+  let lastRight=-1e9;
+  for(let i=1;i<WP.length;i++){const s=SEG[i],x1=xOf(WP[i-1].km)+6,x2=xOf(WP[i].km)-6,mid=(x1+x2)/2;
+    if(x2>x1){svg.appendChild(E('line',{x1,y1:coteY,x2,y2:coteY,stroke:'#64748B','stroke-width':1.5}));[x1,x2].forEach(xx=>svg.appendChild(E('line',{x1:xx,y1:coteY-5,x2:xx,y2:coteY+5,stroke:'#64748B','stroke-width':1.5})));}
+    const needed=Math.max((s.d+' km').length*7.0,('▲'+s.up).length*7.6,('▼'+s.dn).length*7.6);
+    if(mid-needed/2>=lastRight+8){lastRight=mid+needed/2;
+      svg.appendChild(E('text',{x:mid,y:coteY-9,'text-anchor':'middle','font-size':13,'font-weight':700,fill:'#0E1513','font-family':'Space Grotesk'},s.d+' km'));
+      svg.appendChild(E('text',{x:mid,y:coteY+14,'text-anchor':'middle','font-size':13.5,'font-weight':700,fill:'#FF7900','font-family':'Space Grotesk'},'▲'+s.up));
+      svg.appendChild(E('text',{x:mid,y:coteY+29,'text-anchor':'middle','font-size':13.5,'font-weight':700,fill:'#64748B','font-family':'Space Grotesk'},'▼'+s.dn));
     }
-  });
-}
-
-function segB(svg){
-  const lineY=SEGTOP+22;
-  for(let i=1;i<WP.length;i++){
-    const s=SEG[i],x1=xOf(WP[i-1].km)+6,x2=xOf(WP[i].km)-6,mx=(x1+x2)/2;
-    svg.appendChild(E('line',{x1,y1:lineY,x2,y2:lineY,stroke:'#64748B','stroke-width':1.5}));
-    [x1,x2].forEach((xx)=>svg.appendChild(E('line',{x1:xx,y1:lineY-5,x2:xx,y2:lineY+5,stroke:'#64748B','stroke-width':1.5})));
-    svg.appendChild(E('text',{x:mx,y:lineY-9,'text-anchor':'middle','font-size':13,'font-weight':700,fill:'#0E1513','font-family':'Space Grotesk'},s.d+' km'));
-    const t=E('text',{x:mx,y:lineY+19,'text-anchor':'middle','font-size':14,'font-weight':700,'font-family':'Space Grotesk'});
-    t.appendChild(E('tspan',{fill:'#FF7900'},'▲'+s.up));
-    t.appendChild(E('tspan',{fill:'#64748B',dx:9},'▼'+s.dn));
-    svg.appendChild(t);
   }
+  return svg;
 }
-
-function header(){document.getElementById('hd').innerHTML=`<div><div class="race">${RACE.name}</div><div class="stats"><b>${RACE.dist} km</b> · <b>${RACE.dplus} D+</b> · ${RACE.pts} pts · Dép. <b>${RACE.start}</b> · Arr. visée <b>${RACE.arr}</b></div></div><div class="brand"><span class="b1">TRAIL</span> <span class="b2">COCKPIT</span><span class="b3">.RUN</span></div><div class="goal"><span class="lbl">Objectif</span><span class="val">${RACE.goal}</span></div>`;}
-function legend(){document.getElementById('leg').innerHTML=`
-  <span class="k"><span class="lchip liq">L</span>liquide</span>
-  <span class="k"><span class="lchip sol">S</span>solide</span>
-  <span class="k"><span class="lchip hot">C</span>chaud</span>
-  <span class="k"><span class="lchip base">BV</span>base vie</span>
-  <span class="k"><span class="lchip ass">A</span>assistance</span>
-  <span class="k"><span class="lbar">⏱ 12:00</span> barrière</span>
-  <span class="k" style="color:#FF7900;font-weight:700">09:00 objectif</span>
-  <span class="k"><span style="color:#FF7900;font-weight:700">▲ D+</span> · <span style="color:#64748B;font-weight:700">▼ D−</span> du tronçon</span>`;}
-
-const H=SEGTOP+50;
-header(); legend();
-const svg=E('svg',{viewBox:`0 0 ${W} ${H}`});
-drawBase(svg); drawTop(svg); segB(svg);
-document.getElementById('plot').appendChild(svg);
+function header(id){document.getElementById(id).innerHTML=`<div><div class="race">${RACE.name}</div><div class="stats"><b>${RACE.dist} km</b> · <b>${RACE.dplus} D+</b> · ${RACE.pts} pts · Dép. <b>${RACE.start}</b> · Arr. visée <b>${RACE.arr}</b></div></div><div class="brand"><span class="b1">TRAIL</span> <span class="b2">COCKPIT</span><span class="b3">.RUN</span></div><div class="goal"><span class="lbl">Objectif</span><span class="val">${RACE.goal}</span></div>`;}
+function legend(id){document.getElementById(id).innerHTML=`
+  <span class="k"><span class="lchip liq">L</span>liquide</span><span class="k"><span class="lchip sol">S</span>solide</span><span class="k"><span class="lchip hot">C</span>chaud</span><span class="k"><span class="lchip base">BV</span>base vie</span><span class="k"><span class="lchip ass">A</span>assistance</span>
+  <span class="k"><span class="lbar">⏱ 12:00</span> barrière</span><span class="k" style="color:#FF7900;font-weight:700">09:00 objectif</span>
+  <span class="k" style="margin-left:auto;color:var(--faint)">tronçon : distance · <span style="color:#FF7900">▲ D+</span> · <span style="color:#64748B">▼ D−</span></span>`;}
+header('hdF');legend('legF');document.getElementById('plotF').appendChild(build());
+header('hdR');legend('legR');document.getElementById('plotR').appendChild(build());
 </script>
 </body>
 </html>

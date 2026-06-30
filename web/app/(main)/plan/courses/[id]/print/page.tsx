@@ -341,6 +341,13 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .tab{flex:1;font-family:var(--d);font-weight:700;font-size:13px;padding:8px;border-radius:10px;border:1.5px solid var(--trail-border);background:transparent;color:var(--trail-muted);cursor:pointer;}
         .pdfroot .tab.on{border-color:var(--trail-primary);color:var(--trail-primary);background:color-mix(in srgb, var(--trail-primary) 10%, transparent);}
         .pdfroot .pcardwrap{width:100%;display:flex;justify-content:center;}
+        /* Onglet Profil : aperçu ÉCRAN tourné 90° horaire (comme la carte tableau).
+           Le profil est dessiné à plat ; on le pivote uniquement pour la visualisation.
+           profstage = boîte englobante de la carte tournée ; impression + export à plat. */
+        .pdfroot .profscroll{display:flex;justify-content:center;}
+        .pdfroot .profstage{position:relative;width:300px;height:700px;margin:0 auto;}
+        .pdfroot .profstage .pcardwrap{position:absolute;top:50%;left:50%;width:680px;transform:translate(-50%,-50%) rotate(90deg);}
+        .pdfroot .profstage .pcard{width:680px !important;max-width:none !important;}
 
         @page{${(tab === 'profil' ? PRINT_SIZE_DEFS_PROFILE : PRINT_SIZE_DEFS)[size].pageRule}}
         @media print{
@@ -360,6 +367,9 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           .pdfroot .cardwrap{position:static !important;width:auto !important;height:auto !important;}
           .pdfroot .card{position:static !important;transform:scale(${PRINT_SIZE_DEFS[size].scale}) !important;transform-origin:top center !important;top:auto;left:auto;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
           .pdfroot .pcardwrap{display:block !important;}
+          /* impression : on annule la rotation d'aperçu du profil → carte à plat. */
+          .pdfroot .profstage{position:static !important;width:auto !important;height:auto !important;}
+          .pdfroot .profstage .pcardwrap{position:static !important;transform:none !important;width:auto !important;}
           /* Profil dimensionné par LARGEUR (pas de transform:scale). Un ancêtre
              transformé détache les overlays positionnés en absolu (puces / altitude /
              badges de montée) à l'impression Blink → ils tombaient sous le profil. */
@@ -459,9 +469,11 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         </div>
         </div>
       ) : (
-        <div className="previewscroll">
-          <div className="pcardwrap" ref={cardRef as React.RefObject<HTMLDivElement>}>
-            <ProfilePrintCard race={race} waypoints={wps} denseProfile={track?.profile} info={infoCfg} />
+        <div className="previewscroll profscroll">
+          <div className="profstage">
+            <div className="pcardwrap" ref={cardRef as React.RefObject<HTMLDivElement>}>
+              <ProfilePrintCard race={race} waypoints={wps} denseProfile={track?.profile} info={infoCfg} />
+            </div>
           </div>
         </div>
       )}
