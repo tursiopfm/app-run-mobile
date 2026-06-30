@@ -72,7 +72,8 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
   const maxKm = Math.max(profile.d[profile.d.length - 1] ?? 0, ...waypoints.map((w) => w.km), 1)
   const g: ProfileGeom = { W: 1180, H: 392, padL: 46, padR: 18, plotTop: 128, plotH: 150, yMin, yMax, maxKm }
   const baseY = g.plotTop + g.plotH        // 278
-  const KMY = baseY + 13                   // axe km
+  const dotY = baseY + 2                   // pastille du point posée sur la ligne de base (sous le nom)
+  const KMY = baseY + 18                   // axe km (sous les pastilles)
   const coteY0 = baseY + 40                // trait de cote — niveau 0
   const SEG_ROWH = 46                      // décalage vertical du niveau 1 de cotation
   const coteY1 = coteY0 + SEG_ROWH         // trait de cote — niveau 1 (tronçons serrés)
@@ -217,13 +218,14 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
           {/* points + connecteur + nom vertical */}
           {wpMeta.map(({ w, i, x }) => {
             const acc = accentOf(w, i === 0 || i === waypoints.length - 1)
-            const y = yOf(g, interp(w.km))
             return (
               <g key={`pt${w.id ?? i}`}>
-                <line x1={x} y1={y} x2={x} y2={g.plotTop - 2} stroke="#94A3B8" strokeDasharray="2 3" strokeWidth={1} strokeOpacity={0.7} />
-                <text x={x + 3.5} y={baseY - 7} fontSize={11.5} fontWeight={700} fill="#334155" fontFamily="Space Grotesk,sans-serif"
-                  transform={`rotate(-90 ${x + 3.5} ${baseY - 7})`} paintOrder="stroke" stroke="#fff" strokeWidth={3} strokeLinejoin="round">{w.name}</text>
-                <circle cx={x} cy={y} r={4.5} fill={acc} stroke="#fff" strokeWidth={1.6} />
+                {/* repère vertical : de la pastille (bas) jusqu'à la bande haute (puces/objectif/barrière) */}
+                <line x1={x} y1={dotY} x2={x} y2={g.plotTop - 2} stroke="#94A3B8" strokeDasharray="2 3" strokeWidth={1} strokeOpacity={0.7} />
+                <text x={x + 3.5} y={baseY - 9} fontSize={11.5} fontWeight={700} fill="#334155" fontFamily="Space Grotesk,sans-serif"
+                  transform={`rotate(-90 ${x + 3.5} ${baseY - 9})`} paintOrder="stroke" stroke="#fff" strokeWidth={3} strokeLinejoin="round">{w.name}</text>
+                {/* pastille du point posée en bas du profil, sous le nom (plus de collision avec la courbe) */}
+                <circle cx={x} cy={dotY} r={4.5} fill={acc} stroke="#fff" strokeWidth={1.6} />
               </g>
             )
           })}
