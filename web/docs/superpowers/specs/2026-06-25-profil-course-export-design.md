@@ -232,3 +232,14 @@ c'est le seul point qui demande un aller-retour visuel. On introduit
   dessinée à plat puis pivotée **uniquement en visualisation** via un étage `.profstage`
   (boîte englobante) dans `print/page.tsx`. Impression (`@media print`) et export image
   (`.exporting`, clone hors `.profstage`) restent **à plat**.
+- **Correctifs lisibilité (retour Franck sur PDF dense type TDS)** : (1) en-tête en
+  **grille `1fr auto 1fr`** → `TRAILCOCKPIT.RUN` vraiment centré et aligné en haut (même
+  ligne que le nom de course), objectif calé à droite — fini le chevauchement marque ↔
+  objectif. (2) **Cotation étalée sur 2 rangs** (greedy, chaque rang a son trait de cote)
+  au lieu du déclutter qui masquait des tronçons → **toutes** les distances/D+/D−
+  s'affichent (ex. Bourg-Saint-Maurice → Fort de la Platte). (3) **Heures objectif (orange)
+  étalées sur 2 niveaux** comme les barrières. (4) Bug corrigé : `const y = interp(w.km)`
+  → `yOf(g, interp(w.km))` (les pastilles de points étaient hors-cadre, altitude utilisée
+  comme pixel ; désormais posées **sur la courbe**). Géométrie : `plotTop` 112→128,
+  `baseY` 278, cotation `coteY0`/`coteY1` (rang 1 = `+46`), **`svgH` dynamique** (392 si
+  le rang 1 sert, sinon 346 — pas de blanc inutile sur courses peu denses). viewBox `1180×svgH`.
