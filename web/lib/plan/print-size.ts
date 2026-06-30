@@ -52,30 +52,3 @@ export function savePrintSize(size: PrintSize): void {
   if (typeof window === 'undefined') return
   try { window.localStorage.setItem(LS_KEY, size) } catch { /* quota / navigation privée */ }
 }
-
-// Tailles de la carte PROFIL. À la différence du tableau (transform:scale sur une
-// carte 120 mm tournée), le profil est dimensionné par LARGEUR en mm — la carte
-// porte des overlays positionnés en absolu (puces / altitude / montées) qu'un
-// ancêtre `transform` détache à l'impression Blink. La largeur d'impression vaut
-// `280 mm × scale` (box-sizing:border-box). `scale` = fraction de la base 280 mm,
-// avec un léger jeu sous la largeur imprimable (marges 8 mm). À affiner au Ctrl+P.
-//   A5  : A4 portrait, ~192 / 280 = 0.686 (imprimable 194)
-//   A4  : A4 paysage,  ~279 / 280 = 0.996 (imprimable 281)
-//   iPhone : profil de poche, ~150 / 280 = 0.536
-export const PRINT_SIZE_DEFS_PROFILE: Record<PrintSize, PrintSizeDef> = {
-  iphone: {
-    key: 'iphone', label: 'Format iPhone',
-    hint: 'Petit profil à découper, à glisser dans la poche.',
-    pageRule: 'size:A4 portrait;margin:8mm;', scale: 0.536,
-  },
-  a5: {
-    key: 'a5', label: 'Format A5',
-    hint: 'Profil agrandi, en haut d\'une feuille A4 portrait.',
-    pageRule: 'size:A4 portrait;margin:8mm;', scale: 0.686,
-  },
-  a4: {
-    key: 'a4', label: 'Format A4',
-    hint: 'Le profil remplit une feuille A4 en paysage.',
-    pageRule: 'size:A4 landscape;margin:8mm;', scale: 0.996,
-  },
-}

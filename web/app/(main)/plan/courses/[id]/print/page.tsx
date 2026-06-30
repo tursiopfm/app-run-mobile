@@ -15,7 +15,7 @@ import {
 import { PrintColumnsDialog } from '@/components/plan/PrintColumnsDialog'
 import { toJpeg } from 'html-to-image'
 import { FileText, Image as ImageIcon, Share2, Settings2, Ruler, Map as MapIcon } from 'lucide-react'
-import { loadPrintSize, savePrintSize, PRINT_SIZE_DEFS, PRINT_SIZE_DEFS_PROFILE, DEFAULT_PRINT_SIZE, type PrintSize } from '@/lib/plan/print-size'
+import { loadPrintSize, savePrintSize, PRINT_SIZE_DEFS, DEFAULT_PRINT_SIZE, type PrintSize } from '@/lib/plan/print-size'
 import { PrintSizeDialog } from '@/components/plan/PrintSizeDialog'
 import { ProfilePrintCard } from '@/components/plan/ProfilePrintCard'
 import { ProfileInfoDialog } from '@/components/plan/ProfileInfoDialog'
@@ -349,7 +349,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
         .pdfroot .profstage .pcardwrap{position:absolute;top:50%;left:50%;width:680px;transform:translate(-50%,-50%) rotate(90deg);}
         .pdfroot .profstage .pcard{width:680px !important;max-width:none !important;}
 
-        @page{${(tab === 'profil' ? PRINT_SIZE_DEFS_PROFILE : PRINT_SIZE_DEFS)[size].pageRule}}
+        @page{${PRINT_SIZE_DEFS[size].pageRule}}
         @media print{
           /* UNE page : on annule les min-height de la coquille app (2× min-h-screen,
              sidebar, bottom-nav) qui forceraient une 2e page même en visibility:hidden. */
@@ -370,10 +370,10 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           /* impression : on annule la rotation d'aperçu du profil → carte à plat. */
           .pdfroot .profstage{position:static !important;width:auto !important;height:auto !important;}
           .pdfroot .profstage .pcardwrap{position:static !important;transform:none !important;width:auto !important;}
-          /* Profil dimensionné par LARGEUR (pas de transform:scale). Un ancêtre
-             transformé détache les overlays positionnés en absolu (puces / altitude /
-             badges de montée) à l'impression Blink → ils tombaient sous le profil. */
-          .pdfroot .pcard{box-sizing:border-box !important;width:${Math.round(280 * PRINT_SIZE_DEFS_PROFILE[size].scale)}mm !important;max-width:none !important;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
+          /* Profil : MÊME dimensionnement que le tableau (base 120 mm + transform:scale,
+             @page identique). Les overlays sont en SVG → le transform ne les détache plus.
+             Sélecteur .profstage .pcard (3 classes) pour battre la règle d'aperçu écran. */
+          .pdfroot .profstage .pcard{box-sizing:border-box !important;width:120mm !important;max-width:none !important;transform:scale(${PRINT_SIZE_DEFS[size].scale}) !important;transform-origin:top center !important;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
           .pdfroot tbody tr:nth-child(even){background:var(--zebra) !important;}
           .pdfroot tr.is-base td{background:#D5E3DD !important;}
           *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}

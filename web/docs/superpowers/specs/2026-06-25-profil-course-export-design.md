@@ -2,7 +2,7 @@
 
 > **Status: Implémenté** · 2026-06-25 · Code: web/components/plan/ProfilePrintCard.tsx, web/app/(main)/plan/courses/[id]/print/page.tsx, web/lib/plan/{main-climbs,print-profile-info,profile-print-geometry,print-size}.ts, web/components/plan/ProfileInfoDialog.tsx
 >
-> Calibration ouverte : les facteurs `scale` de `PRINT_SIZE_DEFS_PROFILE` (base 180 mm) sont indicatifs, à affiner par Franck à l'aperçu Ctrl+P.
+> Impression : le profil réutilise désormais `PRINT_SIZE_DEFS` du tableau (base 120 mm + `transform:scale`, iphone ×1 / a5 ×1.617 / a4 ×2.342) — voir Drift notes. Vérif Ctrl+P par Franck.
 
 ## Problème
 
@@ -191,14 +191,16 @@ c'est le seul point qui demande un aller-retour visuel. On introduit
   découper), juste un `.pcardwrap` centré.
 - **Largeur de design = 280 mm** (et non 180) : `.pcard` est `width:100%;max-width:280mm`
   à l'écran (tient toujours dans l'aperçu) ; figée à `280mm` à l'export image.
-- **Impression dimensionnée par LARGEUR, pas par `transform:scale`** : un ancêtre
-  transformé **détache les overlays positionnés en absolu** (puces / altitude / badges
-  de montée superposés à la courbe) à l'impression Blink → ils « tombaient » sous le
-  profil (signalé par Franck sur l'UTMB). En impression on pose donc
-  `.pcard{box-sizing:border-box;width:280 mm × scale}` sans aucun `transform`. Les
-  échelles `PRINT_SIZE_DEFS_PROFILE` (= fraction de 280 mm) : iphone 0.536 (~150 mm) ·
-  a5 0.686 (~192 mm) · a4 0.996 (~279 mm), avec un léger jeu sous la largeur imprimable ;
-  à affiner au Ctrl+P.
+- **Impression alignée sur le mécanisme exact du tableau** (correctif « le PDF était
+  toujours en A quelle que soit la taille choisie ») : le profil réutilise désormais
+  `PRINT_SIZE_DEFS` (et non plus un `PRINT_SIZE_DEFS_PROFILE` dédié, supprimé) — base
+  **120 mm** + `transform:scale` (iphone ×1 / a5 ×1.617 / a4 ×2.342) + `@page` issu de
+  la même table. C'est possible parce que **tous les overlays sont maintenant dans le
+  SVG** (cf. point suivant) : un ancêtre transformé ne détache donc plus rien. La règle
+  d'impression cible `.pdfroot .profstage .pcard` (3 classes) pour **battre en spécificité**
+  la règle d'aperçu écran `.profstage .pcard{width:680px}` (sinon le sélecteur de taille
+  restait sans effet à l'impression). L'aperçu écran reste tourné 90° (étage `.profstage`),
+  aplati en impression + export image.
 - **Overlays du profil rendus en SVG (correctif définitif du décrochage à l'impression)** :
   les puces ravito, pastilles d'altitude et badges de montée étaient des `<div>`
   HTML en `position:absolute` superposés au SVG. À l'impression PDF, ces overlays
