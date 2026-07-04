@@ -27,6 +27,7 @@ export const en: Dict = {
       run:  'RUN',
       bike: 'BIKE',
       swim: 'SWIM',
+      walk: 'WALK',
       all:  'ALL',
     },
   },

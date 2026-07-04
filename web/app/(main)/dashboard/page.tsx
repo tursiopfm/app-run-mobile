@@ -29,7 +29,7 @@ async function fetchLatestPerSport(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
 ): Promise<Record<SportKey, ActivityRow | null>> {
-  const keys: SportKey[] = ['run', 'ride', 'swim', 'all']
+  const keys: SportKey[] = ['run', 'ride', 'swim', 'walk', 'all']
   const results = await Promise.all(keys.map(async (k) => {
     const types = SPORT_TYPE_MAP[k]
     let q = supabase

@@ -479,6 +479,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     run:  buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.run,  monday, nextMonday, janFirst, now),
     ride: buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.ride, monday, nextMonday, janFirst, now),
     swim: buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.swim, monday, nextMonday, janFirst, now),
+    walk: buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.walk, monday, nextMonday, janFirst, now),
     all:  buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.all,  monday, nextMonday, janFirst, now),
   }
 

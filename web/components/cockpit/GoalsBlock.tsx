@@ -24,6 +24,7 @@ const DEFAULT_GOALS: Record<SportKey, Goals> = {
   run:  { weekKm: 50,  weekDPlus: 2000, yearKm: 1000 },
   ride: { weekKm: 100, weekDPlus: 2000, yearKm: 3000 },
   swim: { weekKm: 5,   weekDPlus: 0,    yearKm: 150  },
+  walk: { weekKm: 20,  weekDPlus: 500,  yearKm: 500  },
   all:  { weekKm: 150, weekDPlus: 4000, yearKm: 4000 },
 }
 

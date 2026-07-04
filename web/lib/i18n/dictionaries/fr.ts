@@ -16,7 +16,7 @@ export type Dict = {
     run: string; trailRun: string; bike: string; virtualRide: string; ebikeRide: string;
     swim: string; walk: string; hike: string; weightTraining: string;
     all: string
-    abbr: { run: string; bike: string; swim: string; all: string }
+    abbr: { run: string; bike: string; swim: string; walk: string; all: string }
   }
   sportLabel: Record<string, string>
   units: Record<'km' | 'm' | 'kmh' | 'perKm' | 'bpm' | 'watts' | 'kg' | 'pct' | 'pctFcMax' | 'ces' | 'hours', string>
@@ -1173,6 +1173,7 @@ export const fr: Dict = {
       run:  'RUN',
       bike: 'VÉLO',
       swim: 'NATATION',
+      walk: 'MARCHE',
       all:  'TOUTES',
     },
   },

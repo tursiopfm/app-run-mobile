@@ -72,6 +72,7 @@ describe('getDashboardData', () => {
     expect(result.sportOverviews.run).toBeDefined()
     expect(result.sportOverviews.ride).toBeDefined()
     expect(result.sportOverviews.swim).toBeDefined()
+    expect(result.sportOverviews.walk).toBeDefined()
     expect(result.sportOverviews.all).toBeDefined()
   })
 
@@ -101,5 +102,20 @@ describe('getDashboardData', () => {
     const result = await getDashboardData('user-1')
     expect(result.sportOverviews.run.weekKm).toBeCloseTo(10, 1)
     expect(result.sportOverviews.all.weekKm).toBeCloseTo(40, 1)
+  })
+
+  it('groups Walk and Hike into sportOverviews.walk (and into all, not run)', async () => {
+    const today = new Date().toISOString()
+    mockCreateClient.mockResolvedValue(makeSelectMock([
+      { id: '1', sport_type: 'Walk', name: 'Marche', start_time: today,
+        ces: 10, distance_m: 5000,  elevation_gain_m: 50,  moving_time_sec: 3600 },
+      { id: '2', sport_type: 'Hike', name: 'Rando',  start_time: today,
+        ces: 30, distance_m: 12000, elevation_gain_m: 800, moving_time_sec: 7200 },
+    ]))
+    const result = await getDashboardData('user-1')
+    expect(result.sportOverviews.walk.weekSessions).toBe(2)
+    expect(result.sportOverviews.walk.weekKm).toBeCloseTo(17, 1)
+    expect(result.sportOverviews.run.weekSessions).toBe(0)
+    expect(result.sportOverviews.all.weekSessions).toBe(2)
   })
 })

@@ -9,6 +9,7 @@ export function sportLabel(sport: SportKey, t: Dict): string {
     case 'run':  return t.sports.run
     case 'ride': return t.sports.bike
     case 'swim': return t.sports.swim
+    case 'walk': return t.sports.walk
     case 'all':  return t.sports.all
   }
 }
@@ -18,6 +19,7 @@ export function sportShortLabel(sport: SportKey, t: Dict): string {
     case 'run':  return t.sports.abbr.run
     case 'ride': return t.sports.abbr.bike
     case 'swim': return t.sports.abbr.swim
+    case 'walk': return t.sports.abbr.walk
     case 'all':  return t.sports.abbr.all
   }
 }
