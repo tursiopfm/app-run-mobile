@@ -54,7 +54,8 @@ export function WeekBlock({ sportOverviews, allSessions, defaultSport }: Props) 
       <div className="flex items-center justify-between mb-[10px]">
         <p className="text-[15px] font-semibold text-trail-muted font-display">{L.blockLabel.week}</p>
         <div className="flex gap-1">
-          {ALL_SPORT_KEYS.map((sport) => {
+          {/* Marche = sport opt-in (activable via le dialogue des autres blocs), jamais une pastille permanente ici. */}
+          {ALL_SPORT_KEYS.filter((sport) => sport !== 'walk').map((sport) => {
             const scfg = SPORT_CONFIG[sport]
             const isActive = activeSport === sport
             return (
