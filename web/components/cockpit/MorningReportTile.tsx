@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Coffee } from 'lucide-react'
 import { useMorningReportSeen } from '@/lib/hooks/useMorningReportSeen'
 
 function todayISO(): string {
@@ -29,7 +30,7 @@ export function MorningReportTile() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0 bg-trail-surface">
-              <span style={{ fontSize: 18 }}>📋</span>
+              <Coffee size={18} className="text-trail-primary" />
             </div>
             <div className="min-w-0">
               <p className="text-body font-semibold leading-tight text-trail-text">Rapport matinal du jour</p>
