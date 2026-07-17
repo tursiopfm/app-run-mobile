@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { Coffee } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useColors } from '@/lib/design/useColors'
 import { type TrailPalette } from '@/lib/design/colors'
@@ -99,6 +100,9 @@ export function AppearanceSection() {
 
       {/* Rapport matinal — auto-ouverture */}
       <div className="mt-[14px] flex items-start gap-3">
+        <div className="w-9 h-9 rounded-[10px] bg-trail-surface flex items-center justify-center flex-shrink-0">
+          <Coffee size={18} className="text-trail-primary" />
+        </div>
         <div className="flex-1 min-w-0">
           <p className="text-caption font-semibold text-trail-text leading-tight">
             {t.settings.morningReportAutoOpenLabel}
