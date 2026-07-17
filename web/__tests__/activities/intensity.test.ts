@@ -1,6 +1,7 @@
 import {
   guessIntensity,
   guessWorkoutType,
+  intensityWithWorkoutFloor,
   secondsToHMS,
   hmsToSeconds,
   INTENSITY_OPTIONS,
@@ -124,5 +125,25 @@ describe('INTENSITY_OPTIONS', () => {
 describe('SPORT_OPTIONS', () => {
   it('has 10 entries', () => {
     expect(SPORT_OPTIONS).toHaveLength(10)
+  })
+})
+
+describe('intensityWithWorkoutFloor', () => {
+  it('course keeps its measured intensity (an ultra is run in endurance)', () => {
+    expect(intensityWithWorkoutFloor('recuperation', 'course')).toBe('recuperation')
+    expect(intensityWithWorkoutFloor('footing', 'course')).toBe('footing')
+  })
+  it('quality sessions keep their floor (avg HR diluted by recovery intervals)', () => {
+    expect(intensityWithWorkoutFloor('recuperation', 'fractionne')).toBe('endurance_active')
+    expect(intensityWithWorkoutFloor('footing', 'seuil_tempo')).toBe('endurance_active')
+    expect(intensityWithWorkoutFloor('recuperation', 'cotes')).toBe('endurance_active')
+  })
+  it('never lowers an intensity above the floor', () => {
+    expect(intensityWithWorkoutFloor('vma', 'fractionne')).toBe('vma')
+    expect(intensityWithWorkoutFloor('seuil', 'cotes')).toBe('seuil')
+  })
+  it('passes through when intensity or type is missing', () => {
+    expect(intensityWithWorkoutFloor(null, 'fractionne')).toBeNull()
+    expect(intensityWithWorkoutFloor('recuperation', null)).toBe('recuperation')
   })
 })

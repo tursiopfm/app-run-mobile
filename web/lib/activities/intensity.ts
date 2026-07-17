@@ -156,11 +156,13 @@ export function guessIntensity(
 
 const INTENSITY_ORDER: IntensityKey[] = ['recuperation', 'footing', 'endurance_active', 'seuil', 'vma']
 
+// Sur ces séances la FC moyenne sous-estime l'effort (récups entre les blocs).
+// 'course' est volontairement absent : un ultra se court en endurance, son
+// intensité mesurée est la bonne.
 const WORKOUT_INTENSITY_FLOOR: Partial<Record<WorkoutType, IntensityKey>> = {
   fractionne:  'endurance_active',
   seuil_tempo: 'endurance_active',
   cotes:       'endurance_active',
-  course:      'endurance_active',
 }
 
 export function intensityWithWorkoutFloor(

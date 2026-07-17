@@ -41,7 +41,7 @@ describe('guessIntensity — pure HR', () => {
   })
 })
 
-describe('classifyIntensityFromZoneTimes — cascade 15% Z5 / 20% Z4+Z5 / 40% Z3+', () => {
+describe('classifyIntensityFromZoneTimes — cascade 10% Z5 / 15% Z4+Z5 / 20% Z3+', () => {
   it('100% Z2 → footing', () => {
     expect(classifyIntensityFromZoneTimes([0, 3600, 0, 0, 0])).toBe('footing')
   })
@@ -50,36 +50,40 @@ describe('classifyIntensityFromZoneTimes — cascade 15% Z5 / 20% Z4+Z5 / 40% Z3
     expect(classifyIntensityFromZoneTimes([3600, 0, 0, 0, 0])).toBe('recuperation')
   })
 
-  it('Z1+Z2 > Z3+ (39% en Z3+, Z4+Z5 < 20%) → footing', () => {
-    expect(classifyIntensityFromZoneTimes([10, 51, 30, 9, 0])).toBe('footing')
+  it('39% en Z3+ (Z4+Z5 = 9%) → endurance_active', () => {
+    expect(classifyIntensityFromZoneTimes([10, 51, 30, 9, 0])).toBe('endurance_active')
+  })
+
+  it('Z1+Z2 dominants, Z3+ = 15% (< 20%) → footing', () => {
+    expect(classifyIntensityFromZoneTimes([20, 65, 10, 5, 0])).toBe('footing')
   })
 
   it('Trail des lavoirs (Z3 dominant, Z4+Z5 = 9%) → endurance_active', () => {
     expect(classifyIntensityFromZoneTimes([34, 102, 97, 23, 0])).toBe('endurance_active')
   })
 
-  it('seuil exact à 40% Z3+ → bascule endurance_active', () => {
-    expect(classifyIntensityFromZoneTimes([30, 30, 40, 0, 0])).toBe('endurance_active')
+  it('seuil exact à 20% Z3+ → bascule endurance_active', () => {
+    expect(classifyIntensityFromZoneTimes([40, 40, 20, 0, 0])).toBe('endurance_active')
   })
 
-  it('Z4+Z5 = 67%, Z5 = 11% (< 15%) → seuil', () => {
-    expect(classifyIntensityFromZoneTimes([5, 10, 15, 50, 10])).toBe('seuil')
+  it('Z5 = 11% (≥ 10%) → vma', () => {
+    expect(classifyIntensityFromZoneTimes([5, 10, 15, 50, 10])).toBe('vma')
   })
 
   it('Z5 = 50% (VMA pur) → vma', () => {
     expect(classifyIntensityFromZoneTimes([5, 10, 10, 15, 40])).toBe('vma')
   })
 
-  it('Z5 exactement 15% → vma', () => {
-    expect(classifyIntensityFromZoneTimes([10, 20, 25, 30, 15])).toBe('vma')
+  it('Z5 exactement 10% → vma', () => {
+    expect(classifyIntensityFromZoneTimes([10, 20, 30, 30, 10])).toBe('vma')
   })
 
-  it('Z5 = 14.9% (juste sous 15%), Z4+Z5 = 50% → seuil', () => {
-    expect(classifyIntensityFromZoneTimes([200, 200, 200, 250, 149])).toBe('seuil')
+  it('Z5 = 9,6% (juste sous 10%), Z4+Z5 = 36% → seuil', () => {
+    expect(classifyIntensityFromZoneTimes([200, 200, 200, 250, 90])).toBe('seuil')
   })
 
-  it('Z4+Z5 exactement 20% (sans Z5) → seuil', () => {
-    expect(classifyIntensityFromZoneTimes([30, 30, 20, 20, 0])).toBe('seuil')
+  it('Z4+Z5 exactement 15% (sans Z5) → seuil', () => {
+    expect(classifyIntensityFromZoneTimes([30, 35, 20, 15, 0])).toBe('seuil')
   })
 
   it('toutes zones à 0 → null', () => {
