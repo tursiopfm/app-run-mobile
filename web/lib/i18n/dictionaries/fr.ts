@@ -451,6 +451,8 @@ export type Dict = {
     stravaConnectMyAccount: string
     planAutoPushTitleLabel: string
     planAutoPushTitleHint: string
+    morningReportAutoOpenLabel: string
+    morningReportAutoOpenHint: string
 
     defaultAthleteName: string
     memberSince: (date: string) => string
@@ -2142,6 +2144,8 @@ export const fr: Dict = {
     themeDescDark:      'Interface sombre optimisée pour la lecture en extérieur.',
     themeDescLight:     'Interface claire adaptée aux environnements bien éclairés.',
     themeDescSystem:    "Suit automatiquement le réglage système de l'appareil.",
+    morningReportAutoOpenLabel: 'Rapport matinal',
+    morningReportAutoOpenHint:  'Ouvrir automatiquement le rapport au lancement de l’application',
 
     // Settings page
     pageHeroSubtitle:    'Compte, connexions & préférences',

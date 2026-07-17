@@ -952,6 +952,8 @@ export const en: Dict = {
     themeDescDark:      'Dark interface optimised for outdoor reading.',
     themeDescLight:     'Light interface, ideal for bright environments.',
     themeDescSystem:    'Follows the device’s system setting automatically.',
+    morningReportAutoOpenLabel: 'Morning report',
+    morningReportAutoOpenHint:  'Automatically open the report when the app starts',
 
     pageHeroSubtitle:    'Account, connections & preferences',
     pageHeroIntro:       'Manage your identity, sports integrations, and the look of your cockpit.',

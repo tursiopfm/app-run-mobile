@@ -12,6 +12,7 @@ const SYNCED_KEYS = [
   'charge_sport_filter',
   'whats_new_seen',
   'app_mode',
+  'morning_report_auto_open',
 ]
 
 type Listener = () => void

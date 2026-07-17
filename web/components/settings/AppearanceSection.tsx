@@ -6,6 +6,7 @@ import { useColors } from '@/lib/design/useColors'
 import { type TrailPalette } from '@/lib/design/colors'
 import { useT, useLang } from '@/lib/i18n/I18nProvider'
 import type { LangChoice } from '@/lib/i18n'
+import { useMorningReportAutoOpen } from '@/lib/preferences/morning-report'
 
 type ThemeOption = 'Dark' | 'Light' | 'System'
 
@@ -36,6 +37,7 @@ export function AppearanceSection() {
   const t = useT()
   const colors = useColors()
   const router = useRouter()
+  const morningReport = useMorningReportAutoOpen()
 
   const themeOptions: { value: ThemeOption; nextTheme: string; label: string }[] = [
     { value: 'Dark',   nextTheme: 'dark',   label: t.settings.themeDark },
@@ -93,6 +95,37 @@ export function AppearanceSection() {
             colors={colors}
           />
         ))}
+      </div>
+
+      {/* Rapport matinal — auto-ouverture */}
+      <div className="mt-[14px] flex items-start gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-caption font-semibold text-trail-text leading-tight">
+            {t.settings.morningReportAutoOpenLabel}
+          </p>
+          <p className="text-micro text-trail-muted leading-[15px] mt-[2px]">
+            {t.settings.morningReportAutoOpenHint}
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={morningReport.enabled}
+          aria-label={t.settings.morningReportAutoOpenLabel}
+          onClick={() => morningReport.setEnabled(!morningReport.enabled)}
+          className={
+            'relative inline-flex flex-shrink-0 h-[22px] w-[40px] items-center rounded-full transition-colors ' +
+            (morningReport.enabled ? 'bg-trail-primary' : 'bg-trail-border')
+          }
+          style={{ visibility: morningReport.mounted ? 'visible' : 'hidden' }}
+        >
+          <span
+            className={
+              'inline-block h-[18px] w-[18px] rounded-full bg-white shadow transition-transform ' +
+              (morningReport.enabled ? 'translate-x-[20px]' : 'translate-x-[2px]')
+            }
+          />
+        </button>
       </div>
     </>
   )
