@@ -50,3 +50,6 @@ tools/
 .android-user/
 .gradle-user/
 .user-home/
+
+# --- B. Config éditeur locale (VS Code) ---
+.vscode/
