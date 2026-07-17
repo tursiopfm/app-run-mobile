@@ -1,4 +1,4 @@
-import { Plug2, Palette, Sparkles, LifeBuoy, User, Route, Compass } from 'lucide-react'
+import { Plug2, Palette, LifeBuoy, User, Route, Compass } from 'lucide-react'
 import { StravaSection } from '@/components/settings/StravaSection'
 import { ImportEntrySection } from '@/components/settings/ImportEntrySection'
 import { AppModeToggle } from '@/components/settings/AppModeToggle'
@@ -42,24 +42,6 @@ function SectionCard({ children }: { children: React.ReactNode }) {
   )
 }
 
-// ── Roadmap items grouped by theme — derived from project memory + TODO docs
-function buildRoadmap(L: ReturnType<typeof getServerT>['settings']) {
-  return [
-    {
-      group: L.roadmap.intelligence,
-      items: [L.roadmapItems.coachAi],
-    },
-    {
-      group: L.roadmap.personalization,
-      items: [L.roadmapItems.dataCockpit],
-    },
-    {
-      group: L.roadmap.raceManagement,
-      items: [L.roadmapItems.raceTable],
-    },
-  ]
-}
-
 export default async function SettingsPage({
   searchParams,
 }: {
@@ -70,7 +52,6 @@ export default async function SettingsPage({
     searchParams?.strava === 'already_linked' || searchParams?.strava === 'error'
       ? searchParams.strava
       : undefined
-  const ROADMAP = buildRoadmap(settingsLabels)
   const user = await getServerUser()
   const supabase = await createClient()
   const appMode = await getServerAppMode()
@@ -232,37 +213,6 @@ export default async function SettingsPage({
         />
         <SectionCard>
           <AppearanceSection />
-        </SectionCard>
-      </section>
-
-      {/* ── Bientôt — feuille de route ── */}
-      <section>
-        <SectionHeader
-          icon={Sparkles}
-          title={settingsLabels.comingSoon}
-          subtitle={settingsLabels.sectionComingSoonSub}
-        />
-        <SectionCard>
-          <div className="space-y-[14px]">
-            {ROADMAP.map(({ group, items }) => (
-              <div key={group} className="space-y-[6px]">
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-trail-muted px-1">
-                  {group}
-                </p>
-                <div className="space-y-[6px]">
-                  {items.map(text => (
-                    <div
-                      key={text}
-                      className="flex items-start gap-[10px] px-3 py-[8px] rounded-[10px] bg-trail-surface"
-                    >
-                      <div className="flex-shrink-0 mt-[6px] w-[6px] h-[6px] rounded-full bg-trail-primary" />
-                      <p className="text-body-sm text-trail-text leading-[18px]">{text}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
         </SectionCard>
       </section>
 

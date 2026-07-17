@@ -418,22 +418,15 @@ export type Dict = {
     title: string; sectionAccount: string; sectionAppearance: string; sectionStartup: string
     sectionConnections: string; sectionProfile: string; logout: string
     themeLight: string; themeDark: string; themeSystem: string
-    langSystem: string; langFrench: string; langEnglish: string; comingSoon: string
+    langSystem: string; langFrench: string; langEnglish: string
     languageRow: string; themeDescDark: string; themeDescLight: string; themeDescSystem: string
 
     pageHeroSubtitle: string; pageHeroIntro: string
     sectionAccountSub: string; sectionProfileSub: string; sectionAppearanceSub: string
-    sectionComingSoonSub: string
     helpAboutTitle: string; helpAboutSub: string; footerTagline: string
     backToSettingsAria: string
     profilePageTitle: string; profilePageIntro: string
     identityPageTitle: string; identityPageIntro: string
-
-    roadmap: Record<'intelligence' | 'personalization' | 'raceManagement', string>
-    roadmapItems: Record<
-      'coachAi' | 'dataCockpit' | 'raceTable',
-      string
-    >
 
     helpSupport: string; helpContactVersion: string
     helpAndSupport: string; helpAndSupportSub: string
@@ -2139,7 +2132,6 @@ export const fr: Dict = {
     langSystem:         'Système',
     langFrench:         'Français',
     langEnglish:        'English',
-    comingSoon:         'Bientôt',
     languageRow:        'Langue',
     themeDescDark:      'Interface sombre optimisée pour la lecture en extérieur.',
     themeDescLight:     'Interface claire adaptée aux environnements bien éclairés.',
@@ -2153,7 +2145,6 @@ export const fr: Dict = {
     sectionAccountSub:   'Identité Trail Cockpit et intégrations tierces',
     sectionProfileSub:   'Aperçu de ton profil sportif et accès à la calibration cardiaque',
     sectionAppearanceSub:'Thème et langue de l’interface',
-    sectionComingSoonSub:'Prochaines étapes du produit',
     helpAboutTitle:      'Aide & À propos',
     helpAboutSub:        'Mentions, support et version de l’application',
     footerTagline:       'Trail Cockpit · Conçu pour les coureurs de trail',
@@ -2162,18 +2153,6 @@ export const fr: Dict = {
     profilePageIntro:    "Ces réglages calibrent tes zones de fréquence cardiaque et améliorent l'interprétation de l'effort.",
     identityPageTitle:   'Identité',
     identityPageIntro:   'Modifie ton nom et ta photo de profil.',
-
-    // Roadmap groups
-    roadmap: {
-      intelligence:      'Intelligence',
-      personalization:   'Personnalisation',
-      raceManagement:    'Gestion de course',
-    },
-    roadmapItems: {
-      coachAi:           'Coach IA personnalisé (résumé hebdo, conseil du jour)',
-      dataCockpit:       'Data cockpit entièrement personnalisables',
-      raceTable:         'Tableau de plan de course (ravito, BH, temps de passage)',
-    },
 
     // HelpAboutSection
     helpSupport:         'Support',

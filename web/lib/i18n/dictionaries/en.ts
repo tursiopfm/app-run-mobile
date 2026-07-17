@@ -947,7 +947,6 @@ export const en: Dict = {
     langSystem:         'System',
     langFrench:         'Français',
     langEnglish:        'English',
-    comingSoon:         'Coming soon',
     languageRow:        'Language',
     themeDescDark:      'Dark interface optimised for outdoor reading.',
     themeDescLight:     'Light interface, ideal for bright environments.',
@@ -960,7 +959,6 @@ export const en: Dict = {
     sectionAccountSub:   'Trail Cockpit identity and third-party integrations',
     sectionProfileSub:   'Snapshot of your athletic profile and access to heart-rate calibration',
     sectionAppearanceSub:'Interface theme and language',
-    sectionComingSoonSub:'Upcoming product steps',
     helpAboutTitle:      'Help & About',
     helpAboutSub:        'Notices, support, and app version',
     footerTagline:       'Trail Cockpit · Built for trail runners',
@@ -969,17 +967,6 @@ export const en: Dict = {
     profilePageIntro:    'These settings calibrate your heart-rate zones and improve effort interpretation.',
     identityPageTitle:   'Identity',
     identityPageIntro:   'Edit your name and profile picture.',
-
-    roadmap: {
-      intelligence:      'Intelligence',
-      personalization:   'Personalisation',
-      raceManagement:    'Race management',
-    },
-    roadmapItems: {
-      coachAi:           'Personalised AI coach (weekly summary, tip of the day)',
-      dataCockpit:       'Fully customisable cockpit data',
-      raceTable:         'Race plan table (aid stations, BHs, pacing)',
-    },
 
     helpSupport:         'Support',
     helpContactVersion:  'Contact & Version',
