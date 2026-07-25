@@ -27,6 +27,20 @@ function isHashedAsset(url) {
   return url.pathname.startsWith('/_next/static/')
 }
 
+// Âge maximal d'un document HTML servi depuis le cache. Le HTML d'une page Next
+// embarque son payload RSC, donc les DONNÉES du rendu serveur — et l'App Router
+// ne refetche jamais ce RSC initial à l'hydratation. Servir un vieux document =
+// afficher de vieux chiffres (incident 2026-07-25 : Cockpit figé 4 jours sur
+// l'état du 21/07).
+const NAV_MAX_STALE_MS = 5 * 60 * 1000
+
+// Fraîcheur d'une réponse stockée, d'après son en-tête Date (toujours émis par
+// Vercel). Date absente ou illisible → périmée : on préfère le réseau.
+function isFreshDocument(res) {
+  const at = Date.parse(res.headers.get('date') || '')
+  return Number.isFinite(at) && Date.now() - at < NAV_MAX_STALE_MS
+}
+
 self.addEventListener('fetch', (event) => {
   const req = event.request
   if (req.method !== 'GET') return
@@ -55,14 +69,17 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Navigations (documents HTML) : stale-while-revalidate. On peint depuis le
-  // cache instantanément (démarrage PWA quasi immédiat dès la 2e ouverture) puis
-  // on revalide le réseau en tâche de fond. Cache vide → réseau (aucun
-  // ralentissement vs avant). Pas de gel : le HTML caché référence des chunks
-  // hashés eux-mêmes cachés (cache-first) → version interne cohérente ; le bump
-  // de VERSION au déploiement purge les caches (activate) → fraîcheur garantie au
-  // lancement suivant. Compromis assumé : 1 lancement sur l'ancienne version
-  // juste après un déploiement.
+  // Navigations (documents HTML) : stale-while-revalidate BORNÉ dans le temps.
+  // Copie de moins de NAV_MAX_STALE_MS → peinte instantanément (démarrage PWA
+  // quasi immédiat) puis revalidée en tâche de fond. Au-delà → réseau d'abord,
+  // avec repli sur la copie périmée si le réseau échoue (hors ligne).
+  // Le plafond est indispensable : la revalidation d'arrière-plan n'aboutit pas
+  // sur iOS (WebKit suspend le worker dès la réponse livrée, event.waitUntil est
+  // coupé avant cache.put), l'entrée restait donc figée jusqu'au déploiement
+  // suivant. Le chemin réseau, lui, écrit toujours — c'est la réponse livrée à
+  // la page, le worker ne peut pas mourir avant → il resynchronise le cache.
+  // Cohérence interne préservée : le HTML caché référence des chunks hashés
+  // eux-mêmes cachés (cache-first), et le bump de VERSION purge tout (activate).
   if (req.mode === 'navigate') {
     event.respondWith((async () => {
       const cache = await caches.open(RUNTIME_CACHE)
@@ -71,14 +88,14 @@ self.addEventListener('fetch', (event) => {
         if (res.ok) cache.put(req, res.clone()).catch(() => {})
         return res
       })
-      if (cached) {
+      if (cached && isFreshDocument(cached)) {
         event.waitUntil(network.catch(() => {})) // revalidation en arrière-plan
         return cached
       }
       try {
         return await network
       } catch {
-        return (await cache.match(req)) || (await caches.match('/'))
+        return cached || (await caches.match('/'))
       }
     })())
     return
