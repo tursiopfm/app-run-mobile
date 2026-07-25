@@ -1,3 +1,14 @@
+> **🟠 PROJET : Trail Cockpit** — dépôt `app-run-mobile`
+>
+> Application d'entraînement trail running : PWA Next.js (dossier `web/`, déployée sur
+> https://trailcockpit.run) qui calcule la charge d'entraînement (CES) à partir des activités
+> Strava/Garmin et pilote la préparation de courses.
+>
+> **Dépôt indépendant.** Ce dépôt n'a AUCUN lien avec le projet **Crypto Cockpit**. N'y référence
+> jamais des fichiers, schémas, tables, migrations ou concepts appartenant à l'autre projet
+> (transactions, PnL, positions, exchanges, PRU/FIFO, capital_flows, etc.). En cas de doute sur
+> l'appartenance d'un élément à ce projet, **arrête-toi et pose une question** plutôt que d'improviser.
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
@@ -50,7 +61,9 @@ Le SW est généré au build, ne **jamais** éditer `web/public/sw.js` directeme
 
 À chaque déploiement, `VERSION` change donc l'event `activate` du SW supprime les anciens caches `trail-static-*` / `trail-runtime-*` et `clients.claim()` force la nouvelle version active sur les onglets ouverts. Sans ça : les chunks JS cachés restent obsolètes après deploy → router Next.js gelé silencieusement (incident 2026-05-14).
 
-Stratégies de cache (handler `fetch`) : chunks Next hashés `/_next/static/*` = **cache-first** (l'URL garantit la fraîcheur) ; **navigations** (documents HTML, `req.mode === 'navigate'`) = **stale-while-revalidate** (peinture instantanée depuis le cache → démarrage PWA rapide, revalidation réseau en tâche de fond) ; reste (RSC, `/api`, icônes, manifest) = **network-first**. Le SWR navigation ne gèle pas (HTML caché ↔ chunks hashés cachés = cohérents) et le bump de VERSION purge tout au déploiement ; compromis assumé : **1 lancement sur l'ancienne version juste après un déploiement** (puis MAJ). Hard-reload (`reload`/`no-cache`) bypasse le SW.
+Stratégies de cache (handler `fetch`) : chunks Next hashés `/_next/static/*` = **cache-first** (l'URL garantit la fraîcheur) ; **navigations** (documents HTML, `req.mode === 'navigate'`) = **stale-while-revalidate borné à `NAV_MAX_STALE_MS` (5 min)** — copie de moins de 5 min peinte instantanément puis revalidée en fond, au-delà réseau d'abord avec repli sur la copie périmée si hors ligne ; reste (RSC, `/api`, icônes, manifest) = **network-first**. Hard-reload (`reload`/`no-cache`) bypasse le SW.
+
+**Pourquoi le plafond de 5 min** (incident 2026-07-25) : le document HTML d'une page Next embarque son payload RSC, donc les **données** du rendu serveur, et l'App Router ne refetche jamais ce RSC initial à l'hydratation. Sur iOS la revalidation d'arrière-plan (`event.waitUntil`) n'aboutit pas — WebKit suspend le worker dès la réponse livrée, avant `cache.put` — l'entrée était donc *write-once* : le Cockpit repartait à chaque lancement sur l'état du 21/07, figé 4 jours (jusqu'au déploiement suivant, seul purgeur via le bump de VERSION). Le chemin réseau, lui, écrit toujours (la réponse livrée à la page EST celle du réseau) → il resynchronise le cache. Second garde-fou côté client : `components/navigation/SyncOnFocus.tsx` appelle `router.refresh()` **au montage** (un lancement à froid n'émet aucun `visibilitychange`, le document initial est déjà visible). Corollaire à ne pas oublier en debug : **n'importe quel déploiement fait disparaître le symptôme** (VERSION change → purge) sans corriger la cause.
 
 **Si tu modifies la logique du SW** (handlers `fetch`/`install`/`activate`), édite uniquement `scripts/sw.template.js` ; le bump de VERSION est automatique au push suivant.
 
@@ -110,19 +123,30 @@ Implementation lives in `web/lib/analytics/`:
 ## Working style (Franck's preferences)
 
 - French-language responses; code direct, minimal explanation.
+- T'adresser à Franck par son prénom dans chaque réponse (commencer par « Franck, … » ou l'inclure naturellement).
 - Make small, targeted edits. Ask before touching multiple files.
 - Only read files explicitly relevant to the task — don't pre-scan the codebase.
 - When executing a written plan, use the Subagent-driven execution mode, not inline.
 
 ## Engineering discipline
 
-**1. Think before coding.** State assumptions explicitly; if uncertain, ask. If multiple interpretations exist, surface them — don't pick silently. If a simpler approach exists, say so and push back. If something is unclear, stop and name what's confusing.
+**1. Think before coding.** State assumptions explicitly; if uncertain, ask. If multiple interpretations exist, surface them — don't pick silently. If a simpler approach exists, say so and push back. If something is unclear, **stop and ask one clarifying question before writing any code** — never guess intent and proceed.
 
 **2. Simplicity first.** Minimum code that solves the problem, nothing speculative. No features beyond what was asked, no abstractions for single-use code, no unrequested "flexibility", no error handling for impossible scenarios. If 200 lines could be 50, rewrite it. Test: would a senior engineer call this overcomplicated?
 
 **3. Surgical changes.** Touch only what the request requires. Don't "improve" adjacent code, comments, or formatting; don't refactor what isn't broken; match existing style even if you'd do it differently. Remove only the imports/variables/functions YOUR changes orphaned — flag pre-existing dead code, don't delete it. Every changed line must trace to the user's request.
 
 **4. Goal-driven execution.** Turn tasks into verifiable goals before coding ("fix the bug" → "write a failing test that reproduces it, then make it pass"). For multi-step work, state a brief plan with a verification check per step, then loop until each check passes.
+
+**5. Honest reporting.** Summarize what changed and why in a few lines. Flag every assumption you had to make. Never claim something works without verifying it (`npm run build`, type-check, or the relevant test) — and never claim a schema change is live just because a migration file exists. Don't invent APIs, functions, or file paths; verify they exist first.
+
+**6. Stack guardrails.**
+- Migrations Supabase : créer un nouveau fichier numéroté dans `web/supabase/migrations/`, **jamais** éditer une migration déjà appliquée. Rappeler à Franck de la coller dans le SQL Editor.
+- Service Worker : éditer uniquement `web/scripts/sw.template.js`, jamais `web/public/sw.js` (artefact généré, gitignoré).
+- Auth Supabase par cookies : pas de `unstable_cache`. Server Components par défaut, `'use client'` seulement si nécessaire.
+- Secrets (Supabase, Strava, Stripe, `APP_URL`) : jamais en dur, jamais loggés — ils vivent dans le dashboard Vercel.
+- Déploiement : push GitHub uniquement, **pas** de `vercel --prod`. Pas de commit/push ni de commande destructive sans demande explicite.
+- Invariant CES : l'agrégation journalière émet **chaque** jour de la fenêtre, y compris `ces = 0` — ne jamais sauter les jours vides (corrompt les EWMA).
 
 ## Self-learning loop
 
