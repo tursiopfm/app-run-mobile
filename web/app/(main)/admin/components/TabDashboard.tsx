@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { createServiceClient } from '@/lib/database/supabase-server'
 import { fetchVercelDeployments } from '@/lib/admin/vercel'
-import { formatDateTime } from '@/lib/admin/format'
+import { formatDateTime, lastSeenAt } from '@/lib/admin/format'
 import { envSummary } from '@/lib/admin/system-env'
 import { Users, Plug, Activity, Webhook, Rocket, Settings, Sparkles } from 'lucide-react'
 
@@ -38,7 +38,10 @@ async function fetchDashboardStats() {
   ])
 
   const newUsers7d = (usersList ?? []).filter(u => u.created_at >= since7d).length
-  const active24h = (usersList ?? []).filter(u => u.last_sign_in_at && u.last_sign_in_at >= since24h).length
+  const active24h = (usersList ?? []).filter(u => {
+    const seen = lastSeenAt(u.last_sign_in_at, u.updated_at)
+    return seen !== null && seen >= since24h
+  }).length
 
   return {
     userCount: userCount ?? 0,

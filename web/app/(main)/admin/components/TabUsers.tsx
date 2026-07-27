@@ -1,5 +1,5 @@
 import { createServiceClient } from '@/lib/database/supabase-server'
-import { formatRelativeTime, lastLoginColor } from '@/lib/admin/format'
+import { formatRelativeTime, lastLoginColor, lastSeenAt } from '@/lib/admin/format'
 import { UserActions } from './UserActions'
 
 async function fetchUsers() {
@@ -36,7 +36,7 @@ async function fetchUsers() {
     id: u.id,
     email: u.email ?? '—',
     createdAt: u.created_at,
-    lastSignIn: u.last_sign_in_at ?? null,
+    lastSeen: lastSeenAt(u.last_sign_in_at, u.updated_at),
     isAdmin: (profileMap.get(u.id) as any)?.is_admin === true,
     stravaConnected: stravaSet.has(u.id),
     activityCount: actCountMap.get(u.id) ?? 0,
@@ -56,8 +56,8 @@ export async function TabUsers() {
               <p className="text-xs text-trail-muted">
                 Inscrit le {new Date(u.createdAt).toLocaleDateString('fr-FR')}
               </p>
-              <p className={`text-xs ${lastLoginColor(u.lastSignIn)}`}>
-                ⏱ Dernière connexion : {formatRelativeTime(u.lastSignIn)}
+              <p className={`text-xs ${lastLoginColor(u.lastSeen)}`}>
+                ⏱ Dernière activité : {formatRelativeTime(u.lastSeen)}
               </p>
             </div>
             <span className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${

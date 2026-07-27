@@ -1,3 +1,18 @@
+/**
+ * Dernière trace d'utilisation d'un compte.
+ * `last_sign_in_at` n'est écrit qu'à une authentification réelle (saisie du code OTP) :
+ * une session prolongée par rotation du refresh token le laisse figé pendant des semaines.
+ * `updated_at`, lui, bouge à chaque renouvellement de session — on garde la plus récente.
+ */
+export function lastSeenAt(
+  lastSignInAt: string | null | undefined,
+  updatedAt: string | null | undefined,
+): string | null {
+  const dates = [lastSignInAt, updatedAt].filter((d): d is string => !!d)
+  if (dates.length === 0) return null
+  return dates.reduce((a, b) => (Date.parse(a) >= Date.parse(b) ? a : b))
+}
+
 export function formatRelativeTime(iso: string | null): string {
   if (!iso) return '—'
   const diffMs = Date.now() - new Date(iso).getTime()
