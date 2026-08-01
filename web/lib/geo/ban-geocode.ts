@@ -29,13 +29,13 @@ export function parseBanResponse(json: unknown): AddressHit[] {
   return hits
 }
 
-/** Recherche d'adresse. Réponse non-ok ou erreur réseau → []. */
-export async function searchAddress(q: string): Promise<AddressHit[]> {
+/** Recherche d'adresse. Réponse ok + résultats valides → AddressHit[]. Réponse non-ok ou erreur réseau → null. */
+export async function searchAddress(q: string): Promise<AddressHit[] | null> {
   try {
     const res = await fetch(`${BAN_SEARCH_URL}?q=${encodeURIComponent(q)}&limit=5`)
-    if (!res.ok) return []
+    if (!res.ok) return null
     return parseBanResponse(await res.json())
   } catch {
-    return []
+    return null
   }
 }

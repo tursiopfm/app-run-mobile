@@ -102,6 +102,7 @@ export function CommutePointsEditor({
   const [query, setQuery] = useState('')
   const [hits, setHits] = useState<AddressHit[]>([])
   const [searching, setSearching] = useState(false)
+  const [searchError, setSearchError] = useState(false)
 
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(false)
@@ -112,15 +113,23 @@ export function CommutePointsEditor({
     if (q.length < 3) {
       setHits([])
       setSearching(false)
+      setSearchError(false)
       return
     }
+    let cancelled = false
     setSearching(true)
+    setSearchError(false)
     const t = setTimeout(async () => {
       const res = await searchAddress(q)
-      setHits(res)
+      if (cancelled) return
+      setHits(res ?? [])
+      setSearchError(res == null)
       setSearching(false)
     }, 300)
-    return () => clearTimeout(t)
+    return () => {
+      cancelled = true
+      clearTimeout(t)
+    }
   }, [query])
 
   const setPoint = (key: PointKey, pos: LatLng) => {
@@ -133,6 +142,7 @@ export function CommutePointsEditor({
     setFocus([hit.lat, hit.lng])
     setQuery('')
     setHits([])
+    setSearchError(false)
   }
 
   async function handleSave() {
@@ -202,10 +212,13 @@ export function CommutePointsEditor({
           placeholder={`Adresse du point ${POINT_META[active].label}…`}
           className="w-full rounded-[10px] bg-trail-surface border border-trail-border px-3 py-[8px] text-body text-trail-text outline-none focus:border-trail-primary"
         />
-        {(hits.length > 0 || searching) && (
+        {(hits.length > 0 || searching || (searchError && !searching)) && (
           <div className="absolute left-4 right-4 top-full z-[1100] rounded-[10px] bg-trail-card border border-trail-border shadow-xl overflow-hidden">
             {searching && (
               <p className="px-3 py-[8px] text-caption text-trail-muted">Recherche…</p>
+            )}
+            {searchError && !searching && (
+              <p className="px-3 py-[8px] text-caption text-trail-muted">Recherche d&apos;adresse indisponible. Place le point directement sur la carte.</p>
             )}
             {hits.map(hit => (
               <button
