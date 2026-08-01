@@ -129,6 +129,55 @@ describe('matchCommute', () => {
     expect(matchCommute({ sportType: 'Run', geo }, [makeRoute()])).toBeNull()
   })
 
+  it('régression : boucle depuis Home (arrivée = Home) → null', () => {
+    // Le faux positif d'origine : footing de la bonne distance qui part de
+    // chez soi et y revient — l'arrivée n'est pas le bureau, pas un trajet.
+    const geo = extractCommuteGeo({
+      distance: 5000,
+      start_latlng: [48.8566, 2.3522], // Home
+      end_latlng: [48.8567, 2.3524], // ~20 m de Home
+      start_date_local: '2026-05-28T07:45:00Z',
+    })
+    expect(matchCommute({ sportType: 'Run', geo }, [makeRoute()])).toBeNull()
+  })
+
+  it('boucle depuis Office (arrivée = Office) → null', () => {
+    const geo = extractCommuteGeo({
+      distance: 5000,
+      start_latlng: [48.8606, 2.42], // Office
+      end_latlng: [48.8607, 2.4202], // ~20 m d'Office
+      start_date_local: '2026-05-28T12:10:00Z',
+    })
+    expect(matchCommute({ sportType: 'Run', geo }, [makeRoute()])).toBeNull()
+  })
+
+  it('route avec géo + arrivée GPS manquante → null', () => {
+    // Départ valide à Home mais pas d'end_latlng (montre coupée) :
+    // sans preuve d'arrivée, pas de classement auto (le titre reste la voie
+    // de rattrapage manuelle).
+    const geo = extractCommuteGeo({
+      distance: 5000,
+      start_latlng: [48.8566, 2.3522], // Home
+      end_latlng: [],
+      start_date_local: '2026-05-28T07:45:00Z',
+    })
+    expect(matchCommute({ sportType: 'Run', geo }, [makeRoute()])).toBeNull()
+  })
+
+  it('vélotaf : même logique départ+arrivée pour une route Ride', () => {
+    const geo = extractCommuteGeo({
+      distance: 5000,
+      start_latlng: [48.8566, 2.3522],
+      end_latlng: [48.8606, 2.42],
+      start_date_local: '2026-05-28T07:45:00Z',
+    })
+    const m = matchCommute(
+      { sportType: 'Ride', geo },
+      [makeRoute({ sportType: 'Ride', label: 'Vélotaf' })],
+    )
+    expect(m?.direction).toBe('outbound')
+  })
+
   it('route avec géo + activité SANS GPS → null (pas de fallback heure)', () => {
     // Sans le strict, un treadmill 5 km à 8 h serait classé Runtaf aller.
     const geo = extractCommuteGeo({

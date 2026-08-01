@@ -85,7 +85,8 @@ export function haversineMeters(a: LatLng, b: LatLng): number {
 
 /**
  * Détecte si une activité correspond à un trajet domicile-travail et dans quel sens.
- * Direction : géoloc d'abord, heure en secours.
+ * Direction : géo stricte départ ET arrivée (routes avec Home/Office),
+ * heure en secours pour les routes héritées sans points GPS.
  */
 export function matchCommute(
   input: { sportType: string; geo: CommuteGeo },
@@ -116,14 +117,20 @@ function resolveDirection(geo: CommuteGeo, route: CommuteRoute): CommuteDirectio
     route.officeLat != null &&
     route.officeLng != null
 
-  // Route avec Home/Office (cas standard) : géo strict, pas de fallback heure si géo non concluante
-  // (sinon n'importe quelle activité de la bonne distance et bon créneau horaire est classée trajet).
+  // Route avec Home/Office (cas standard) : géo stricte sur les DEUX extrémités —
+  // une boucle qui part de chez soi et y revient ne doit jamais matcher, et pas
+  // de fallback heure (sinon n'importe quelle activité de la bonne distance et
+  // du bon créneau horaire est classée trajet).
   if (routeHasGeo) {
-    if (geo.start == null) return null
-    const dHome = haversineMeters(geo.start, [route.homeLat!, route.homeLng!])
-    const dOffice = haversineMeters(geo.start, [route.officeLat!, route.officeLng!])
-    if (dHome <= route.geoTolM && dHome <= dOffice) return 'outbound'
-    if (dOffice <= route.geoTolM) return 'return'
+    if (geo.start == null || geo.end == null) return null
+    const home: LatLng = [route.homeLat!, route.homeLng!]
+    const office: LatLng = [route.officeLat!, route.officeLng!]
+    const startAtHome = haversineMeters(geo.start, home) <= route.geoTolM
+    const startAtOffice = haversineMeters(geo.start, office) <= route.geoTolM
+    const endAtHome = haversineMeters(geo.end, home) <= route.geoTolM
+    const endAtOffice = haversineMeters(geo.end, office) <= route.geoTolM
+    if (startAtHome && endAtOffice) return 'outbound'
+    if (startAtOffice && endAtHome) return 'return'
     return null
   }
 
