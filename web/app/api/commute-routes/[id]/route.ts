@@ -10,6 +10,17 @@ type PatchBody = {
   geoTolM?: number
   hourSplit?: number
   active?: boolean
+  homeLat?: number
+  homeLng?: number
+  officeLat?: number
+  officeLng?: number
+}
+
+function isLat(v: unknown): v is number {
+  return typeof v === 'number' && Number.isFinite(v) && v >= -90 && v <= 90
+}
+function isLng(v: unknown): v is number {
+  return typeof v === 'number' && Number.isFinite(v) && v >= -180 && v <= 180
 }
 
 // PATCH /api/commute-routes/[id] → maj partielle (scope user).
@@ -32,6 +43,19 @@ export async function PATCH(
   if (body.geoTolM != null) update.geo_tol_m = body.geoTolM
   if (body.hourSplit != null) update.hour_split = body.hourSplit
   if (body.active != null) update.active = body.active
+
+  // Points Home/Office : paire complète exigée, bornes lat/lng validées.
+  for (const [latVal, lngVal, latCol, lngCol] of [
+    [body.homeLat, body.homeLng, 'home_lat', 'home_lng'],
+    [body.officeLat, body.officeLng, 'office_lat', 'office_lng'],
+  ] as const) {
+    if (latVal == null && lngVal == null) continue
+    if (!isLat(latVal) || !isLng(lngVal)) {
+      return NextResponse.json({ error: 'Point GPS invalide ou incomplet' }, { status: 400 })
+    }
+    update[latCol] = latVal
+    update[lngCol] = lngVal
+  }
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: 'Aucun champ à mettre à jour' }, { status: 400 })
