@@ -85,8 +85,9 @@ export function haversineMeters(a: LatLng, b: LatLng): number {
 
 /**
  * Détecte si une activité correspond à un trajet domicile-travail et dans quel sens.
- * Direction : géo stricte départ ET arrivée (routes avec Home/Office),
- * heure en secours pour les routes héritées sans points GPS.
+ * Critères : sport + géo stricte départ ET arrivée (routes avec Home/Office),
+ * quelle que soit la distance ; heure en secours pour les routes héritées
+ * sans points GPS.
  */
 export function matchCommute(
   input: { sportType: string; geo: CommuteGeo },
@@ -96,13 +97,7 @@ export function matchCommute(
     if (!route.active) continue
     if (route.sportType.toLowerCase() !== input.sportType.toLowerCase()) continue
 
-    const { geo } = input
-    // Distance requise et dans la tolérance
-    if (geo.distanceM == null) continue
-    const tol = (route.refDistanceM * route.distanceTolPct) / 100
-    if (Math.abs(geo.distanceM - route.refDistanceM) > tol) continue
-
-    const direction = resolveDirection(geo, route)
+    const direction = resolveDirection(input.geo, route)
     if (direction == null) continue
 
     return { route, direction }

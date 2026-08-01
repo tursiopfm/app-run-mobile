@@ -119,14 +119,26 @@ describe('matchCommute', () => {
     expect(m?.direction).toBe('return')
   })
 
-  it('distance hors tolérance → null', () => {
+  it('distance très différente de la réf mais départ/arrivée corrects → match', () => {
+    // La distance n'est plus un critère : les points font foi (décision 2026-08-02).
     const geo = extractCommuteGeo({
-      distance: 9000, // +80% > 12%
+      distance: 9000, // réf 5000 — l'ancienne tolérance ±12 % aurait rejeté
       start_latlng: [48.8566, 2.3522],
       end_latlng: [48.8606, 2.42],
       start_date_local: '2026-05-28T07:45:00Z',
     })
-    expect(matchCommute({ sportType: 'Run', geo }, [makeRoute()])).toBeNull()
+    const m = matchCommute({ sportType: 'Run', geo }, [makeRoute()])
+    expect(m?.direction).toBe('outbound')
+  })
+
+  it('activité sans distance mais GPS départ/arrivée valides → match', () => {
+    const geo = extractCommuteGeo({
+      start_latlng: [48.8566, 2.3522],
+      end_latlng: [48.8606, 2.42],
+      start_date_local: '2026-05-28T07:45:00Z',
+    })
+    const m = matchCommute({ sportType: 'Run', geo }, [makeRoute()])
+    expect(m?.direction).toBe('outbound')
   })
 
   it('régression : boucle depuis Home (arrivée = Home) → null', () => {
