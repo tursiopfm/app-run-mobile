@@ -5,6 +5,13 @@ import {
   Footprints, Bike, Route, Trash2, Plus, ChevronDown, ChevronUp,
   Play, Check, AlertTriangle,
 } from 'lucide-react'
+import dynamic from 'next/dynamic'
+import type { CommutePoints } from './CommutePointsEditor'
+
+const CommutePointsEditor = dynamic(
+  () => import('./CommutePointsEditor').then(m => m.CommutePointsEditor),
+  { ssr: false },
+)
 
 type CommuteRoute = {
   id: string
@@ -148,6 +155,10 @@ export function CommuteRoutesSection() {
     }
   }
 
+  function handlePointsSaved(id: string, points: CommutePoints) {
+    setRoutes(prev => prev.map(r => (r.id === id ? { ...r, ...points } : r)))
+  }
+
   async function handleApply() {
     setApplying(true)
     setApplyError(false)
@@ -203,6 +214,7 @@ export function CommuteRoutesSection() {
               route={route}
               onDelete={() => handleDelete(route.id)}
               onPatch={patch => handlePatch(route.id, patch)}
+              onPointsSaved={points => handlePointsSaved(route.id, points)}
             />
           ))}
         </div>
@@ -262,14 +274,16 @@ export function CommuteRoutesSection() {
 
 // ── Carte d'un trajet existant (avec édition inline) ──
 function RouteCard({
-  route, onDelete, onPatch,
+  route, onDelete, onPatch, onPointsSaved,
 }: {
   route: CommuteRoute
   onDelete: () => void
   onPatch: (patch: Partial<CommuteRoute>) => void
+  onPointsSaved: (points: CommutePoints) => void
 }) {
   const Icon = sportIcon(route.sportType)
   const [editing, setEditing] = useState(false)
+  const [pointsOpen, setPointsOpen] = useState(false)
 
   // Champs d'édition locaux
   const [outbound, setOutbound] = useState(route.outboundTitle)
@@ -342,15 +356,24 @@ function RouteCard({
         </div>
       </div>
 
-      {/* Toggle édition */}
+      {/* Toggles édition */}
       {!editing && (
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className="text-micro text-trail-primary font-semibold underline underline-offset-2"
-        >
-          Modifier les titres & tolérances
-        </button>
+        <div className="flex flex-col items-start gap-[6px]">
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="text-micro text-trail-primary font-semibold underline underline-offset-2"
+          >
+            Modifier les titres &amp; tolérances
+          </button>
+          <button
+            type="button"
+            onClick={() => setPointsOpen(true)}
+            className="text-micro text-trail-primary font-semibold underline underline-offset-2"
+          >
+            Modifier les points Home / Office
+          </button>
+        </div>
       )}
 
       {/* Édition inline */}
@@ -391,6 +414,21 @@ function RouteCard({
             </button>
           </div>
         </div>
+      )}
+
+      {pointsOpen && (
+        <CommutePointsEditor
+          route={{
+            id: route.id,
+            label: route.label,
+            homeLat: route.homeLat,
+            homeLng: route.homeLng,
+            officeLat: route.officeLat,
+            officeLng: route.officeLng,
+          }}
+          onClose={() => setPointsOpen(false)}
+          onSaved={onPointsSaved}
+        />
       )}
     </div>
   )
