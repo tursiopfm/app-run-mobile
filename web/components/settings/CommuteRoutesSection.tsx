@@ -288,14 +288,12 @@ function RouteCard({
   // Champs d'édition locaux
   const [outbound, setOutbound] = useState(route.outboundTitle)
   const [ret, setRet] = useState(route.returnTitle)
-  const [distTol, setDistTol] = useState(route.distanceTolPct)
   const [geoTol, setGeoTol] = useState(route.geoTolM)
 
   function saveEdit() {
     onPatch({
       outboundTitle: outbound,
       returnTitle: ret,
-      distanceTolPct: distTol,
       geoTolM: geoTol,
     })
     setEditing(false)
@@ -304,7 +302,6 @@ function RouteCard({
   function cancelEdit() {
     setOutbound(route.outboundTitle)
     setRet(route.returnTitle)
-    setDistTol(route.distanceTolPct)
     setGeoTol(route.geoTolM)
     setEditing(false)
   }
@@ -318,9 +315,7 @@ function RouteCard({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-body font-bold text-trail-text truncate">{route.label}</p>
-          <p className="text-micro text-trail-muted">
-            {route.sportType} · réf {formatKm(route.refDistanceM)} · ±{route.distanceTolPct}%
-          </p>
+          <p className="text-micro text-trail-muted">{route.sportType}</p>
         </div>
         <button
           type="button"
@@ -387,15 +382,9 @@ function RouteCard({
             <FieldLabel>Titre retour</FieldLabel>
             <TextInput value={ret} onChange={setRet} />
           </div>
-          <div className="grid grid-cols-2 gap-[8px]">
-            <div>
-              <FieldLabel>Tol. dist. %</FieldLabel>
-              <NumberInput value={distTol} onChange={setDistTol} />
-            </div>
-            <div>
-              <FieldLabel>Tol. géo m</FieldLabel>
-              <NumberInput value={geoTol} onChange={setGeoTol} />
-            </div>
+          <div>
+            <FieldLabel>Tol. géo m</FieldLabel>
+            <NumberInput value={geoTol} onChange={setGeoTol} />
           </div>
           <div className="flex gap-[8px]">
             <button
@@ -449,7 +438,6 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
   const [fromActivityId, setFromActivityId] = useState('')
   const [outboundTitle, setOutboundTitle] = useState('🏠 Home🏃‍♂️➡️🏃Office 🏢')
   const [returnTitle, setReturnTitle] = useState('🏢 Office🏃‍♂️➡️🏃Home 🏠')
-  const [distanceTolPct, setDistanceTolPct] = useState(12)
   const [geoTolM, setGeoTolM] = useState(250)
 
   const [submitting, setSubmitting] = useState(false)
@@ -479,7 +467,6 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
   function reset() {
     setLabel('')
     setFromActivityId('')
-    setDistanceTolPct(12)
     setGeoTolM(250)
     setSubmitError(null)
     setAdvancedOpen(false)
@@ -501,7 +488,6 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
           label: label.trim(),
           outboundTitle,
           returnTitle,
-          distanceTolPct,
           geoTolM,
         }),
       })
@@ -565,8 +551,8 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
           </select>
         )}
         <p className="text-[10px] text-trail-muted/80 mt-[4px] leading-[14px]">
-          C&apos;est l&apos;ALLER qui sert de référence : la distance et les points Home (départ) / Office
-          (arrivée) en sont extraits. Le retour (trajet inverse) est détecté automatiquement.
+          C&apos;est l&apos;ALLER qui sert de référence : les points Home (départ) / Office (arrivée)
+          en sont extraits. Le retour (trajet inverse) est détecté automatiquement.
         </p>
       </div>
 
@@ -630,15 +616,9 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
           Options avancées
         </button>
         {advancedOpen && (
-          <div className="grid grid-cols-2 gap-[8px] mt-[8px]">
-            <div>
-              <FieldLabel>Tol. dist. %</FieldLabel>
-              <NumberInput value={distanceTolPct} onChange={setDistanceTolPct} />
-            </div>
-            <div>
-              <FieldLabel>Tol. géo m</FieldLabel>
-              <NumberInput value={geoTolM} onChange={setGeoTolM} />
-            </div>
+          <div className="mt-[8px]">
+            <FieldLabel>Tol. géo m</FieldLabel>
+            <NumberInput value={geoTolM} onChange={setGeoTolM} />
           </div>
         )}
       </div>

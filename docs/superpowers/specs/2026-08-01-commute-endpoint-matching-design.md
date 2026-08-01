@@ -98,3 +98,10 @@ Cas à couvrir (nouveaux ou mis à jour) :
 - Vérif manuelle par Franck après déploiement : un run boucle depuis chez lui
   dans la fourchette de distance n'est plus renommé ; un vrai aller/retour TAF
   l'est toujours.
+
+## Drift notes
+
+- 2026-08-02 : le « filtre distance (réf ± `distance_tol_pct` %) en garde
+  amont » décrit ci-dessus a été **supprimé** — les points départ/arrivée font
+  foi quelle que soit la distance. Voir
+  `2026-08-02-commute-distance-criterion-removal-design.md`.
