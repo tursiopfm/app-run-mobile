@@ -276,7 +276,6 @@ function RouteCard({
   const [ret, setRet] = useState(route.returnTitle)
   const [distTol, setDistTol] = useState(route.distanceTolPct)
   const [geoTol, setGeoTol] = useState(route.geoTolM)
-  const [hourSplit, setHourSplit] = useState(route.hourSplit)
 
   function saveEdit() {
     onPatch({
@@ -284,7 +283,6 @@ function RouteCard({
       returnTitle: ret,
       distanceTolPct: distTol,
       geoTolM: geoTol,
-      hourSplit: hourSplit,
     })
     setEditing(false)
   }
@@ -294,7 +292,6 @@ function RouteCard({
     setRet(route.returnTitle)
     setDistTol(route.distanceTolPct)
     setGeoTol(route.geoTolM)
-    setHourSplit(route.hourSplit)
     setEditing(false)
   }
 
@@ -367,7 +364,7 @@ function RouteCard({
             <FieldLabel>Titre retour</FieldLabel>
             <TextInput value={ret} onChange={setRet} />
           </div>
-          <div className="grid grid-cols-3 gap-[8px]">
+          <div className="grid grid-cols-2 gap-[8px]">
             <div>
               <FieldLabel>Tol. dist. %</FieldLabel>
               <NumberInput value={distTol} onChange={setDistTol} />
@@ -375,10 +372,6 @@ function RouteCard({
             <div>
               <FieldLabel>Tol. géo m</FieldLabel>
               <NumberInput value={geoTol} onChange={setGeoTol} />
-            </div>
-            <div>
-              <FieldLabel>Bascule h</FieldLabel>
-              <NumberInput value={hourSplit} onChange={setHourSplit} />
             </div>
           </div>
           <div className="flex gap-[8px]">
@@ -420,7 +413,6 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
   const [returnTitle, setReturnTitle] = useState('🏢 Office🏃‍♂️➡️🏃Home 🏠')
   const [distanceTolPct, setDistanceTolPct] = useState(12)
   const [geoTolM, setGeoTolM] = useState(250)
-  const [hourSplit, setHourSplit] = useState(14)
 
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -451,7 +443,6 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
     setFromActivityId('')
     setDistanceTolPct(12)
     setGeoTolM(250)
-    setHourSplit(14)
     setSubmitError(null)
     setAdvancedOpen(false)
   }
@@ -474,7 +465,6 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
           returnTitle,
           distanceTolPct,
           geoTolM,
-          hourSplit,
         }),
       })
       if (!res.ok) throw new Error('create')
@@ -602,7 +592,7 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
           Options avancées
         </button>
         {advancedOpen && (
-          <div className="grid grid-cols-3 gap-[8px] mt-[8px]">
+          <div className="grid grid-cols-2 gap-[8px] mt-[8px]">
             <div>
               <FieldLabel>Tol. dist. %</FieldLabel>
               <NumberInput value={distanceTolPct} onChange={setDistanceTolPct} />
@@ -610,10 +600,6 @@ function AddRouteForm({ onCreated }: { onCreated: () => void }) {
             <div>
               <FieldLabel>Tol. géo m</FieldLabel>
               <NumberInput value={geoTolM} onChange={setGeoTolM} />
-            </div>
-            <div>
-              <FieldLabel>Bascule h</FieldLabel>
-              <NumberInput value={hourSplit} onChange={setHourSplit} />
             </div>
           </div>
         )}
