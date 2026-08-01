@@ -42,12 +42,20 @@ const POINT_META: Record<PointKey, { emoji: string; label: string }> = {
 
 // divIcon emoji : évite les icônes par défaut de Leaflet (assets cassés en
 // bundler). L'ombre portée est dessinée sur la carte, hors thème → valeur fixe.
-function emojiIcon(emoji: string, active: boolean) {
+// ⚠️ Icônes créées UNE seule fois (identité stable) : une icône recréée au
+// render déclenche marker.setIcon(), qui réinitialise l'interaction Leaflet et
+// tue un drag en cours.
+function emojiIcon(emoji: string) {
   return L.divIcon({
     className: '',
-    html: `<div style="font-size:28px;line-height:1;transform:translate(-50%,-50%);filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));opacity:${active ? 1 : 0.7}">${emoji}</div>`,
+    html: `<div style="font-size:28px;line-height:1;transform:translate(-50%,-50%);filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))">${emoji}</div>`,
     iconSize: [0, 0],
   })
+}
+
+const ICONS: Record<PointKey, L.DivIcon> = {
+  home: emojiIcon(POINT_META.home.emoji),
+  office: emojiIcon(POINT_META.office.emoji),
 }
 
 // Cadre la carte sur les 2 points à l'ouverture (une seule fois) et corrige la
@@ -246,11 +254,12 @@ export function CommutePointsEditor({
           <Marker
             position={home}
             draggable
-            icon={emojiIcon('🏠', active === 'home')}
+            icon={ICONS.home}
             eventHandlers={{
-              dragstart: () => setActive('home'),
+              click: () => setActive('home'),
               dragend: e => {
                 const p = (e.target as L.Marker).getLatLng()
+                setActive('home')
                 setHome([p.lat, p.lng])
               },
             }}
@@ -258,11 +267,12 @@ export function CommutePointsEditor({
           <Marker
             position={office}
             draggable
-            icon={emojiIcon('🏢', active === 'office')}
+            icon={ICONS.office}
             eventHandlers={{
-              dragstart: () => setActive('office'),
+              click: () => setActive('office'),
               dragend: e => {
                 const p = (e.target as L.Marker).getLatLng()
+                setActive('office')
                 setOffice([p.lat, p.lng])
               },
             }}

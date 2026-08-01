@@ -46,11 +46,13 @@ Aucune migration (colonnes existantes), aucun autre endpoint touché.
   `features[].geometry.coordinates` en ordre **[lng, lat]** — l'inversion est
   LE piège, couverte par un test), tolérante aux champs manquants (feature
   invalide ignorée).
-- `searchAddress(q: string): Promise<AddressHit[]>` — fetch
+- `searchAddress(q: string): Promise<AddressHit[] | null>` — fetch
   `https://api-adresse.data.gouv.fr/search/?q=<q>&limit=5` (gratuit, sans clé,
   CORS ouvert, appel client comme le reverse-geocode BigDataCloud existant),
-  erreurs réseau → `[]`. URL de base en constante unique (si la BAN migre vers
-  `data.geopf.fr/geocodage`, un seul endroit à changer).
+  réponse non-ok ou erreur réseau → `null` (distinct de `[]` = aucun
+  résultat ; l'éditeur affiche alors un message discret). URL de base en
+  constante unique (si la BAN migre vers `data.geopf.fr/geocodage`, un seul
+  endroit à changer).
 
 ### 3. Composant — `web/components/settings/CommutePointsEditor.tsx` (nouveau)
 
@@ -95,7 +97,7 @@ DOM) uniquement à l'ouverture.
 - `lib/geo/ban-geocode.test.ts` : `parseBanResponse` — cas nominal (label +
   inversion [lng,lat] → {lat,lng}), feature sans geometry/properties ignorée,
   json non conforme → `[]`.
-- `api/commute-routes-patch-points.test.ts` (mock Supabase capturant le
+- `app/api/commute-routes/patch-points.test.ts` (mock Supabase capturant le
   payload `.update()`, comme le pattern existant du projet) : 4 champs valides
   → update `home_lat`/… corrects ; lat hors bornes → 400 ; paire incomplète
   (homeLat sans homeLng) → 400 ; PATCH sans points (ex. `label` seul) →
@@ -115,7 +117,7 @@ DOM) uniquement à l'ouverture.
 
 ## Vérification
 
-- `npx jest __tests__/lib/geo/ban-geocode.test.ts __tests__/api/commute-routes-patch-points.test.ts`
+- `npx jest __tests__/lib/geo/ban-geocode.test.ts __tests__/app/api/commute-routes/patch-points.test.ts`
   verts (depuis `web/`).
 - `npx tsc --noEmit` + `npm run lint` verts (build local non autoritatif).
 - Vérif manuelle Franck après déploiement : ouvrir l'éditeur sur son trajet,
