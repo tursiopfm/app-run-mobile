@@ -14,7 +14,14 @@ const READY_TIMEOUT_MS = 2000
 export function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
   return new Promise(resolve => {
     const timer = setTimeout(() => resolve(fallback), ms)
-    promise.then(value => { clearTimeout(timer); resolve(value) })
+    // Un rejet se résout aussi en repli (jamais de reject) : les appelants
+    // veulent une valeur exploitable et ne doivent jamais être bloqués ni
+    // voir leur flux (déconnexion, affichage de l'interrupteur) échouer à
+    // cause d'une API navigateur défaillante.
+    promise.then(
+      value => { clearTimeout(timer); resolve(value) },
+      ()    => { clearTimeout(timer); resolve(fallback) },
+    )
   })
 }
 

@@ -43,8 +43,13 @@ async function unsubscribePushBeforeLogout(): Promise<void> {
     // sera purgée au prochain envoi cron (404/410), et le compte sortant ne
     // doit pas laisser d'abonnement actif derrière lui. Bornée comme le DELETE
     // ci-dessus : sub.unsubscribe() n'a pas d'AbortSignal, withTimeout abandonne
-    // l'attente sans annuler l'appel sous-jacent.
-    await withTimeout(sub.unsubscribe(), UNSUBSCRIBE_TIMEOUT_MS, false)
+    // l'attente sans annuler l'appel sous-jacent. withTimeout résorbant tout
+    // rejet en repli, on journalise ici avant qu'il ne disparaisse.
+    await withTimeout(
+      sub.unsubscribe().catch(err => { console.error('Échec du désabonnement local (sub.unsubscribe(), déconnexion)', err); throw err }),
+      UNSUBSCRIBE_TIMEOUT_MS,
+      false,
+    )
   } catch (err) {
     console.error('Échec du désabonnement push à la déconnexion', err)
   }
