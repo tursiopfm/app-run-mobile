@@ -446,6 +446,10 @@ export type Dict = {
     planAutoPushTitleHint: string
     morningReportAutoOpenLabel: string
     morningReportAutoOpenHint: string
+    pushMorningLabel: string
+    pushMorningHint: string
+    pushInstallRequired: string
+    pushPermissionDenied: string
 
     defaultAthleteName: string
     memberSince: (date: string) => string
@@ -2138,6 +2142,10 @@ export const fr: Dict = {
     themeDescSystem:    "Suit automatiquement le réglage système de l'appareil.",
     morningReportAutoOpenLabel: 'Rapport matinal',
     morningReportAutoOpenHint:  'Ouvrir automatiquement le rapport au lancement de l’application',
+    pushMorningLabel:     'Notification du rapport matinal',
+    pushMorningHint:      'Recevoir une notification à 7:00 avec ta forme et ta séance du jour',
+    pushInstallRequired:  'Ajoute Trail Cockpit à ton écran d’accueil pour recevoir les notifications',
+    pushPermissionDenied: 'Autorise les notifications dans les réglages de ton navigateur',
 
     // Settings page
     pageHeroSubtitle:    'Compte, connexions & préférences',

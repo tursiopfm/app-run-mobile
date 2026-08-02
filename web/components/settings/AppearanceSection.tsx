@@ -8,6 +8,7 @@ import { type TrailPalette } from '@/lib/design/colors'
 import { useT, useLang } from '@/lib/i18n/I18nProvider'
 import type { LangChoice } from '@/lib/i18n'
 import { useMorningReportAutoOpen } from '@/lib/preferences/morning-report'
+import { PushNotificationToggle } from './PushNotificationToggle'
 
 type ThemeOption = 'Dark' | 'Light' | 'System'
 
@@ -131,6 +132,9 @@ export function AppearanceSection() {
           />
         </button>
       </div>
+
+      {/* Rapport matinal — notification push à 7:00 */}
+      <PushNotificationToggle />
     </>
   )
 }

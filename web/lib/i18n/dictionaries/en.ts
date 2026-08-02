@@ -953,6 +953,10 @@ export const en: Dict = {
     themeDescSystem:    'Follows the device’s system setting automatically.',
     morningReportAutoOpenLabel: 'Morning report',
     morningReportAutoOpenHint:  'Automatically open the report when the app starts',
+    pushMorningLabel:     'Morning report notification',
+    pushMorningHint:      'Get a 7:00 AM notification with your form and today’s session',
+    pushInstallRequired:  'Add Trail Cockpit to your home screen to receive notifications',
+    pushPermissionDenied: 'Allow notifications in your browser settings',
 
     pageHeroSubtitle:    'Account, connections & preferences',
     pageHeroIntro:       'Manage your identity, sports integrations, and the look of your cockpit.',
