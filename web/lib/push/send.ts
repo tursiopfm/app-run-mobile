@@ -24,8 +24,8 @@ export function isGoneStatus(code: number | undefined): boolean {
 }
 
 export async function sendPush(target: PushTarget, payload: PushPayload): Promise<SendResult> {
-  configure()
   try {
+    configure()
     await webpush.sendNotification(
       { endpoint: target.endpoint, keys: { p256dh: target.p256dh, auth: target.auth } },
       JSON.stringify(payload),

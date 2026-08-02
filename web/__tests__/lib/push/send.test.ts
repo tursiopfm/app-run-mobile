@@ -18,6 +18,21 @@ beforeEach(() => {
 const target = { endpoint: 'https://push.example/abc', p256dh: 'k', auth: 'a' }
 const payload = { title: 'Rapport matinal', body: 'Corps', url: '/rapport-matinal' }
 
+describe('sendPush - configuration', () => {
+  it('appelle setVapidDetails avec subject, clé publique, clé privée dans cet ordre', async () => {
+    mockSend.mockResolvedValueOnce({})
+    const mockSetVapidDetails = webpush.setVapidDetails as jest.Mock
+
+    await sendPush(target, payload)
+
+    expect(mockSetVapidDetails).toHaveBeenCalledWith(
+      'mailto:test@example.com',
+      'pub',
+      'priv',
+    )
+  })
+})
+
 describe('isGoneStatus', () => {
   it('considère 404 et 410 comme abonnements morts', () => {
     expect(isGoneStatus(404)).toBe(true)
