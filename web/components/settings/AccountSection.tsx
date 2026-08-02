@@ -5,7 +5,13 @@ import { useRouter } from 'next/navigation'
 import { Mail, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/database/supabase-client'
 import { useT } from '@/lib/i18n/I18nProvider'
-import { getReadyRegistration } from '@/lib/push/browser'
+import { getReadyRegistration, withTimeout } from '@/lib/push/browser'
+
+// Borne le DELETE serveur et le sub.unsubscribe() : sur un réseau qui pend
+// (portail captif, 3G qui traîne) plutôt qu'il ne rejette (hors ligne, lui,
+// rejette vite), aucun des deux ne doit retarder signOut() au-delà de
+// quelques secondes.
+const UNSUBSCRIBE_TIMEOUT_MS = 3000
 
 // Un abonnement push est lié à l'ORIGINE du navigateur, pas au compte : s'il
 // survit à la déconnexion, le prochain compte connecté sur cet appareil hérite
@@ -27,6 +33,7 @@ async function unsubscribePushBeforeLogout(): Promise<void> {
         method:  'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ endpoint: sub.endpoint }),
+        signal:  AbortSignal.timeout(UNSUBSCRIBE_TIMEOUT_MS),
       })
       if (!res.ok) console.error(`DELETE /api/push/subscribe a répondu ${res.status} (déconnexion)`)
     } catch (err) {
@@ -34,8 +41,10 @@ async function unsubscribePushBeforeLogout(): Promise<void> {
     }
     // Désabonner l'appareil même si le serveur a échoué : la ligne orpheline
     // sera purgée au prochain envoi cron (404/410), et le compte sortant ne
-    // doit pas laisser d'abonnement actif derrière lui.
-    await sub.unsubscribe()
+    // doit pas laisser d'abonnement actif derrière lui. Bornée comme le DELETE
+    // ci-dessus : sub.unsubscribe() n'a pas d'AbortSignal, withTimeout abandonne
+    // l'attente sans annuler l'appel sous-jacent.
+    await withTimeout(sub.unsubscribe(), UNSUBSCRIBE_TIMEOUT_MS, false)
   } catch (err) {
     console.error('Échec du désabonnement push à la déconnexion', err)
   }

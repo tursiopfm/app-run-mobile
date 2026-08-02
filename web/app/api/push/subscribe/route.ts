@@ -14,11 +14,16 @@ type SubscribeBody = {
 // et on extraits user.id de la session.
 //
 // Écriture par service role (pas RLS) : un endpoint est lié au NAVIGATEUR,
-// pas au compte. Quand le compte A s'abonne sur un appareil puis que le compte B
-// se connecte sur le même navigateur, la RLS empêcherait l'UPDATE (la ligne
-// existante appartient à A, pas à B). On contournerait donc l'accès, et le cron
-// enverrait le rapport d'entraînement de A sur l'appareil de B (fuite inter-comptes).
-// Le service role bypasse RLS, permettant la réattribution de l'endpoint.
+// pas au compte. Sous RLS utilisateur, l'upsert ne peut pas réattribuer
+// l'endpoint d'un compte A à un compte B (la policy UPDATE s'évalue contre la
+// ligne existante, pas la nouvelle) ; le service role lève cet obstacle
+// technique. Mais ça ne ferme PAS à soi seul la fuite inter-comptes sur un
+// navigateur partagé : B ne retouche l'interrupteur que s'il le voit à OFF,
+// or `pushManager.getSubscription()` répond « abonné » dès que le navigateur
+// a un abonnement actif, peu importe qui l'a créé. C'est le désabonnement à
+// la déconnexion (components/settings/AccountSection.tsx) qui ferme
+// réellement ce cas, en repartant de zéro côté navigateur avant que B ne se
+// connecte.
 //
 // C'est sûr car user_id vient TOUJOURS de la session validée (user.id), jamais
 // du corps de la requête. L'attaquant ne peut donc pas usurper un autre compte.
