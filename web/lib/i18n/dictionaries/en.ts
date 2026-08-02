@@ -958,6 +958,7 @@ export const en: Dict = {
     pushInstallRequired:  'Add Trail Cockpit to your home screen to receive notifications',
     pushPermissionDenied: 'Allow notifications in your browser settings',
     pushError:            'Something went wrong — try again later',
+    pushUnavailable:      'Notifications unavailable: incomplete server configuration',
 
     pageHeroSubtitle:    'Account, connections & preferences',
     pageHeroIntro:       'Manage your identity, sports integrations, and the look of your cockpit.',

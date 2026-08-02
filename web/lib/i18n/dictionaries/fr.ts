@@ -451,6 +451,7 @@ export type Dict = {
     pushInstallRequired: string
     pushPermissionDenied: string
     pushError: string
+    pushUnavailable: string
 
     defaultAthleteName: string
     memberSince: (date: string) => string
@@ -2148,6 +2149,7 @@ export const fr: Dict = {
     pushInstallRequired:  'Ajoute Trail Cockpit à ton écran d’accueil pour recevoir les notifications',
     pushPermissionDenied: 'Autorise les notifications dans les réglages de ton navigateur',
     pushError:            'Un problème est survenu, réessaie plus tard',
+    pushUnavailable:      'Notifications indisponibles : configuration serveur incomplète',
 
     // Settings page
     pageHeroSubtitle:    'Compte, connexions & préférences',

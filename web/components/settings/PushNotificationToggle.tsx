@@ -151,14 +151,17 @@ export function PushNotificationToggle() {
     }
   }, [refresh])
 
-  // Sans clé VAPID au build, l'abonnement est structurellement impossible :
-  // ne rien rendre plutôt qu'afficher un interrupteur mort. Regroupé avec la
-  // garde `state` existante (même pattern, pas de rendu tant que non prêt).
-  if (!VAPID_PUBLIC_KEY || state === null || state === 'hidden') return null
+  // On ne se masque que quand le navigateur est structurellement incapable de
+  // push, ou avant le montage. Une clé VAPID manquante, elle, s'AFFICHE : c'est
+  // une erreur de configuration, et la masquer la rend indiagnosticable — on a
+  // perdu une heure sur ce symptôme le 2026-08-02.
+  if (state === null || state === 'hidden') return null
 
+  const misconfigured = !VAPID_PUBLIC_KEY
   const on       = state === 'on'
-  const locked   = state === 'denied' || busy
+  const locked   = misconfigured || state === 'denied' || busy
   const notice   =
+    misconfigured                ? t.settings.pushUnavailable :
     state === 'install-required' ? t.settings.pushInstallRequired :
     state === 'denied'           ? t.settings.pushPermissionDenied :
     error                        ? t.settings.pushError :
