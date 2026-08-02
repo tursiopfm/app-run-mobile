@@ -110,3 +110,44 @@ self.addEventListener('fetch', (event) => {
     }).catch(() => caches.match(req).then((cached) => cached || caches.match('/')))
   )
 })
+
+// ─── Web Push ───
+// Un push reçu DOIT afficher une notification : un push silencieux fait
+// révoquer l'abonnement par le navigateur. D'où le repli si le payload est
+// absent ou illisible.
+self.addEventListener('push', (event) => {
+  let payload = {}
+  try {
+    payload = event.data ? event.data.json() : {}
+  } catch (e) {
+    payload = {}
+  }
+  const title = payload.title || 'Rapport matinal'
+  const body  = payload.body  || 'Ton rapport matinal est prêt.'
+  const url   = payload.url   || '/rapport-matinal'
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon:  '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      tag:   'morning-report',   // une notif remplace la précédente
+      data:  { url },
+    })
+  )
+})
+
+// Tap sur la notification : refocalise un onglet déjà ouvert sur la cible,
+// sinon en ouvre un.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const url = (event.notification.data && event.notification.data.url) || '/rapport-matinal'
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const client of list) {
+        if (client.url.includes(url) && 'focus' in client) return client.focus()
+      }
+      return self.clients.openWindow(url)
+    })
+  )
+})
