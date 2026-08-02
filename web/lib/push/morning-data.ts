@@ -34,13 +34,26 @@ export async function getMorningPushData(
       .select(CHARGE_PROFILE_COLUMNS)
       .eq('id', userId)
       .maybeSingle(),
+    // Une notification part à un coup : seule une séance encore "planned"
+    // doit être annoncée (pas complétée/sautée/déplacée). Filtrer ici plutôt
+    // qu'après coup garantit aussi que `.order().limit(1)` retient la
+    // première séance PLANIFIÉE du jour, pas la première séance tout court.
     supabase.from('planned_sessions')
       .select('title, duration_min, distance_km')
       .eq('athlete_id', userId)
       .eq('date', todayYmd)
+      .eq('status', 'planned')
       .order('created_at', { ascending: true })
       .limit(1),
   ])
+
+  // Erreurs fatales : une lecture ratée d'activités ou de séance ne doit pas
+  // se traduire par un verdict "assuré" tiré de zéro donnée envoyé en push.
+  // Le cron (tâche 5) capture ces exceptions par abonnement et retente au
+  // tick suivant. L'erreur de profil, elle, est non fatale — un profil
+  // illisible retombe sur des zones FC vides, comme un profil absent.
+  if (actsRes.error) throw actsRes.error
+  if (sessRes.error) throw sessRes.error
 
   const payload = computeAllSportPayload(
     actsRes.data ?? [],
