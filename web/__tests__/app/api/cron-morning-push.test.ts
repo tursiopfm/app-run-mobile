@@ -42,6 +42,13 @@ it('refuse un Bearer invalide', async () => {
   expect(res.status).toBe(401)
 })
 
+it('refuse même un Bearer correct si CRON_SECRET est absent (fail-closed)', async () => {
+  freeze('2026-08-02T05:00:00Z')
+  delete process.env.CRON_SECRET
+  const res = await GET(req())
+  expect(res.status).toBe(401)
+})
+
 it('ne fait rien hors de la fenêtre matinale', async () => {
   freeze('2026-08-02T04:00:00Z')   // 06:00 à Paris
   const res = await GET(req())
@@ -98,4 +105,27 @@ it('compte un échec transitoire sans marquer ni supprimer', async () => {
   expect(await res.json()).toEqual({ sent: 0, removed: 0, failed: 1, batch: 1 })
   expect(mockMark).not.toHaveBeenCalled()
   expect(mockDelete).not.toHaveBeenCalled()
+})
+
+it('continue le lot quand getMorningPushData lève pour un abonnement', async () => {
+  freeze('2026-08-02T05:00:00Z')
+  mockFetch.mockResolvedValue([
+    { id: 's1', user_id: 'u1', endpoint: 'e1', p256dh: 'k', auth: 'a' },
+    { id: 's2', user_id: 'u2', endpoint: 'e2', p256dh: 'k', auth: 'a' },
+  ])
+  // u1 échoue à la lecture des données (activités/séances), u2 réussit — sur
+  // la valeur par défaut posée en beforeEach.
+  mockData.mockRejectedValueOnce(new Error('lecture activités KO'))
+  mockSend.mockResolvedValue('sent')
+  const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+  const res = await GET(req())
+  expect(await res.json()).toEqual({ sent: 1, removed: 0, failed: 1, batch: 2 })
+  // s1 n'a jamais atteint sendPush/markNotified : l'exception a été absorbée
+  // avant, et le lot a continué jusqu'à s2 plutôt que de s'interrompre.
+  expect(mockSend).toHaveBeenCalledTimes(1)
+  expect(mockMark).toHaveBeenCalledWith('s2', '2026-08-02')
+  expect(mockMark).not.toHaveBeenCalledWith('s1', '2026-08-02')
+
+  consoleSpy.mockRestore()
 })

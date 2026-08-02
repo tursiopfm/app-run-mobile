@@ -12,6 +12,14 @@ on:
     - cron: '*/10 5,6 * * *'
   workflow_dispatch:
 
+# Sérialise les runs : deux exécutions qui se recouvrent liraient le même lot
+# de lignes non marquées et enverraient deux fois. cancel-in-progress: false
+# car annuler à mi-lot laisserait des abonnements notifiés mais non marqués —
+# pire que d'attendre la fin du run précédent.
+concurrency:
+  group: morning-push-cron
+  cancel-in-progress: false
+
 jobs:
   trigger:
     runs-on: ubuntu-latest

@@ -28,12 +28,14 @@ export async function fetchPendingSubscriptions(
 
 export async function markNotified(id: string, todayYmd: string): Promise<void> {
   const supabase = createServiceClient()
-  await supabase.from('push_subscriptions')
+  const { error } = await supabase.from('push_subscriptions')
     .update({ last_notified_on: todayYmd })
     .eq('id', id)
+  if (error) throw error
 }
 
 export async function deleteSubscriptionById(id: string): Promise<void> {
   const supabase = createServiceClient()
-  await supabase.from('push_subscriptions').delete().eq('id', id)
+  const { error } = await supabase.from('push_subscriptions').delete().eq('id', id)
+  if (error) throw error
 }
