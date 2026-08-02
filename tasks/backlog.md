@@ -89,6 +89,11 @@
 - **Comment** : restaurer `recalculateUserFatigue` (git avant 2026-06-05) + ses appels (`streams-backfill.ts`, `app/api/profile/recalculate`). Impératif : rafraîchir sur TOUS les chemins qui changent les charges (insert/update/delete activité, changement de seuil profil → CES) sinon staleness. Table + RLS déjà en place (migrations 001/002).
 - **Identifié** : 2026-06-05
 
+### Trajets TAF — durcissements relevés en revue (éditeur unifié)
+- **Quoi** : trois suites différées de la revue finale du 2026-08-02 (éditeur unifié `CommuteRouteEditor`) — (1) valider `geoTolM` (> 0) et les titres (non vides) **côté serveur** dans `PATCH /api/commute-routes/[id]` : aujourd'hui seul le client garde contre `geo_tol_m = 0`, valeur qui désactive silencieusement la détection (`matchCommute` teste `<= geoTolM`) ; (2) extraire `FieldLabel` / `TextInput` / `NumberInput` / le markup de la pastille `YYYY#N`, dupliqués entre `CommuteRoutesSection.tsx` et `CommuteRouteEditor.tsx`, dans un module partagé ; (3) ajouter à `__tests__/app/api/commute-routes/patch-points.test.ts` un cas sur le **payload combiné** réellement envoyé par l'éditeur (2 titres + `geoTolM` + 2 paires lat/lng → 7 colonnes en update) — chaque branche est testée isolément, jamais le contrat complet.
+- **Pourquoi** : (1) une valeur `0` persistée casse la feature sans aucun signal utilisateur ; (2) duplication qui divergera à la prochaine retouche ; (3) le contrat dont dépend toute la feature n'est verrouillé par aucun test.
+- **Identifié** : 2026-08-02
+
 ## Onglet Plan — bibliothèque de séances
 
 - [ ] Types de séance custom par utilisateur (table dédiée `user_session_types`) — Plan bibliothèque
