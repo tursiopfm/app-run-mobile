@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react'
 import {
   Footprints, Bike, Route, Trash2, Plus, ChevronDown, ChevronUp,
-  Play, Check, AlertTriangle,
+  Play, Check, AlertTriangle, Pencil,
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
-import type { CommutePoints } from './CommutePointsEditor'
+import type { CommutePatch } from './CommuteRouteEditor'
 
-const CommutePointsEditor = dynamic(
-  () => import('./CommutePointsEditor').then(m => m.CommutePointsEditor),
+const CommuteRouteEditor = dynamic(
+  () => import('./CommuteRouteEditor').then(m => m.CommuteRouteEditor),
   { ssr: false },
 )
 
@@ -155,8 +155,8 @@ export function CommuteRoutesSection() {
     }
   }
 
-  function handlePointsSaved(id: string, points: CommutePoints) {
-    setRoutes(prev => prev.map(r => (r.id === id ? { ...r, ...points } : r)))
+  function handleSaved(id: string, patch: CommutePatch) {
+    setRoutes(prev => prev.map(r => (r.id === id ? { ...r, ...patch } : r)))
   }
 
   async function handleApply() {
@@ -214,7 +214,7 @@ export function CommuteRoutesSection() {
               route={route}
               onDelete={() => handleDelete(route.id)}
               onPatch={patch => handlePatch(route.id, patch)}
-              onPointsSaved={points => handlePointsSaved(route.id, points)}
+              onSaved={patch => handleSaved(route.id, patch)}
             />
           ))}
         </div>
@@ -272,39 +272,16 @@ export function CommuteRoutesSection() {
   )
 }
 
-// ── Carte d'un trajet existant (avec édition inline) ──
 function RouteCard({
-  route, onDelete, onPatch, onPointsSaved,
+  route, onDelete, onPatch, onSaved,
 }: {
   route: CommuteRoute
   onDelete: () => void
   onPatch: (patch: Partial<CommuteRoute>) => void
-  onPointsSaved: (points: CommutePoints) => void
+  onSaved: (patch: CommutePatch) => void
 }) {
   const Icon = sportIcon(route.sportType)
-  const [editing, setEditing] = useState(false)
-  const [pointsOpen, setPointsOpen] = useState(false)
-
-  // Champs d'édition locaux
-  const [outbound, setOutbound] = useState(route.outboundTitle)
-  const [ret, setRet] = useState(route.returnTitle)
-  const [geoTol, setGeoTol] = useState(route.geoTolM)
-
-  function saveEdit() {
-    onPatch({
-      outboundTitle: outbound,
-      returnTitle: ret,
-      geoTolM: geoTol,
-    })
-    setEditing(false)
-  }
-
-  function cancelEdit() {
-    setOutbound(route.outboundTitle)
-    setRet(route.returnTitle)
-    setGeoTol(route.geoTolM)
-    setEditing(false)
-  }
+  const [editorOpen, setEditorOpen] = useState(false)
 
   return (
     <div className="rounded-[12px] bg-trail-card border border-trail-border p-[12px] space-y-[10px]">
@@ -351,72 +328,31 @@ function RouteCard({
         </div>
       </div>
 
-      {/* Toggles édition */}
-      {!editing && (
-        <div className="flex flex-col items-start gap-[6px]">
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="text-micro text-trail-primary font-semibold underline underline-offset-2"
-          >
-            Modifier les titres &amp; tolérances
-          </button>
-          <button
-            type="button"
-            onClick={() => setPointsOpen(true)}
-            className="text-micro text-trail-primary font-semibold underline underline-offset-2"
-          >
-            Modifier les points Home / Office
-          </button>
-        </div>
-      )}
+      {/* Bouton d'édition */}
+      <button
+        type="button"
+        onClick={() => setEditorOpen(true)}
+        className="flex items-center gap-[5px] px-[10px] py-[5px] rounded-[10px] border border-trail-primary text-trail-primary text-micro font-semibold hover:bg-trail-primary/10 transition-colors"
+      >
+        <Pencil size={12} />
+        Modifier
+      </button>
 
-      {/* Édition inline */}
-      {editing && (
-        <div className="space-y-[10px] pt-[2px]">
-          <div>
-            <FieldLabel>Titre aller</FieldLabel>
-            <TextInput value={outbound} onChange={setOutbound} />
-          </div>
-          <div>
-            <FieldLabel>Titre retour</FieldLabel>
-            <TextInput value={ret} onChange={setRet} />
-          </div>
-          <div>
-            <FieldLabel>Tol. géo m</FieldLabel>
-            <NumberInput value={geoTol} onChange={setGeoTol} />
-          </div>
-          <div className="flex gap-[8px]">
-            <button
-              type="button"
-              onClick={saveEdit}
-              className="flex-1 rounded-[10px] py-[8px] text-caption font-bold text-trail-primary bg-trail-primary/15 border border-trail-primary hover:bg-trail-primary/25 transition-colors"
-            >
-              Enregistrer
-            </button>
-            <button
-              type="button"
-              onClick={cancelEdit}
-              className="flex-1 rounded-[10px] py-[8px] text-caption font-semibold text-trail-muted bg-trail-surface border border-trail-border hover:text-trail-text transition-colors"
-            >
-              Annuler
-            </button>
-          </div>
-        </div>
-      )}
-
-      {pointsOpen && (
-        <CommutePointsEditor
+      {editorOpen && (
+        <CommuteRouteEditor
           route={{
             id: route.id,
             label: route.label,
+            outboundTitle: route.outboundTitle,
+            returnTitle: route.returnTitle,
+            geoTolM: route.geoTolM,
             homeLat: route.homeLat,
             homeLng: route.homeLng,
             officeLat: route.officeLat,
             officeLng: route.officeLng,
           }}
-          onClose={() => setPointsOpen(false)}
-          onSaved={onPointsSaved}
+          onClose={() => setEditorOpen(false)}
+          onSaved={onSaved}
         />
       )}
     </div>
