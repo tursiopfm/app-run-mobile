@@ -32,6 +32,16 @@ export async function sendPush(target: PushTarget, payload: PushPayload): Promis
     )
     return 'sent'
   } catch (err) {
-    return isGoneStatus((err as { statusCode?: number }).statusCode) ? 'gone' : 'failed'
+    const statusCode = (err as { statusCode?: number }).statusCode
+    if (isGoneStatus(statusCode)) return 'gone'
+    // Un abonnement mort se supprime silencieusement (branche 'gone' ci-dessus) ;
+    // tout le reste doit laisser une trace, sinon un problème de configuration
+    // (ex : VAPID absent) reste invisible — le workflow reste vert avec
+    // `failed: N` et personne ne le remarque. On ne logue jamais l'endpoint
+    // (identifiant d'appareil) : seulement la cause, diagnosticable sans exposer
+    // l'abonnement.
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('[push] envoi échoué', { statusCode, message })
+    return 'failed'
   }
 }

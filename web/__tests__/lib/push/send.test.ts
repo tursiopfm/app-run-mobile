@@ -13,6 +13,14 @@ beforeEach(() => {
   process.env.VAPID_SUBJECT = 'mailto:test@example.com'
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY = 'pub'
   process.env.VAPID_PRIVATE_KEY = 'priv'
+  // sendPush journalise désormais ses échecs non-gone (Finding 1) : on
+  // supprime le bruit console par défaut, deux tests dédiés vérifient le
+  // contenu du journal.
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterEach(() => {
+  jest.restoreAllMocks()
 })
 
 const target = { endpoint: 'https://push.example/abc', p256dh: 'k', auth: 'a' }
@@ -69,5 +77,26 @@ describe('sendPush', () => {
   it('renvoie "failed" sur erreur réseau sans statusCode', async () => {
     mockSend.mockRejectedValueOnce(new Error('ECONNRESET'))
     await expect(sendPush(target, payload)).resolves.toBe('failed')
+  })
+
+  it('journalise la cause d\'un échec non-gone sans exposer l\'endpoint', async () => {
+    mockSend.mockRejectedValueOnce(Object.assign(new Error('boom'), { statusCode: 500 }))
+
+    await sendPush(target, payload)
+
+    const consoleSpy = console.error as jest.Mock
+    expect(consoleSpy).toHaveBeenCalled()
+    const loggedText = consoleSpy.mock.calls.flat().map(a => JSON.stringify(a)).join(' ')
+    expect(loggedText).toContain('500')
+    expect(loggedText).toContain('boom')
+    expect(loggedText).not.toContain(target.endpoint)
+  })
+
+  it('ne journalise rien sur "gone" (attendu, pas une panne)', async () => {
+    mockSend.mockRejectedValueOnce(Object.assign(new Error('gone'), { statusCode: 410 }))
+
+    await sendPush(target, payload)
+
+    expect(console.error as jest.Mock).not.toHaveBeenCalled()
   })
 })

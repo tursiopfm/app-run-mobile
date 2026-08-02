@@ -5,6 +5,41 @@ import { useRouter } from 'next/navigation'
 import { Mail, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/database/supabase-client'
 import { useT } from '@/lib/i18n/I18nProvider'
+import { getReadyRegistration } from '@/lib/push/browser'
+
+// Un abonnement push est lié à l'ORIGINE du navigateur, pas au compte : s'il
+// survit à la déconnexion, le prochain compte connecté sur cet appareil hérite
+// silencieusement de l'abonnement du précédent (endpoint réattribué en base
+// dès qu'il retouche l'interrupteur — voir POST /api/push/subscribe), et voit
+// l'interrupteur déjà « ON » donc n'a aucune raison d'y toucher. On coupe
+// l'abonnement AVANT de quitter le compte pour fermer ce cas.
+//
+// Ceci ne doit JAMAIS faire échouer la déconnexion : SW absent, fetch en
+// échec, unsubscribe qui lève — tout est avalé et journalisé, jamais propagé.
+async function unsubscribePushBeforeLogout(): Promise<void> {
+  try {
+    const reg = await getReadyRegistration()
+    if (!reg) return
+    const sub = await reg.pushManager.getSubscription()
+    if (!sub) return
+    try {
+      const res = await fetch('/api/push/subscribe', {
+        method:  'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ endpoint: sub.endpoint }),
+      })
+      if (!res.ok) console.error(`DELETE /api/push/subscribe a répondu ${res.status} (déconnexion)`)
+    } catch (err) {
+      console.error('Échec réseau lors du retrait serveur de l\'abonnement push (déconnexion)', err)
+    }
+    // Désabonner l'appareil même si le serveur a échoué : la ligne orpheline
+    // sera purgée au prochain envoi cron (404/410), et le compte sortant ne
+    // doit pas laisser d'abonnement actif derrière lui.
+    await sub.unsubscribe()
+  } catch (err) {
+    console.error('Échec du désabonnement push à la déconnexion', err)
+  }
+}
 
 export function AccountSection() {
   const router = useRouter()
@@ -21,6 +56,7 @@ export function AccountSection() {
 
   async function handleLogout() {
     setLoggingOut(true)
+    await unsubscribePushBeforeLogout()
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/')

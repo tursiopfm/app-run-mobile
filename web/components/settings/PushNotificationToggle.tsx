@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Bell } from 'lucide-react'
 import { useT } from '@/lib/i18n/I18nProvider'
 import { pushToggleState, type PushToggleState } from '@/lib/push/toggle-state'
+import { getReadyRegistration } from '@/lib/push/browser'
 
 // La clé VAPID est distribuée en base64url ; l'API Push attend un Uint8Array.
 // Uint8Array.from(...) renvoie un Uint8Array<ArrayBufferLike>, incompatible
@@ -27,33 +28,17 @@ function detectStandalone(): boolean {
     || (navigator as Navigator & { standalone?: boolean }).standalone === true
 }
 
-const READY_TIMEOUT_MS = 2000
-
-// navigator.serviceWorker.ready ne se résout QUE si une registration devient
-// ACTIVE pour ce scope. En dev, ServiceWorkerRegistrar.tsx ne l'enregistre
-// jamais (court-circuité hors production) : l'attente serait infinie et
-// figerait le composant sur son état initial. On la borne ; passé le délai,
-// on traite l'absence de worker actif comme « pas de registration » au lieu
-// de rester bloqué.
-function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
-  return new Promise(resolve => {
-    const timer = setTimeout(() => resolve(fallback), ms)
-    promise.then(value => { clearTimeout(timer); resolve(value) })
-  })
-}
-
-async function getReadyRegistration(): Promise<ServiceWorkerRegistration | null> {
-  if (!('serviceWorker' in navigator)) return null
-  return withTimeout<ServiceWorkerRegistration | null>(
-    navigator.serviceWorker.ready, READY_TIMEOUT_MS, null,
-  )
-}
+// NEXT_PUBLIC_* est inlinée au BUILD : son absence est donc statique, pas une
+// condition qui varie d'un rendu à l'autre (pas de souci avec les Rules of
+// Hooks à la lire ici, avant les hooks du composant).
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
 
 export function PushNotificationToggle() {
   const t = useT()
   // null = pas encore monté : on ne rend rien pour éviter tout écart SSR.
   const [state, setState] = useState<PushToggleState | null>(null)
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(false)
 
   // L'état affiché vient TOUJOURS de l'appareil, jamais d'une valeur stockée :
   // un abonnement révoqué par le navigateur apparaît naturellement en OFF.
@@ -76,12 +61,15 @@ export function PushNotificationToggle() {
   useEffect(() => { void refresh() }, [refresh])
 
   const enable = useCallback(async () => {
+    setError(false)
     // NEXT_PUBLIC_* est inlinée au BUILD : si elle manque, on le sait dès
     // maintenant. Sans cette garde, l'utilisateur accorderait la permission
     // pour rien — un « oui » qu'il ne pourrait plus jamais redonner.
-    const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-    if (!vapidPublicKey) {
+    // Garde redondante avec le rendu (VAPID_PUBLIC_KEY ci-dessous) mais
+    // conservée : elle documente l'invariant localement et coûte une ligne.
+    if (!VAPID_PUBLIC_KEY) {
       console.error('NEXT_PUBLIC_VAPID_PUBLIC_KEY manquante : abonnement push impossible')
+      setError(true)
       return
     }
     setBusy(true)
@@ -93,11 +81,12 @@ export function PushNotificationToggle() {
       const reg = await getReadyRegistration()
       if (!reg) {
         console.error('Aucun Service Worker actif : abonnement push impossible')
+        setError(true)
         return
       }
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       })
       const json = sub.toJSON() as { endpoint?: string; keys?: { p256dh: string; auth: string } }
       try {
@@ -113,6 +102,7 @@ export function PushNotificationToggle() {
         // refresh() affichera OFF — l'utilisateur voit que l'action n'a pas
         // pris, sans qu'on ait besoin de stocker un état d'échec à part.
         console.error('Échec de l\'enregistrement serveur de l\'abonnement push', err)
+        setError(true)
         await sub.unsubscribe()
       }
     } finally {
@@ -122,10 +112,15 @@ export function PushNotificationToggle() {
   }, [refresh])
 
   const disable = useCallback(async () => {
+    setError(false)
     setBusy(true)
     try {
       const reg = await getReadyRegistration()
-      if (!reg) return
+      if (!reg) {
+        console.error('Aucun Service Worker actif : désabonnement push impossible')
+        setError(true)
+        return
+      }
       const sub = await reg.pushManager.getSubscription()
       if (sub) {
         // Retirer côté serveur AVANT unsubscribe : après, l'endpoint est perdu.
@@ -142,9 +137,11 @@ export function PushNotificationToggle() {
           })
           if (!res.ok) {
             console.error(`DELETE /api/push/subscribe a répondu ${res.status}`)
+            setError(true)
           }
         } catch (err) {
           console.error('Échec réseau lors du retrait serveur de l\'abonnement push', err)
+          setError(true)
         }
         await sub.unsubscribe()
       }
@@ -154,13 +151,17 @@ export function PushNotificationToggle() {
     }
   }, [refresh])
 
-  if (state === null || state === 'hidden') return null
+  // Sans clé VAPID au build, l'abonnement est structurellement impossible :
+  // ne rien rendre plutôt qu'afficher un interrupteur mort. Regroupé avec la
+  // garde `state` existante (même pattern, pas de rendu tant que non prêt).
+  if (!VAPID_PUBLIC_KEY || state === null || state === 'hidden') return null
 
   const on       = state === 'on'
   const locked   = state === 'denied' || busy
   const notice   =
     state === 'install-required' ? t.settings.pushInstallRequired :
     state === 'denied'           ? t.settings.pushPermissionDenied :
+    error                        ? t.settings.pushError :
     null
 
   return (

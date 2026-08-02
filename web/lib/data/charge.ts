@@ -37,7 +37,11 @@ type ActivityRow = {
 }
 
 // Colonnes partagées avec le cron push, qui recalcule le même payload en
-// service role (lib/push/morning-data.ts). Une seule source de vérité.
+// service role (lib/push/morning-data.ts) : seule source de vérité pour la
+// LISTE DE COLONNES. Les filtres de requête (eq user_id, gte start_time,
+// is deleted_at null, l'ordre) et la fenêtre EWMA_WARMUP_DAYS restent
+// dupliqués volontairement dans morning-data.ts — un changement de filtre ici
+// ne s'y propage PAS automatiquement.
 export const CHARGE_ACTIVITY_COLUMNS =
   'id, sport_type, manual_sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_intensity'
 export const CHARGE_PROFILE_COLUMNS =

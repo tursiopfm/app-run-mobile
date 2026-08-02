@@ -450,6 +450,7 @@ export type Dict = {
     pushMorningHint: string
     pushInstallRequired: string
     pushPermissionDenied: string
+    pushError: string
 
     defaultAthleteName: string
     memberSince: (date: string) => string
@@ -2146,6 +2147,7 @@ export const fr: Dict = {
     pushMorningHint:      'Recevoir une notification à 7:00 avec ta forme et ta séance du jour',
     pushInstallRequired:  'Ajoute Trail Cockpit à ton écran d’accueil pour recevoir les notifications',
     pushPermissionDenied: 'Autorise les notifications dans les réglages de ton navigateur',
+    pushError:            'Un problème est survenu, réessaie plus tard',
 
     // Settings page
     pageHeroSubtitle:    'Compte, connexions & préférences',
