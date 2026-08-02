@@ -40,6 +40,14 @@ export function CockpitComboChart({
   const gap = `${Math.round((1 - chart.comboBarRatio) * 100)}%`
   const wrapperRef = useChartTooltipDismiss()
 
+  // Halo couleur carte : détache les valeurs de la courbe / des barres qu'elles recouvrent.
+  const halo = {
+    stroke:          colors.cardBg,
+    strokeWidth:     3,
+    strokeLinejoin:  'round',
+    paintOrder:      'stroke',
+  } as const
+
   return (
     <div ref={wrapperRef} style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -117,7 +125,7 @@ export function CockpitComboChart({
             <LabelList
               dataKey="dPlus"
               position="insideTop"
-              style={{ fontSize: 10, fill: '#fff', fontWeight: 600 }}
+              style={{ fontSize: 11, fill: '#fff', fontWeight: 700, ...halo }}
               formatter={(v: number) => v > 0 ? v.toLocaleString('fr-FR') : ''}
             />
           </Bar>
@@ -135,8 +143,8 @@ export function CockpitComboChart({
             <LabelList
               dataKey="km"
               position="top"
-              offset={6}
-              style={{ fontSize: 10, fill: lineColor, fontWeight: 600 }}
+              offset={8}
+              style={{ fontSize: 11, fill: lineColor, fontWeight: 700, ...halo }}
               formatter={(v: number) => v > 0 ? Math.round(v) : ''}
             />
           </Line>
