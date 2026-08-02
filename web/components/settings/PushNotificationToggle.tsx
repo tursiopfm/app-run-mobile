@@ -27,6 +27,28 @@ function detectStandalone(): boolean {
     || (navigator as Navigator & { standalone?: boolean }).standalone === true
 }
 
+const READY_TIMEOUT_MS = 2000
+
+// navigator.serviceWorker.ready ne se résout QUE si une registration devient
+// ACTIVE pour ce scope. En dev, ServiceWorkerRegistrar.tsx ne l'enregistre
+// jamais (court-circuité hors production) : l'attente serait infinie et
+// figerait le composant sur son état initial. On la borne ; passé le délai,
+// on traite l'absence de worker actif comme « pas de registration » au lieu
+// de rester bloqué.
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise(resolve => {
+    const timer = setTimeout(() => resolve(fallback), ms)
+    promise.then(value => { clearTimeout(timer); resolve(value) })
+  })
+}
+
+async function getReadyRegistration(): Promise<ServiceWorkerRegistration | null> {
+  if (!('serviceWorker' in navigator)) return null
+  return withTimeout<ServiceWorkerRegistration | null>(
+    navigator.serviceWorker.ready, READY_TIMEOUT_MS, null,
+  )
+}
+
 export function PushNotificationToggle() {
   const t = useT()
   // null = pas encore monté : on ne rend rien pour éviter tout écart SSR.
@@ -39,8 +61,8 @@ export function PushNotificationToggle() {
     const supported = 'serviceWorker' in navigator && 'PushManager' in window
     let subscribed = false
     if (supported) {
-      const reg = await navigator.serviceWorker.ready
-      subscribed = (await reg.pushManager.getSubscription()) != null
+      const reg = await getReadyRegistration()
+      subscribed = reg != null && (await reg.pushManager.getSubscription()) != null
     }
     setState(pushToggleState({
       supported,
@@ -54,25 +76,45 @@ export function PushNotificationToggle() {
   useEffect(() => { void refresh() }, [refresh])
 
   const enable = useCallback(async () => {
+    // NEXT_PUBLIC_* est inlinée au BUILD : si elle manque, on le sait dès
+    // maintenant. Sans cette garde, l'utilisateur accorderait la permission
+    // pour rien — un « oui » qu'il ne pourrait plus jamais redonner.
+    const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    if (!vapidPublicKey) {
+      console.error('NEXT_PUBLIC_VAPID_PUBLIC_KEY manquante : abonnement push impossible')
+      return
+    }
     setBusy(true)
     try {
       // requestPermission DOIT rester dans le geste utilisateur : Safari
       // rejette toute demande hors handler de clic.
       const permission = await Notification.requestPermission()
       if (permission !== 'granted') return
-      const reg = await navigator.serviceWorker.ready
+      const reg = await getReadyRegistration()
+      if (!reg) {
+        console.error('Aucun Service Worker actif : abonnement push impossible')
+        return
+      }
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(
-          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as string,
-        ),
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
       })
       const json = sub.toJSON() as { endpoint?: string; keys?: { p256dh: string; auth: string } }
-      await fetch('/api/push/subscribe', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ endpoint: json.endpoint, keys: json.keys }),
-      })
+      try {
+        const res = await fetch('/api/push/subscribe', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ endpoint: json.endpoint, keys: json.keys }),
+        })
+        if (!res.ok) throw new Error(`POST /api/push/subscribe a répondu ${res.status}`)
+      } catch (err) {
+        // Le navigateur est abonné mais le serveur n'a pas la ligne : annuler
+        // l'abonnement ramène la vérité de l'appareil à « non abonné », donc
+        // refresh() affichera OFF — l'utilisateur voit que l'action n'a pas
+        // pris, sans qu'on ait besoin de stocker un état d'échec à part.
+        console.error('Échec de l\'enregistrement serveur de l\'abonnement push', err)
+        await sub.unsubscribe()
+      }
     } finally {
       await refresh()
       setBusy(false)
@@ -82,15 +124,28 @@ export function PushNotificationToggle() {
   const disable = useCallback(async () => {
     setBusy(true)
     try {
-      const reg = await navigator.serviceWorker.ready
+      const reg = await getReadyRegistration()
+      if (!reg) return
       const sub = await reg.pushManager.getSubscription()
       if (sub) {
         // Retirer côté serveur AVANT unsubscribe : après, l'endpoint est perdu.
-        await fetch('/api/push/subscribe', {
-          method:  'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ endpoint: sub.endpoint }),
-        })
+        // On désabonne l'appareil même si le serveur échoue : l'utilisateur a
+        // demandé l'arrêt des notifications sur CET appareil, et le laisser
+        // abonné le priverait de tout moyen de le voir. La ligne orpheline
+        // sera purgée au prochain envoi cron (404/410) ; on journalise l'échec
+        // ici pour ne pas le rendre muet.
+        try {
+          const res = await fetch('/api/push/subscribe', {
+            method:  'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ endpoint: sub.endpoint }),
+          })
+          if (!res.ok) {
+            console.error(`DELETE /api/push/subscribe a répondu ${res.status}`)
+          }
+        } catch (err) {
+          console.error('Échec réseau lors du retrait serveur de l\'abonnement push', err)
+        }
         await sub.unsubscribe()
       }
     } finally {
