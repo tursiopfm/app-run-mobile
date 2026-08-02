@@ -68,7 +68,7 @@ Structure verticale, **page scrollable** :
 `onSaved(patch)` puis fermeture ; échec → message inline, l'éditeur reste
 ouvert. **Annuler** ferme sans rien écrire (sémantique modale).
 
-Type exporté renommé : `CommutePoints` → `CommuteRoutePatch` =
+Type exporté renommé : `CommutePoints` → `CommutePatch` =
 `{ outboundTitle: string; returnTitle: string; geoTolM: number; homeLat: number; homeLng: number; officeLat: number; officeLng: number }`.
 
 ### 3. Hors scope

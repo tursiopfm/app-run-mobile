@@ -136,6 +136,21 @@ export function CommuteRouteEditor({
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(false)
 
+  // Fermeture clavier + lock du scroll body tant que l'éditeur est ouvert
+  // (aligné sur components/ui/Sheet.tsx).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [onClose])
+
   // Recherche BAN avec debounce (min 3 caractères).
   useEffect(() => {
     const q = query.trim()
@@ -177,6 +192,11 @@ export function CommuteRouteEditor({
   async function handleSave() {
     setSaving(true)
     setSaveError(false)
+    if (!Number.isFinite(geoTolM) || geoTolM < 1) {
+      setSaveError(true)
+      setSaving(false)
+      return
+    }
     try {
       const patch: CommutePatch = {
         outboundTitle,
@@ -191,7 +211,8 @@ export function CommuteRouteEditor({
         body: JSON.stringify(patch),
       })
       if (!res.ok) throw new Error('patch')
-      onSaved(patch)
+      const data = await res.json().catch(() => null) as { route?: Partial<CommutePatch> } | null
+      onSaved({ ...patch, ...(data?.route ?? {}) })
       onClose()
     } catch {
       setSaveError(true)
@@ -200,7 +221,7 @@ export function CommuteRouteEditor({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[1000] bg-trail-bg flex flex-col">
+    <div className="fixed inset-0 z-[1000] bg-trail-bg flex flex-col" role="dialog" aria-modal="true">
       {/* En-tête */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-trail-border flex-shrink-0">
         <div className="flex-1 min-w-0">
@@ -218,7 +239,7 @@ export function CommuteRouteEditor({
       </div>
 
       {/* Corps scrollable */}
-      <div className="flex-1 overflow-y-auto px-4 py-[12px] space-y-[14px]">
+      <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-[12px] space-y-[14px]">
         {/* Titres */}
         <div>
           <FieldLabel>Titre aller</FieldLabel>
@@ -261,6 +282,7 @@ export function CommuteRouteEditor({
           <FieldLabel>Tol. géo m</FieldLabel>
           <input
             type="number"
+            min={10}
             value={Number.isFinite(geoTolM) ? geoTolM : ''}
             onChange={e => setGeoTolM(Number(e.target.value))}
             className="w-full rounded-[8px] bg-trail-surface border border-trail-border px-2 py-[6px] text-body text-trail-text outline-none focus:border-trail-primary"
@@ -366,14 +388,14 @@ export function CommuteRouteEditor({
         </p>
       </div>
 
-      {/* Pied collant : rappel + actions */}
-      <div className="sticky bottom-0 flex-shrink-0 px-4 py-3 border-t border-trail-border bg-trail-bg space-y-[8px]">
+      {/* Pied : rappel + actions */}
+      <div className="flex-shrink-0 px-4 py-3 border-t border-trail-border bg-trail-bg space-y-[8px]">
         <p className="text-[10px] text-trail-muted leading-[14px]">
           Après modification, relance « Appliquer à l&apos;historique » pour re-détecter les
           trajets avec les nouveaux points.
         </p>
         {saveError && (
-          <p className="text-caption text-red-400">L&apos;enregistrement a échoué. Réessaie.</p>
+          <p className="text-caption text-red-400">L&apos;enregistrement a échoué. Vérifie la tolérance (au moins 1 m) et réessaie.</p>
         )}
         <div className="flex gap-[8px]">
           <button
