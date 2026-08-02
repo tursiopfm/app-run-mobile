@@ -1,0 +1,31 @@
+name: Morning Push Cron
+
+# Déclenche /api/cron/morning-push toutes les 10 minutes entre 05h et 07h UTC.
+# La fenêtre couvre 7:00 heure de Paris en été (05:00 UTC) ET en hiver
+# (06:00 UTC) : la route refuse d'agir tant qu'il n'est pas 7:00 à Paris, et
+# `last_notified_on` garantit un seul envoi par jour et par appareil. Le retard
+# habituel de GitHub Actions (5 à 20 min) est donc sans conséquence.
+# Vercel Hobby plafonne les crons à once-per-day, d'où GitHub Actions.
+
+on:
+  schedule:
+    - cron: '*/10 5,6 * * *'
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Vercel cron endpoint
+        run: |
+          response=$(curl -sS -w "\n%{http_code}" -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://trailcockpit.run/api/cron/morning-push)
+          body=$(echo "$response" | sed '$d')
+          status=$(echo "$response" | tail -n1)
+          echo "HTTP $status"
+          echo "Response: $body"
+          if [ "$status" != "200" ]; then
+            echo "::error::Cron endpoint returned non-200 status"
+            exit 1
+          fi
