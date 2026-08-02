@@ -122,6 +122,14 @@ self.addEventListener('push', (event) => {
   } catch (e) {
     payload = {}
   }
+
+  // Normaliser si le payload n'est pas un objet (notamment null après JSON.parse).
+  // JSON.parse('null') réussit et renvoie null (pas d'exception), donc on doit
+  // vérifier ici avant d'accéder à payload.title.
+  if (typeof payload !== 'object' || payload === null) {
+    payload = {}
+  }
+
   const title = payload.title || 'Rapport matinal'
   const body  = payload.body  || 'Ton rapport matinal est prêt.'
   const url   = payload.url   || '/rapport-matinal'
@@ -133,7 +141,7 @@ self.addEventListener('push', (event) => {
       badge: '/icons/icon-192.png',
       tag:   'morning-report',   // une notif remplace la précédente
       data:  { url },
-    })
+    }).catch(() => {})  // éviter les rejets non gérés si showNotification échoue
   )
 })
 
@@ -145,7 +153,14 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
       for (const client of list) {
-        if (client.url.includes(url) && 'focus' in client) return client.focus()
+        try {
+          const clientUrl = new URL(client.url)
+          // Comparer le pathname + search du client avec l'URL cible (qui est un chemin relatif).
+          // Évite les faux positifs de substring (ex: une route contenant '/rapport-matinal')
+          if ((clientUrl.pathname + clientUrl.search) === url && 'focus' in client) {
+            return client.focus()
+          }
+        } catch (e) {}
       }
       return self.clients.openWindow(url)
     })
