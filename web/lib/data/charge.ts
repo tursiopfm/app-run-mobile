@@ -36,6 +36,13 @@ type ActivityRow = {
   manual_intensity:  string | null
 }
 
+// Colonnes partagées avec le cron push, qui recalcule le même payload en
+// service role (lib/push/morning-data.ts). Une seule source de vérité.
+export const CHARGE_ACTIVITY_COLUMNS =
+  'id, sport_type, manual_sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_intensity'
+export const CHARGE_PROFILE_COLUMNS =
+  'max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year'
+
 function rowToCesActivity(r: ActivityRow): CesActivity {
   return {
     id:              r.id,
@@ -55,6 +62,21 @@ function rowToCesActivity(r: ActivityRow): CesActivity {
 function filterByCategory(acts: CesActivity[], cat: SportCategoryKey | 'all'): CesActivity[] {
   if (cat === 'all') return acts
   return acts.filter(a => classifySportCategory(a.rawSportType) === cat)
+}
+
+function hrZonesFromProfile(profile: Record<string, number | null> | null): HrZone[] {
+  if (!profile) return []
+  const p = profile
+  let method: HrZoneMethod = 'auto'
+  if (p.max_hr && p.aerobic_threshold_hr && p.threshold_hr) method = 'seuils'
+  else if (p.max_hr && p.threshold_hr)                      method = 'test30'
+  else if (p.max_hr && p.resting_hr)                        method = 'karvonen'
+  else if (p.max_hr)                                        method = 'pct_max'
+  return calculateHrZones({
+    method, maxHr: p.max_hr, restingHr: p.resting_hr,
+    aerobicThresholdHr: p.aerobic_threshold_hr, thresholdHr: p.threshold_hr,
+    birthYear: p.birth_year,
+  }).zones
 }
 
 function buildSportPayload(
@@ -111,6 +133,18 @@ function buildSportPayload(
   return partial
 }
 
+// Payload « all » seul, calculé depuis des lignes brutes — utilisé par le cron
+// push, qui lit en service role et n'a besoin que de insights.status. Ne
+// calcule PAS les catégories run/ride/swim : 4× moins de travail.
+export function computeAllSportPayload(
+  rows:    unknown[],
+  profile: Record<string, number | null> | null,
+  now:     Date,
+): ChargeSportPayload {
+  const activities = rows.map(r => rowToCesActivity(r as ActivityRow))
+  return buildSportPayload(activities, hrZonesFromProfile(profile), now)
+}
+
 export async function getChargePageData(userId: string): Promise<ChargePageData> {
   const supabase = await createClient()
   // On charge ~1 an d'activités pour amorçer l'EWMA sur un historique convergé
@@ -121,33 +155,21 @@ export async function getChargePageData(userId: string): Promise<ChargePageData>
   const [{ data: rows }, { data: profile }] = await Promise.all([
     supabase
       .from('activities')
-      .select('id, sport_type, manual_sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_intensity')
+      .select(CHARGE_ACTIVITY_COLUMNS)
       .eq('user_id', userId)
       .gte('start_time', since.toISOString())
       .is('deleted_at', null)
       .order('start_time', { ascending: true }),
     supabase
       .from('profiles')
-      .select('max_hr, resting_hr, aerobic_threshold_hr, threshold_hr, birth_year')
+      .select(CHARGE_PROFILE_COLUMNS)
       .eq('id', userId)
       .single(),
   ])
 
   const activities = (rows ?? []).map((r) => rowToCesActivity(r as ActivityRow))
 
-  const zones: HrZone[] = (() => {
-    if (!profile) return []
-    const p = profile as Record<string, number | null>
-    let method: HrZoneMethod = 'auto'
-    if (p.max_hr && p.aerobic_threshold_hr && p.threshold_hr) method = 'seuils'
-    else if (p.max_hr && p.threshold_hr)                      method = 'test30'
-    else if (p.max_hr && p.resting_hr)                        method = 'karvonen'
-    else if (p.max_hr)                                         method = 'pct_max'
-    return calculateHrZones({
-      method, maxHr: p.max_hr, restingHr: p.resting_hr,
-      aerobicThresholdHr: p.aerobic_threshold_hr, thresholdHr: p.threshold_hr, birthYear: p.birth_year,
-    }).zones
-  })()
+  const zones: HrZone[] = hrZonesFromProfile(profile as Record<string, number | null> | null)
 
   const now = new Date()
   const perSport: Record<ChargeSportFilterKey, ChargeSportPayload> = {
