@@ -18,10 +18,10 @@ const mockSend   = sendPush as jest.Mock
 const mockMark   = markNotified as jest.Mock
 const mockDelete = deleteSubscriptionById as jest.Mock
 
-function req(secret = 'S3CR3T', query = ''): Request {
-  return new Request(`http://localhost/api/cron/morning-push${query}`, {
-    headers: { authorization: `Bearer ${secret}` },
-  })
+function req(secret = 'S3CR3T', query = '', force = false): Request {
+  const headers: Record<string, string> = { authorization: `Bearer ${secret}` }
+  if (force) headers['x-force-morning-push'] = '1'
+  return new Request(`http://localhost/api/cron/morning-push${query}`, { headers })
 }
 
 // Fige l'horloge : 05:00 UTC le 2 août = 07:00 à Paris (été) → dans la fenêtre.
@@ -56,8 +56,21 @@ it('ne fait rien hors de la fenêtre matinale', async () => {
   expect(mockFetch).not.toHaveBeenCalled()
 })
 
-it('force=1 court-circuite la garde horaire', async () => {
+// L'en-tête est le mécanisme retenu : sur Vercel, la requête est réécrite avant
+// la fonction et request.url peut perdre sa query string.
+it('l\'en-tête X-Force-Morning-Push court-circuite la garde horaire', async () => {
   freeze('2026-08-02T20:00:00Z')   // 22:00 à Paris, très loin de la fenêtre
+  mockFetch.mockResolvedValue([
+    { id: 's1', user_id: 'u1', endpoint: 'e1', p256dh: 'k', auth: 'a' },
+  ])
+  mockSend.mockResolvedValue('sent')
+
+  const res = await GET(req('S3CR3T', '', true))
+  expect(await res.json()).toEqual({ sent: 1, removed: 0, failed: 0, batch: 1 })
+})
+
+it('la query string ?force=1 marche aussi (ordonnanceurs externes)', async () => {
+  freeze('2026-08-02T20:00:00Z')
   mockFetch.mockResolvedValue([
     { id: 's1', user_id: 'u1', endpoint: 'e1', p256dh: 'k', auth: 'a' },
   ])
@@ -67,9 +80,17 @@ it('force=1 court-circuite la garde horaire', async () => {
   expect(await res.json()).toEqual({ sent: 1, removed: 0, failed: 0, batch: 1 })
 })
 
-it('force=1 ne dispense pas du Bearer', async () => {
+it('l\'en-tête à 0 ne force pas (runs planifiés)', async () => {
   freeze('2026-08-02T20:00:00Z')
-  const res = await GET(req('WRONG', '?force=1'))
+  const res = await GET(new Request('http://localhost/api/cron/morning-push', {
+    headers: { authorization: 'Bearer S3CR3T', 'x-force-morning-push': '0' },
+  }))
+  expect(await res.json()).toEqual({ skipped: true, reason: 'outside-window' })
+})
+
+it('le forçage ne dispense pas du Bearer', async () => {
+  freeze('2026-08-02T20:00:00Z')
+  const res = await GET(req('WRONG', '', true))
   expect(res.status).toBe(401)
   expect(mockFetch).not.toHaveBeenCalled()
 })

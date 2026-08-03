@@ -30,7 +30,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const force = new URL(request.url).searchParams.get('force') === '1'
+  // Forçage par EN-TÊTE en priorité : sur Vercel, la requête est réécrite avant
+  // d'atteindre la fonction (cf. X-Matched-Path) et `request.url` peut arriver
+  // amputé de sa query string — c'est ce qui a fait échouer le premier essai,
+  // le 2026-08-03. Un en-tête traverse la réécriture intact. La query string
+  // reste acceptée en second, elle est plus commode à configurer sur certains
+  // ordonnanceurs externes.
+  const force = request.headers.get('x-force-morning-push') === '1'
+    || new URL(request.url).searchParams.get('force') === '1'
   const now = new Date()
   if (!force && !isMorningWindow(now)) {
     return NextResponse.json({ skipped: true, reason: 'outside-window' })

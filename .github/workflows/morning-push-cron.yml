@@ -35,11 +35,15 @@ jobs:
           # Un déclenchement manuel court-circuite la garde horaire : c'est une
           # intention explicite, pas un tick égaré. Les runs planifiés, eux,
           # restent soumis à la fenêtre.
-          FORCE: ${{ github.event_name == 'workflow_dispatch' && '?force=1' || '' }}
+          # En-tête et non query string : Vercel réécrit la requête avant la
+          # fonction et `request.url` peut y perdre sa query (constaté le
+          # 2026-08-03, le forçage était ignoré).
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
         run: |
           response=$(curl -sS -w "\n%{http_code}" -X GET \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "https://trailcockpit.run/api/cron/morning-push$FORCE")
+            -H "X-Force-Morning-Push: $FORCE" \
+            https://trailcockpit.run/api/cron/morning-push)
           body=$(echo "$response" | sed '$d')
           status=$(echo "$response" | tail -n1)
           echo "HTTP $status"
