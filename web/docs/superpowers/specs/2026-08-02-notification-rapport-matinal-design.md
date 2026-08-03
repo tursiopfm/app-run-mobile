@@ -156,7 +156,7 @@ Même garde Bearer que les crons existants. `runtime = 'nodejs'`,
 `maxDuration = 60`.
 
 1. **Garde horaire** : n'agir que si l'heure locale de Paris est dans
-   `[07:00, 10:00[`, sinon retourner `{ skipped: true }` sans rien faire. La
+   `[07:00, 12:00[`, sinon retourner `{ skipped: true }` sans rien faire. La
    borne basse fait le travail décrit plus bas (DST + retard GitHub) ; la borne
    haute évite qu'un `workflow_dispatch` manuel en pleine journée n'envoie une
    notification « matinale » à 22h.
@@ -190,7 +190,7 @@ Calqué sur `strava-import-cron.yml` (curl + Bearer + contrôle du code HTTP).
 ```yaml
 on:
   schedule:
-    - cron: '*/10 5,6 * * *'   # UTC
+    - cron: '7,17,27,37,47,57 5-10 * * *'   # UTC
   workflow_dispatch:
 ```
 
@@ -307,7 +307,7 @@ Détection de l'installation :
 
 Suite Jest sur `lib/push/morning-message.ts`, la seule logique non triviale :
 
-- **garde horaire** : bords `06:59` / `07:00` et `09:59` / `10:00` heure de
+- **garde horaire** : bords `06:59` / `07:00` et `11:59` / `12:00` heure de
   Paris, en été **et** en hiver ;
 - **composition du corps** : avec séance / sans séance ; distance présente ou
   nulle ; retrait du point final du verdict ; chaque `StatusId` produit une
@@ -337,7 +337,7 @@ fait sur téléphone.
 - Variables Vercel `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`,
   `VAPID_SUBJECT` à créer avant le premier déploiement.
 - Test manuel : activer le toggle sur iPhone installé → déclencher le workflow
-  à la main (`workflow_dispatch`) **entre 7:00 et 10:00 heure de Paris** (hors
+  à la main (`workflow_dispatch`) — il court-circuite la fenêtre via `?force=1` (hors
   de cette fenêtre le cron est volontairement inerte) → la notification arrive,
   le tap ouvre `/rapport-matinal`.
 
@@ -407,3 +407,34 @@ mentir l'interrupteur en affichant ON alors que rien n'arrivera), un `DELETE`
 notifications cessent réellement sur cet appareil. La ligne orpheline côté
 serveur est purgée automatiquement par le cron au premier 404/410 renvoyé par
 le service de push.
+
+### GitHub Actions n'est qu'un filet ; la fenêtre va jusqu'à midi
+
+Le design d'origine reposait sur une hypothèse fausse : « le retard habituel de
+GitHub Actions est de 5 à 20 minutes ». Le 2026-08-03, sur les **12
+déclenchements planifiés** entre 05:00 et 06:50 UTC, GitHub en a exécuté **un
+seul**, à 08:44 UTC — soit 10h44 heure de Paris. La borne haute de la fenêtre
+était à 10h : le run a été refusé, et personne n'a reçu sa notification.
+
+Deux enseignements, tous deux appliqués :
+
+- GitHub **ne rattrape pas** les occurrences manquées, et 05:00/06:00 UTC sont
+  des heures de pointe (tout le monde planifie aux heures rondes). Les minutes
+  sont donc décalées (`7,17,27,…`) et la plage étendue à 05h-10h UTC.
+- La fenêtre de la route va désormais jusqu'à **midi** heure de Paris. Cinq
+  heures de marge, sans risque de doublon grâce à `last_notified_on`.
+
+Le déclencheur **principal** est désormais un service d'ordonnancement externe
+précis à la minute ; le workflow GitHub reste en second, comme filet. Avoir deux
+déclencheurs est sans danger : le premier arrivé envoie et marque, le second ne
+trouve plus rien à faire.
+
+### `?force=1` pour tester hors fenêtre
+
+La garde horaire protège d'un envoi « matinal » égaré en pleine journée. Un
+appel manuel étant une intention explicite, il peut la court-circuiter via
+`?force=1`. Sans ce paramètre, vérifier la chaîne complète imposait d'attendre
+le lendemain matin à chaque itération. L'appel reste protégé par le Bearer, et
+l'idempotence continue de s'appliquer : forcer deux fois le même jour n'envoie
+rien la seconde fois — il faut remettre `last_notified_on` à `NULL` pour
+retester.

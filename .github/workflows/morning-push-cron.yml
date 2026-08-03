@@ -1,15 +1,21 @@
 name: Morning Push Cron
 
-# Déclenche /api/cron/morning-push toutes les 10 minutes entre 05h et 07h UTC.
-# La fenêtre couvre 7:00 heure de Paris en été (05:00 UTC) ET en hiver
-# (06:00 UTC) : la route refuse d'agir tant qu'il n'est pas 7:00 à Paris, et
-# `last_notified_on` garantit un seul envoi par jour et par appareil. Le retard
-# habituel de GitHub Actions (5 à 20 min) est donc sans conséquence.
-# Vercel Hobby plafonne les crons à once-per-day, d'où GitHub Actions.
+# Déclenche /api/cron/morning-push. Ce workflow est le FILET DE SÉCURITÉ :
+# le déclencheur principal est cron-job.org, précis à la minute. GitHub Actions
+# n'est pas un ordonnanceur fiable pour un rendez-vous à heure fixe — le
+# 2026-08-03 il n'a exécuté qu'UN des 12 déclenchements planifiés, avec 1h45 de
+# retard, et personne n'a rien reçu. Il ne rattrape pas les occurrences
+# manquées. L'idempotence de `last_notified_on` rend inoffensif le fait d'avoir
+# deux déclencheurs : le premier arrivé envoie, le second ne trouve plus rien.
+#
+# Minutes décalées des heures rondes : 05:00 et 06:00 UTC sont des heures de
+# pointe (tout le monde planifie à l'heure pile), c'est là que GitHub retarde
+# et abandonne le plus. La plage 05h-10h UTC couvre la fenêtre de la route
+# (07:00-12:00 Paris) en été comme en hiver.
 
 on:
   schedule:
-    - cron: '*/10 5,6 * * *'
+    - cron: '7,17,27,37,47,57 5-10 * * *'
   workflow_dispatch:
 
 # Sérialise les runs : deux exécutions qui se recouvrent liraient le même lot
@@ -25,10 +31,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Call Vercel cron endpoint
+        env:
+          # Un déclenchement manuel court-circuite la garde horaire : c'est une
+          # intention explicite, pas un tick égaré. Les runs planifiés, eux,
+          # restent soumis à la fenêtre.
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && '?force=1' || '' }}
         run: |
           response=$(curl -sS -w "\n%{http_code}" -X GET \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            https://trailcockpit.run/api/cron/morning-push)
+            "https://trailcockpit.run/api/cron/morning-push$FORCE")
           body=$(echo "$response" | sed '$d')
           status=$(echo "$response" | tail -n1)
           echo "HTTP $status"

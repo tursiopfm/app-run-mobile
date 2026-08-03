@@ -20,12 +20,15 @@ describe('fenêtre horaire', () => {
   it.each([
     ['été   06:59', '2026-08-02T04:59:00Z', false],
     ['été   07:00', '2026-08-02T05:00:00Z', true],
-    ['été   09:59', '2026-08-02T07:59:00Z', true],
-    ['été   10:00', '2026-08-02T08:00:00Z', false],
+    // 10:44 : l'heure réelle du run GitHub du 2026-08-03, refusé par l'ancienne
+    // borne à 10h. Il doit désormais passer.
+    ['été   10:44', '2026-08-02T08:44:00Z', true],
+    ['été   11:59', '2026-08-02T09:59:00Z', true],
+    ['été   12:00', '2026-08-02T10:00:00Z', false],
     ['hiver 06:59', '2026-01-15T05:59:00Z', false],
     ['hiver 07:00', '2026-01-15T06:00:00Z', true],
-    ['hiver 09:59', '2026-01-15T08:59:00Z', true],
-    ['hiver 10:00', '2026-01-15T09:00:00Z', false],
+    ['hiver 11:59', '2026-01-15T10:59:00Z', true],
+    ['hiver 12:00', '2026-01-15T11:00:00Z', false],
   ])('%s → %s', (_label, iso, expected) => {
     expect(isMorningWindow(new Date(iso))).toBe(expected)
   })

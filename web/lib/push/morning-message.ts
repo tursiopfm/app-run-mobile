@@ -3,12 +3,20 @@ import { fr } from '@/lib/i18n/dictionaries/fr'
 import { formatDurationHHmm } from '@/lib/training/duration'
 
 // Heure d'envoi et bornes de la fenêtre où le cron accepte d'agir, en heure
-// locale de Paris. La borne basse absorbe le changement d'heure et le retard
-// habituel de GitHub Actions ; la borne haute évite qu'un déclenchement manuel
-// en pleine journée n'envoie une notification « matinale » à 22h.
+// locale de Paris. La borne basse absorbe le changement d'heure ; la borne
+// haute évite qu'un déclenchement égaré en pleine journée n'envoie une
+// notification « matinale » à 22h.
+//
+// La borne haute était à 10h. Le 2026-08-03, GitHub Actions n'a exécuté qu'UN
+// seul des 12 déclenchements planifiés, avec 1h45 de retard sur le dernier :
+// le run est arrivé à 10h44 et s'est fait refuser, personne n'a rien reçu.
+// GitHub ne rattrape pas les occurrences manquées et 05:00-06:00 UTC est une
+// heure de pointe (tout le monde planifie aux heures rondes). Midi laisse
+// désormais cinq heures de marge ; l'idempotence de last_notified_on garantit
+// qu'un seul envoi passe, quel que soit le tick qui arrive.
 const PARIS_TZ = 'Europe/Paris'
 export const MORNING_HOUR = 7
-export const MORNING_WINDOW_END_HOUR = 10
+export const MORNING_WINDOW_END_HOUR = 12
 
 export type TodaySessionLite = {
   title:    string

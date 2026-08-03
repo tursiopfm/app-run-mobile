@@ -13,9 +13,16 @@ export const maxDuration = 60
 // dans maxDuration. Le reste part au tick suivant (10 min plus tard).
 const BATCH_SIZE = 25
 
-// Notification du rapport matinal. Déclenché en externe (Bearer) toutes les
-// 10 min entre 05h et 07h UTC ; la garde horaire choisit le bon tick selon
-// l'heure d'été ou d'hiver.
+// Notification du rapport matinal. Déclenché en externe (Bearer) sur une plage
+// de ticks ; la garde horaire choisit ceux qui tombent dans la matinée de
+// Paris, quelle que soit la saison.
+//
+// `?force=1` court-circuite la garde horaire. Réservé au déclenchement manuel :
+// la garde protège d'un envoi « matinal » égaré en pleine journée, or un appel
+// manuel EST une intention explicite. Sans ce paramètre, tester la chaîne
+// complète imposait d'attendre le lendemain matin. L'appel reste protégé par
+// le Bearer, et l'idempotence continue de s'appliquer : forcer deux fois le
+// même jour n'envoie rien la seconde fois.
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET
   const authHeader = request.headers.get('authorization')
@@ -23,8 +30,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const force = new URL(request.url).searchParams.get('force') === '1'
   const now = new Date()
-  if (!isMorningWindow(now)) {
+  if (!force && !isMorningWindow(now)) {
     return NextResponse.json({ skipped: true, reason: 'outside-window' })
   }
 

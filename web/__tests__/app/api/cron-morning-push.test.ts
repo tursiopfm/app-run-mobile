@@ -18,8 +18,8 @@ const mockSend   = sendPush as jest.Mock
 const mockMark   = markNotified as jest.Mock
 const mockDelete = deleteSubscriptionById as jest.Mock
 
-function req(secret = 'S3CR3T'): Request {
-  return new Request('http://localhost/api/cron/morning-push', {
+function req(secret = 'S3CR3T', query = ''): Request {
+  return new Request(`http://localhost/api/cron/morning-push${query}`, {
     headers: { authorization: `Bearer ${secret}` },
   })
 }
@@ -53,6 +53,24 @@ it('ne fait rien hors de la fenêtre matinale', async () => {
   freeze('2026-08-02T04:00:00Z')   // 06:00 à Paris
   const res = await GET(req())
   expect(await res.json()).toEqual({ skipped: true, reason: 'outside-window' })
+  expect(mockFetch).not.toHaveBeenCalled()
+})
+
+it('force=1 court-circuite la garde horaire', async () => {
+  freeze('2026-08-02T20:00:00Z')   // 22:00 à Paris, très loin de la fenêtre
+  mockFetch.mockResolvedValue([
+    { id: 's1', user_id: 'u1', endpoint: 'e1', p256dh: 'k', auth: 'a' },
+  ])
+  mockSend.mockResolvedValue('sent')
+
+  const res = await GET(req('S3CR3T', '?force=1'))
+  expect(await res.json()).toEqual({ sent: 1, removed: 0, failed: 0, batch: 1 })
+})
+
+it('force=1 ne dispense pas du Bearer', async () => {
+  freeze('2026-08-02T20:00:00Z')
+  const res = await GET(req('WRONG', '?force=1'))
+  expect(res.status).toBe(401)
   expect(mockFetch).not.toHaveBeenCalled()
 })
 
