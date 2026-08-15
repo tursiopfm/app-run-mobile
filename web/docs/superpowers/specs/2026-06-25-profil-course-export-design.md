@@ -262,3 +262,24 @@ c'est le seul point qui demande un aller-retour visuel. On introduit
   comme pixel ; désormais posées **sur la courbe**). Géométrie : `plotTop` 112→128,
   `baseY` 278, cotation `coteY0`/`coteY1` (rang 1 = `+46`), **`svgH` dynamique** (392 si
   le rang 1 sert, sinon 346 — pas de blanc inutile sur courses peu denses). viewBox `1180×svgH`.
+- **2026-08-15 — texte +20 % à format d'impression INCHANGÉ (retour Franck : barrières
+  illisibles en iPhone)** : le levier est le **viewBox**, `W` 1180 → **980**. La carte étant
+  dimensionnée par sa LARGEUR (170 mm en iPhone) et le SVG s'y ajustant, resserrer le viewBox
+  agrandit physiquement tout le dessin sans toucher une seule taille de police (barrière
+  6,1 → **7,4 pt**, noms 6,9 → 8,4 pt ; repère : le tableau imprimé est à ~7,1 pt).
+  Contrainte posée par Franck : **mêmes millimètres qu'avant**, donc `svgH` est calé sur
+  `(398|458) × W/1180` (= 380 pour la TDS) et c'est le **relief** qui absorbe la différence
+  (`plotH` calculé, plancher 60 → 93 unités ≈ 16 mm au lieu de 22). Corollaire heureux : le
+  rapport hauteur/largeur est conservé au millième, `.profstage` (384×700) et l'export JPEG
+  ne bougent pas. Interlignes resserrés pour financer le reste (`BAR_STEP` 24→21, `BAR_H`
+  23→20, `OBJ_STEP` 20→18, `CHIP_STEP` 22→21, `KM_DY` 28→24, `COTE_GAP` 60→50, `COTE_STEP`
+  60→52, marge basse 38→32). Trois défauts corrigés au passage : (1) **rangs non bornés** —
+  `assignLevels()` (profile-print-geometry) remplace les greedy à 2 niveaux figés qui posaient
+  l'étiquette en trop sur un rang déjà pris ; les bandes haute/basse sont dimensionnées sur les
+  rangs réellement occupés (et se referment quand une info est masquée dans « Infos ») ;
+  (2) **axe des altitudes** — `altitudeStep()` remplace le pas fixe de 200 m qui empilait les
+  nombres en bouillie grise ; (3) **bord droit** — marqueurs (puces, barrière, objectif)
+  recadrés dans le viewBox, le drapeau restant sur le point. Le bandeau et la légende sont du
+  HTML en px : ils suivent désormais le même facteur `K = 1180/980` (ils étaient à 4,5–6,8 pt).
+  Maquette de validation : `Prompts/profil-export-typo-mockups.html` (variante B66). Vérifié
+  headless sur les données TDS réelles.

@@ -37,7 +37,18 @@ describe('ProfilePrintCard', () => {
     expect(screen.queryAllByTestId('barrier')).toHaveLength(0)
   })
 
-  it('cas dense : affiche TOUTE la cotation et étale objectif + cotation sur 2 niveaux', () => {
+  it('occupe la même hauteur imprimée qu\'avant l\'agrandissement du texte', () => {
+    // La carte est dimensionnée par sa LARGEUR à l'impression : à rapport
+    // hauteur/largeur constant, la hauteur en millimètres ne bouge pas. Le
+    // viewBox s'est resserré (1180 → 980) pour grossir le texte, la hauteur
+    // doit avoir suivi dans la même proportion (référence : 398 / 1180).
+    const { container } = render(<ProfilePrintCard race={race} waypoints={wps} denseProfile={dense} info={DEFAULT_PROFILE_INFO} />)
+    const [, , w, h] = (container.querySelector('svg')!.getAttribute('viewBox') as string).split(' ').map(Number)
+    expect(w).toBe(980)
+    expect(h / w).toBeCloseTo(398 / 1180, 2)
+  })
+
+  it('cas dense : affiche TOUTE la cotation et étale objectif + cotation sur plusieurs rangs', () => {
     // grappe de points serrés (≈0,5 km) → les libellés se chevaucheraient sur un seul rang.
     const denseWps = [
       { id: 'd0', raceId: 'r1', km: 0, name: 'Départ', altitude: 1000, dPlus: 0, dMoins: 0, supplies: [], cutoffRaw: null, cutoffKind: null, type: 'start', targetOverrideSec: null },
@@ -56,11 +67,12 @@ describe('ProfilePrintCard', () => {
     const texts = Array.from(container.querySelectorAll('text'))
     const dpTexts = texts.filter((t) => /^▲\d/.test(t.textContent || ''))
     expect(dpTexts).toHaveLength(denseWps.length - 1)
-    // #2/#3 : cotation étalée sur 2 rangs (2 valeurs de y distinctes).
-    expect(new Set(dpTexts.map((t) => t.getAttribute('y'))).size).toBe(2)
+    // #2/#3 : cotation étalée sur plusieurs rangs (le nombre n'est plus borné à 2 —
+    // au-delà, une étiquette se posait sur un rang déjà pris et chevauchait sa voisine).
+    expect(new Set(dpTexts.map((t) => t.getAttribute('y'))).size).toBeGreaterThan(1)
 
-    // #3 : heures objectif étalées sur 2 niveaux.
+    // #3 : heures objectif étalées sur plusieurs niveaux.
     const objYs = new Set(screen.getAllByTestId('obj').map((o) => o.getAttribute('y')))
-    expect(objYs.size).toBe(2)
+    expect(objYs.size).toBeGreaterThan(1)
   })
 })

@@ -17,7 +17,27 @@ import { buildProfileData, elevationDomain } from '@/components/plan/ElevationPr
 import { deriveSegment, formatElapsedToClock, formatBarrierClock } from '@/lib/plan/waypoint-view'
 import { resolveElapsed } from '@/lib/plan/barrier-lock'
 import { chartChips } from '@/lib/plan/supply-chips'
-import { xOf, yOf, buildLinePath, buildAreaPath, type ProfileGeom } from '@/lib/plan/profile-print-geometry'
+import {
+  xOf, yOf, buildLinePath, buildAreaPath, assignLevels, altitudeStep, type ProfileGeom,
+} from '@/lib/plan/profile-print-geometry'
+
+// Largeur du viewBox. La carte est dimensionnée par sa LARGEUR à l'impression
+// (170 mm en iPhone) et le SVG s'y ajuste : resserrer le viewBox agrandit donc
+// physiquement TOUT le dessin, texte compris, sans toucher une seule taille de
+// police. 1180 → 980 = +20 %. OLD_W sert à conserver la hauteur imprimée :
+// la carte doit occuper les mêmes millimètres qu'avant (cf. targetH).
+const W = 980
+const OLD_W = 1180
+const K = OLD_W / W                        // même facteur pour le texte HTML (bandeau, légende)
+
+// Métriques verticales, resserrées pour financer le grossissement à hauteur
+// constante : le reste est pris sur le relief (cf. plotH).
+const BAR_STEP = 21, BAR_H = 20, BAR_FLAG = 8   // rang / boîte / drapeau de barrière
+const OBJ_GAP = 18, OBJ_STEP = 18               // 1re ligne d'objectifs sous les barrières, puis rangs
+const CHIP_H = 19, CHIP_GAP_Y = 3, CHIP_STEP = 21
+const PLOT_GAP = 4                              // puces → haut du relief
+const KM_DY = 24                                // axe km sous les pastilles
+const COTE_GAP = 50, COTE_STEP = 52, COTE_TAIL = 32  // cotation : 1er rang, rangs suivants, marge basse
 
 const SUP: Record<WaypointSupply, { letter: string; cls: string }> = {
   liquid: { letter: 'L', cls: 'liq' }, solid: { letter: 'S', cls: 'sol' },
@@ -62,15 +82,11 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
 
   // Géométrie du SVG (échelle UNIFORME, width:100%;height:auto). Bandes réservées :
   // haute (0→plotTop) pour les marqueurs, basse (sous baseY) pour la cotation.
+  // plotTop / plotH dépendent du nombre de rangs réellement occupés : ils sont
+  // renseignés plus bas, une fois les rangs connus (xOf n'en dépend pas).
   const [yMin, yMax] = profile.e.length ? elevationDomain(profile.e) : [0, 100]
   const maxKm = Math.max(profile.d[profile.d.length - 1] ?? 0, ...waypoints.map((w) => w.km), 1)
-  const g: ProfileGeom = { W: 1180, H: 460, padL: 54, padR: 22, plotTop: 150, plotH: 150, yMin, yMax, maxKm }
-  const baseY = g.plotTop + g.plotH        // 300
-  const dotY = baseY + 4                   // pastille du point posée sur la ligne de base (sous le nom)
-  const KMY = baseY + 28                   // axe km (sous les pastilles)
-  const coteY0 = baseY + 60                // trait de cote — niveau 0
-  const SEG_ROWH = 60                      // décalage vertical du niveau 1 de cotation
-  const coteY1 = coteY0 + SEG_ROWH         // trait de cote — niveau 1 (tronçons serrés)
+  const g: ProfileGeom = { W, H: 0, padL: 54, padR: 22, plotTop: 0, plotH: 0, yMin, yMax, maxKm }
   const BARW = 66                          // largeur du drapeau barrière
   const OBJW = 54                          // largeur estimée d'une heure objectif (étalement)
 
@@ -80,8 +96,6 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
   const arrClock = race.startTime && race.targetDurationMin != null
     ? noDay(formatElapsedToClock(race.startTime, race.targetDurationMin * 60)?.label) : null
 
-  const gridAlts: number[] = []
-  for (let a = Math.ceil(yMin / 200) * 200; a <= yMax; a += 200) gridAlts.push(a)
   const gridKms: number[] = []
   for (let k = 0; k <= maxKm; k += Math.max(5, Math.round(maxKm / 10 / 5) * 5)) gridKms.push(k)
 
@@ -98,80 +112,79 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
     const bh = bhRaw ? bhRaw.replace(/^J\d+\s+/, '') : null
     return { w, i, x, chips, chipW, objClock, bh }
   })
-  // Barrières trop proches → étalées sur 2 niveaux (greedy) pour ne pas se chevaucher.
-  const barLevel: Record<number, number> = {}
-  const lastR = [-1e9, -1e9]
-  for (const m of wpMeta) {
-    if (!m.bh) continue
-    const left = m.x - BARW / 2
-    const lv = left >= lastR[0] + 4 ? 0 : left >= lastR[1] + 4 ? 1 : (lastR[0] <= lastR[1] ? 0 : 1)
-    barLevel[m.i] = lv
-    lastR[lv] = m.x + BARW / 2
+  // Étiquettes trop proches → rangs empilés, autant que nécessaire.
+  const levelsOf = (rows: typeof wpMeta, halfW: (m: typeof wpMeta[number]) => number) => {
+    const lv = assignLevels(rows.map((m) => ({ left: m.x - halfW(m), right: m.x + halfW(m) })), 4)
+    const byIndex: Record<number, number> = {}
+    rows.forEach((m, k) => { byIndex[m.i] = lv[k] })
+    return { byIndex, rows: lv.length ? Math.max(...lv) + 1 : 0 }
   }
+  const bar = levelsOf(wpMeta.filter((m) => m.bh), () => BARW / 2)
+  const obj = levelsOf(wpMeta.filter((m) => m.objClock), () => OBJW / 2)
+  const chip = levelsOf(wpMeta.filter((m) => m.chips.length), (m) => m.chipW / 2)
 
-  // Idem pour les heures objectif (orange) : 2 niveaux quand deux points sont proches.
-  const objLevel: Record<number, number> = {}
-  const lastObjR = [-1e9, -1e9]
-  for (const m of wpMeta) {
-    if (!m.objClock) continue
-    const left = m.x - OBJW / 2
-    const lv = left >= lastObjR[0] + 4 ? 0 : left >= lastObjR[1] + 4 ? 1 : (lastObjR[0] <= lastObjR[1] ? 0 : 1)
-    objLevel[m.i] = lv
-    lastObjR[lv] = m.x + OBJW / 2
-  }
+  // Bande HAUTE : barrières → objectifs → puces, un rang par niveau occupé. Une
+  // info masquée dans le dialogue « Infos » referme sa bande au lieu de la réserver.
+  const barZoneEnd = bar.rows ? 2 + bar.rows * BAR_STEP + BAR_FLAG : 0
+  const objY = (lv: number) => barZoneEnd + OBJ_GAP + lv * OBJ_STEP
+  const objZoneEnd = obj.rows ? objY(obj.rows - 1) : barZoneEnd
+  const chipY = (lv: number) => objZoneEnd + CHIP_GAP_Y + lv * CHIP_STEP
+  g.plotTop = (chip.rows ? chipY(chip.rows - 1) + CHIP_H : objZoneEnd) + PLOT_GAP
 
-  // Puces ravito : 2 niveaux aussi (points serrés avec plusieurs puces → sinon ça se chevauche).
-  const chipLevel: Record<number, number> = {}
-  const lastChipR = [-1e9, -1e9]
-  for (const m of wpMeta) {
-    if (!m.chips.length) continue
-    const left = m.x - m.chipW / 2
-    const lv = left >= lastChipR[0] + 4 ? 0 : left >= lastChipR[1] + 4 ? 1 : (lastChipR[0] <= lastChipR[1] ? 0 : 1)
-    chipLevel[m.i] = lv
-    lastChipR[lv] = m.x + m.chipW / 2
-  }
-
-  // Cotation des tronçons : étalée sur 2 niveaux (greedy) pour TOUT afficher sans
-  // chevauchement — chaque niveau a son propre trait de cote (mini-roadbook 2 rangs).
+  // Cotation des tronçons : mêmes rangs empilés — chacun a son propre trait de cote.
   const segPts = waypoints.map((w) => ({ km: w.km, dPlus: w.dPlus, dMoins: w.dMoins }))
-  const segView: { x1: number; x2: number; mid: number; dp: number; dm: number; kmLabel: string; level: number }[] = []
-  const lastSegR = [-1e9, -1e9]
-  for (let i = 1; i < waypoints.length; i++) {
+  const segView = waypoints.slice(1).map((_, k) => {
+    const i = k + 1
     const seg = deriveSegment(segPts, i)
     const x1 = xOf(g, waypoints[i - 1].km), x2 = xOf(g, waypoints[i].km), mid = (x1 + x2) / 2
     const dp = seg.dPlusSeg ?? 0, dm = seg.dMoinsSeg ?? 0
     const kmLabel = seg.interKm != null ? `${fmtKm(seg.interKm)} km` : ''
     // D+ / D− empilés → largeur = la plus large des trois lignes (km, ▲D+, ▼D−).
     const needed = Math.max(kmLabel.length * 9.0, `▲${dp}`.length * 9.8, `▼${dm}`.length * 9.8)
-    const left = mid - needed / 2
-    const level = left >= lastSegR[0] + 8 ? 0 : left >= lastSegR[1] + 8 ? 1 : (lastSegR[0] <= lastSegR[1] ? 0 : 1)
-    lastSegR[level] = mid + needed / 2
-    segView.push({ x1, x2, mid, dp, dm, kmLabel, level })
-  }
-  // Hauteur du SVG : on ne réserve le 2ᵉ rang de cotation que s'il sert (courses denses).
-  const usesSegL1 = segView.some((s) => s.level === 1)
-  const svgH = usesSegL1 ? 458 : 398
+    return { x1, x2, mid, dp, dm, kmLabel, needed }
+  })
+  const segLv = assignLevels(segView.map((s) => ({ left: s.mid - s.needed / 2, right: s.mid + s.needed / 2 })), 8)
+  const segRows = segLv.length ? Math.max(...segLv) + 1 : 1
+
+  // Hauteur imprimée INCHANGÉE : la carte doit occuper les mêmes millimètres
+  // qu'avec l'ancien viewBox (398 unités, 458 dès qu'un 2ᵉ rang de cotation sert).
+  // Le texte ayant grossi, c'est le RELIEF qui absorbe la différence (plancher 60).
+  const tailH = COTE_GAP + (segRows - 1) * COTE_STEP + COTE_TAIL
+  const targetH = Math.round((segRows > 1 ? 458 : 398) * (W / OLD_W))
+  g.plotH = Math.max(60, targetH - g.plotTop - tailH)
+  const baseY = g.plotTop + g.plotH
+  const dotY = baseY + 4                   // pastille du point posée sur la ligne de base (sous le nom)
+  const KMY = baseY + KM_DY                // axe km (sous les pastilles)
+  const coteY = (lv: number) => baseY + COTE_GAP + lv * COTE_STEP
+  const svgH = coteY(segRows - 1) + COTE_TAIL
+  g.H = svgH
+
+  const gridAlts: number[] = []
+  const altStep = altitudeStep(g.plotH, yMax - yMin || 1, 15)
+  for (let a = Math.ceil(yMin / altStep) * altStep; a <= yMax; a += altStep) gridAlts.push(a)
 
   return (
     <div className="pcard">
       <style>{`
         .pcard{--ink:#0E1513;--ink-soft:#55615E;--ink-faint:#8A938F;--line:#C9D1CE;--line-strong:#2A332F;--brand:#FF7900;--blue:#2E90D0;--d:'Space Grotesk',var(--font-display,system-ui),sans-serif;background:#fff;color:var(--ink);width:100%;max-width:280mm;margin:0 auto;border-radius:2.5mm;padding:10px 12px 9px;box-shadow:0 18px 40px -16px rgba(0,0,0,.5);font-family:system-ui,sans-serif;}
         .pcard .hd{display:grid;grid-template-columns:1fr auto 1fr;align-items:start;border-bottom:1.6px solid var(--line-strong);padding-bottom:5px;gap:10px;}
-        .pcard .race{font-family:var(--d);font-size:9px;font-weight:700;letter-spacing:-.3px;line-height:1.05;}
-        .pcard .stats{font-family:var(--d);font-size:6px;color:var(--ink-soft);font-weight:600;margin-top:2px;}
+        /* Bandeau et légende sont du HTML en px : ils ne suivent pas le viewBox,
+           on leur applique le MÊME facteur K, sinon ils restent à 4,5–6,8 pt. */
+        .pcard .race{font-family:var(--d);font-size:${(9 * K).toFixed(1)}px;font-weight:700;letter-spacing:-.3px;line-height:1.05;}
+        .pcard .stats{font-family:var(--d);font-size:${(6 * K).toFixed(1)}px;color:var(--ink-soft);font-weight:600;margin-top:2px;}
         .pcard .stats b{color:var(--ink);}
-        .pcard .brand{font-family:var(--d);font-weight:800;font-size:8px;letter-spacing:.5px;justify-self:center;white-space:nowrap;}
+        .pcard .brand{font-family:var(--d);font-weight:800;font-size:${(8 * K).toFixed(1)}px;letter-spacing:.5px;justify-self:center;white-space:nowrap;}
         .pcard .brand .b1{color:var(--brand);}.pcard .brand .b2{color:var(--ink-soft);}.pcard .brand .b3{color:var(--brand);}
         .pcard .goal{font-family:var(--d);text-align:right;white-space:nowrap;justify-self:end;}
-        .pcard .goal .lbl{display:block;color:var(--ink-faint);font-size:5.5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
-        .pcard .goal .val{color:var(--brand);font-size:8px;font-weight:700;}
+        .pcard .goal .lbl{display:block;color:var(--ink-faint);font-size:${(5.5 * K).toFixed(1)}px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+        .pcard .goal .val{color:var(--brand);font-size:${(8 * K).toFixed(1)}px;font-weight:700;}
         .pcard .plot{width:100%;margin-top:5px;}
         .pcard .plot svg{display:block;width:100%;height:auto;}
-        .pcard .chip{font-family:var(--d);font-weight:700;font-size:6.5px;min-width:10px;height:11px;padding:0 2px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;color:#fff;line-height:1;}
+        .pcard .chip{font-family:var(--d);font-weight:700;font-size:${(6.5 * K).toFixed(1)}px;min-width:${(10 * K).toFixed(1)}px;height:${(11 * K).toFixed(1)}px;padding:0 2px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;color:#fff;line-height:1;}
         .pcard .chip.liq{background:#2E90D0;}.pcard .chip.sol{background:#B45309;}.pcard .chip.hot{background:#DC2626;}.pcard .chip.base{background:#16A34A;}.pcard .chip.ass{background:#7C5CFC;}
-        .pcard .legend{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:5px;padding-top:4px;border-top:1px solid var(--line-strong);font-family:var(--d);font-size:6.5px;color:var(--ink-soft);font-weight:600;}
+        .pcard .legend{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:5px;padding-top:4px;border-top:1px solid var(--line-strong);font-family:var(--d);font-size:${(6.5 * K).toFixed(1)}px;color:var(--ink-soft);font-weight:600;}
         .pcard .legend .k{display:inline-flex;align-items:center;gap:3px;}
-        .pcard .legend .bar{font-family:var(--d);font-weight:800;font-size:6.5px;color:#B0111C;background:#fff;border:1.2px solid #E11D2A;border-radius:3px;padding:1px 4px;}
+        .pcard .legend .bar{font-family:var(--d);font-weight:800;font-size:${(6.5 * K).toFixed(1)}px;color:#B0111C;background:#fff;border:1.2px solid #E11D2A;border-radius:3px;padding:1px 4px;}
       `}</style>
 
       <div className="hd">
@@ -226,30 +239,35 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
             )
           })}
 
-          {/* bande HAUTE : barrière (drapeau rouge, 2 niveaux) · objectif (orange) · puces ravito */}
+          {/* bande HAUTE : barrière (drapeau rouge) · objectif (orange) · puces ravito.
+              Marqueurs recadrés dans le viewBox (clampX) : aux extrémités, le dernier
+              point débordait et se faisait rogner au bord droit. */}
           {wpMeta.map(({ w, i, x, chips, chipW, objClock, bh }) => {
-            const chipH = 19
-            let x0 = x - chipW / 2
-            const chipsY = chipLevel[i] === 1 ? g.plotTop - 24 : g.plotTop - 46
-            const by = barLevel[i] === 1 ? 26 : 2
-            const objY = objLevel[i] === 1 ? g.plotTop - 50 : g.plotTop - 70
-            const bx = x - BARW / 2
+            const clampX = (left: number, width: number) => Math.min(Math.max(left, 2), g.W - width - 2)
+            let x0 = clampX(x - chipW / 2, chipW)
+            const chipsY = chipY(chip.byIndex[i] ?? 0)
+            const by = 2 + (bar.byIndex[i] ?? 0) * BAR_STEP
+            const bx = clampX(x - BARW / 2, BARW)
             return (
               <g key={`top${w.id ?? i}`}>
                 {bh && (
                   <g data-testid="barrier">
                     {/* fond blanc + bordure rouge + texte rouge foncé : bien plus lisible que blanc-sur-rouge */}
-                    <rect x={bx} y={by} width={BARW} height={23} rx={4} fill="#fff" stroke={BAR} strokeWidth={2.5} />
-                    <path d={`M${x} ${by + 23} l-6 9 l6 -3 l6 3 z`} fill={BAR} />
-                    <text x={x} y={by + 16.5} textAnchor="middle" fontSize={15} fontWeight={800} fill="#B0111C" fontFamily="Space Grotesk,sans-serif">{bh}</text>
+                    <rect x={bx} y={by} width={BARW} height={BAR_H} rx={4} fill="#fff" stroke={BAR} strokeWidth={2.5} />
+                    {/* le drapeau reste sur le point, même si la boîte a été recadrée */}
+                    <path d={`M${x} ${by + BAR_H} l-6 ${BAR_FLAG} l6 -3 l6 3 z`} fill={BAR} />
+                    <text x={bx + BARW / 2} y={by + BAR_H - 5.5} textAnchor="middle" fontSize={15} fontWeight={800} fill="#B0111C" fontFamily="Space Grotesk,sans-serif">{bh}</text>
                   </g>
                 )}
-                {objClock && <text data-testid="obj" x={x} y={objY} textAnchor="middle" fontSize={17} fontWeight={700} fill="#FF7900" fontFamily="Space Grotesk,sans-serif">{objClock}</text>}
-                {chips.map((s, j) => {
+                {objClock && (
+                  <text data-testid="obj" x={clampX(x - OBJW / 2, OBJW) + OBJW / 2} y={objY(obj.byIndex[i] ?? 0)}
+                    textAnchor="middle" fontSize={17} fontWeight={700} fill="#FF7900" fontFamily="Space Grotesk,sans-serif">{objClock}</text>
+                )}
+                {chips.map((s) => {
                   const wch = chipWidth(s); const cx = x0; x0 += wch + CHIP_GAP
                   return (
                     <g key={s}>
-                      <rect x={cx} y={chipsY} width={wch} height={chipH} rx={3.5} fill={SUP_COLOR[SUP[s].cls]} />
+                      <rect x={cx} y={chipsY} width={wch} height={CHIP_H} rx={3.5} fill={SUP_COLOR[SUP[s].cls]} />
                       <text x={cx + wch / 2} y={chipsY + 14} fontSize={12.5} fontWeight={700} fill="#fff" textAnchor="middle" fontFamily="Space Grotesk,sans-serif">{SUP[s].letter}</text>
                     </g>
                   )
@@ -259,9 +277,9 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
           })}
 
           {/* bande BASSE : cotation des tronçons (distance · ▲ D+ orange AU-DESSUS du ▼ D− gris).
-              2 rangs (niveau 0 / niveau 1) pour TOUT afficher sans chevauchement. */}
+              Autant de rangs que nécessaire pour TOUT afficher sans chevauchement. */}
           {segView.map((s, i) => {
-            const cy = s.level === 1 ? coteY1 : coteY0
+            const cy = coteY(segLv[i])
             const lx1 = s.x1 + 6, lx2 = s.x2 - 6
             return (
               <g key={`seg${i}`}>
@@ -272,9 +290,9 @@ export function ProfilePrintCard({ race, waypoints, denseProfile, info }: {
                     <line x1={lx2} y1={cy - 7} x2={lx2} y2={cy + 7} stroke="#64748B" strokeWidth={1.8} />
                   </>
                 )}
-                <text x={s.mid} y={cy - 11} textAnchor="middle" fontSize={17} fontWeight={700} fill="#0E1513" fontFamily="Space Grotesk,sans-serif">{s.kmLabel}</text>
-                <text x={s.mid} y={cy + 16} textAnchor="middle" fontSize={18} fontWeight={700} fill="#FF7900" fontFamily="Space Grotesk,sans-serif">{`▲${s.dp}`}</text>
-                <text x={s.mid} y={cy + 33} textAnchor="middle" fontSize={18} fontWeight={700} fill="#64748B" fontFamily="Space Grotesk,sans-serif">{`▼${s.dm}`}</text>
+                <text x={s.mid} y={cy - 10} textAnchor="middle" fontSize={17} fontWeight={700} fill="#0E1513" fontFamily="Space Grotesk,sans-serif">{s.kmLabel}</text>
+                <text x={s.mid} y={cy + 14} textAnchor="middle" fontSize={18} fontWeight={700} fill="#FF7900" fontFamily="Space Grotesk,sans-serif">{`▲${s.dp}`}</text>
+                <text x={s.mid} y={cy + 30} textAnchor="middle" fontSize={18} fontWeight={700} fill="#64748B" fontFamily="Space Grotesk,sans-serif">{`▼${s.dm}`}</text>
               </g>
             )
           })}
