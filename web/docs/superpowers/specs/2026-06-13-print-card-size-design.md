@@ -95,3 +95,36 @@ on documente la limite plutôt que d'ajouter une mesure DOM de la hauteur.
 
 > Le rendu d'impression dépend du navigateur — vérification finale par Franck
 > via l'aperçu Ctrl+P (Chromium).
+
+## Drift notes
+
+- **2026-08-15 — « format iPhone » devient vraiment la taille d'un iPhone**
+  (retour Franck : « je voudrais que ça fasse la taille d'un iPhone, c'est pour
+  coller au dos du téléphone »). Le format iPhone n'était pas une taille mais un
+  **no-op** : `scale: 1` sur une carte dessinée en 120 mm, donc une carte de
+  120 mm de large et de hauteur variable — plus étroite que le dos du téléphone
+  sur une course courte, plus haute sur une course dense. Désormais l'échelle est
+  **calculée à l'exécution** : `fitIphoneScale(120, hauteur mesurée)` =
+  `min(140/120, 66/h)`, borné à `[0,8 ; 1,2]`, cible `IPHONE_CARD_MM = 140 × 66`
+  (dos d'un iPhone 15/16/17 = 146,6 × 70,6 mm, ~3 mm de marge). La hauteur ne peut
+  pas être connue statiquement — elle dépend du nombre de points — d'où la mesure
+  DOM dans print/page.tsx (`offsetHeight`, insensible aux transforms d'aperçu ;
+  les mm sont dérivés de la largeur mesurée, pas d'un DPI supposé), refaite quand
+  les colonnes, l'onglet ou les données changent. **A5 et A4 gardent leurs échelles
+  fixes** — seul iPhone est ajusté. Plancher à 0,8 : au-delà, on laisse la carte
+  déborder plutôt que de la rendre illisible (le levier est alors de retirer des
+  points, pas des colonnes — la hauteur vient des lignes).
+- **Décision (2026-08-15) : le profil NE passe PAS au format iPhone.** Arithmétique
+  à l'appui sur la TDS (150 km, 17 points) : sur une carte de 140 mm, le bandeau,
+  la légende et les marges coûtent ~19 mm en valeur fixe (des px, ils ne rétrécissent
+  pas avec la carte) et il ne reste que ~47 mm de dessin ; à cette largeur les points
+  sont espacés de 8 mm, donc barrières, objectifs et cotation s'empilent sur 3 à 4
+  rangs et consomment tout le budget vertical. Même en ne gardant **que** la cotation
+  km/D+/D−, on retombe à ~6,1 pt. Le nombre de **couches** n'est pas le facteur
+  limitant, le nombre de **points** l'est. Conclusion : la carte du dos de téléphone,
+  c'est le **tableau** (dense par nature, et il porte km/D+/D−/barrières en colonnes) ;
+  le **profil reste une fiche de 170 mm** à part. L'idée d'un garde-fou de lisibilité
+  dans le dialogue « Infos » (choix des couches + budget calculé) a été écartée pour
+  cette raison : sur une course longue il ne pourrait qu'annoncer l'échec. Si le sujet
+  revient, le seul levier qui marche est d'afficher **moins de points** sur le profil
+  (uniquement ceux avec barrière, ou uniquement les ravitos).

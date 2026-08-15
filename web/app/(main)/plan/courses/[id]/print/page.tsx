@@ -15,7 +15,9 @@ import {
 import { PrintColumnsDialog } from '@/components/plan/PrintColumnsDialog'
 import { toJpeg } from 'html-to-image'
 import { FileText, Image as ImageIcon, Share2, Settings2, Ruler, Map as MapIcon } from 'lucide-react'
-import { loadPrintSize, savePrintSize, PRINT_SIZE_DEFS, DEFAULT_PRINT_SIZE, type PrintSize } from '@/lib/plan/print-size'
+import {
+  loadPrintSize, savePrintSize, PRINT_SIZE_DEFS, DEFAULT_PRINT_SIZE, fitIphoneScale, type PrintSize,
+} from '@/lib/plan/print-size'
 import { PrintSizeDialog } from '@/components/plan/PrintSizeDialog'
 import { ProfilePrintCard } from '@/components/plan/ProfilePrintCard'
 import { ProfileInfoDialog } from '@/components/plan/ProfileInfoDialog'
@@ -85,6 +87,10 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
   const updateInfo = (next: ProfileInfoConfig) => { setInfoCfg(next); saveProfileInfo(next) }
 
   const cardRef = useRef<HTMLDivElement>(null)
+  // Échelle d'impression du tableau en format iPhone : calculée à partir de la
+  // hauteur RÉELLE de la carte (elle grandit avec le nombre de points), pour que
+  // le PDF sorte à la taille du dos du téléphone. 1 tant que rien n'est mesuré.
+  const [fitScale, setFitScale] = useState(1)
   const jpegBtnRef = useRef<HTMLButtonElement>(null)
   const shareBtnRef = useRef<HTMLButtonElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -153,6 +159,23 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
     if (action === 'jpeg') jpegBtnRef.current?.focus()
     else if (action === 'share') shareBtnRef.current?.focus()
   }, [ready, race])
+
+  // Format iPhone : on MESURE la carte (120 mm de large par design, hauteur =
+  // contenu, donc variable avec le nombre de points) pour en déduire l'échelle
+  // d'impression qui la fait tenir au dos du téléphone. Les mm sont dérivés de la
+  // largeur mesurée (pas d'un DPI supposé) ; offsetWidth/Height ignorent les
+  // transforms d'aperçu (rotation 90°, zoom au pincement), c'est ce qu'on veut.
+  useEffect(() => {
+    if (tab !== 'tableau') return
+    let cancelled = false
+    const measure = () => {
+      const el = cardRef.current
+      if (!el || cancelled || !el.offsetWidth) return
+      setFitScale(fitIphoneScale(120, (el.offsetHeight * 120) / el.offsetWidth))
+    }
+    void (document.fonts?.ready ?? Promise.resolve()).then(measure)
+    return () => { cancelled = true }
+  }, [tab, ready, wps, cfg])
 
   // Zoom au pincement (2 doigts) + pincement trackpad (ctrl+molette). Listeners
   // natifs non-passifs (React passe onTouchMove en passif → preventDefault KO).
@@ -370,7 +393,7 @@ export default function PrintCoursePage({ params }: { params: { id: string } }) 
           .pdfroot .zoomview .cardwrap{transform:none !important;}
           .pdfroot .cut{border:none;background:none;padding:0;margin:0;width:auto;}
           .pdfroot .cardwrap{position:static !important;width:auto !important;height:auto !important;}
-          .pdfroot .card{position:static !important;transform:scale(${PRINT_SIZE_DEFS[size].scale}) !important;transform-origin:top center !important;top:auto;left:auto;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
+          .pdfroot .card{position:static !important;transform:scale(${size === 'iphone' ? fitScale : PRINT_SIZE_DEFS[size].scale}) !important;transform-origin:top center !important;top:auto;left:auto;margin:0 auto;box-shadow:none;border:.5px solid var(--line);}
           .pdfroot .pcardwrap{display:block !important;}
           /* impression : on annule la rotation d'aperçu du profil → carte à plat. */
           .pdfroot .profstage{position:static !important;width:auto !important;height:auto !important;}

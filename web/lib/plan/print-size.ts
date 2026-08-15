@@ -18,7 +18,9 @@ export interface PrintSizeDef {
 export const PRINT_SIZE_DEFS: Record<PrintSize, PrintSizeDef> = {
   iphone: {
     key: 'iphone', label: 'Format iPhone',
-    hint: 'Petite carte à découper, à coller au dos de son téléphone.',
+    hint: 'Ajustée au dos du téléphone (140 × 66 mm), à découper et coller.',
+    // scale ignoré pour iPhone : l'échelle est CALCULÉE (cf. fitIphoneScale),
+    // la hauteur de la carte dépendant du nombre de points de la course.
     pageRule: 'size:A4 portrait;margin:8mm;', scale: 1,
   },
   a5: {
@@ -34,6 +36,22 @@ export const PRINT_SIZE_DEFS: Record<PrintSize, PrintSizeDef> = {
 }
 
 export const DEFAULT_PRINT_SIZE: PrintSize = 'iphone'
+
+// Dos d'un iPhone 15/16/17 : 146,6 × 70,6 mm. On garde ~3 mm de marge tout autour
+// pour que la carte se colle sans déborder ni gêner les bords arrondis.
+export const IPHONE_CARD_MM = { w: 140, h: 66 }
+
+// Échelle à appliquer à la carte pour qu'elle tienne PILE au dos du téléphone.
+// La largeur est fixe (120 mm de design) mais la hauteur dépend du nombre de
+// points : c'est elle qui commande dès qu'une course est longue, d'où le calcul
+// à partir de la hauteur MESURÉE plutôt qu'un facteur en dur.
+// Bornée à [0,8 ; 1,2] : au-delà, réduire encore rendrait le tableau illisible —
+// mieux vaut déborder un peu et retirer des colonnes.
+export function fitIphoneScale(cardWmm: number, cardHmm: number): number {
+  if (!(cardWmm > 0) || !(cardHmm > 0)) return 1
+  const s = Math.min(IPHONE_CARD_MM.w / cardWmm, IPHONE_CARD_MM.h / cardHmm)
+  return Math.round(Math.min(Math.max(s, 0.8), 1.2) * 1000) / 1000
+}
 
 const LS_KEY = 'tc:plan:print-size:v1'
 
