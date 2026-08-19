@@ -3,9 +3,22 @@ import { loadProfileInfo, saveProfileInfo, DEFAULT_PROFILE_INFO } from '@/lib/pl
 describe('print-profile-info', () => {
   beforeEach(() => window.localStorage.clear())
 
-  it('renvoie le défaut (tout activé) si rien en stockage', () => {
+  it('renvoie le défaut (barrières, sans objectif) si rien en stockage', () => {
     expect(loadProfileInfo()).toEqual(DEFAULT_PROFILE_INFO)
-    expect(DEFAULT_PROFILE_INFO).toEqual({ objectif: true, barriers: true, supplies: true, altitudes: true })
+    expect(DEFAULT_PROFILE_INFO).toEqual({ objectif: false, barriers: true, supplies: true, altitudes: true })
+  })
+
+  it('objectif et barrières sont exclusifs : une config héritée à deux vrais garde la barrière', () => {
+    window.localStorage.setItem(
+      'tc:plan:print-profile-info:v1',
+      JSON.stringify({ objectif: true, barriers: true, supplies: true, altitudes: true }),
+    )
+    expect(loadProfileInfo()).toEqual({ objectif: false, barriers: true, supplies: true, altitudes: true })
+  })
+
+  it('objectif seul est conservé', () => {
+    saveProfileInfo({ objectif: true, barriers: false, supplies: true, altitudes: true })
+    expect(loadProfileInfo()).toEqual({ objectif: true, barriers: false, supplies: true, altitudes: true })
   })
 
   it('round-trip save → load', () => {

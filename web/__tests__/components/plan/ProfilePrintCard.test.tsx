@@ -3,6 +3,10 @@ import { ProfilePrintCard } from '@/components/plan/ProfilePrintCard'
 import { DEFAULT_PROFILE_INFO } from '@/lib/plan/print-profile-info'
 import type { Race, RaceWaypoint } from '@/types/plan'
 
+// Barrières et objectif sont exclusifs côté dialogue (défaut = barrières) : les
+// cas « objectif » passent donc explicitement la config objectif.
+const OBJ_INFO = { ...DEFAULT_PROFILE_INFO, objectif: true, barriers: false }
+
 const race = {
   id: 'r1', name: 'Course Test', date: '2026-09-01', distance: 20, elevation: 1200,
   type: 'trail', startTime: '06:00', targetDurationMin: 180,
@@ -24,7 +28,7 @@ describe('ProfilePrintCard', () => {
   })
 
   it('affiche la ligne objectif quand info.objectif est vrai, et la masque sinon', () => {
-    const { rerender } = render(<ProfilePrintCard race={race} waypoints={wps} denseProfile={dense} info={DEFAULT_PROFILE_INFO} />)
+    const { rerender } = render(<ProfilePrintCard race={race} waypoints={wps} denseProfile={dense} info={OBJ_INFO} />)
     expect(screen.getAllByTestId('obj').length).toBeGreaterThan(0)
     rerender(<ProfilePrintCard race={race} waypoints={wps} denseProfile={dense} info={{ ...DEFAULT_PROFILE_INFO, objectif: false }} />)
     expect(screen.queryAllByTestId('obj')).toHaveLength(0)
@@ -61,7 +65,7 @@ describe('ProfilePrintCard', () => {
       { id: 'd7', raceId: 'r1', km: 20, name: 'Arrivée', altitude: 1000, dPlus: 0, dMoins: 800, supplies: [], cutoffRaw: null, cutoffKind: null, type: 'end', targetOverrideSec: null },
     ] as unknown as RaceWaypoint[]
     const denseTrace = { d: [0, 4, 8, 9, 10, 20], e: [1000, 1500, 2000, 1900, 1800, 1000] }
-    const { container } = render(<ProfilePrintCard race={race} waypoints={denseWps} denseProfile={denseTrace} info={DEFAULT_PROFILE_INFO} />)
+    const { container } = render(<ProfilePrintCard race={race} waypoints={denseWps} denseProfile={denseTrace} info={OBJ_INFO} />)
 
     // #2 : un ▲<D+> par tronçon, AUCUN masqué (n-1 tronçons).
     const texts = Array.from(container.querySelectorAll('text'))
