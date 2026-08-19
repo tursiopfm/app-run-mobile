@@ -16,6 +16,10 @@ export interface LockWaypoint {
 
 const TOLERANCE_SEC = 60
 
+// Marge de sécurité sous la barrière : viser l'heure exacte de fermeture, c'est
+// être éliminé. L'Objectif d'un point est donc plafonné à (barrière − 15 min).
+const BARRIER_SAFETY_SEC = 15 * 60
+
 // Écoulé (s depuis le départ) de la barrière de chaque point, null si absente.
 // Parcours monotone (chaque barrière ≥ la précédente) → lève l'ambiguïté du jour.
 export function barrierElapsedSeries(
@@ -65,6 +69,63 @@ export function isBarrierLocked(
   return Math.abs(arr - targetDurationMin * 60) <= TOLERANCE_SEC
 }
 
+// Plafond de chaque point intermédiaire = barrière − marge, rendu monotone
+// (une barrière plus tôt que la précédente ne doit pas faire reculer l'horaire).
+// Départ et arrivée exclus : l'arrivée porte l'objectif saisi par l'athlète.
+function barrierCaps(waypoints: LockWaypoint[], startTime?: string): (number | null)[] {
+  const series = barrierElapsedSeries(waypoints, startTime)
+  const caps: (number | null)[] = new Array(waypoints.length).fill(null)
+  let prev = 0
+  for (let i = 1; i < waypoints.length - 1; i++) {
+    if (series[i] == null) continue
+    const cap = Math.max(prev, Math.max(0, (series[i] as number) - BARRIER_SAFETY_SEC))
+    caps[i] = cap
+    prev = cap
+  }
+  return caps
+}
+
+// Répartition effort-km, puis plafonnement itératif : tout point projeté après
+// son plafond y est figé (comme un override) et le temps en trop se reporte sur
+// les tronçons suivants — ce qui peut violer une barrière ultérieure, d'où la
+// boucle (chaque passe fige au moins un point → au plus n passes).
+function cappedPassageTimes(
+  waypoints: LockWaypoint[],
+  startTime: string | undefined,
+  totalSec: number,
+  fade: number,
+): number[] {
+  const n = waypoints.length
+  const caps = barrierCaps(waypoints, startTime)
+  // Un objectif saisi à la main au-delà du plafond est ramené au plafond.
+  const pinned = waypoints.map((w, i) => {
+    const cap = caps[i]
+    if (w.targetOverrideSec == null) return null
+    return cap != null && w.targetOverrideSec > cap ? cap : w.targetOverrideSec
+  })
+
+  const run = () => estimatePassageTimes(
+    waypoints.map((w, i) => ({ km: w.km, dPlus: w.dPlus, targetOverrideSec: pinned[i] })),
+    { totalDurationSec: totalSec, fade },
+  )
+
+  let elapsed = run()
+  for (let pass = 0; pass < n; pass++) {
+    let changed = false
+    for (let i = 1; i < n - 1; i++) {
+      const cap = caps[i]
+      if (cap == null || pinned[i] === cap) continue
+      if (elapsed[i] > cap) { pinned[i] = cap; changed = true }
+    }
+    if (!changed) break
+    elapsed = run()
+  }
+
+  // Garde-fou final : jamais d'horaire décroissant (course déjà infaisable).
+  for (let i = 1; i < n; i++) elapsed[i] = Math.max(elapsed[i], elapsed[i - 1])
+  return elapsed
+}
+
 // Heures de passage (s écoulées) + indicateur de mode. Point d'entrée UNIQUE de
 // l'UI (tableau + PDF) : décide barrières vs répartition effort-km.
 export function resolveElapsed(
@@ -77,11 +138,7 @@ export function resolveElapsed(
   const totalSec = targetDurationMin * 60
 
   if (!isBarrierLocked(waypoints, startTime, targetDurationMin)) {
-    const elapsed = estimatePassageTimes(
-      waypoints.map((w) => ({ km: w.km, dPlus: w.dPlus, targetOverrideSec: w.targetOverrideSec })),
-      { totalDurationSec: totalSec, fade },
-    )
-    return { elapsed, locked: false }
+    return { elapsed: cappedPassageTimes(waypoints, startTime, totalSec, fade), locked: false }
   }
 
   // Mode barrières : ancres = override ?? barrière (départ 0, arrivée objectif),

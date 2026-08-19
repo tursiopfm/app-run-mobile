@@ -71,3 +71,76 @@ describe('resolveElapsed — mode normal', () => {
     expect(resolveElapsed(TABLE, START, null, 0)).toEqual({ elapsed: null, locked: false })
   })
 })
+
+// Départ 00:00, objectif 45h : la répartition effort-km projetait Bourg-St-Maurice
+// (km 51, BH 11:00) à 14h11 — 3h11 APRÈS la barrière. Reproduction de l'incident.
+describe('resolveElapsed — plafond des barrières (mode normal)', () => {
+  const BSM: LockWaypoint[] = [
+    wp({ km: 0, dPlus: 0 }),
+    wp({ km: 51, dPlus: 2428, cutoffRaw: '11:00', cutoffKind: 'clock_time' }),
+    wp({ km: 140, dPlus: 9000 }),
+  ]
+
+  it(`plafonne l'objectif à la barrière moins 15 min`, () => {
+    const { elapsed, locked } = resolveElapsed(BSM, '00:00', 45 * 60, 0)
+    expect(locked).toBe(false)
+    expect(elapsed![1]).toBe(11 * 3600 - 900) // 10h45
+    expect(elapsed![2]).toBe(45 * 3600)       // arrivée = objectif, intouchée
+  })
+
+  it('reporte le temps en trop sur les tronçons suivants', () => {
+    const { elapsed } = resolveElapsed(BSM, '00:00', 45 * 60, 0)
+    const brut = estimatePassageTimes(
+      BSM.map((w) => ({ km: w.km, dPlus: w.dPlus, targetOverrideSec: w.targetOverrideSec })),
+      { totalDurationSec: 45 * 3600, fade: 0 },
+    )
+    expect(brut[1]).toBeGreaterThan(11 * 3600) // le brut violait bien la barrière
+    expect(elapsed![2] - elapsed![1]).toBeGreaterThan(brut[2] - brut[1])
+  })
+
+  it('plafonne en cascade quand le report viole une barrière ultérieure', () => {
+    const t: LockWaypoint[] = [
+      wp({ km: 0, dPlus: 0 }),
+      wp({ km: 10, dPlus: 100, cutoffRaw: '03:00', cutoffKind: 'elapsed' }),
+      wp({ km: 20, dPlus: 200, cutoffRaw: '05:00', cutoffKind: 'elapsed' }),
+      wp({ km: 30, dPlus: 300 }),
+    ]
+    const { elapsed } = resolveElapsed(t, '00:00', 12 * 60, 0)
+    expect(elapsed).toEqual([0, 3 * 3600 - 900, 5 * 3600 - 900, 12 * 3600])
+  })
+
+  it('ramène au plafond un objectif saisi à la main au-delà de la barrière', () => {
+    const t = BSM.map((w, i) => (i === 1 ? { ...w, targetOverrideSec: 14 * 3600 } : w))
+    const { elapsed } = resolveElapsed(t, '00:00', 45 * 60, 0)
+    expect(elapsed![1]).toBe(11 * 3600 - 900)
+  })
+
+  it('laisse intact un objectif saisi en deçà de la barrière', () => {
+    const t = BSM.map((w, i) => (i === 1 ? { ...w, targetOverrideSec: 9 * 3600 } : w))
+    const { elapsed } = resolveElapsed(t, '00:00', 45 * 60, 0)
+    expect(elapsed![1]).toBe(9 * 3600)
+  })
+
+  it('ne recule jamais dans le temps quand une barrière précède la précédente', () => {
+    const t: LockWaypoint[] = [
+      wp({ km: 0, dPlus: 0 }),
+      wp({ km: 10, dPlus: 100, cutoffRaw: '01:00', cutoffKind: 'elapsed' }),
+      wp({ km: 20, dPlus: 200, cutoffRaw: '00:50', cutoffKind: 'elapsed' }),
+      wp({ km: 30, dPlus: 300 }),
+    ]
+    const { elapsed } = resolveElapsed(t, '00:00', 12 * 60, 0)!
+    expect(elapsed![1]).toBe(3600 - 900)
+    expect(elapsed![2]).toBeGreaterThanOrEqual(elapsed![1])
+  })
+
+  it(`ne plafonne pas l'arrivée sur sa propre barrière`, () => {
+    const t: LockWaypoint[] = [
+      wp({ km: 0, dPlus: 0 }),
+      wp({ km: 20, dPlus: 200 }),
+      wp({ km: 30, dPlus: 300, cutoffRaw: '12:00', cutoffKind: 'elapsed' }),
+    ]
+    const { elapsed, locked } = resolveElapsed(t, '00:00', 11 * 60, 0)
+    expect(locked).toBe(false)
+    expect(elapsed![2]).toBe(11 * 3600)
+  })
+})
