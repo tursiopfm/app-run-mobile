@@ -228,6 +228,47 @@ export function computeZoneTimesFromStream(
   return zoneTimes.map(t => Math.round(t))
 }
 
+// ── Histogramme FC : temps passé à chaque bpm ────────────────────────────────
+// Substitut compact du stream brut (~1 kB contre ~10 kB de streams_gz), stocké
+// sur activity_streams.hr_time_hist. Index = bpm, valeur = secondes. Permet de
+// recalculer les temps par zone quand les zones du profil changent, sans jamais
+// relire le stream compressé. Les FC des streams étant entières (le downsampling
+// sélectionne des points, il ne moyenne pas), la conversion est exacte.
+const HR_HIST_SIZE = 256
+
+export function computeHrTimeHistogram(heartrate: number[], time: number[]): number[] {
+  const hist = new Array<number>(HR_HIST_SIZE).fill(0)
+  const len = Math.min(heartrate.length, time.length)
+  if (len < 2) return hist
+
+  for (let i = 0; i < len - 1; i++) {
+    const hr = Math.round(heartrate[i])
+    const dt = time[i + 1] - time[i]
+    if (dt <= 0 || hr <= 0) continue
+    hist[Math.min(hr, HR_HIST_SIZE - 1)] += dt
+  }
+
+  return hist.map(t => Math.round(t))
+}
+
+export function zoneTimesFromHistogram(zones: HrZone[], hist: number[] | null): number[] {
+  const zoneTimes = zones.map(() => 0)
+  if (!hist || zones.length === 0) return zoneTimes
+
+  for (let hr = 1; hr < hist.length; hr++) {
+    const t = hist[hr]
+    if (!t) continue
+
+    let zoneIdx = zones.length - 1
+    for (let z = 0; z < zones.length; z++) {
+      if (hr <= zones[z].max) { zoneIdx = z; break }
+    }
+    zoneTimes[zoneIdx] += t
+  }
+
+  return zoneTimes.map(t => Math.round(t))
+}
+
 export function getRecommendedHeartRateZoneMode(profile: {
   max_hr?:               number | null
   aerobic_threshold_hr?: number | null

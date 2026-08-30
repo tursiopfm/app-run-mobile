@@ -17,6 +17,7 @@ import { buildActivityIndex, matchFit } from '@/lib/garmin-import/fit-match'
 import { createFitPool } from '@/lib/garmin-import/fit-pool'
 import { packStreamsClient } from '@/lib/garmin-import/stream-pack'
 import { streamsToPolyline, streamsToSplits } from '@/lib/garmin-import/fit-derive'
+import { computeHrTimeHistogram } from '@/lib/health/hr-zones'
 import { createClient as createSupabaseBrowser } from '@/lib/database/supabase-client'
 import type { EnrichCandidate, StreamUpload, EnrichReport } from '@/lib/garmin-import/enrich-types'
 import { EnrichmentStep } from './EnrichmentStep'
@@ -246,6 +247,7 @@ export function GarminImportFlow() {
         const streamRows = items.map(u => ({
           activity_id: u.activityId, user_id: userId, downsample_s: 5,
           point_count: u.pointCount, streams_gz: u.streamsGz, source: 'garmin',
+          hr_time_hist: u.hrTimeHist ?? null,
         }))
         const { error: sErr } = await sb.from('activity_streams').upsert(streamRows, { onConflict: 'activity_id' })
         if (sErr) throw new Error(`Streams: ${sErr.message}`)
@@ -287,6 +289,11 @@ export function GarminImportFlow() {
                 activityId: m.id,
                 streamsGz,
                 pointCount: res.pointCount ?? 0,
+                // Calculé ici, où le stream est encore décompressé : le recalcul CES
+                // n'aura jamais à relire streams_gz (cf. migration 047).
+                hrTimeHist: res.streams.heartrate?.length && res.streams.time?.length
+                  ? computeHrTimeHistogram(res.streams.heartrate, res.streams.time)
+                  : [],
                 summaryPolyline,
                 splits: splits.length ? splits : undefined,
               })

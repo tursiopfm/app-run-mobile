@@ -1,10 +1,28 @@
 import { createServiceClient } from '@/lib/database/supabase-server'
 import { computeCesResult } from '@/lib/analytics/effort-score'
 import type { UserProfileForCes, ActivityInput, CesStreamMetrics } from '@/lib/analytics/types'
-import { unpackStreams } from '@/lib/providers/strava/streams'
-import { computeStreamMetrics } from '@/lib/activities/stream-metrics'
-import { calculateHrZones, computeZoneTimesFromStream, type HrZone, type CustomZoneInput, type HrZoneMethod } from '@/lib/health/hr-zones'
+import { calculateHrZones, zoneTimesFromHistogram, type HrZone, type CustomZoneInput, type HrZoneMethod } from '@/lib/health/hr-zones'
 import { classifyIntensityFromZoneTimes, guessIntensity, type IntensityKey } from '@/lib/activities/intensity'
+
+// Métriques dérivées du stream, écrites à l'ingestion et relues ici plutôt que
+// recalculées depuis streams_gz.
+const STREAM_METRIC_KEYS = ['grade_adjusted_pace_s', 'decoupling_pct', 'elevation_loss_m']
+
+const PAGE_SIZE = 1000
+
+// PostgREST plafonne chaque requête à 1000 lignes : on boucle jusqu'à épuisement.
+async function fetchAllPages<T>(
+  run: (from: number, to: number) => PromiseLike<{ data: unknown[] | null; error: unknown }>,
+): Promise<T[]> {
+  const all: T[] = []
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await run(from, from + PAGE_SIZE - 1)
+    if (error || !data || data.length === 0) break
+    all.push(...(data as T[]))
+    if (data.length < PAGE_SIZE) break
+  }
+  return all
+}
 
 function toActivityInput(row: Record<string, unknown>): ActivityInput {
   return {
@@ -52,41 +70,62 @@ export async function recalculateUserEffortScores(userId: string): Promise<{ rec
   } catch { hrZones = [] }
   const restingHr = (p.resting_hr as number | null) ?? null
 
-  // Plus récentes d'abord : la fenêtre couverte (cap ~1000 lignes Supabase) inclut
-  // les activités récentes (celles qui ont des streams / qui nous intéressent pour SP-2).
-  const { data: activities } = await supabase
-    .from('activities')
-    .select('id, ces, sport_type, name, start_time, duration_sec, moving_time_sec, distance_m, elevation_gain_m, avg_hr, max_hr, avg_power, computed_intensity')
-    .eq('user_id', userId)
-    .order('start_time', { ascending: false })
+  // Toutes les activités, paginées : sans la boucle, le cap PostgREST de 1000 lignes
+  // rendait le recalcul silencieusement partiel (1000 sur 5389 pour le plus gros compte).
+  const activities = await fetchAllPages<Record<string, unknown>>((from, to) =>
+    supabase
+      .from('activities')
+      .select('id, ces, sport_type, name, start_time, duration_sec, moving_time_sec, distance_m, elevation_gain_m, avg_hr, max_hr, avg_power, computed_intensity')
+      .eq('user_id', userId)
+      .order('start_time', { ascending: false })
+      .range(from, to),
+  )
 
-  if (!activities?.length) return { recalculated: 0, errors: 0 }
+  if (!activities.length) return { recalculated: 0, errors: 0 }
 
-  // Charger les streams stockés (raw gz) pour appliquer SP-2 ; re-dérive les métriques en local.
-  const { data: streamRows } = await supabase
-    .from('activity_streams')
-    .select('activity_id, streams_gz')
-    .eq('user_id', userId)
+  // Temps par zone FC depuis l'histogramme (migration 047), jamais depuis streams_gz :
+  // ~1 kB par activité au lieu de ~10 kB, pour un résultat identique.
+  const histRows = await fetchAllPages<{ activity_id: string; hr_time_hist: number[] | null }>((from, to) =>
+    supabase
+      .from('activity_streams')
+      .select('activity_id, hr_time_hist')
+      .eq('user_id', userId)
+      .order('activity_id', { ascending: true })
+      .range(from, to),
+  )
+
+  // Métriques dérivées du stream, déjà persistées à l'ingestion. activity_metrics n'a
+  // pas de user_id → filtrage par jointure sur activities.
+  const metricRows = await fetchAllPages<{ activity_id: string; metric_key: string; metric_value: number }>((from, to) =>
+    supabase
+      .from('activity_metrics')
+      .select('activity_id, metric_key, metric_value, activities!inner(user_id)')
+      .eq('activities.user_id', userId)
+      .in('metric_key', STREAM_METRIC_KEYS)
+      .order('activity_id', { ascending: true })
+      .range(from, to),
+  )
 
   const smByActivity = new Map<string, CesStreamMetrics>()
+  for (const row of metricRows) {
+    const id = String(row.activity_id)
+    const sm = smByActivity.get(id) ?? {}
+    const value = Number(row.metric_value)
+    if (row.metric_key === 'grade_adjusted_pace_s')  sm.gradeAdjustedPaceS = value
+    else if (row.metric_key === 'decoupling_pct')    sm.decouplingPct      = value
+    else if (row.metric_key === 'elevation_loss_m')  sm.elevationLossM     = value
+    smByActivity.set(id, sm)
+  }
+
   const zoneTimesByActivity = new Map<string, number[]>()
-  for (const sr of streamRows ?? []) {
-    try {
-      const row = sr as { activity_id: string; streams_gz: string }
-      const streams = unpackStreams(String(row.streams_gz))
-      const m = computeStreamMetrics(streams)
-      smByActivity.set(String(row.activity_id), {
-        gradeAdjustedPaceS: m.gradeAdjustedPaceS,
-        decouplingPct:      m.decouplingPct,
-        elevationLossM:     m.elevationLossM,
-      })
-      if (hrZones.length === 5 && streams.heartrate?.length && streams.time?.length) {
-        zoneTimesByActivity.set(
-          String(row.activity_id),
-          computeZoneTimesFromStream(hrZones, streams.heartrate, streams.time),
-        )
-      }
-    } catch { /* stream illisible → fallback (pas de sm) */ }
+  // Stream présent mais histogramme jamais calculé (null, en attente du backfill 047) :
+  // on préserve la computed_intensity existante au lieu de la dégrader en estimation
+  // depuis la FC moyenne. [] = traité, sans cardio → estimation légitime.
+  const awaitingHistogram = new Set<string>()
+  for (const row of histRows) {
+    if (row.hr_time_hist == null) { awaitingHistogram.add(String(row.activity_id)); continue }
+    if (!row.hr_time_hist.length || hrZones.length !== 5) continue
+    zoneTimesByActivity.set(String(row.activity_id), zoneTimesFromHistogram(hrZones, row.hr_time_hist))
   }
 
   const now = new Date().toISOString()
@@ -114,7 +153,9 @@ export async function recalculateUserEffortScores(userId: string): Promise<{ rec
             restingHr,
           },
         )
-      const ciChanged = computedIntensity !== ((act.computed_intensity as string | null) ?? null)
+      const ciChanged =
+        !awaitingHistogram.has(String(act.id)) &&
+        computedIntensity !== ((act.computed_intensity as string | null) ?? null)
 
       const vals: Record<string, unknown> = {}
       if (changed) {

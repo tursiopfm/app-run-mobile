@@ -25,6 +25,7 @@ export type StreamUpload = {
   activityId: string
   streamsGz: string
   pointCount: number
+  hrTimeHist?: number[] | null  // → activity_streams.hr_time_hist (évite de relire le stream au recalcul CES)
   summaryPolyline?: string      // → raw_payload.map.summary_polyline (carte)
   splits?: StravaSplit[]        // → raw_payload.splits_metric (splits/km)
 }

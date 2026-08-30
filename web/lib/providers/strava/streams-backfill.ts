@@ -2,6 +2,7 @@ import { createServiceClient } from '@/lib/database/supabase-server'
 import { getValidStravaToken } from './token'
 import { fetchStravaStreams, downsampleStreams, packStreams } from './streams'
 import { computeStreamMetrics } from '@/lib/activities/stream-metrics'
+import { computeHrTimeHistogram } from '@/lib/health/hr-zones'
 import { recalculateUserEffortScores } from '@/lib/sync/recalculate-scores'
 
 type MissingRow = { id: string; user_id: string; provider_activity_id: string }
@@ -59,6 +60,11 @@ export async function processStreamsBackfillBatch(
             point_count: ds.time?.length ?? 0,
             streams_gz: packStreams(ds),
             source: 'strava',
+            // Dérivé à l'écriture : évite de relire streams_gz au recalcul CES (cf. 047).
+            // [] = activité sans cardio (traitée) ; null = pas encore backfillée.
+            hr_time_hist: ds.heartrate?.length && ds.time?.length
+              ? computeHrTimeHistogram(ds.heartrate, ds.time)
+              : [],
           },
           { onConflict: 'activity_id' },
         )

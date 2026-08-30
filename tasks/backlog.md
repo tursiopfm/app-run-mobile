@@ -253,6 +253,18 @@ C:\Users\Franc\app-run-mobile\web> npm run dev
 - **À faire** : déplacer (ou ré-exporter depuis) un module pur `lib/plan/macrocycle-utils.ts`.
 - **Identifié** : 2026-06-12
 
+### Egress Supabase — purger les streams orphelins
+- **Quoi** : 952 lignes d'`activity_streams` (8 MB) appartiennent à des activités soft-deleted. `recalculateUserEffortScores` les lit car il filtre sur `user_id` sans jointure sur `activities.deleted_at`.
+- **Pourquoi** : correctif n°2 du dépassement de quota egress d'août 2026. Gain immédiat, un seul DELETE, aucun risque fonctionnel.
+- **À faire** : DELETE des lignes dont l'activité est supprimée, puis filtrer par jointure à la lecture pour éviter que ça se reproduise.
+- **Identifié** : 2026-08-30
+
+### Egress Supabase — agréger l'historique du Cockpit côté Postgres
+- **Quoi** : `fetchAllHistorySlim` (`lib/data/dashboard.ts`) rapatrie tout l'historique d'activités, paginé par 1000, à chaque rendu du Cockpit — 243 pages/jour mesurées, ~50 MB — uniquement pour calculer des cumuls mensuels et annuels.
+- **Pourquoi** : correctif n°3 du dépassement de quota egress d'août 2026. Une RPC d'agrégation ramènerait ~5 kB au lieu de ~1 MB par chargement.
+- **À faire** : RPC SQL renvoyant les totaux par jour/mois/an, puis remplacer l'appel côté `getDashboardData`.
+- **Identifié** : 2026-08-30
+
 ---
 
 ## Modèle de fiche pour un nouvel item

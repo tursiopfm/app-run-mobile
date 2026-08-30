@@ -1,6 +1,21 @@
 // web/lib/garmin-import/enrich-commit.ts
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { StreamUpload } from './enrich-types'
+import { unpackStreams } from '@/lib/providers/strava/streams'
+import { computeHrTimeHistogram } from '@/lib/health/hr-zones'
+
+// Histogramme FC depuis un stream déjà compressé (le client envoie du gz).
+// Renvoie toujours un tableau : [] signifie « traité, pas de cardio exploitable »,
+// à distinguer de null (« pas encore backfillé », cf. migration 047).
+function hrHistFromGz(streamsGz: string): number[] {
+  try {
+    const s = unpackStreams(streamsGz)
+    if (!s.heartrate?.length || !s.time?.length) return []
+    return computeHrTimeHistogram(s.heartrate, s.time)
+  } catch {
+    return []
+  }
+}
 
 export async function writeStreamRows(
   supabase: SupabaseClient, userId: string, uploads: StreamUpload[],
@@ -17,6 +32,10 @@ export async function writeStreamRows(
   const rows = Array.from(byActivity.values()).map(u => ({
     activity_id: u.activityId, user_id: userId, downsample_s: 5,
     point_count: u.pointCount, streams_gz: u.streamsGz, source: 'garmin',
+    // Dérivé à l'écriture : évite de relire streams_gz au recalcul CES (cf. 047).
+    // Le client le calcule déjà quand le stream est encore décompressé ; sinon on
+    // décompresse ici.
+    hr_time_hist: u.hrTimeHist ?? hrHistFromGz(u.streamsGz),
   }))
   const { error } = await supabase.from('activity_streams').upsert(rows, { onConflict: 'activity_id' })
   if (error) throw new Error(`Garmin streams upsert: ${error.message}`)

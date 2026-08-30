@@ -1,4 +1,4 @@
-import { calculateHrZones, computeZoneTimesFromStream, hrZoneForAvgHr, getRecommendedHeartRateZoneMode } from '@/lib/health/hr-zones'
+import { calculateHrZones, computeZoneTimesFromStream, hrZoneForAvgHr, getRecommendedHeartRateZoneMode, computeHrTimeHistogram, zoneTimesFromHistogram } from '@/lib/health/hr-zones'
 
 describe('hrZoneForAvgHr', () => {
   const zones = calculateHrZones({ method: 'karvonen', maxHr: 195, restingHr: 57 }).zones
@@ -181,5 +181,80 @@ describe('méthode deduced', () => {
     const result = calculateHrZones({ method: 'deduced' })
     expect(result.zones.length).toBe(0)
     expect(result.missing).toContain('FC max observée')
+  })
+})
+
+// ── Histogramme FC (temps par bpm) ───────────────────────────────────────────
+// Substitut compact du stream brut pour le recalcul CES : permet de recalculer
+// les temps par zone sans relire streams_gz (cf. egress Supabase).
+
+describe('computeHrTimeHistogram', () => {
+  it('accumule le temps passé à chaque bpm', () => {
+    const hist = computeHrTimeHistogram([150, 150, 160], [0, 10, 20])
+    expect(hist[150]).toBe(20)
+    expect(hist[160]).toBe(0) // dernier point : aucun dt ne le suit
+  })
+
+  it('ignore les FC nulles et les pas de temps non positifs', () => {
+    const hist = computeHrTimeHistogram([0, 150, 160], [0, 10, 10])
+    expect(hist[0]).toBe(0)
+    expect(hist[150]).toBe(0) // dt = 0 entre les deux derniers points
+  })
+
+  it('renvoie un histogramme vide pour un stream trop court', () => {
+    expect(computeHrTimeHistogram([150], [0]).every(v => v === 0)).toBe(true)
+  })
+
+  it('arrondit les FC décimales au bpm le plus proche', () => {
+    const hist = computeHrTimeHistogram([149.6, 149.6], [0, 30])
+    expect(hist[150]).toBe(30)
+  })
+})
+
+describe('zoneTimesFromHistogram', () => {
+  const zones = calculateHrZones({ method: 'karvonen', maxHr: 195, restingHr: 57 }).zones
+
+  it('regroupe les bpm par zone', () => {
+    const hist = new Array(256).fill(0)
+    hist[130] = 60 // Z1 (≤140)
+    hist[150] = 30 // Z2 (141–154)
+    const zoneTimes = zoneTimesFromHistogram(zones, hist)
+    expect(zoneTimes[0]).toBe(60)
+    expect(zoneTimes[1]).toBe(30)
+    expect(zoneTimes[2]).toBe(0)
+  })
+
+  it('range les bpm au-dessus de la dernière zone dans la dernière zone', () => {
+    const hist = new Array(256).fill(0)
+    hist[210] = 15 // au-dessus de la FC max des zones (195)
+    expect(zoneTimesFromHistogram(zones, hist)[4]).toBe(15)
+  })
+
+  it('renvoie des zéros pour un histogramme absent', () => {
+    expect(zoneTimesFromHistogram(zones, null)).toEqual([0, 0, 0, 0, 0])
+  })
+})
+
+describe('équivalence histogramme ↔ stream brut', () => {
+  const zones = calculateHrZones({ method: 'karvonen', maxHr: 195, restingHr: 57 }).zones
+
+  it('donne exactement les mêmes temps par zone que computeZoneTimesFromStream', () => {
+    // Stream réaliste : 1 point / 5 s, FC entières traversant les 5 zones.
+    const heartrate: number[] = []
+    const time: number[] = []
+    let hr = 110
+    for (let i = 0; i < 400; i++) {
+      heartrate.push(hr)
+      time.push(i * 5)
+      hr += i % 7 === 0 ? 3 : -1
+      if (hr < 95) hr = 95
+      if (hr > 200) hr = 200
+    }
+
+    const fromStream = computeZoneTimesFromStream(zones, heartrate, time)
+    const fromHist = zoneTimesFromHistogram(zones, computeHrTimeHistogram(heartrate, time))
+
+    expect(fromHist).toEqual(fromStream)
+    expect(fromStream.reduce((s, v) => s + v, 0)).toBeGreaterThan(0)
   })
 })
