@@ -265,6 +265,12 @@ C:\Users\Franc\app-run-mobile\web> npm run dev
 - **À faire** : RPC SQL renvoyant les totaux par jour/mois/an, puis remplacer l'appel côté `getDashboardData`.
 - **Identifié** : 2026-08-30
 
+### Streams Garmin : le temps total dépasse la durée de l'activité
+- **Quoi** : pour 857 activités Garmin (sur 4011 avec cardio), la somme des pas de temps du stream dépasse la durée écoulée — ratio moyen 1,29 et jusqu'à 26,8× (ex. 29 points sur 187 s totalisant 5003 s). Côté Strava le ratio est de 0,996 avec zéro dépassement, donc le calcul est juste : ce sont les données FIT qui le sont moins (records probablement non triés, ou fichier couvrant plus que l'activité — `fit-transform.ts` construit pourtant `time` correctement en `(timestamp - t0)/1000`).
+- **Pourquoi** : défaut PRÉEXISTANT, révélé par le backfill des histogrammes 047, pas causé par lui — `computeZoneTimesFromStream` sommait exactement les mêmes pas de temps. Impact atténué : `classifyIntensityFromZoneTimes` raisonne en ratios entre zones, qu'un gonflement uniforme ne change pas ; seul un gonflement concentré sur certains bpm fausse la classification.
+- **À faire** : trier les records par timestamp et écarter les pas de temps aberrants (> quelques minutes) dans `fitRecordsToStreams`, puis rejouer le backfill.
+- **Identifié** : 2026-08-30
+
 ---
 
 ## Modèle de fiche pour un nouvel item
