@@ -25,6 +25,7 @@ function query(data: unknown[]) {
   const link = () => chain
   chain.select = link
   chain.eq = link
+  chain.is = link
   chain.in = link
   chain.order = link
   chain.range = async () => ({ data, error: null })

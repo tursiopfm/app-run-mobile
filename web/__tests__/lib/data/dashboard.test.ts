@@ -37,7 +37,35 @@ function makeSelectMock(rows: unknown[]) {
     from: jest.fn().mockImplementation((table: string) =>
       table === 'profiles' ? profileChain : activitiesChain
     ),
+    // activity_daily_totals (migration 048) : Postgres agrège désormais l'historique
+    // par (jour, sport). On reproduit cette agrégation depuis les mêmes lignes.
+    rpc: jest.fn().mockImplementation(async () => ({ data: toDailyTotals(rows), error: null })),
   }
+}
+
+type Row = {
+  start_time?: string
+  sport_type?: string
+  manual_sport_type?: string | null
+  distance_m?: number | null
+  manual_distance_m?: number | null
+  elevation_gain_m?: number | null
+  manual_elevation_gain_m?: number | null
+}
+
+function toDailyTotals(rows: unknown[]) {
+  const acc = new Map<string, { d: string; s: string; km: number; dp: number }>()
+  for (const raw of rows as Row[]) {
+    if (!raw.start_time) continue
+    const d = String(raw.start_time).slice(0, 10)
+    const s = raw.manual_sport_type ?? raw.sport_type ?? ''
+    const key = `${d}|${s}`
+    const cur = acc.get(key) ?? { d, s, km: 0, dp: 0 }
+    cur.km += (raw.manual_distance_m ?? raw.distance_m ?? 0) / 1000
+    cur.dp += raw.manual_elevation_gain_m ?? raw.elevation_gain_m ?? 0
+    acc.set(key, cur)
+  }
+  return Array.from(acc.values()).sort((a, b) => a.d.localeCompare(b.d))
 }
 
 beforeEach(() => jest.clearAllMocks())

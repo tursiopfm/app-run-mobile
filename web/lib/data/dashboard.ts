@@ -57,20 +57,13 @@ export type SportOverview = {
   dailyHistory: DailyHistoryEntry[]
 }
 
-type SlimActivity = {
-  sport_type:              string
-  // manual_sport_type est le re-tag utilisateur ; quand présent il OVERRIDE
-  // sport_type pour toutes les agrégations par sport. Sans ça, une activité
-  // tagguée à la main "Run" depuis Strava "Workout" disparaît du total Run
-  // annuel — bug constaté 2026-05-16.
-  manual_sport_type:       string | null
-  start_time:              string
-  distance_m:              number | null
-  elevation_gain_m:        number | null
-  // Overrides utilisateur : prioritaires sur les valeurs Strava pour TOUS les
-  // cumuls (semaine, mois, année, historique). Le sync Strava ne les touche pas.
-  manual_distance_m:       number | null
-  manual_elevation_gain_m: number | null
+/** Une ligne de `activity_daily_totals` (migration 048) : un jour × un sport effectif.
+ *  `d` est au format YYYY-MM-DD, déjà découpé en UTC côté Postgres. */
+type DailyTotal = {
+  d:  string
+  s:  string
+  km: number
+  dp: number
 }
 
 export type WorkoutTypeShare = {
@@ -115,13 +108,6 @@ const WORKOUT_TYPE_ORDER: (WorkoutType | null)[] = [
 // ISO week day to 0-based Mon index: Sun=6, Mon=0, Tue=1 … Sat=5
 function toMonIndex(jsDay: number): number {
   return jsDay === 0 ? 6 : jsDay - 1
-}
-
-function localDateKey(d: Date): string {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
 }
 
 function getWeekStart(date: Date): Date {
@@ -184,6 +170,14 @@ function filterSport(activities: ActivityRow[], types: readonly string[] | null)
   return activities.filter((a) => types.includes(a.manual_sport_type ?? a.sport_type))
 }
 
+/** Index du jour dans l'année (0 = 1er janvier) depuis une clé YYYY-MM-DD. */
+function dayOfYearFromKey(key: string): number {
+  const y = Number(key.slice(0, 4))
+  const m = Number(key.slice(5, 7))
+  const d = Number(key.slice(8, 10))
+  return Math.floor((Date.UTC(y, m - 1, d) - Date.UTC(y, 0, 1)) / 86_400_000)
+}
+
 function dayOfYearIdx(d: Date): number {
   const y = d.getFullYear()
   return Math.floor(
@@ -196,20 +190,18 @@ function isLeapYear(y: number): boolean {
 }
 
 function buildCumulYears(
-  yearActivities: SlimActivity[],
+  dailyTotals: DailyTotal[],
   types: readonly string[] | null,
   now: Date,
 ): MonthSeries[] {
-  const filtered = types
-    ? yearActivities.filter((a) => types.includes(a.manual_sport_type ?? a.sport_type))
-    : yearActivities
+  const filtered = types ? dailyTotals.filter((t) => types.includes(t.s)) : dailyTotals
 
-  const byYear = new Map<number, SlimActivity[]>()
-  for (const a of filtered) {
-    const y = new Date(a.start_time).getFullYear()
+  const byYear = new Map<number, DailyTotal[]>()
+  for (const t of filtered) {
+    const y = Number(t.d.slice(0, 4))
     const arr = byYear.get(y)
-    if (arr) arr.push(a)
-    else byYear.set(y, [a])
+    if (arr) arr.push(t)
+    else byYear.set(y, [t])
   }
 
   const series: MonthSeries[] = []
@@ -226,10 +218,11 @@ function buildCumulYears(
       : isLeapYear(y) ? 366 : 365
 
     const dayKm = Array(totalDays).fill(0) as number[]
-    for (const a of yacts) {
-      const ad = new Date(a.start_time)
-      const idx = dayOfYearIdx(ad)
-      if (idx >= 0 && idx < totalDays) dayKm[idx] += ((a.manual_distance_m ?? a.distance_m) ?? 0) / 1000
+    for (const t of yacts) {
+      // Découpage explicite de YYYY-MM-DD : pas de parsing Date, donc pas de
+      // dérive de fuseau selon le runtime.
+      const idx = dayOfYearFromKey(t.d)
+      if (idx >= 0 && idx < totalDays) dayKm[idx] += t.km
     }
 
     const dailyCumul: number[] = []
@@ -249,7 +242,7 @@ function buildCumulYears(
 
 function buildSportOverview(
   all365: ActivityRow[],
-  yearActivities: SlimActivity[],
+  dailyTotals: DailyTotal[],
   types: readonly string[] | null,
   monday: Date,
   nextMonday: Date,
@@ -370,20 +363,19 @@ function buildSportOverview(
     .filter((t) => workoutTypeMap.has(t))
     .map((t) => ({ type: t, km: Math.round((workoutTypeMap.get(t) ?? 0) * 10) / 10 }))
 
-  const cumulYears = buildCumulYears(yearActivities, types, now)
+  const cumulYears = buildCumulYears(dailyTotals, types, now)
 
   // Daily history across the user's entire activity range (per sport, slim).
   // Used by HistoryBlock to navigate back through past weeks/months/years.
-  const fullHistory = types
-    ? yearActivities.filter((a) => types.includes(a.manual_sport_type ?? a.sport_type))
-    : yearActivities
+  const fullHistory = types ? dailyTotals.filter((t) => types.includes(t.s)) : dailyTotals
   const historyMap = new Map<string, { km: number; dPlus: number }>()
-  for (const a of fullHistory) {
-    const key = localDateKey(new Date(a.start_time))
-    const entry = historyMap.get(key) ?? { km: 0, dPlus: 0 }
-    entry.km    += ((a.manual_distance_m       ?? a.distance_m)       ?? 0) / 1000
-    entry.dPlus += ((a.manual_elevation_gain_m ?? a.elevation_gain_m) ?? 0)
-    historyMap.set(key, entry)
+  for (const t of fullHistory) {
+    // Postgres agrège déjà par (jour, sport) : il reste à fusionner les sports
+    // d'une même journée quand le filtre en couvre plusieurs.
+    const entry = historyMap.get(t.d) ?? { km: 0, dPlus: 0 }
+    entry.km    += t.km
+    entry.dPlus += t.dp
+    historyMap.set(t.d, entry)
   }
   const dailyHistory: DailyHistoryEntry[] = Array.from(historyMap.entries())
     .map(([date, v]) => ({
@@ -419,26 +411,15 @@ function buildSportOverview(
   }
 }
 
-const HISTORY_PAGE_SIZE = 1000
-
-async function fetchAllHistorySlim(
+// Totaux journaliers agrégés par Postgres (migration 048) : l'historique complet
+// pesait ~1,1 MB par rendu du Cockpit, l'agrégat ~243 kB pour la même information.
+async function fetchDailyTotals(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
-): Promise<SlimActivity[]> {
-  const all: SlimActivity[] = []
-  for (let from = 0; ; from += HISTORY_PAGE_SIZE) {
-    const { data, error } = await supabase
-      .from('activities')
-      .select('sport_type, manual_sport_type, start_time, distance_m, elevation_gain_m, manual_distance_m, manual_elevation_gain_m')
-      .eq('user_id', userId)
-      .is('deleted_at', null)
-      .order('start_time', { ascending: true })
-      .range(from, from + HISTORY_PAGE_SIZE - 1)
-    if (error || !data || data.length === 0) break
-    all.push(...(data as SlimActivity[]))
-    if (data.length < HISTORY_PAGE_SIZE) break
-  }
-  return all
+): Promise<DailyTotal[]> {
+  const { data, error } = await supabase.rpc('activity_daily_totals', { p_user_id: userId })
+  if (error || !data) return []
+  return data as DailyTotal[]
 }
 
 export async function getDashboardData(userId: string): Promise<DashboardData> {
@@ -447,7 +428,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   const since = new Date()
   since.setDate(since.getDate() - EWMA_WARMUP_DAYS)
 
-  const [{ data: rows }, yearActivities] = await Promise.all([
+  const [{ data: rows }, dailyTotals] = await Promise.all([
     supabase
       .from('activities')
       .select('id, sport_type, name, start_time, ces, avg_hr, distance_m, elevation_gain_m, moving_time_sec, manual_intensity, manual_sport_type, manual_workout_type, manual_distance_m, manual_elevation_gain_m, manual_moving_time_sec')
@@ -455,7 +436,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       .gte('start_time', since.toISOString())
       .is('deleted_at', null)
       .order('start_time', { ascending: true }),
-    fetchAllHistorySlim(supabase, userId),
+    fetchDailyTotals(supabase, userId),
   ])
 
   const activities = (rows ?? []) as ActivityRow[]
@@ -476,11 +457,11 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   const janFirst = new Date(now.getFullYear(), 0, 1)
 
   const sportOverviews: Record<SportKey, SportOverview> = {
-    run:  buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.run,  monday, nextMonday, janFirst, now),
-    ride: buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.ride, monday, nextMonday, janFirst, now),
-    swim: buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.swim, monday, nextMonday, janFirst, now),
-    walk: buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.walk, monday, nextMonday, janFirst, now),
-    all:  buildSportOverview(activities, yearActivities, SPORT_TYPE_MAP.all,  monday, nextMonday, janFirst, now),
+    run:  buildSportOverview(activities, dailyTotals, SPORT_TYPE_MAP.run,  monday, nextMonday, janFirst, now),
+    ride: buildSportOverview(activities, dailyTotals, SPORT_TYPE_MAP.ride, monday, nextMonday, janFirst, now),
+    swim: buildSportOverview(activities, dailyTotals, SPORT_TYPE_MAP.swim, monday, nextMonday, janFirst, now),
+    walk: buildSportOverview(activities, dailyTotals, SPORT_TYPE_MAP.walk, monday, nextMonday, janFirst, now),
+    all:  buildSportOverview(activities, dailyTotals, SPORT_TYPE_MAP.all,  monday, nextMonday, janFirst, now),
   }
 
   const weekActivities = activities.filter((r) => {

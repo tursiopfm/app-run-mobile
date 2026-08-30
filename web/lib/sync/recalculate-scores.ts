@@ -85,11 +85,14 @@ export async function recalculateUserEffortScores(userId: string): Promise<{ rec
 
   // Temps par zone FC depuis l'histogramme (migration 047), jamais depuis streams_gz :
   // ~1 kB par activité au lieu de ~10 kB, pour un résultat identique.
+  // !inner + deleted_at is null : les streams d'activités supprimées ne sont jamais
+  // rapatriés (ils ne servent à rien et pesaient ~15 % de la lecture).
   const histRows = await fetchAllPages<{ activity_id: string; hr_time_hist: number[] | null }>((from, to) =>
     supabase
       .from('activity_streams')
-      .select('activity_id, hr_time_hist')
+      .select('activity_id, hr_time_hist, activities!inner(deleted_at)')
       .eq('user_id', userId)
+      .is('activities.deleted_at', null)
       .order('activity_id', { ascending: true })
       .range(from, to),
   )
