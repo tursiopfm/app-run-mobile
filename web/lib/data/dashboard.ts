@@ -413,13 +413,28 @@ function buildSportOverview(
 
 // Totaux journaliers agrégés par Postgres (migration 048) : l'historique complet
 // pesait ~1,1 MB par rendu du Cockpit, l'agrégat ~243 kB pour la même information.
+// Paginé : PostgREST plafonne aussi les RPC à 1000 lignes, et un compte ancien
+// dépasse 4000 (jour, sport) — sans .range(), les jours récents étaient coupés.
+const DAILY_TOTALS_PAGE_SIZE = 1000
+
 async function fetchDailyTotals(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
 ): Promise<DailyTotal[]> {
-  const { data, error } = await supabase.rpc('activity_daily_totals', { p_user_id: userId })
-  if (error || !data) return []
-  return data as DailyTotal[]
+  const all: DailyTotal[] = []
+  for (let from = 0; ; from += DAILY_TOTALS_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .rpc('activity_daily_totals', { p_user_id: userId })
+      // Tri total (jour, sport) : sans lui, deux sports d'un même jour peuvent
+      // changer d'ordre entre deux pages et être dupliqués ou perdus.
+      .order('d', { ascending: true })
+      .order('s', { ascending: true })
+      .range(from, from + DAILY_TOTALS_PAGE_SIZE - 1)
+    if (error || !data || data.length === 0) break
+    all.push(...(data as DailyTotal[]))
+    if (data.length < DAILY_TOTALS_PAGE_SIZE) break
+  }
+  return all
 }
 
 export async function getDashboardData(userId: string): Promise<DashboardData> {
