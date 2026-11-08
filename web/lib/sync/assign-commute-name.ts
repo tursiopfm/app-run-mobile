@@ -147,11 +147,15 @@ export async function assignCommuteName(opts: AssignOpts): Promise<AssignResult>
 
   const outboundSuffix = ` ${route.outboundTitle}`
   const returnSuffix = ` ${route.returnTitle}`
+  // On ne retient que les activités qui portent ENCORE un titre de trajet : une
+  // activité liée à la route mais renommée depuis (ex. boucle classée TAF à tort
+  // par l'ancien fallback heure/distance, puis renommée à la main) garde un
+  // commute_seq périmé qui gonflerait le max → mauvais #N.
   const byId = new Map<string, Sib>()
-  for (const r of (linkedRes.data ?? []) as Sib[]) byId.set(r.id, r)
-  for (const r of (numberedRes.data ?? []) as Sib[]) {
+  const rawSibs = [...((linkedRes.data ?? []) as Sib[]), ...((numberedRes.data ?? []) as Sib[])]
+  for (const r of rawSibs) {
     if (byId.has(r.id)) continue
-    if (!r.name) continue
+    if (!r.name || parseCommuteSeq(r.name, year) == null) continue
     if (r.name.endsWith(outboundSuffix) || r.name.endsWith(returnSuffix)) byId.set(r.id, r)
   }
   const rows: Sib[] = Array.from(byId.values())
