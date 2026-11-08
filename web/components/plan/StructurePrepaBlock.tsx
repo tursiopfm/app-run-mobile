@@ -94,6 +94,12 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
   // Course candidate pour démarrer une prépa quand aucun macro n'existe encore.
   const seedRace = useMemo<Race | null>(() => pickGoalRace(races), [races])
 
+  // Course passée à l'éditeur (Auto-générer) : l'objectif du plan s'il est encore
+  // à venir, sinon le nouvel objectif détecté (ancienne course passée ou supprimée).
+  const editorRace = useMemo<Race | null>(() =>
+    goalRace && goalRace.date >= todayISO() ? goalRace : (seedRace ?? goalRace),
+    [goalRace, seedRace])
+
   const { guardedSave, dialog } = useOverlapGuard()
 
   async function handleGenerateInitial() {
@@ -228,7 +234,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
         </div>
         <PhaseEditorModal
           plan={activeMacrocycle}
-          race={goalRace}
+          race={editorRace}
           open={modalOpen}
           onClose={() => setModalOpen(false)}
           onSaved={() => { onChange?.(); setModalOpen(false) }}
@@ -420,7 +426,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
 
       <PhaseEditorModal
         plan={activeMacrocycle}
-        race={goalRace}
+        race={editorRace}
         open={modalOpen}
         onClose={() => { setModalOpen(false); setFocusPhaseId(undefined) }}
         onSaved={() => { onChange?.(); setModalOpen(false); setFocusPhaseId(undefined) }}

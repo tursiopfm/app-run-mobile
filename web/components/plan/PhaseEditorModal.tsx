@@ -92,12 +92,15 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
   // Accordéon : ids des cycles dépliés. Multi-ouvert autorisé. À l'ouverture
   // du modal on déplie le cycle ciblé (focusPhaseId) ou le premier.
   const [openIds, setOpenIds] = useState<Set<string>>(new Set())
+  // true après Auto-générer : le plan est re-ciblé sur `race` à l'enregistrement.
+  const [regenerated, setRegenerated] = useState(false)
 
   useEffect(() => {
     if (open) {
       const next = plan?.phases ?? []
       setPhases(next)
       setError(null)
+      setRegenerated(false)
       const initialOpen = new Set<string>()
       if (focusPhaseId && next.some(p => p.id === focusPhaseId)) {
         initialOpen.add(focusPhaseId)
@@ -167,6 +170,7 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
     setPhases(next)
     setOpenIds(new Set(next.length > 0 ? [next[0].id] : []))
     setError(null)
+    setRegenerated(true)
   }
 
   function handleAddPhase() {
@@ -265,7 +269,13 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
       const endDate = sortedPhases.reduce((acc, p) => (p.endDate > acc ? p.endDate : acc), sortedPhases[0].endDate)
 
       const updated: TrainingPlan = plan
-        ? { ...plan, phases: sortedPhases, startDate, endDate, updatedAt: now }
+        ? {
+            ...plan,
+            ...(regenerated && race && plan.goalRaceId !== race.id
+              ? { goalRaceId: race.id, name: L.structurePlanName(race.name) }
+              : {}),
+            phases: sortedPhases, startDate, endDate, updatedAt: now,
+          }
         : {
             id: makeId(),
             athleteId: '',
