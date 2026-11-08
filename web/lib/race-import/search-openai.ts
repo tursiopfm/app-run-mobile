@@ -16,7 +16,7 @@ export async function searchRaceUrls(target: RaceTarget): Promise<string[]> {
     `(livetrail.net / livetrail.run) ou UTMB (utmb.world), ET (2) son site officiel ` +
     `ou sa page de résultats. Liste toutes les URLs directes pertinentes.`
   const res = await client.chat.completions.create({
-    model: 'gpt-4o-search-preview',
+    model: 'gpt-5-search-api', // gpt-4o-search-preview retiré par OpenAI le 2026-07-23
     web_search_options: { search_context_size: 'high' },
     messages: [{ role: 'user', content: prompt }],
   } as any)

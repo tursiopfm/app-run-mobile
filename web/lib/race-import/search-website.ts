@@ -20,7 +20,7 @@ export async function searchOfficialWebsite(target: WebsiteTarget): Promise<stri
     `PAS une page de chronométrage, de résultats ou d'inscription tierce.`
   // web_search_options non typé selon la version du SDK → cast any localisé.
   const res = await client.chat.completions.create({
-    model: 'gpt-4o-search-preview',
+    model: 'gpt-5-search-api', // gpt-4o-search-preview retiré par OpenAI le 2026-07-23
     web_search_options: { search_context_size: 'high' },
     messages: [{ role: 'user', content: prompt }],
   } as any)
