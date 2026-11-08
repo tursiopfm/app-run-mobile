@@ -24,6 +24,7 @@ import {
   getPhaseWeeks,
   phaseWeekCount,
 } from '@/lib/training/phases'
+import { applyProgression, type Baseline } from '@/lib/training/progression'
 import { useOverlapGuard } from './useOverlapGuard'
 import { useT } from '@/lib/i18n/I18nProvider'
 import type { Dict } from '@/lib/i18n/dictionaries/fr'
@@ -31,6 +32,7 @@ import type { Dict } from '@/lib/i18n/dictionaries/fr'
 type Props = {
   plan: TrainingPlan | null
   race: Race | null
+  baseline: Baseline
   open: boolean
   onClose: () => void
   onSaved: () => void
@@ -83,7 +85,7 @@ function newEmptyPhase(startDate: string, endDate: string, cycleLabelFn: (s: str
   }
 }
 
-export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhaseId }: Props) {
+export function PhaseEditorModal({ plan, race, baseline, open, onClose, onSaved, focusPhaseId }: Props) {
   const L = useT().plan
   const PHASE_TYPE_OPTIONS = useMemo(() => buildPhaseTypeOptions(L), [L])
   const [phases, setPhases] = useState<Phase[]>(plan?.phases ?? [])
@@ -162,7 +164,8 @@ export function PhaseEditorModal({ plan, race, open, onClose, onSaved, focusPhas
       setError(L.phaseEditorErrNoRace)
       return
     }
-    const next = autoDistributePhases(start, raceDate)
+    const next = applyProgression(autoDistributePhases(start, raceDate), baseline,
+      { raceKm: race.distance, raceDplus: race.elevation })
     if (next.length === 0) {
       setError(L.phaseEditorErrAutoFailed)
       return

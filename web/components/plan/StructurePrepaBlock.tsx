@@ -12,6 +12,7 @@ import { Fragment, useMemo, useState } from 'react'
 import { SquarePen } from 'lucide-react'
 import type { Phase, Race, TrainingPlan } from '@/types/plan'
 import { PHASE_DEFINITIONS, autoDistributePhases, getPhaseWeeks } from '@/lib/training/phases'
+import { applyProgression, type Baseline } from '@/lib/training/progression'
 import { useOverlapGuard } from './useOverlapGuard'
 import { BlockCard } from '@/components/blocks/BlockCard'
 import { PhaseEditorModal } from './PhaseEditorModal'
@@ -71,10 +72,11 @@ function pickGoalRace(races: Race[]): Race | null {
 type Props = {
   activeMacrocycle: TrainingPlan | null
   races: Race[]
+  baseline: Baseline
   onChange?: () => void
 }
 
-export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props) {
+export function StructurePrepaBlock({ activeMacrocycle, races, baseline, onChange }: Props) {
   const L = useT().plan
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
@@ -111,7 +113,8 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
         if (!seedRace) return
         const start = todayISO()
         const end = seedRace.date
-        const phases = autoDistributePhases(start, end)
+        const phases = applyProgression(autoDistributePhases(start, end), baseline,
+          { raceKm: seedRace.distance, raceDplus: seedRace.elevation })
         const now = new Date().toISOString()
         const newPlan: TrainingPlan = {
           id: makeId(),
@@ -131,7 +134,8 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
       // Cas 2 : macro existant sans phases → on les génère.
       const start = activeMacrocycle.startDate
       const end = goalRace?.date ?? activeMacrocycle.endDate
-      const phases = autoDistributePhases(start, end)
+      const phases = applyProgression(autoDistributePhases(start, end), baseline,
+        { raceKm: goalRace?.distance ?? 0, raceDplus: goalRace?.elevation ?? 0 })
       if (phases.length === 0) {
         openEditor()
         return
@@ -235,6 +239,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
         <PhaseEditorModal
           plan={activeMacrocycle}
           race={editorRace}
+          baseline={baseline}
           open={modalOpen}
           onClose={() => setModalOpen(false)}
           onSaved={() => { onChange?.(); setModalOpen(false) }}
@@ -427,6 +432,7 @@ export function StructurePrepaBlock({ activeMacrocycle, races, onChange }: Props
       <PhaseEditorModal
         plan={activeMacrocycle}
         race={editorRace}
+        baseline={baseline}
         open={modalOpen}
         onClose={() => { setModalOpen(false); setFocusPhaseId(undefined) }}
         onSaved={() => { onChange?.(); setModalOpen(false); setFocusPhaseId(undefined) }}

@@ -21,7 +21,8 @@
 // indépendamment, mais le drag template → calendrier fonctionne.
 // ─────────────────────────────────────────────────────────────────────────
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { computeBaseline } from '@/lib/training/progression'
 import { BlockGrid, type BlockDef } from '@/components/blocks/BlockGrid'
 import { ModeToggleBlock } from '@/components/plan/ModeToggleBlock'
 import { ObjectifCourseBlock } from '@/components/plan/ObjectifCourseBlock'
@@ -69,6 +70,8 @@ export default function PlanClient({
   const L = useT().plan
   const [reloadKey, setReloadKey] = useState(0)
   const bumpReload = useCallback(() => setReloadKey(k => k + 1), [])
+  // Base de progression des nouveaux plans : moyenne hebdo des 28 derniers jours.
+  const baseline = useMemo(() => computeBaseline(recentActivities), [recentActivities])
 
   // 1 plan actif par utilisateur + courses pour le bloc Structure.
   const [activeMacrocycle, setActiveMacrocycle] = useState<TrainingPlan | null>(null)
@@ -183,6 +186,7 @@ export default function PlanClient({
         <StructurePrepaBlock
           activeMacrocycle={activeMacrocycle}
           races={races}
+          baseline={baseline}
           onChange={bumpReload}
         />
       ),

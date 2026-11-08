@@ -1,6 +1,6 @@
 # Étude : progression des cibles hebdo dans les plans d'entraînement
 
-> **Status: Étude** · 2026-11-08 · Code concerné : `web/lib/training/phases.ts`
+> **Status: Implémenté** · 2026-11-08 · Code: `web/lib/training/progression.ts` (branché dans `StructurePrepaBlock` + `PhaseEditorModal`, base calculée dans `PlanClient`)
 
 ## 1. Constat : ce que fait l'app aujourd'hui
 
@@ -112,3 +112,15 @@ Découpage actuel conservé : Foncier 4 / Développement 3 / Spécifique 3 / Aff
 3. Plans existants : régénérer leurs cibles, ou n'appliquer le nouveau modèle qu'aux nouveaux plans et sur le bouton « auto-distribuer » ?
 4. Si l'utilisateur a modifié des semaines à la main, faut-il les écraser à la régénération ?
 5. Sans objectif lié (`goalRaceId` null), faut-il seulement une progression depuis la base, sans calibrage sur la course ?
+
+## Décisions (Franck, 2026-11-08)
+
+Cycle 3:1, base = moyenne des 4 dernières semaines d'activités course (Run/TrailRun), **nouveaux plans uniquement** (création + « Auto-générer »). Les plans existants ne sont pas touchés.
+
+## Drift notes
+
+- Récup 3:1 placée par simple compteur (toutes les 4 semaines de charge, remis à zéro par une phase Récupération) et non alignée sur les fins de phase. Exception : une récup qui tomberait juste avant l'affûtage est convertie en semaine de charge.
+- Affûtage : −20 % (S-3 si affûtage ≥ 3 sem), −35 % (S-2), −55 % (semaine de course), relatif à la dernière semaine de charge.
+- D+ : croissance plafonnée à +20 %/sem, d'où un pic légèrement sous la cible si la prépa est courte (exemple §3 : 2700 m au lieu de 2800 m).
+- Sans activité récente : départ à 60 % du pic. Sans objectif (distance 0) : pic = base × 1,15.
+- **Charge hebdo (CES) non progressée** : `weeklyChargeTarget` reste la constante de phase (`PhaseWeeklyTarget` ne porte que km/D+). À traiter si besoin.
